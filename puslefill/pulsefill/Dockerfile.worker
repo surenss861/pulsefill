@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1.7
+# Railway / Docker: BullMQ worker — build from monorepo root: `docker build -f Dockerfile.worker .`
+
+FROM node:20-alpine AS base
+WORKDIR /app
+RUN corepack enable
+
+FROM base AS deps
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/api/package.json apps/api/
+COPY apps/worker/package.json apps/worker/
+COPY apps/dashboard-web/package.json apps/dashboard-web/
+COPY apps/marketing-site/package.json apps/marketing-site/
+COPY packages/shared/package.json packages/shared/
+RUN pnpm install --frozen-lockfile
+
+FROM base AS build
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/worker ./apps/worker
+RUN pnpm --filter @pulsefill/worker build
+
+FROM node:20-alpine AS runtime
+WORKDIR /app
+RUN corepack enable
+ENV NODE_ENV=production
+
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=build /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/worker/package.json ./apps/worker/package.json
+COPY --from=build /app/apps/worker/dist ./apps/worker/dist
+
+WORKDIR /app/apps/worker
+CMD ["node", "dist/worker.js"]

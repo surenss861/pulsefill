@@ -1,0 +1,19 @@
+:root {
+  color-scheme: dark;
+  --bg: #0a0c10;
+  --text: #f5f7fb;
+  --muted: #99a3b3;
+  --primary: #4de2c5;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+}
+
+a {
+  color: var(--primary);
+}

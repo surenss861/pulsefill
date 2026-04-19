@@ -1,0 +1,26 @@
+{
+  "name": "pulsefill",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @pulsefill/api dev",
+    "dev:worker": "pnpm --filter @pulsefill/worker dev",
+    "dev:dashboard": "pnpm --filter @pulsefill/dashboard-web dev",
+    "dev:marketing": "pnpm --filter @pulsefill/marketing-site dev",
+    "build:api": "pnpm --filter @pulsefill/api build",
+    "build:worker": "pnpm --filter @pulsefill/worker build",
+    "build:dashboard": "pnpm --filter @pulsefill/dashboard-web build",
+    "build:marketing": "pnpm --filter @pulsefill/marketing-site build",
+    "build:shared": "pnpm --filter @pulsefill/shared build",
+    "start:api": "pnpm --filter @pulsefill/api start",
+    "start:worker": "pnpm --filter @pulsefill/worker start",
+    "railway:install": "pnpm install --frozen-lockfile",
+    "railway:build:api": "pnpm run railway:install && pnpm run build:api",
+    "railway:build:worker": "pnpm run railway:install && pnpm run build:worker",
+    "typecheck": "pnpm -r typecheck",
+    "typecheck:api": "pnpm --filter @pulsefill/api typecheck"
+  }
+}
