@@ -50,6 +50,9 @@ importers:
 
   apps/dashboard-web:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.49.1
+        version: 2.103.2
       next:
         specifier: ^15.2.4
         version: 15.5.15(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
