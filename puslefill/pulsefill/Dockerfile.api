@@ -7,7 +7,6 @@ RUN corepack enable
 
 FROM base AS deps
 # Build hosts (e.g. Railway) often set NODE_ENV=production, which skips devDependencies.
-# typescript lives in devDependencies — required for `pnpm --filter @pulsefill/api build` (tsc).
 ENV NODE_ENV=development
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/api/package.json apps/api/
@@ -18,9 +17,10 @@ COPY packages/shared/package.json packages/shared/
 RUN pnpm install --frozen-lockfile --prod=false
 
 FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+# Copy full pnpm workspace layout (root + per-package node_modules symlinks) from deps.
+COPY --from=deps /app /app
 COPY apps/api ./apps/api
+COPY packages/shared ./packages/shared
 RUN pnpm --filter @pulsefill/api build
 
 FROM node:20-alpine AS runtime
@@ -32,8 +32,8 @@ COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=build /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/api/package.json ./apps/api/package.json
-COPY --from=build /app/apps/api/dist ./apps/api/dist
+COPY --from=build /app/apps/api ./apps/api
+COPY --from=build /app/packages/shared ./packages/shared
 
 WORKDIR /app/apps/api
 EXPOSE 3001
