@@ -32,7 +32,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		21D452B02F90C0C500818129 /* Exceptions for "puslefill" folder in "puslefill" target */ = {
+		21D452B02F90C0C500818129 /* Exceptions for "puslefill/pulsefill/ios/PulseFill/PulseFill" folder in "puslefill" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -42,10 +42,10 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		21D4528F2F90C0C300818129 /* puslefill */ = {
+		21D4528F2F90C0C300818129 /* puslefill/pulsefill/ios/PulseFill/PulseFill */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				21D452B02F90C0C500818129 /* Exceptions for "puslefill" folder in "puslefill" target */,
+				21D452B02F90C0C500818129 /* Exceptions for "puslefill/pulsefill/ios/PulseFill/PulseFill" folder in "puslefill" target */,
 			);
 			path = puslefill/pulsefill/ios/PulseFill/PulseFill;
 			sourceTree = "<group>";
@@ -97,7 +97,7 @@
 		21D452842F90C0C300818129 = {
 			isa = PBXGroup;
 			children = (
-				21D4528F2F90C0C300818129 /* puslefill */,
+				21D4528F2F90C0C300818129 /* puslefill/pulsefill/ios/PulseFill/PulseFill */,
 				21D452A12F90C0C500818129 /* puslefillTests */,
 				21D452AB2F90C0C500818129 /* puslefillUITests */,
 				21D4528E2F90C0C300818129 /* Products */,
@@ -137,7 +137,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				21D4528F2F90C0C300818129 /* puslefill */,
+				21D4528F2F90C0C300818129 /* puslefill/pulsefill/ios/PulseFill/PulseFill */,
 			);
 			name = puslefill;
 			packageProductDependencies = (

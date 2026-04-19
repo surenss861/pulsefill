@@ -50,4 +50,22 @@ enum DateFormatterPF {
         f.timeStyle = .short
         return f.string(from: date)
     }
+
+    /// Same-day range for operator lists (local timezone).
+    static func dateTimeRange(start: String, end: String?) -> String {
+        guard let s = parse(start) else { return start }
+        let dateFmt = DateFormatter()
+        dateFmt.dateStyle = .medium
+        dateFmt.timeStyle = .none
+        let timeFmt = DateFormatter()
+        timeFmt.dateStyle = .none
+        timeFmt.timeStyle = .short
+        guard let eStr = end, let e = parse(eStr) else {
+            return "\(dateFmt.string(from: s)) · \(timeFmt.string(from: s))"
+        }
+        if Calendar.current.isDate(s, inSameDayAs: e) {
+            return "\(dateFmt.string(from: s)) · \(timeFmt.string(from: s))–\(timeFmt.string(from: e))"
+        }
+        return "\(medium(start)) → \(medium(eStr))"
+    }
 }

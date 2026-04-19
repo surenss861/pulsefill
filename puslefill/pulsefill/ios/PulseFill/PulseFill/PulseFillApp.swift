@@ -7,7 +7,7 @@ struct PulseFillApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            MainShellView()
                 .environmentObject(env)
                 .environmentObject(env.sessionStore)
                 .task {
@@ -18,6 +18,7 @@ struct PulseFillApp: App {
                 .onChange(of: env.sessionStore.accessToken) { _, newValue in
                     guard newValue != nil else { return }
                     Task {
+                        await env.authManager.refreshStaffAccess()
                         await env.pushCoordinator.bootstrapIfSignedIn(sessionStore: env.sessionStore)
                     }
                 }

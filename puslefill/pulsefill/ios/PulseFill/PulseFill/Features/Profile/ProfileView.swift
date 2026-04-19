@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject private var env: AppEnvironment
+    @AppStorage("pf.preferCustomerTabs") private var preferCustomerTabs = false
 
     var body: some View {
         NavigationStack {
@@ -14,6 +15,13 @@ struct ProfileView: View {
                     }
                     if let email = env.sessionStore.email, !email.isEmpty {
                         LabeledContent("Email", value: email)
+                    }
+                    if env.sessionStore.isStaffUser {
+                        Toggle(
+                            "Customer mode (standby & offers)",
+                            isOn: $preferCustomerTabs
+                        )
+                        .tint(PFColor.primary)
                     }
                 }
                 Section("Standby") {

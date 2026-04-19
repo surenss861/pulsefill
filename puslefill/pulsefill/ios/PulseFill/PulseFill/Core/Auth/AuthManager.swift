@@ -29,6 +29,7 @@ final class AuthManager: ObservableObject {
                 email: bundle.email
             )
             try await syncCustomerSession()
+            await refreshStaffAccess()
         } catch {
             sessionStore.clear()
             banner = nil
@@ -48,6 +49,7 @@ final class AuthManager: ObservableObject {
                 email: bundle.email
             )
             try await syncCustomerSession()
+            await refreshStaffAccess()
         } catch {
             banner = error.localizedDescription
         }
@@ -66,6 +68,7 @@ final class AuthManager: ObservableObject {
                     email: bundle.email
                 )
                 try await syncCustomerSession()
+                await refreshStaffAccess()
             } else {
                 banner = "Check your inbox to verify your email, then sign in."
             }
@@ -77,6 +80,20 @@ final class AuthManager: ObservableObject {
     func signOut() async {
         sessionStore.clear()
         banner = nil
+    }
+
+    /// Call after sign-in / restore to detect staff JWT (`GET /v1/businesses/mine`).
+    func refreshStaffAccess() async {
+        guard sessionStore.isSignedIn else {
+            sessionStore.isStaffUser = false
+            return
+        }
+        do {
+            _ = try await apiClient.get("/v1/businesses/mine", as: Business.self)
+            sessionStore.isStaffUser = true
+        } catch {
+            sessionStore.isStaffUser = false
+        }
     }
 
     private func syncCustomerSession() async throws {

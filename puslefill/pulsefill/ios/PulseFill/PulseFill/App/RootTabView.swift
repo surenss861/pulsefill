@@ -31,7 +31,7 @@ struct RootTabView: View {
 }
 
 #Preview {
-    RootTabView()
+    MainShellView()
         .environmentObject(AppEnvironment.development)
         .environmentObject(AppEnvironment.development.sessionStore)
 }

@@ -26,6 +26,9 @@ final class SessionStore: ObservableObject {
         didSet { UserDefaults.standard.set(email, forKey: Keys.email) }
     }
 
+    /// Set after `GET /v1/businesses/mine` succeeds (staff JWT) or fails (customer-only).
+    @Published var isStaffUser: Bool = false
+
     var isSignedIn: Bool {
         guard let accessToken, !accessToken.isEmpty else { return false }
         return true
@@ -50,5 +53,6 @@ final class SessionStore: ObservableObject {
         refreshToken = nil
         userId = nil
         email = nil
+        isStaffUser = false
     }
 }
