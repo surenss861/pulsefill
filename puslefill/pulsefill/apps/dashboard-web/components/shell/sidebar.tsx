@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { signOutStaff } from "@/lib/auth";
 import { useLiveCounts } from "@/hooks/useLiveCounts";
+import { useNeedsAttentionCount } from "@/hooks/useNeedsAttentionCount";
 
 const links: Array<{
   href: string;
@@ -10,6 +11,7 @@ const links: Array<{
   sub?: { href: string; label: string };
 }> = [
   { href: "/overview", label: "Overview" },
+  { href: "/action-queue", label: "Action queue" },
   { href: "/open-slots", label: "Open slots", sub: { href: "/open-slots/create", label: "Create slot" } },
   { href: "/offers", label: "Offers" },
   { href: "/claims", label: "Claims" },
@@ -34,6 +36,7 @@ const badgeBase = {
 export function Sidebar() {
   const router = useRouter();
   const counts = useLiveCounts();
+  const needsAttention = useNeedsAttentionCount();
 
   async function handleLogout() {
     try {
@@ -70,6 +73,18 @@ export function Sidebar() {
               }}
             >
               <span>{l.label}</span>
+              {l.href === "/action-queue" && needsAttention > 0 ? (
+                <span
+                  style={{
+                    ...badgeBase,
+                    background: "rgba(245, 158, 11, 0.12)",
+                    borderColor: "rgba(251, 191, 36, 0.25)",
+                    color: "#fcd34d",
+                  }}
+                >
+                  {needsAttention}
+                </span>
+              ) : null}
               {l.href === "/claims" && counts.claimed > 0 ? (
                 <span
                   style={{

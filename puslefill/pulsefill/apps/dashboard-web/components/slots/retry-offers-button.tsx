@@ -51,7 +51,7 @@ export function RetryOffersButton({ openSlotId, onDone, emphasis = "secondary", 
       const matched = result.matched ?? 0;
       const offersCreated = Array.isArray(result.offer_ids) ? result.offer_ids.length : 0;
       const q = result.notification_queue;
-      const queued = q ? q.queued : null;
+      const queued = q == null ? null : (q.queued ?? null);
       const queueCount = q && typeof q.count === "number" ? q.count : null;
 
       const nextMessage = result.message ?? "Offers updated.";

@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
 import { requireStaff } from "../../plugins/guards.js";
+import { buildActionQueue } from "./action-queue.js";
 
 const patchBody = z
   .object({
@@ -86,6 +87,21 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         slots_booked: booked.count ?? 0,
         recovered_revenue_cents: recoveredRevenueCents,
       });
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/action-queue",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = await buildActionQueue(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "action_queue_failed");
+        return reply.status(500).send({ error: "action_queue_failed" });
+      }
     },
   );
 

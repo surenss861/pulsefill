@@ -267,6 +267,16 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const uniqueMatches = [...uniqueByCustomer.values()];
 
       if (uniqueMatches.length === 0) {
+        await admin.from("audit_events").insert({
+          business_id: req.staff!.business_id,
+          actor_type: "staff",
+          actor_id: req.staff!.id,
+          event_type: "offers_no_match",
+          entity_type: "open_slot",
+          entity_id: id,
+          metadata: { matched: 0 },
+        });
+
         return reply.send({
           ok: true,
           matched: 0,

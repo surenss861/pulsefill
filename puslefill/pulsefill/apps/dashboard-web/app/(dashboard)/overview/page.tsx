@@ -1,15 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActionQueuePreviewCard } from "@/components/action-queue/action-queue-preview-card";
 import { GettingStartedCard } from "@/components/overview/getting-started-card";
 import { OverviewMetricCard } from "@/components/ui/overview-metric-card";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
+import { useActionQueue } from "@/hooks/useActionQueue";
 import { useBusinessMetrics } from "@/hooks/useBusinessMetrics";
 import { useSetupChecklistState } from "@/hooks/useSetupChecklistState";
 import { useSetupOverviewData } from "@/hooks/useSetupOverviewData";
 
 export default function OverviewPage() {
   const { metrics, loading: metricsLoading, error: metricsError, reload: reloadMetrics } = useBusinessMetrics();
+  const actionQueue = useActionQueue(30_000);
   const setup = useSetupOverviewData();
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
 
@@ -37,9 +40,9 @@ export default function OverviewPage() {
   const loading = setup.loading || metricsLoading;
 
   const refresh = useCallback(async () => {
-    await Promise.all([reloadMetrics(), setup.reload()]);
+    await Promise.all([reloadMetrics(), setup.reload(), actionQueue.reload()]);
     setRefreshedAt(new Date());
-  }, [reloadMetrics, setup.reload]);
+  }, [reloadMetrics, setup.reload, actionQueue.reload]);
 
   useEffect(() => {
     if (!loading && metrics) setRefreshedAt(new Date());
@@ -114,6 +117,14 @@ export default function OverviewPage() {
           <OverviewMetricCard label="Recovered revenue" value={metrics.recovered_revenue_cents} isCurrency />
           <OverviewMetricCard label="Open slots (now)" value={setup.openSlotsCount} />
         </div>
+      ) : null}
+
+      {!loading ? (
+        <ActionQueuePreviewCard
+          items={actionQueue.data?.sections.needs_action ?? []}
+          loading={actionQueue.loading}
+          error={actionQueue.error}
+        />
       ) : null}
 
       {showGettingStarted && !loading ? (
