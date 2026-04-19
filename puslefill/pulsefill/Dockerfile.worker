@@ -6,13 +6,15 @@ WORKDIR /app
 RUN corepack enable
 
 FROM base AS deps
+# Same as API: ensure devDependencies (typescript) install so `tsc` exists for the build stage.
+ENV NODE_ENV=development
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/api/package.json apps/api/
 COPY apps/worker/package.json apps/worker/
 COPY apps/dashboard-web/package.json apps/dashboard-web/
 COPY apps/marketing-site/package.json apps/marketing-site/
 COPY packages/shared/package.json packages/shared/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prod=false
 
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
