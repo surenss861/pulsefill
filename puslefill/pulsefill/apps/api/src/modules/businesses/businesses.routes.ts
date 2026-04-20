@@ -7,6 +7,7 @@ import { buildDailyOpsSummary } from "./daily-ops-summary.js";
 import { buildDeliveryReliability } from "./delivery-reliability.js";
 import { buildOpsBreakdown } from "./ops-breakdown.js";
 import { buildMorningRecoveryDigest } from "./morning-recovery-digest.js";
+import { buildOperatorActivityFeed } from "./activity-feed.js";
 import { buildOperatorCustomerContext } from "./operator-customer-context.js";
 
 const patchBody = z
@@ -92,6 +93,21 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         slots_booked: booked.count ?? 0,
         recovered_revenue_cents: recoveredRevenueCents,
       });
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/activity-feed",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = await buildOperatorActivityFeed(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "operator_activity_feed_failed");
+        return reply.status(500).send({ error: "operator_activity_feed_failed" });
+      }
     },
   );
 

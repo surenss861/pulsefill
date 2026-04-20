@@ -12,6 +12,7 @@ const links: Array<{
 }> = [
   { href: "/overview", label: "Overview" },
   { href: "/action-queue", label: "Action queue" },
+  { href: "/activity", label: "Activity" },
   { href: "/open-slots", label: "Open slots", sub: { href: "/open-slots/create", label: "Create slot" } },
   { href: "/offers", label: "Offers" },
   { href: "/claims", label: "Claims" },

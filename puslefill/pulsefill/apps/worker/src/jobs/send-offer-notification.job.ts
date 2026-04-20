@@ -1,3 +1,4 @@
+import { buildCustomerPushFromCustomerEvent } from "@pulsefill/shared";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type SendOfferNotificationJobPayload = {
@@ -39,6 +40,9 @@ export async function sendOfferNotificationJob(
   if (!offer) return { skipped: true, reason: "offer_missing" as const };
   if (offer.status !== "sent") return { skipped: true, reason: `offer_status_${offer.status}` as const };
 
+  const slot = Array.isArray(offer.open_slots) ? offer.open_slots[0] : offer.open_slots;
+  const providerName = slot?.provider_name_snapshot ?? "Earlier appointment available";
+
   const { data: customer, error: customerError } = await supabase
     .from("customers")
     .select("id, email, phone, push_enabled, sms_enabled, email_enabled")
@@ -59,9 +63,6 @@ export async function sendOfferNotificationJob(
       offerStatus: offer.status,
     });
   }
-
-  const slot = Array.isArray(offer.open_slots) ? offer.open_slots[0] : offer.open_slots;
-  const providerName = slot?.provider_name_snapshot ?? "Earlier appointment available";
 
   if (channel === "push") {
     const { data: devices, error: devicesError } = await supabase
@@ -88,17 +89,18 @@ export async function sendOfferNotificationJob(
       });
     }
 
-    const deepLinkData = {
-      kind: "offer",
+    const apsPayload = buildCustomerPushFromCustomerEvent({
+      kind: "offer_received",
+      businessName: providerName,
       offerId,
       openSlotId: offer.open_slot_id,
-    };
+    });
     console.log("[PulseFill] send offer push (simulated until APNs wired)", {
       offerId,
       customerId,
       deviceCount: deviceTokens.length,
       providerName,
-      apsData: deepLinkData,
+      apsPayload,
     });
   } else {
     console.log("[PulseFill] send offer notification (non-push stub)", {

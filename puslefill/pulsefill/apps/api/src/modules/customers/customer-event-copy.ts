@@ -1,3 +1,5 @@
+import { getCustomerPushCopy } from "@pulsefill/shared";
+
 import type { CustomerEventKind } from "./customer-event-taxonomy.js";
 
 export type CustomerEventCopyInput = {
@@ -18,86 +20,90 @@ export type CustomerEventCopy = {
 export function getCustomerEventCopy(input: CustomerEventCopyInput): CustomerEventCopy {
   const clinic = input.businessName?.trim() || "Clinic";
   const service = input.serviceName?.trim() || "Opening";
+  const push = getCustomerPushCopy(input.kind, {
+    businessName: input.businessName,
+    serviceName: input.serviceName,
+  });
 
   switch (input.kind) {
     case "offer_received":
       return {
         title: "Offer received",
         detail: `${clinic} · ${service}`,
-        pushTitle: "New opening available",
-        pushBody: `${clinic} has a matching opening for you.`,
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "New offer",
       };
     case "offer_expiring_soon":
       return {
         title: "Offer expiring soon",
         detail: `${clinic} · ${service}`,
-        pushTitle: "Offer expiring soon",
-        pushBody: "This opening may not be available for long.",
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "Expiring soon",
       };
     case "offer_expired":
       return {
         title: "Offer expired",
         detail: `${clinic} · ${service}`,
-        pushTitle: "Offer expired",
-        pushBody: "This opening is no longer available.",
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "Expired",
       };
     case "claim_submitted":
       return {
         title: "Claim submitted",
         detail: "We sent your claim right away.",
-        pushTitle: "Claim submitted",
-        pushBody: "We sent your claim to the clinic.",
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "Submitted",
       };
     case "claim_pending_confirmation":
       return {
         title: "Waiting for clinic confirmation",
         detail: "The clinic still needs to confirm the booking.",
-        pushTitle: "Claim received",
-        pushBody: "Your claim is in. The clinic still needs to confirm it.",
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "Pending confirmation",
       };
     case "booking_confirmed":
       return {
         title: "Booking confirmed",
         detail: `${clinic} confirmed your opening.`,
-        pushTitle: "Booking confirmed",
-        pushBody: `${clinic} confirmed your opening.`,
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "Confirmed",
       };
     case "claim_unavailable":
       return {
         title: "Opening no longer available",
         detail: `${clinic} · ${service}`,
-        pushTitle: "Opening no longer available",
-        pushBody: "This opening is no longer available.",
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "Unavailable",
       };
     case "missed_opportunity":
       return {
         title: "Missed opportunity",
         detail: `${clinic} · ${service}`,
-        pushTitle: "You missed an opening",
-        pushBody: "A matching opening passed by. You can review what happened in the app.",
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "Missed",
       };
     case "standby_status_reminder":
       return {
         title: "Check your standby status",
         detail: "Review your coverage and notification readiness.",
-        pushTitle: "Check your standby setup",
-        pushBody: "Review your standby status and readiness.",
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "Status",
       };
     case "standby_setup_suggestion":
       return {
         title: "Improve your standby setup",
         detail: "A few small changes could improve your chances.",
-        pushTitle: "Improve your standby setup",
-        pushBody: "A few small changes could help you catch more openings.",
+        pushTitle: push.title,
+        pushBody: push.body,
         stateLabel: "Suggestion",
       };
   }
