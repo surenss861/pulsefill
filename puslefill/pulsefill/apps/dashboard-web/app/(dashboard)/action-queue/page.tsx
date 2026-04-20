@@ -5,9 +5,16 @@ import { ActionQueueEmptyState } from "@/components/action-queue/action-queue-em
 import { ActionQueueItemCard } from "@/components/action-queue/action-queue-item-card";
 import { ActionQueueSection } from "@/components/action-queue/action-queue-section";
 import { ActionQueueSummaryBar } from "@/components/action-queue/action-queue-summary-bar";
+import { OperatorFilterBar } from "@/components/operator/operator-filter-bar";
+import { OperatorSavedViews } from "@/components/operator/operator-saved-views";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
 import { useActionQueue } from "@/hooks/useActionQueue";
-import type { ActionQueueFilter } from "@/types/action-queue";
+import { useOperatorFilterOptions } from "@/hooks/useOperatorFilterOptions";
+import { useOperatorFilters } from "@/hooks/useOperatorFilters";
+import { useOperatorRowAction } from "@/hooks/useOperatorRowAction";
+import { matchesOperatorFilters } from "@/lib/operator-filters";
+import { deriveQueueInlinePrimaryAction } from "@/lib/operator-primary-action";
+import type { ActionQueueFilter, ActionQueueItem } from "@/types/action-queue";
 
 const filterTabs: Array<{ id: ActionQueueFilter; label: string }> = [
   { id: "all", label: "All" },
@@ -18,8 +25,46 @@ const filterTabs: Array<{ id: ActionQueueFilter; label: string }> = [
 
 export default function ActionQueuePage() {
   const { data, loading, error, reload } = useActionQueue(15_000);
+  const rowAction = useOperatorRowAction(() => reload({ silent: true }));
   const [filter, setFilter] = useState<ActionQueueFilter>("all");
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
+  const opFilter = useOperatorFilters({
+    filtersStorageKey: "pf.operator.action-queue.filters",
+    viewsStorageKey: "pf.operator.action-queue.views",
+  });
+  const filterOptions = useOperatorFilterOptions();
+
+  const filteredSections = useMemo(() => {
+    if (!data) {
+      return { needs_action: [] as ActionQueueItem[], review: [] as ActionQueueItem[], resolved: [] as ActionQueueItem[] };
+    }
+    const f = opFilter.filters;
+    return {
+      needs_action: data.sections.needs_action.filter((i) => matchesOperatorFilters(i, f)),
+      review: data.sections.review.filter((i) => matchesOperatorFilters(i, f)),
+      resolved: data.sections.resolved.filter((i) => matchesOperatorFilters(i, f)),
+    };
+  }, [data, opFilter.filters]);
+
+  async function handleQueuePrimary(item: ActionQueueItem) {
+    const inline = deriveQueueInlinePrimaryAction(item);
+    if (!inline) return;
+
+    const successTitle =
+      inline.kind === "confirm_booking"
+        ? "Booking confirmed"
+        : inline.kind === "send_offers"
+          ? "Offers sent"
+          : "Offers retried";
+
+    await rowAction.run({
+      rowId: item.id,
+      kind: inline.kind,
+      openSlotId: item.open_slot_id,
+      claimId: inline.kind === "confirm_booking" ? inline.claimId : null,
+      successTitle,
+    });
+  }
 
   useEffect(() => {
     if (data && !loading) setRefreshedAt(new Date());
@@ -77,7 +122,7 @@ export default function ActionQueuePage() {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
         {filterTabs.map((t) => (
           <button
             key={t.id}
@@ -98,6 +143,33 @@ export default function ActionQueuePage() {
         ))}
       </div>
 
+      {data ? (
+        <div style={{ display: "grid", gap: 14, marginBottom: 20 }}>
+          {filterOptions.error ? (
+            <p style={{ color: "#f87171", fontSize: 13 }}>Filters: {filterOptions.error}</p>
+          ) : null}
+          {!filterOptions.loading ? (
+            <>
+              <OperatorFilterBar
+                filters={opFilter.filters}
+                onChange={opFilter.setFilters}
+                providers={filterOptions.providers}
+                locations={filterOptions.locations}
+                services={filterOptions.services}
+              />
+              <OperatorSavedViews
+                views={opFilter.views}
+                onApply={opFilter.setFilters}
+                onCreate={opFilter.createView}
+                onDelete={opFilter.deleteView}
+              />
+            </>
+          ) : (
+            <p style={{ color: "var(--muted)", fontSize: 13 }}>Loading filter options…</p>
+          )}
+        </div>
+      ) : null}
+
       {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
       {loading && !data ? <p style={{ color: "var(--muted)" }}>Loading action queue…</p> : null}
 
@@ -109,12 +181,19 @@ export default function ActionQueuePage() {
             <ActionQueueSection
               title="Needs action now"
               subtitle="Highest urgency — confirm claims, fix failed deliveries, retry offers."
-              count={data.sections.needs_action.length}
+              count={filteredSections.needs_action.length}
             >
-              {data.sections.needs_action.length === 0 ? (
+              {filteredSections.needs_action.length === 0 ? (
                 <ActionQueueEmptyState title="Nothing urgent right now" body="When claims stall or notifications fail, they will show up here." />
               ) : (
-                data.sections.needs_action.map((item) => <ActionQueueItemCard key={item.id} item={item} />)
+                filteredSections.needs_action.map((item) => (
+                  <ActionQueueItemCard
+                    key={item.id}
+                    item={item}
+                    busy={rowAction.busyId === item.id}
+                    onPrimaryAction={handleQueuePrimary}
+                  />
+                ))
               )}
             </ActionQueueSection>
           ) : null}
@@ -123,12 +202,19 @@ export default function ActionQueuePage() {
             <ActionQueueSection
               title="Watch / review"
               subtitle="Awareness items — no matches, active offers, recently expired slots."
-              count={data.sections.review.length}
+              count={filteredSections.review.length}
             >
-              {data.sections.review.length === 0 ? (
+              {filteredSections.review.length === 0 ? (
                 <ActionQueueEmptyState title="No items to review" body="Offers in flight and edge cases will land here." />
               ) : (
-                data.sections.review.map((item) => <ActionQueueItemCard key={item.id} item={item} />)
+                filteredSections.review.map((item) => (
+                  <ActionQueueItemCard
+                    key={item.id}
+                    item={item}
+                    busy={rowAction.busyId === item.id}
+                    onPrimaryAction={handleQueuePrimary}
+                  />
+                ))
               )}
             </ActionQueueSection>
           ) : null}
@@ -137,12 +223,12 @@ export default function ActionQueuePage() {
             <ActionQueueSection
               title="Recently resolved"
               subtitle="Bookings recovered in the last week (by slot created time)."
-              count={data.sections.resolved.length}
+              count={filteredSections.resolved.length}
             >
-              {data.sections.resolved.length === 0 ? (
+              {filteredSections.resolved.length === 0 ? (
                 <ActionQueueEmptyState title="No recent bookings yet" body="Confirmed slots will appear here as you recover cancellations." />
               ) : (
-                data.sections.resolved.map((item) => <ActionQueueItemCard key={item.id} item={item} />)
+                filteredSections.resolved.map((item) => <ActionQueueItemCard key={item.id} item={item} />)
               )}
             </ActionQueueSection>
           ) : null}

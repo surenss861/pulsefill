@@ -2,6 +2,7 @@ import SwiftUI
 
 struct OperatorActionQueueRow: View {
     let item: OperatorActionQueueItem
+    let isBusy: Bool
     let onPrimaryAction: (OperatorActionQueueItem) -> Void
     let onOpen: (OperatorActionQueueItem) -> Void
 
@@ -37,11 +38,12 @@ struct OperatorActionQueueRow: View {
 
             HStack(spacing: 10) {
                 if let primary = item.actions.first {
-                    Button(OperatorQueuePresenters.primaryActionTitle(primary)) {
+                    Button(isBusy ? "Working…" : primaryButtonTitle(primary: primary)) {
                         onPrimaryAction(item)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(PFColor.primaryDark)
+                    .disabled(isBusy)
                 }
 
                 Button("Open") {
@@ -57,6 +59,13 @@ struct OperatorActionQueueRow: View {
                 .stroke(OperatorQueuePresenters.severityColor(item.severity).opacity(0.2), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+    }
+
+    private func primaryButtonTitle(primary: OperatorQueueAction) -> String {
+        if let inline = OperatorPrimaryActionDeriver.queueInline(from: item) {
+            return inline.label
+        }
+        return OperatorQueuePresenters.primaryActionTitle(primary)
     }
 
     @ViewBuilder

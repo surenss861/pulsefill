@@ -6,7 +6,7 @@ final class AppEnvironment: ObservableObject {
     let sessionStore: SessionStore
     let apiClient: APIClient
     let authManager: AuthManager
-    let navigationRouter: AppFlowRouter
+    let customerNavigation: CustomerNavigationCoordinator
     let pushRegistrationManager: PushRegistrationManager
     let pushCoordinator: PushNotificationCoordinator
 
@@ -27,12 +27,12 @@ final class AppEnvironment: ObservableObject {
         let authClient = SupabaseAuthClient(supabaseURL: supabaseURL, anonKey: supabaseAnonKey)
         self.authManager = AuthManager(authClient: authClient, sessionStore: sessionStore, apiClient: api)
 
-        let navigationRouter = AppFlowRouter()
-        self.navigationRouter = navigationRouter
+        let customerNavigation = CustomerNavigationCoordinator()
+        self.customerNavigation = customerNavigation
         let pushRegistrationManager = PushRegistrationManager(apiClient: api)
         self.pushRegistrationManager = pushRegistrationManager
         self.pushCoordinator = PushNotificationCoordinator(
-            router: navigationRouter,
+            customerNavigation: customerNavigation,
             pushRegistration: pushRegistrationManager
         )
     }

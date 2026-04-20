@@ -84,6 +84,37 @@ final class APIClient {
     private func throwIfNeeded(data: Data, response: URLResponse) throws {
         guard let http = response as? HTTPURLResponse else { throw APIError.status(code: -1, body: nil) }
         guard (200 ..< 300).contains(http.statusCode) else {
+            if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                if let err = obj["error"] as? [String: Any] {
+                    let message = (err["message"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let code = err["code"] as? String
+                    let retryable = err["retryable"] as? Bool ?? false
+                    if let message, !message.isEmpty {
+                        throw APIError.structured(
+                            statusCode: http.statusCode,
+                            code: code,
+                            message: message,
+                            retryable: retryable
+                        )
+                    }
+                    if let code {
+                        throw APIError.structured(
+                            statusCode: http.statusCode,
+                            code: code,
+                            message: code,
+                            retryable: retryable
+                        )
+                    }
+                }
+                if let errStr = obj["error"] as? String, !errStr.isEmpty {
+                    throw APIError.structured(
+                        statusCode: http.statusCode,
+                        code: nil,
+                        message: errStr,
+                        retryable: false
+                    )
+                }
+            }
             throw APIError.status(code: http.statusCode, body: String(data: data, encoding: .utf8))
         }
     }

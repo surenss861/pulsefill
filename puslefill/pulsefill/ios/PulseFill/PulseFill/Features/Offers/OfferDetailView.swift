@@ -1,57 +1,83 @@
 import SwiftUI
 
+/// Canonical offer surface: loads `GET /v1/customers/me/offers/:id` for rich context + claim CTA.
 struct OfferDetailView: View {
     @EnvironmentObject private var env: AppEnvironment
-    let offer: OfferInboxItem
+    @State private var viewModel: OfferDetailViewModel
+
+    init(api: APIClient, offerId: String) {
+        _viewModel = State(initialValue: OfferDetailViewModel(api: api, offerId: offerId))
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: PFSpacing.md) {
-                PFTypography.title(offer.openSlot?.providerNameSnapshot ?? "Earlier appointment")
-                PFTypography.caption(dateLine)
-
-                if let cents = offer.openSlot?.estimatedValueCents {
-                    PFTypography.body(CurrencyFormatter.currency(cents: cents))
-                        .foregroundStyle(PFColor.primary)
+        Group {
+            switch viewModel.loadState {
+            case .idle, .loading:
+                VStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
                 }
 
-                PFTypography.caption("Channel: \(offer.channel.capitalized)")
-                PFTypography.caption("Status: \(offer.status.capitalized)")
-
-                if let exp = offer.expiresAt {
-                    PFTypography.caption("Expires: \(DateFormatterPF.medium(exp))")
-                }
-
-                if let notes = offer.openSlot?.notes, !notes.isEmpty {
-                    PFSurfaceCard {
-                        VStack(alignment: .leading, spacing: PFSpacing.sm) {
-                            Text("Notes").font(.system(size: 13, weight: .semibold))
-                            Text(notes).font(.system(size: 15))
-                        }
+            case let .failed(message):
+                VStack(spacing: 12) {
+                    Spacer()
+                    PFTypography.section("Couldn’t load this offer")
+                    PFTypography.caption(message)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                    Button("Retry") {
+                        Task { await viewModel.load() }
                     }
+                    .buttonStyle(PFPrimaryButtonStyle())
+                    .padding(.horizontal, 24)
+                    Spacer()
                 }
 
-                let canClaim = offer.status.lowercased() == "sent" || offer.status.lowercased() == "delivered"
-                    || offer.status.lowercased() == "viewed"
-
-                NavigationLink {
-                    ClaimSlotView(openSlotId: offer.openSlotId)
-                } label: {
-                    Text("Claim this slot")
-                        .frame(maxWidth: .infinity)
+            case .loaded:
+                if let offer = viewModel.offer {
+                    offerContent(offer)
                 }
-                .buttonStyle(PFPrimaryButtonStyle())
-                .disabled(!canClaim)
             }
-            .padding(PFSpacing.lg)
         }
         .background(PFColor.background.ignoresSafeArea())
         .navigationTitle("Offer")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await viewModel.load()
+        }
+        .refreshable {
+            await viewModel.refresh()
+        }
     }
 
-    private var dateLine: String {
-        guard let slot = offer.openSlot else { return "Pending details" }
-        return "\(DateFormatterPF.medium(slot.startsAt)) • \(DateFormatterPF.time(slot.startsAt))–\(DateFormatterPF.time(slot.endsAt))"
+    @ViewBuilder
+    private func offerContent(_ offer: CustomerOfferDetail) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                OfferHeroCard(offer: offer)
+                OfferExpiryCard(expiresAtIso: offer.expiresAt)
+                OfferMatchReasonCard(offer: offer)
+                OfferClaimConfidenceCard(guidance: offer.claimGuidance)
+
+                if let slotId = offer.openSlotId, !slotId.isEmpty {
+                    NavigationLink {
+                        ClaimSlotView(openSlotId: slotId)
+                    } label: {
+                        Text(viewModel.isExpired ? "Offer expired" : "Claim now")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PFPrimaryButtonStyle())
+                    .disabled(!viewModel.canClaim)
+                    .padding(.top, 4)
+                }
+
+                Text("You’ll see what happens next right after you claim.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(PFColor.textSecondary)
+            }
+            .padding(20)
+            .padding(.bottom, 28)
+        }
     }
 }

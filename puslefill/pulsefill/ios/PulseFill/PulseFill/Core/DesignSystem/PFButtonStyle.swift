@@ -12,3 +12,9 @@ struct PFPrimaryButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
     }
 }
+
+extension View {
+    func pfPrimaryButtonStyle() -> some View {
+        buttonStyle(PFPrimaryButtonStyle())
+    }
+}

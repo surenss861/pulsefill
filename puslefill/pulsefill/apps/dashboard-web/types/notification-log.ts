@@ -5,6 +5,7 @@ export type NotificationLogRow = {
   slot_offer_id?: string | null;
   channel: string;
   status: string;
+  error?: string | null;
   metadata?: Record<string, unknown> | null;
   created_at: string;
 };

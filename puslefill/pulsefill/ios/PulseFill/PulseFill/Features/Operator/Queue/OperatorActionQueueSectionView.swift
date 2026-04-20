@@ -3,6 +3,7 @@ import SwiftUI
 struct OperatorActionQueueSectionView: View {
     let title: String
     let items: [OperatorActionQueueItem]
+    let performingItemId: String?
     let onPrimaryAction: (OperatorActionQueueItem) -> Void
     let onOpen: (OperatorActionQueueItem) -> Void
 
@@ -28,6 +29,7 @@ struct OperatorActionQueueSectionView: View {
                     ForEach(items) { item in
                         OperatorActionQueueRow(
                             item: item,
+                            isBusy: performingItemId == item.id,
                             onPrimaryAction: onPrimaryAction,
                             onOpen: onOpen
                         )

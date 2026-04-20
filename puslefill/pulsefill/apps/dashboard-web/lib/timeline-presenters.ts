@@ -4,11 +4,13 @@ const MILESTONE_TYPES = new Set([
   "open_slot_created",
   "slot_created",
   "offers_sent",
+  "offers_no_match",
   "claim_won",
   "slot_confirmed",
   "slot_cancelled",
   "slot_expired",
   "slot_reopened",
+  "operator_internal_note_updated",
 ]);
 
 const NOISE_TYPES = new Set(["notification_delivered", "notification_failed"]);
@@ -28,6 +30,8 @@ export function labelForTimelineEvent(eventType: string): string {
       return "Slot created";
     case "offers_sent":
       return "Offers sent to standby customers";
+    case "offers_no_match":
+      return "No matching standby customers";
     case "slot_reopened":
       return "Slot reopened";
     case "slot_expired":
@@ -42,14 +46,22 @@ export function labelForTimelineEvent(eventType: string): string {
       return "Push / notification delivered";
     case "notification_failed":
       return "Notification delivery failed";
+    case "operator_internal_note_updated":
+      return "Internal note updated";
     default:
       return eventType.replace(/_/g, " ");
   }
 }
 
-export function formatActorLine(actorType: string, actorId?: string | null): string {
+export function formatActorLine(
+  actorType: string,
+  actorId?: string | null,
+  actorLabel?: string | null,
+): string {
+  const trimmed = actorLabel?.trim();
+  if (trimmed) return trimmed;
   const t = actorType.toLowerCase();
-  if (t === "staff") return "Staff action";
+  if (t === "staff") return actorId ? `Staff · ${String(actorId).slice(0, 8)}…` : "Staff";
   if (t === "system") return "System";
   if (t === "customer") return "Customer";
   if (actorId) return `${actorType} · ${String(actorId).slice(0, 8)}…`;

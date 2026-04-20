@@ -3,6 +3,11 @@ import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
 import { requireStaff } from "../../plugins/guards.js";
 import { buildActionQueue } from "./action-queue.js";
+import { buildDailyOpsSummary } from "./daily-ops-summary.js";
+import { buildDeliveryReliability } from "./delivery-reliability.js";
+import { buildOpsBreakdown } from "./ops-breakdown.js";
+import { buildMorningRecoveryDigest } from "./morning-recovery-digest.js";
+import { buildOperatorCustomerContext } from "./operator-customer-context.js";
 
 const patchBody = z
   .object({
@@ -101,6 +106,89 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
       } catch (e) {
         req.log.error({ e }, "action_queue_failed");
         return reply.status(500).send({ error: "action_queue_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/morning-recovery-digest",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = await buildMorningRecoveryDigest(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "morning_recovery_digest_failed");
+        return reply.status(500).send({ error: "morning_recovery_digest_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/daily-ops-summary",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = await buildDailyOpsSummary(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "daily_ops_summary_failed");
+        return reply.status(500).send({ error: "daily_ops_summary_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/ops-breakdown",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = await buildOpsBreakdown(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "ops_breakdown_failed");
+        return reply.status(500).send({ error: "ops_breakdown_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/delivery-reliability",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = await buildDeliveryReliability(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "delivery_reliability_failed");
+        return reply.status(500).send({ error: "delivery_reliability_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/customers/:customerId/context",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const customerId = z.string().uuid().parse((req.params as { customerId?: string }).customerId);
+
+      try {
+        const result = await buildOperatorCustomerContext(admin, req.staff!.business_id, customerId);
+        if ("error" in result) {
+          if (result.error === "not_found") {
+            return reply.status(404).send({ error: "customer_not_found" });
+          }
+          return reply.status(403).send({ error: "customer_context_forbidden" });
+        }
+        return reply.send(result);
+      } catch (e) {
+        req.log.error({ e }, "operator_customer_context_failed");
+        return reply.status(500).send({ error: "operator_customer_context_failed" });
       }
     },
   );

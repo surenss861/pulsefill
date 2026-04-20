@@ -29,6 +29,9 @@ struct OperatorActionQueueItem: Codable, Identifiable, Hashable {
     let detail: String?
     let openSlotId: String
     let slotStatus: String?
+    let providerId: String?
+    let locationId: String?
+    let serviceId: String?
     let providerName: String?
     let serviceName: String?
     let locationName: String?
@@ -42,7 +45,7 @@ struct OperatorActionQueueItem: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, kind, severity, headline
         case detail = "description"
-        case openSlotId, slotStatus, providerName, serviceName, locationName
+        case openSlotId, slotStatus, providerId, locationId, serviceId, providerName, serviceName, locationName
         case customerLabel, claimId, startsAt, endsAt, createdAt, actions
     }
 
@@ -55,6 +58,9 @@ struct OperatorActionQueueItem: Codable, Identifiable, Hashable {
         detail = try c.decodeIfPresent(String.self, forKey: .detail)
         openSlotId = try c.decode(String.self, forKey: .openSlotId)
         slotStatus = try c.decodeIfPresent(String.self, forKey: .slotStatus)
+        providerId = try c.decodeIfPresent(String.self, forKey: .providerId)
+        locationId = try c.decodeIfPresent(String.self, forKey: .locationId)
+        serviceId = try c.decodeIfPresent(String.self, forKey: .serviceId)
         providerName = try c.decodeIfPresent(String.self, forKey: .providerName)
         serviceName = try c.decodeIfPresent(String.self, forKey: .serviceName)
         locationName = try c.decodeIfPresent(String.self, forKey: .locationName)
@@ -75,6 +81,9 @@ struct OperatorActionQueueItem: Codable, Identifiable, Hashable {
         try c.encodeIfPresent(detail, forKey: .detail)
         try c.encode(openSlotId, forKey: .openSlotId)
         try c.encodeIfPresent(slotStatus, forKey: .slotStatus)
+        try c.encodeIfPresent(providerId, forKey: .providerId)
+        try c.encodeIfPresent(locationId, forKey: .locationId)
+        try c.encodeIfPresent(serviceId, forKey: .serviceId)
         try c.encodeIfPresent(providerName, forKey: .providerName)
         try c.encodeIfPresent(serviceName, forKey: .serviceName)
         try c.encodeIfPresent(locationName, forKey: .locationName)

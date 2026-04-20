@@ -21,6 +21,9 @@ export type ActionQueueItem = {
   description: string;
   open_slot_id: string;
   slot_status: string;
+  provider_id: string | null;
+  location_id: string | null;
+  service_id: string | null;
   provider_name: string | null;
   service_name: string | null;
   location_name: string | null;
@@ -75,6 +78,14 @@ function pickJoinedName(rel: unknown): string | null {
     return n || null;
   }
   return null;
+}
+
+function slotDimensions(s: SlotRow) {
+  return {
+    provider_id: s.provider_id ?? null,
+    location_id: s.location_id ?? null,
+    service_id: s.service_id ?? null,
+  };
 }
 
 function shortId(id: string): string {
@@ -262,6 +273,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
       description: "A customer claimed this opening. Confirm to finalize the slot.",
       open_slot_id: s.id,
       slot_status: s.status,
+      ...slotDimensions(s),
       provider_name: providerLabel(s),
       service_name: serviceLabel(s),
       location_name: locationLabel(s),
@@ -290,6 +302,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
         : "At least one offer notification failed. Inspect logs and retry if needed.",
       open_slot_id: s.id,
       slot_status: s.status,
+      ...slotDimensions(s),
       provider_name: providerLabel(s),
       service_name: serviceLabel(s),
       location_name: locationLabel(s),
@@ -318,6 +331,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
       description: "One or more offers failed. Open the slot to resend or adjust.",
       open_slot_id: s.id,
       slot_status: s.status,
+      ...slotDimensions(s),
       provider_name: providerLabel(s),
       service_name: serviceLabel(s),
       location_name: locationLabel(s),
@@ -353,6 +367,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
       description: "Last send found zero matching customers. Widen standby or adjust the slot.",
       open_slot_id: s.id,
       slot_status: s.status,
+      ...slotDimensions(s),
       provider_name: providerLabel(s),
       service_name: serviceLabel(s),
       location_name: locationLabel(s),
@@ -383,6 +398,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
       description: "Customers have active offers for this slot. Watch for claims.",
       open_slot_id: s.id,
       slot_status: s.status,
+      ...slotDimensions(s),
       provider_name: providerLabel(s),
       service_name: serviceLabel(s),
       location_name: locationLabel(s),
@@ -406,6 +422,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
       description: "This opening closed without a booking. Review if you want to recreate.",
       open_slot_id: s.id,
       slot_status: s.status,
+      ...slotDimensions(s),
       provider_name: providerLabel(s),
       service_name: serviceLabel(s),
       location_name: locationLabel(s),
@@ -429,6 +446,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
       description: "This slot was confirmed and marked booked.",
       open_slot_id: s.id,
       slot_status: s.status,
+      ...slotDimensions(s),
       provider_name: providerLabel(s),
       service_name: serviceLabel(s),
       location_name: locationLabel(s),

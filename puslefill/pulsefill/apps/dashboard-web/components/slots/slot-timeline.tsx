@@ -113,7 +113,7 @@ export function SlotTimeline({ events }: { events: SlotTimelineEvent[] }) {
                         {formatDate(event.created_at)} · {formatRelativeTime(event.created_at)}
                       </p>
                       <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--muted)" }}>
-                        {formatActorLine(event.actor_type, event.actor_id)}
+                        {formatActorLine(event.actor_type, event.actor_id, event.actor_label)}
                       </p>
                       {metaLine ? (
                         <p style={{ margin: "8px 0 0", fontSize: 13, color: "rgba(255,255,255,0.82)" }}>{metaLine}</p>

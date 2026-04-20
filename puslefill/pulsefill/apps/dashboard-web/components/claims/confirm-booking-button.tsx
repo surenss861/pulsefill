@@ -20,16 +20,19 @@ export function ConfirmBookingButton({ openSlotId, claimId, onConfirmed }: Props
     try {
       setLoading(true);
       setError(null);
-      await apiFetch<{ ok: boolean }>(`/v1/open-slots/${openSlotId}/confirm`, {
+      const res = await apiFetch<{ ok: boolean; message?: string }>(`/v1/open-slots/${openSlotId}/confirm`, {
         method: "POST",
         body: JSON.stringify({ claim_id: claimId }),
       });
-      showToast({ title: "Booking confirmed successfully.", tone: "success" });
+      showToast({
+        title: res.message?.trim() || "Booking confirmed.",
+        tone: "success",
+      });
       onConfirmed?.();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to confirm booking";
       setError(message);
-      showToast({ title: "This slot changed before confirmation.", tone: "error" });
+      showToast({ title: message, tone: "error" });
     } finally {
       setLoading(false);
     }

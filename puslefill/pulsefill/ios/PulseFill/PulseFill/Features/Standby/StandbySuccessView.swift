@@ -16,12 +16,12 @@ struct StandbySuccessView: View {
                 .font(.system(size: 52, weight: .semibold))
                 .foregroundStyle(PFColor.success)
 
-            Text("You’re on standby now")
+            Text(StandbyOnboardingCopy.Preference.successTitle)
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundStyle(PFColor.textPrimary)
                 .multilineTextAlignment(.center)
 
-            Text("We’ll notify you when an earlier opening matches what you saved. Claim quickly — the first valid claim wins.")
+            Text(StandbyOnboardingCopy.Preference.successBody)
                 .font(.system(size: 17, weight: .regular))
                 .foregroundStyle(PFColor.textSecondary)
                 .multilineTextAlignment(.center)
@@ -54,7 +54,7 @@ struct StandbySuccessView: View {
 
             Spacer(minLength: 24)
 
-            PrimaryCTAButton(title: "Done") {
+            PrimaryCTAButton(title: StandbyOnboardingCopy.Preference.successPrimaryCTA) {
                 onDone()
             }
             .padding(.horizontal, PFSpacing.lg)

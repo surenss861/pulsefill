@@ -18,8 +18,10 @@ export function useActionQueue(pollMs = 15_000) {
       const res = await apiFetch<ActionQueueResponse>("/v1/businesses/mine/action-queue");
       setData(res);
     } catch (err) {
-      if (!silent) setError(err instanceof Error ? err.message : "Failed to load action queue");
-      setData(null);
+      if (!silent) {
+        setError(err instanceof Error ? err.message : "Failed to load action queue");
+        setData(null);
+      }
     } finally {
       if (!silent) setLoading(false);
     }
@@ -35,7 +37,10 @@ export function useActionQueue(pollMs = 15_000) {
     return () => clearInterval(id);
   }, [load, pollMs]);
 
-  const reload = useCallback(() => load(false), [load]);
+  const reload = useCallback(
+    (opts?: { silent?: boolean }) => load(opts?.silent ?? false),
+    [load],
+  );
 
   return { data, loading, error, reload };
 }

@@ -1,9 +1,16 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { sendActionError, sendConfirmSuccess, sendSendOffersSuccess } from "../../lib/action-replies.js";
 import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
 import { filterMatchingPreferences, type OpenSlotRow, type StandbyPreferenceRow } from "../../lib/standby-matcher.js";
 import { requireCustomer, requireStaff } from "../../plugins/guards.js";
+import { executeBulkOpenSlotAction } from "./bulk-actions.js";
+import {
+  loadStaffActorLabels,
+  mergeMetadata,
+  touchOpenSlotByStaff,
+} from "./staff-attribution.js";
 
 const createSlotBody = z
   .object({
@@ -34,6 +41,29 @@ const confirmBody = z
 const claimBody = z
   .object({
     deposit_payment_intent_id: z.string().optional(),
+  })
+  .strict();
+
+const RESOLUTION_STATUSES = [
+  "none",
+  "handled_manually",
+  "no_retry_needed",
+  "customer_contacted",
+  "provider_unavailable",
+  "ignore",
+] as const;
+
+const patchInternalNoteBody = z
+  .object({
+    resolution_status: z.enum(RESOLUTION_STATUSES),
+    internal_note: z.string().max(5000).nullable().optional(),
+  })
+  .strict();
+
+const bulkActionBody = z
+  .object({
+    action: z.enum(["retry_offers", "expire"]),
+    open_slot_ids: z.array(z.string().uuid()).min(1).max(50),
   })
   .strict();
 
@@ -89,6 +119,28 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
   app.get("/v1/open-slots", { preHandler: requireStaff }, listOpenSlots);
   app.get("/v1/open-slots/mine", { preHandler: requireStaff }, listOpenSlots);
 
+  app.post(
+    "/v1/open-slots/bulk-action",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const parsed = bulkActionBody.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: { code: "invalid_request", message: "Invalid bulk action payload.", retryable: false },
+        });
+      }
+      const admin = createServiceSupabase(req.server.env);
+      const out = await executeBulkOpenSlotAction(admin, req.server.env, {
+        businessId: req.staff!.business_id,
+        staffId: req.staff!.id,
+        authUserId: req.authUser!.id,
+        action: parsed.data.action,
+        openSlotIds: parsed.data.open_slot_ids,
+      });
+      return reply.send(out);
+    },
+  );
+
   app.get(
     "/v1/open-slots/:id/timeline",
     { preHandler: requireStaff },
@@ -111,7 +163,36 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         return reply.status(500).send({ error: "timeline_failed" });
       }
 
-      return reply.send({ events: data ?? [] });
+      const raw = (data ?? []) as Array<{
+        id: string;
+        actor_type: string;
+        actor_id: string | null;
+        event_type: string;
+        entity_type: string;
+        entity_id: string | null;
+        metadata: Record<string, unknown>;
+        created_at: string;
+      }>;
+
+      const staffIds = raw
+        .filter((e) => e.actor_type === "staff" && e.actor_id)
+        .map((e) => e.actor_id as string);
+      const labels = await loadStaffActorLabels(admin, req.staff!.business_id, staffIds);
+
+      const events = raw.map((e) => {
+        let actor_label: string | null = null;
+        if (e.actor_type === "staff" && e.actor_id) {
+          actor_label = labels.get(e.actor_id) ?? "Staff";
+        } else if (e.actor_type === "customer") {
+          actor_label = "Customer";
+        } else if (e.actor_type === "system") {
+          actor_label = "System";
+        }
+
+        return { ...e, actor_label };
+      });
+
+      return reply.send({ events });
     },
   );
 
@@ -127,7 +208,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       const { data, error } = await admin
         .from("notification_logs")
-        .select("id, customer_id, open_slot_id, slot_offer_id, channel, status, metadata, created_at")
+        .select("id, customer_id, open_slot_id, slot_offer_id, channel, status, error, metadata, created_at")
         .eq("open_slot_id", slotId)
         .order("created_at", { ascending: false });
 
@@ -170,8 +251,10 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         event_type: "open_slot_created",
         entity_type: "open_slot",
         entity_id: data.id,
-        metadata: {},
+        metadata: mergeMetadata({}, req.authUser!.id),
       });
+
+      await touchOpenSlotByStaff(admin, data.id, req.staff!.id);
 
       return reply.status(201).send(data);
     },
@@ -190,17 +273,18 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const { data, error } = await admin
         .from("open_slots")
         .select(
-          "*, slot_offers(id, customer_id, channel, status, sent_at, expires_at), slot_claims(id, customer_id, claimed_at, status)",
+          "*, slot_offers(id, customer_id, channel, status, sent_at, expires_at), slot_claims(id, customer_id, claimed_at, status), last_touched_staff:staff_users!last_touched_by_staff_id(id, full_name, email)",
         )
         .eq("id", id)
         .single();
       if (error) return reply.status(500).send({ error: "load_failed" });
       const row = data as Record<string, unknown>;
-      const { slot_claims: claims, ...slotRest } = row;
+      const { slot_claims: claims, last_touched_staff: lastTouchedStaff, ...slotRest } = row;
       return reply.send({
         slot: {
           ...slotRest,
           winning_claim: pickWinningClaim(claims),
+          last_touched_by: lastTouchedStaff ?? null,
         },
       });
     },
@@ -233,13 +317,65 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const opts = sendOffersBody.parse(req.body ?? {});
 
       const ok = await assertSlotInBusiness(admin, id, req.staff!.business_id);
-      if (!ok) return reply.status(404).send({ error: "not_found" });
+      if (!ok) {
+        return sendActionError(reply, 404, "not_found", "This opening no longer exists.", false);
+      }
 
       const { data: slot, error: slotErr } = await admin.from("open_slots").select("*").eq("id", id).single();
-      if (slotErr || !slot) return reply.status(500).send({ error: "slot_load_failed" });
+      if (slotErr || !slot) {
+        req.log.error({ slotErr }, "slot load failed");
+        return sendActionError(reply, 404, "not_found", "This opening no longer exists.", false);
+      }
 
-      if (!["open", "offered"].includes(slot.status as string)) {
-        return reply.status(409).send({ error: "slot_not_sendable", status: slot.status });
+      const status = String(slot.status ?? "");
+      const previousStatus = status;
+
+      if (status === "claimed") {
+        return sendActionError(
+          reply,
+          409,
+          "slot_already_claimed",
+          "This opening already has a claimant and can’t be re-offered.",
+          false,
+        );
+      }
+      if (status === "booked") {
+        return sendActionError(
+          reply,
+          409,
+          "slot_already_booked",
+          "This opening has already been confirmed.",
+          false,
+        );
+      }
+      if (status === "expired") {
+        return sendActionError(
+          reply,
+          409,
+          "slot_expired",
+          "This opening has expired and can no longer send offers.",
+          false,
+        );
+      }
+      if (status === "cancelled") {
+        return sendActionError(
+          reply,
+          409,
+          "slot_cancelled",
+          "This opening was cancelled and can no longer send offers.",
+          false,
+        );
+      }
+
+      if (status !== "open" && status !== "offered") {
+        return sendActionError(
+          reply,
+          409,
+          "invalid_request",
+          "This opening cannot send offers in its current state.",
+          false,
+          { current_status: status },
+        );
       }
 
       const { data: business, error: bizErr } = await admin
@@ -274,14 +410,18 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           event_type: "offers_no_match",
           entity_type: "open_slot",
           entity_id: id,
-          metadata: { matched: 0 },
+          metadata: mergeMetadata({ matched: 0 }, req.authUser!.id),
         });
 
-        return reply.send({
+        await touchOpenSlotByStaff(admin, id, req.staff!.id);
+
+        return sendSendOffersSuccess(reply, {
           ok: true,
+          result: "no_matches",
+          open_slot_id: id,
           matched: 0,
-          offers: [],
-          message: "No matching standby customers yet. Add or widen standby preferences for customers.",
+          offer_ids: [],
+          message: "No matching standby customers were found.",
         });
       }
 
@@ -339,19 +479,28 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         event_type: "offers_sent",
         entity_type: "open_slot",
         entity_id: id,
-        metadata: { count: offerIds.length, queued: queued.queued },
+        metadata: mergeMetadata({ count: offerIds.length, queued: queued.queued }, req.authUser!.id),
       });
 
+      await touchOpenSlotByStaff(admin, id, req.staff!.id);
+
       const count = offerIds.length;
-      return reply.send({
+      const resultKind = previousStatus === "open" ? "offers_sent" : "offers_retried";
+      const message =
+        count === 0
+          ? "No new offers created (all customers may already have an offer for this slot)."
+          : resultKind === "offers_sent"
+            ? `Sent ${count} offer${count === 1 ? "" : "s"}.`
+            : `Retried ${count} offer${count === 1 ? "" : "s"}.`;
+
+      return sendSendOffersSuccess(reply, {
         ok: true,
-        matched: uniqueMatches.length,
+        result: resultKind,
+        open_slot_id: id,
+        matched: count,
         offer_ids: offerIds,
-        notification_queue: queued,
-        message:
-          count === 0
-            ? "No new offers created (all customers may already have an offer for this slot)."
-            : `Sent ${count} offer${count === 1 ? "" : "s"}.`,
+        message,
+        notification_queue: { queued: queued.queued, count: queued.count },
       });
     },
   );
@@ -399,10 +548,89 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const slotId = z.string().uuid().parse((req.params as { id?: string }).id);
-      const body = confirmBody.parse(req.body ?? {});
+      const parsed = confirmBody.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return sendActionError(reply, 400, "invalid_request", "A valid claim ID is required.", false);
+      }
+      const body = parsed.data;
 
       const ok = await assertSlotInBusiness(admin, slotId, req.staff!.business_id);
-      if (!ok) return reply.status(404).send({ error: "not_found" });
+      if (!ok) {
+        return sendActionError(reply, 404, "not_found", "This opening or claim no longer exists.", false);
+      }
+
+      const { data: slotRow, error: slotLoadErr } = await admin
+        .from("open_slots")
+        .select("id, status")
+        .eq("id", slotId)
+        .maybeSingle();
+
+      if (slotLoadErr || !slotRow) {
+        return sendActionError(reply, 404, "not_found", "This opening or claim no longer exists.", false);
+      }
+
+      const st = String((slotRow as { status: string }).status);
+
+      if (st === "booked") {
+        const { data: claimRow } = await admin
+          .from("slot_claims")
+          .select("id, status, open_slot_id")
+          .eq("id", body.claim_id)
+          .maybeSingle();
+
+        if (!claimRow || (claimRow as { open_slot_id: string }).open_slot_id !== slotId) {
+          return sendActionError(
+            reply,
+            404,
+            "not_found",
+            "This opening or claim no longer exists.",
+            false,
+          );
+        }
+
+        const cst = String((claimRow as { status: string }).status);
+        if (cst === "confirmed") {
+          return sendConfirmSuccess(reply, {
+            ok: true,
+            result: "already_confirmed",
+            open_slot_id: slotId,
+            claim_id: body.claim_id,
+            status: "booked",
+            message: "This booking was already confirmed.",
+          });
+        }
+
+        return sendActionError(
+          reply,
+          409,
+          "slot_terminal_state",
+          "This opening can no longer be confirmed.",
+          false,
+          { current_status: st },
+        );
+      }
+
+      if (st === "expired" || st === "cancelled") {
+        return sendActionError(
+          reply,
+          409,
+          "slot_terminal_state",
+          "This opening can no longer be confirmed.",
+          false,
+          { current_status: st },
+        );
+      }
+
+      if (st !== "claimed") {
+        return sendActionError(
+          reply,
+          409,
+          "slot_not_claimed",
+          "This opening is no longer awaiting confirmation.",
+          false,
+          { current_status: st },
+        );
+      }
 
       const { data, error } = await admin.rpc("confirm_open_slot_claim", {
         p_open_slot_id: slotId,
@@ -412,15 +640,89 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "confirm rpc failed");
-        return reply.status(500).send({ error: "confirm_failed" });
+        return sendActionError(
+          reply,
+          500,
+          "server_error",
+          "Could not confirm this booking. Try again.",
+          true,
+        );
       }
 
-      const result = data as { ok?: boolean; error?: string };
+      const result = data as { ok?: boolean; error?: string; status?: string };
       if (!result?.ok) {
-        return reply.status(409).send({ error: result?.error ?? "confirm_rejected" });
+        const err = result?.error ?? "";
+        if (err === "forbidden") {
+          return sendActionError(
+            reply,
+            403,
+            "forbidden",
+            "You do not have access to confirm this opening.",
+            false,
+          );
+        }
+        if (err === "slot_not_found") {
+          return sendActionError(reply, 404, "not_found", "This opening or claim no longer exists.", false);
+        }
+        if (err === "slot_not_claimed") {
+          const cs = result.status ? String(result.status) : undefined;
+          if (cs === "expired" || cs === "cancelled") {
+            return sendActionError(
+              reply,
+              409,
+              "slot_terminal_state",
+              "This opening can no longer be confirmed.",
+              false,
+              { current_status: cs },
+            );
+          }
+          return sendActionError(
+            reply,
+            409,
+            "slot_not_claimed",
+            "This opening is no longer awaiting confirmation.",
+            false,
+            cs ? { current_status: cs } : undefined,
+          );
+        }
+        if (err === "claim_not_found" || err === "claim_not_won") {
+          return sendActionError(
+            reply,
+            409,
+            "claim_mismatch",
+            "That claim no longer matches this opening.",
+            false,
+          );
+        }
+        return sendActionError(
+          reply,
+          409,
+          "slot_terminal_state",
+          "This opening can no longer be confirmed.",
+          false,
+        );
       }
 
-      return reply.send({ ok: true });
+      await admin.from("audit_events").insert({
+        business_id: req.staff!.business_id,
+        actor_type: "staff",
+        actor_id: req.staff!.id,
+        event_type: "slot_confirmed",
+        entity_type: "open_slot",
+        entity_id: slotId,
+        metadata: mergeMetadata({ claim_id: body.claim_id }, req.authUser!.id),
+      });
+
+      await touchOpenSlotByStaff(admin, slotId, req.staff!.id);
+
+      return sendConfirmSuccess(reply, {
+        ok: true,
+        result: "confirmed",
+        open_slot_id: slotId,
+        claim_id: body.claim_id,
+        status: "booked",
+        message: "Booking confirmed.",
+      });
     },
   );
 
@@ -442,7 +744,91 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       if (error) return reply.status(500).send({ error: "cancel_failed" });
       const result = data as { ok?: boolean; error?: string };
       if (!result?.ok) return reply.status(409).send({ error: result?.error ?? "cancel_rejected" });
+
+      await admin.from("audit_events").insert({
+        business_id: req.staff!.business_id,
+        actor_type: "staff",
+        actor_id: req.staff!.id,
+        event_type: "slot_cancelled",
+        entity_type: "open_slot",
+        entity_id: id,
+        metadata: mergeMetadata({ source: "staff_action" }, req.authUser!.id),
+      });
+      await touchOpenSlotByStaff(admin, id, req.staff!.id);
+
       return reply.send({ ok: true });
+    },
+  );
+
+  app.patch(
+    "/v1/open-slots/:id/internal-note",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const id = z.string().uuid().parse((req.params as { id?: string }).id);
+      const body = patchInternalNoteBody.safeParse(req.body ?? {});
+      if (!body.success) {
+        return reply.status(400).send({
+          error: { code: "invalid_request", message: "Invalid internal note payload.", retryable: false },
+        });
+      }
+
+      const ok = await assertSlotInBusiness(admin, id, req.staff!.business_id);
+      if (!ok) {
+        return reply.status(404).send({
+          error: { code: "not_found", message: "This opening no longer exists.", retryable: false },
+        });
+      }
+
+      const patch: Record<string, unknown> = {
+        resolution_status: body.data.resolution_status,
+        internal_note_updated_at: new Date().toISOString(),
+      };
+      if (body.data.internal_note !== undefined) {
+        const v = body.data.internal_note;
+        patch.internal_note = v == null || v.trim() === "" ? null : v.trim();
+      }
+
+      const { data: updated, error: updErr } = await admin
+        .from("open_slots")
+        .update(patch)
+        .eq("id", id)
+        .select("internal_note, resolution_status, internal_note_updated_at")
+        .single();
+
+      if (updErr || !updated) {
+        req.log.error({ updErr }, "internal note update failed");
+        return reply.status(500).send({
+          error: { code: "server_error", message: "Could not save internal note.", retryable: true },
+        });
+      }
+
+      const row = updated as {
+        internal_note: string | null;
+        resolution_status: string;
+        internal_note_updated_at: string | null;
+      };
+
+      await touchOpenSlotByStaff(admin, id, req.staff!.id);
+
+      await admin.from("audit_events").insert({
+        business_id: req.staff!.business_id,
+        actor_type: "staff",
+        actor_id: req.staff!.id,
+        event_type: "operator_internal_note_updated",
+        entity_type: "open_slot",
+        entity_id: id,
+        metadata: mergeMetadata({ resolution_status: row.resolution_status }, req.authUser!.id),
+      });
+
+      return reply.send({
+        ok: true,
+        open_slot_id: id,
+        internal_note: row.internal_note,
+        resolution_status: row.resolution_status,
+        internal_note_updated_at: row.internal_note_updated_at,
+        message: "Internal note saved.",
+      });
     },
   );
 
@@ -464,6 +850,18 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       if (error) return reply.status(500).send({ error: "expire_failed" });
       const result = data as { ok?: boolean; error?: string };
       if (!result?.ok) return reply.status(409).send({ error: result?.error ?? "expire_rejected" });
+
+      await admin.from("audit_events").insert({
+        business_id: req.staff!.business_id,
+        actor_type: "staff",
+        actor_id: req.staff!.id,
+        event_type: "slot_expired",
+        entity_type: "open_slot",
+        entity_id: id,
+        metadata: mergeMetadata({ source: "staff_action" }, req.authUser!.id),
+      });
+      await touchOpenSlotByStaff(admin, id, req.staff!.id);
+
       return reply.send({ ok: true });
     },
   );

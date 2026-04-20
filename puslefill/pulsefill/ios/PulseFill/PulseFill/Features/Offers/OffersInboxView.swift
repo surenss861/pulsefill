@@ -50,23 +50,19 @@ struct OffersInboxView: View {
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationDestination(for: String.self) { id in
-                if let offer = offers.first(where: { $0.id == id }) {
-                    OfferDetailView(offer: offer)
-                } else {
-                    EmptyStateView(
-                        title: "Offer not found",
-                        message: "Pull to refresh if this offer was just created.",
-                        actionTitle: "Refresh",
-                        action: { Task { await load() } }
-                    )
-                }
+                OfferDetailView(api: env.apiClient, offerId: id)
             }
             .task {
                 await load()
-                await handlePendingDestination()
+                await handlePendingOfferRouting()
             }
-            .onChange(of: env.navigationRouter.pendingDestination) { _, _ in
-                Task { await handlePendingDestination() }
+            .onChange(of: env.customerNavigation.pendingOfferRouting) { _, _ in
+                Task { await handlePendingOfferRouting() }
+            }
+            .onChange(of: env.customerNavigation.selectedTab) { _, tab in
+                if tab == .offers {
+                    Task { await handlePendingOfferRouting() }
+                }
             }
         }
     }
@@ -88,25 +84,28 @@ struct OffersInboxView: View {
         }
     }
 
-    private func handlePendingDestination() async {
-        guard let pending = env.navigationRouter.pendingDestination else { return }
-
-        switch pending {
-        case .offersInbox:
-            env.navigationRouter.clearPendingDestination()
-        case let .offerDetail(offerId, openSlotId):
-            if offers.isEmpty {
-                await load()
-            }
-            if let offerId,
-               let matched = offers.first(where: { $0.id == offerId }) {
-                navigationPath.append(matched.id)
-            } else if let openSlotId,
-                      let matched = offers.first(where: { $0.openSlotId == openSlotId }) {
-                navigationPath.append(matched.id)
-            }
-            env.navigationRouter.clearPendingDestination()
+    private func handlePendingOfferRouting() async {
+        guard let pending = env.customerNavigation.pendingOfferRouting else { return }
+        if pending.offerId == nil, pending.openSlotId == nil {
+            env.customerNavigation.clearPendingOfferRouting()
+            return
         }
+
+        if offers.isEmpty {
+            await load()
+        }
+        if let offerId = pending.offerId,
+           !offerId.isEmpty,
+           let matched = offers.first(where: { $0.id == offerId }) {
+            navigationPath.append(matched.id)
+        } else if let openSlotId = pending.openSlotId,
+                  !openSlotId.isEmpty,
+                  let matched = offers.first(where: { $0.openSlotId == openSlotId }) {
+            navigationPath.append(matched.id)
+        } else if let offerId = pending.offerId, !offerId.isEmpty {
+            navigationPath.append(offerId)
+        }
+        env.customerNavigation.clearPendingOfferRouting()
     }
 }
 

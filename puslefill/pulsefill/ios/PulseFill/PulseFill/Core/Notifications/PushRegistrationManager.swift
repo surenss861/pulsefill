@@ -11,14 +11,33 @@ struct StandbyPushFollowUp: Equatable {
 final class PushRegistrationManager {
     private let apiClient: APIClient
 
+    /// Latest authorization status (refresh with `refreshAuthorizationStatus()`).
+    private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
+
     init(apiClient: APIClient) {
         self.apiClient = apiClient
+    }
+
+    func refreshAuthorizationStatus() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        authorizationStatus = settings.authorizationStatus
+    }
+
+    /// Whether alerts are enabled for common “notifications on” UI (includes provisional / ephemeral).
+    var isPushAuthorizedForUI: Bool {
+        switch authorizationStatus {
+        case .authorized, .provisional, .ephemeral:
+            return true
+        default:
+            return false
+        }
     }
 
     /// Used on launch / sign-in: refresh the APNs token if the user already granted permission (no system prompt).
     func syncRemoteRegistrationIfAuthorized() async {
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
+        authorizationStatus = settings.authorizationStatus
         switch settings.authorizationStatus {
         case .authorized, .provisional, .ephemeral:
             UIApplication.shared.registerForRemoteNotifications()
@@ -41,9 +60,13 @@ final class PushRegistrationManager {
 
     /// After the customer saves standby with “stay reachable” on: prompt only if status is `.notDetermined`.
     func standbyPushFollowUp(wantsPush: Bool) async -> StandbyPushFollowUp {
-        guard wantsPush else { return StandbyPushFollowUp(message: nil, showOpenSettings: false) }
+        guard wantsPush else {
+            await refreshAuthorizationStatus()
+            return StandbyPushFollowUp(message: nil, showOpenSettings: false)
+        }
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
+        authorizationStatus = settings.authorizationStatus
         switch settings.authorizationStatus {
         case .authorized, .provisional, .ephemeral:
             UIApplication.shared.registerForRemoteNotifications()
@@ -64,6 +87,7 @@ final class PushRegistrationManager {
                     )
                 }
                 let after = await center.notificationSettings()
+                authorizationStatus = after.authorizationStatus
                 if after.authorizationStatus == .denied {
                     return StandbyPushFollowUp(
                         message: "Without notifications you may miss openings. Turn them on in Settings so we can reach you.",

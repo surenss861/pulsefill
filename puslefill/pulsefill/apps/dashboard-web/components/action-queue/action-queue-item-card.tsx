@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { actionButtonLabel, kindLabel } from "@/lib/action-queue-ui";
+import { deriveQueueInlinePrimaryAction } from "@/lib/operator-primary-action";
 import { formatSlotRange } from "@/lib/format-slot-range";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import type { ActionQueueItem } from "@/types/action-queue";
@@ -12,13 +13,21 @@ function severityBorder(severity: ActionQueueItem["severity"]): string {
   return "rgba(255,255,255,0.1)";
 }
 
-export function ActionQueueItemCard({ item }: { item: ActionQueueItem }) {
+type Props = {
+  item: ActionQueueItem;
+  busy?: boolean;
+  onPrimaryAction?: (item: ActionQueueItem) => void;
+};
+
+export function ActionQueueItemCard({ item, busy, onPrimaryAction }: Props) {
   const meta = [item.service_name, item.provider_name].filter(Boolean).join(" · ") || "Slot";
   const where = item.location_name ? ` · ${item.location_name}` : "";
   const when = formatSlotRange(item.starts_at, item.ends_at);
   const rel = formatRelativeTime(item.created_at);
 
   const [primary, secondary] = item.actions;
+  const inline = deriveQueueInlinePrimaryAction(item);
+  const canInline = Boolean(inline && onPrimaryAction);
 
   return (
     <div
@@ -62,7 +71,29 @@ export function ActionQueueItemCard({ item }: { item: ActionQueueItem }) {
         {rel ? ` · ${rel}` : null}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {primary ? (
+        {canInline && inline ? (
+          <button
+            type="button"
+            onClick={() => onPrimaryAction?.(item)}
+            disabled={busy}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "8px 14px",
+              borderRadius: 10,
+              background: "var(--primary, #38bdf8)",
+              color: "#0f172a",
+              fontWeight: 600,
+              fontSize: 13,
+              border: "none",
+              cursor: busy ? "not-allowed" : "pointer",
+              opacity: busy ? 0.7 : 1,
+            }}
+          >
+            {busy ? "Working…" : inline.label}
+          </button>
+        ) : primary ? (
           <Link
             href={`/open-slots/${item.open_slot_id}`}
             style={{

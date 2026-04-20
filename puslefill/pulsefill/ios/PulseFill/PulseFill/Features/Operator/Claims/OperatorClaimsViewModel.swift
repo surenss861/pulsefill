@@ -56,8 +56,13 @@ final class OperatorClaimsViewModel: ObservableObject {
         confirmingClaimId = claim.claimId
         defer { confirmingClaimId = nil }
         do {
-            _ = try await api.confirmOpenSlotClaim(slotId: claim.openSlotId, claimId: claim.claimId)
-            flashMessage = "Booking confirmed."
+            let res = try await api.confirmOpenSlotClaim(slotId: claim.openSlotId, claimId: claim.claimId)
+            let trimmed = res.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if trimmed.isEmpty {
+                flashMessage = res.result == "already_confirmed" ? "This booking was already confirmed." : "Booking confirmed."
+            } else {
+                flashMessage = trimmed
+            }
             await load()
         } catch {
             flashMessage = APIErrorCopy.message(for: error)

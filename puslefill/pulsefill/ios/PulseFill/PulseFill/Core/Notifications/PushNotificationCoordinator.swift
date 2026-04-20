@@ -4,11 +4,11 @@ import UserNotifications
 
 @MainActor
 final class PushNotificationCoordinator: NSObject {
-    private let router: AppFlowRouter
+    private let customerNavigation: CustomerNavigationCoordinator
     private let pushRegistration: PushRegistrationManager
 
-    init(router: AppFlowRouter, pushRegistration: PushRegistrationManager) {
-        self.router = router
+    init(customerNavigation: CustomerNavigationCoordinator, pushRegistration: PushRegistrationManager) {
+        self.customerNavigation = customerNavigation
         self.pushRegistration = pushRegistration
         super.init()
         UNUserNotificationCenter.current().delegate = self
@@ -16,6 +16,7 @@ final class PushNotificationCoordinator: NSObject {
 
     func bootstrapIfSignedIn(sessionStore: SessionStore) async {
         guard sessionStore.isSignedIn else { return }
+        await pushRegistration.refreshAuthorizationStatus()
         await pushRegistration.syncRemoteRegistrationIfAuthorized()
     }
 
@@ -27,11 +28,31 @@ final class PushNotificationCoordinator: NSObject {
 
     private func handleNotificationPayload(_ userInfo: [AnyHashable: Any]) {
         let payload = NotificationRoutePayload(userInfo: userInfo)
-        switch payload.kind {
-        case "offer":
-            router.routeToOffer(offerId: payload.offerId, openSlotId: payload.openSlotId)
+        let key = payload.routeKey?.lowercased() ?? ""
+
+        switch key {
+        case "offer_received", "offer_expiring_soon", "offer":
+            customerNavigation.routeToOffersTab(offerId: payload.offerId, openSlotId: payload.openSlotId)
+            return
         default:
-            router.routeToOffersInbox()
+            break
+        }
+
+        if let destination = CustomerRouteMapper.destinationForPushPayload(
+            type: key,
+            offerId: payload.offerId,
+            claimId: payload.claimId
+        ) {
+            customerNavigation.open(destination)
+            return
+        }
+
+        if payload.offerId != nil || payload.openSlotId != nil {
+            customerNavigation.routeToOffersTab(offerId: payload.offerId, openSlotId: payload.openSlotId)
+        } else if let claimId = payload.claimId, !claimId.isEmpty {
+            customerNavigation.open(.claimOutcome(claimId))
+        } else {
+            customerNavigation.openOffersInbox()
         }
     }
 }

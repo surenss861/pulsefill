@@ -11,7 +11,7 @@ struct OperatorTabView: View {
                     Label("Queue", systemImage: "exclamationmark.bubble")
                 }
 
-            OperatorSlotsListView()
+            OperatorSlotsListView(api: env.apiClient)
                 .environmentObject(env)
                 .tabItem {
                     Label("Slots", systemImage: "calendar")
@@ -23,7 +23,7 @@ struct OperatorTabView: View {
                     Label("Claims", systemImage: "checkmark.seal")
                 }
 
-            ActivityView()
+            CustomerActivityFeedView(api: env.apiClient)
                 .environmentObject(env)
                 .tabItem {
                     Label("Activity", systemImage: "clock.arrow.circlepath")

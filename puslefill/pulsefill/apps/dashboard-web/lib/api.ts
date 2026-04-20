@@ -46,10 +46,21 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const text = await res.text();
   const data = text ? (JSON.parse(text) as unknown) : null;
   if (!res.ok) {
-    const msg =
-      data && typeof data === "object" && data !== null && "error" in data
-        ? String((data as { error: unknown }).error)
-        : text || res.statusText;
+    if (data && typeof data === "object" && data !== null && "error" in data) {
+      const errField = (data as { error: unknown }).error;
+      if (errField && typeof errField === "object" && errField !== null) {
+        const nested = errField as { code?: string; message?: string; retryable?: boolean };
+        const message = nested.message?.trim() || nested.code || `HTTP ${res.status}`;
+        const e = new Error(message);
+        (e as { code?: string; retryable?: boolean }).code = nested.code;
+        (e as { retryable?: boolean }).retryable = nested.retryable;
+        throw e;
+      }
+      if (typeof errField === "string") {
+        throw new Error(errField);
+      }
+    }
+    const msg = text || res.statusText;
     throw new Error(msg || `HTTP ${res.status}`);
   }
   return data as T;

@@ -187,7 +187,8 @@ final class StandbyPreferencesViewModel: ObservableObject {
         savedResolvedLabels = next
     }
 
-    func savePreference() async {
+    @discardableResult
+    func savePreference() async -> Bool {
         guard draft.canReview else {
             let msg: String
             if draft.isBasicSetupComplete, draft.hasAvailabilityWindow, !draft.isTimeWindowValid {
@@ -196,7 +197,7 @@ final class StandbyPreferencesViewModel: ObservableObject {
                 msg = "Add your clinic’s business ID, pick at least one day, and fix any time window issues."
             }
             saveState = .failed(msg)
-            return
+            return false
         }
 
         saveState = .saving
@@ -241,8 +242,10 @@ final class StandbyPreferencesViewModel: ObservableObject {
             }
             saveState = .saved
             await loadExistingPreferences()
+            return true
         } catch {
             saveState = .failed(APIErrorCopy.message(for: error))
+            return false
         }
     }
 

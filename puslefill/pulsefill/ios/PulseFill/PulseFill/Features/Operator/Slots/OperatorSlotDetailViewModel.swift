@@ -12,10 +12,12 @@ final class OperatorSlotDetailViewModel: ObservableObject {
 
     @Published var loadState: LoadState = .idle
     @Published var slot: StaffOpenSlotDetail?
+    @Published var customerContext: OperatorCustomerContextResponse?
     @Published var timeline: [OperatorTimelineEvent] = []
     @Published var notificationLogs: [OperatorNotificationLogRow] = []
     @Published var isRetrying = false
     @Published var isConfirming = false
+    @Published var isSavingNote = false
     @Published var flashMessage: String?
 
     private let api: APIClient
@@ -38,6 +40,13 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             slot = d.slot
             timeline = t.events
             notificationLogs = l.logs
+
+            if let cid = d.slot.winningClaim?.customerId {
+                customerContext = try? await api.getOperatorCustomerContext(customerId: cid)
+            } else {
+                customerContext = nil
+            }
+
             loadState = .loaded
         } catch {
             if slot == nil {
@@ -58,9 +67,34 @@ final class OperatorSlotDetailViewModel: ObservableObject {
         isRetrying = true
         defer { isRetrying = false }
         do {
-            _ = try await api.sendOffers(slotId: slot.id)
-            flashMessage = "Offers sent."
+            let res = try await api.sendOffers(slotId: slot.id)
+            let trimmed = res.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if !trimmed.isEmpty {
+                flashMessage = trimmed
+            } else if res.result == "no_matches" {
+                flashMessage = "No matching standby customers were found."
+            } else {
+                flashMessage = slot.status == "offered" ? "Offers retried." : "Offers sent."
+            }
             await load()
+        } catch {
+            flashMessage = APIErrorCopy.message(for: error)
+        }
+    }
+
+    func saveInternalNote(note: String, resolutionStatus: String) async {
+        guard let slot else { return }
+        isSavingNote = true
+        defer { isSavingNote = false }
+        do {
+            let res = try await api.updateOperatorSlotNote(
+                slotId: slot.id,
+                internalNote: note,
+                resolutionStatus: resolutionStatus
+            )
+            self.slot = slot.applyingSavedNote(res)
+            let trimmed = res.message.trimmingCharacters(in: .whitespacesAndNewlines)
+            flashMessage = trimmed.isEmpty ? "Internal note saved." : trimmed
         } catch {
             flashMessage = APIErrorCopy.message(for: error)
         }
@@ -71,8 +105,13 @@ final class OperatorSlotDetailViewModel: ObservableObject {
         isConfirming = true
         defer { isConfirming = false }
         do {
-            _ = try await api.confirmOpenSlotClaim(slotId: slot.id, claimId: claimId)
-            flashMessage = "Booking confirmed."
+            let res = try await api.confirmOpenSlotClaim(slotId: slot.id, claimId: claimId)
+            let trimmed = res.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if trimmed.isEmpty {
+                flashMessage = res.result == "already_confirmed" ? "This booking was already confirmed." : "Booking confirmed."
+            } else {
+                flashMessage = trimmed
+            }
             await load()
         } catch {
             flashMessage = APIErrorCopy.message(for: error)

@@ -2,6 +2,15 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
 import { requireCustomer } from "../../plugins/guards.js";
+import { fetchCustomerActivityFeed } from "./activity-feed.js";
+import { fetchCustomerClaimStatus } from "./claim-status.js";
+import { fetchMissedOpportunities } from "./missed-opportunities.js";
+import {
+  getCustomerNotificationPreferences,
+  patchCustomerNotificationPreferences,
+} from "./notification-preferences.js";
+import { fetchCustomerOfferDetail } from "./offer-detail.js";
+import { fetchCustomerStandbyStatus } from "./standby-status.js";
 
 const prefBody = z
   .object({
@@ -218,6 +227,120 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
     },
   );
 
+  app.get(
+    "/v1/customers/me/offers/:offerId",
+    { preHandler: requireCustomer },
+    async (req, reply) => {
+      const offerId = z.string().uuid().parse((req.params as { offerId?: string }).offerId);
+      const admin = createServiceSupabase(req.server.env);
+      const out = await fetchCustomerOfferDetail(admin, req.customer!.id, offerId);
+      if (!out.ok) return reply.status(out.status).send({ error: out.error });
+      return reply.send(out.body);
+    },
+  );
+
+  app.get(
+    "/v1/customers/me/claims/:claimId/status",
+    { preHandler: requireCustomer },
+    async (req, reply) => {
+      const claimId = z.string().uuid().parse((req.params as { claimId?: string }).claimId);
+      const admin = createServiceSupabase(req.server.env);
+      const out = await fetchCustomerClaimStatus(admin, req.customer!.id, claimId);
+      if (!out.ok) return reply.status(out.status).send({ error: out.error });
+      return reply.send(out.body);
+    },
+  );
+
+  app.get(
+    "/v1/customers/me/activity-feed",
+    { preHandler: requireCustomer },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const out = await fetchCustomerActivityFeed(admin, req.customer!.id);
+      if ("error" in out) {
+        req.log.error({ error: out.error }, "activity feed failed");
+        return reply.status(500).send({ error: out.error });
+      }
+      return reply.send({ items: out.items });
+    },
+  );
+
+  app.get(
+    "/v1/customers/me/missed-opportunities",
+    { preHandler: requireCustomer },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const body = await fetchMissedOpportunities(admin, req.customer!.id);
+        return reply.send(body);
+      } catch (e) {
+        req.log.error({ err: e }, "missed opportunities failed");
+        return reply.status(500).send({ error: "missed_opportunities_failed" });
+      }
+    },
+  );
+
+  const notificationPrefsPatch = z
+    .object({
+      quiet_hours_enabled: z.boolean(),
+      quiet_hours_start_local: z.string().nullable().optional(),
+      quiet_hours_end_local: z.string().nullable().optional(),
+      cadence_preference: z.enum(["all_opportunities", "best_matches", "important_only"]),
+      notify_new_offers: z.boolean(),
+      notify_claim_updates: z.boolean(),
+      notify_booking_confirmations: z.boolean(),
+      notify_standby_tips: z.boolean(),
+    })
+    .strict();
+
+  app.get(
+    "/v1/customers/me/notification-preferences",
+    { preHandler: requireCustomer },
+    async (req, reply) => {
+      const q = z
+        .object({
+          push_permission_status: z
+            .enum(["authorized", "denied", "not_determined", "unknown"])
+            .default("unknown"),
+        })
+        .parse((req.query as Record<string, string | undefined>) ?? {});
+
+      const admin = createServiceSupabase(req.server.env);
+      const body = await getCustomerNotificationPreferences(admin, req.customer!.id, q.push_permission_status);
+      return reply.send(body);
+    },
+  );
+
+  app.patch(
+    "/v1/customers/me/notification-preferences",
+    { preHandler: requireCustomer },
+    async (req, reply) => {
+      const q = z
+        .object({
+          push_permission_status: z
+            .enum(["authorized", "denied", "not_determined", "unknown"])
+            .default("unknown"),
+        })
+        .parse((req.query as Record<string, string | undefined>) ?? {});
+
+      const admin = createServiceSupabase(req.server.env);
+      const parsed = notificationPrefsPatch.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return reply.status(400).send({ error: "invalid_body" });
+      }
+      const out = await patchCustomerNotificationPreferences(
+        admin,
+        req.customer!.id,
+        parsed.data as Record<string, unknown>,
+        q.push_permission_status,
+      );
+      if ("error" in out) {
+        return reply.status((out as { status: number }).status).send({ error: (out as { error: string }).error });
+      }
+      return reply.send(out);
+    },
+  );
+
   app.post(
     "/v1/customers/me/push-devices",
     { preHandler: requireCustomer },
@@ -248,6 +371,29 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
       }
 
       return reply.send({ registered: true, id: data.id });
+    },
+  );
+
+  app.get(
+    "/v1/customers/me/standby-status",
+    { preHandler: requireCustomer },
+    async (req, reply) => {
+      const q = z
+        .object({
+          push_permission_status: z.enum(["authorized", "denied", "not_determined", "unknown"]).optional(),
+        })
+        .parse((req.query as Record<string, string | undefined>) ?? {});
+
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const body = await fetchCustomerStandbyStatus(admin, req.customer!.id, {
+          pushPermissionStatus: q.push_permission_status ?? "unknown",
+        });
+        return reply.send(body);
+      } catch (e) {
+        req.log.error({ err: e }, "standby status failed");
+        return reply.status(500).send({ error: "standby_status_failed" });
+      }
     },
   );
 

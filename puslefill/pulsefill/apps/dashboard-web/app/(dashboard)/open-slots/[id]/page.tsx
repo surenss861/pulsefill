@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NotificationLogsInspector } from "@/components/slots/notification-logs-inspector";
+import { SlotDeliverySummary } from "@/components/slots/slot-delivery-summary";
+import { OperatorInternalNoteCard } from "@/components/slots/operator-internal-note-card";
 import { SlotAttentionCues } from "@/components/slots/slot-attention-cues";
 import { SlotDetailHero } from "@/components/slots/slot-detail-hero";
 import { SlotRecentActivityBar } from "@/components/slots/slot-recent-activity-bar";
@@ -17,6 +19,8 @@ import { useOpenSlotDetail } from "@/hooks/useOpenSlotDetail";
 import { useOpenSlotRealtime } from "@/hooks/useOpenSlotRealtime";
 import { usePollingEffect } from "@/hooks/usePollingEffect";
 import { useSlotFormOptions } from "@/hooks/useSlotFormOptions";
+import { OperatorCustomerContextSection } from "@/components/customers/operator-customer-context-section";
+import { useOperatorCustomerContext } from "@/hooks/useOperatorCustomerContext";
 import { useSlotTimeline } from "@/hooks/useSlotTimeline";
 
 export default function OpenSlotDetailPage() {
@@ -37,6 +41,8 @@ export default function OpenSlotDetailPage() {
     reload: reloadNotificationLogs,
   } = useNotificationLogs(slotId);
   const claimId = slot?.winning_claim?.id;
+  const winningCustomerId = slot?.winning_claim?.customer_id;
+  const customerCtx = useOperatorCustomerContext(winningCustomerId);
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
 
   const { serviceLabel, locationLabel, namesLoading } = useMemo(() => {
@@ -59,18 +65,19 @@ export default function OpenSlotDetailPage() {
   }, [slot, options.loading, options.services, options.locations]);
 
   const refreshAll = useCallback(async () => {
-    await Promise.all([reload(), reloadTimeline(), reloadNotificationLogs(), options.reload()]);
+    await Promise.all([reload(), reloadTimeline(), reloadNotificationLogs(), options.reload(), customerCtx.reload()]);
     setRefreshedAt(new Date());
-  }, [reload, reloadTimeline, reloadNotificationLogs, options.reload]);
+  }, [reload, reloadTimeline, reloadNotificationLogs, options.reload, customerCtx.reload]);
 
   const silentRefresh = useCallback(async () => {
     await Promise.all([
       reload({ silent: true }),
       reloadTimeline({ silent: true }),
       reloadNotificationLogs({ silent: true }),
+      customerCtx.reload(),
     ]);
     setRefreshedAt(new Date());
-  }, [reload, reloadTimeline, reloadNotificationLogs]);
+  }, [reload, reloadTimeline, reloadNotificationLogs, customerCtx.reload]);
 
   useEffect(() => {
     if (!loading && slot) setRefreshedAt(new Date());
@@ -126,6 +133,22 @@ export default function OpenSlotDetailPage() {
 
           <SlotAttentionCues slot={slot} logs={notificationLogs} />
 
+          <OperatorInternalNoteCard
+            openSlotId={slot.id}
+            initialNote={slot.internal_note}
+            initialResolutionStatus={slot.resolution_status}
+            initialUpdatedAt={slot.internal_note_updated_at}
+            onSaved={() => void silentRefresh()}
+          />
+
+          {winningCustomerId ? (
+            <OperatorCustomerContextSection
+              loading={customerCtx.loading}
+              error={customerCtx.error}
+              data={customerCtx.data}
+            />
+          ) : null}
+
           <SlotRowShell status={slot.status}>
             <SlotDetailHero
               slot={slot}
@@ -158,6 +181,7 @@ export default function OpenSlotDetailPage() {
 
           {notificationLogsLoading ? <p style={{ color: "var(--muted)" }}>Loading notification logs…</p> : null}
           {notificationLogsError ? <p style={{ color: "#f87171" }}>{notificationLogsError}</p> : null}
+          {!notificationLogsLoading && notificationLogs.length > 0 ? <SlotDeliverySummary logs={notificationLogs} /> : null}
           {!notificationLogsLoading ? <NotificationLogsInspector logs={notificationLogs} /> : null}
         </div>
       ) : null}

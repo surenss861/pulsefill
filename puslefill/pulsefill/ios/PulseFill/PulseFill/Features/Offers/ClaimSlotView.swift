@@ -1,12 +1,17 @@
 import SwiftUI
 
+private struct ClaimOutcomeNav: Identifiable, Hashable {
+    let id: String
+}
+
 struct ClaimSlotView: View {
     @EnvironmentObject private var env: AppEnvironment
 
     let openSlotId: String
 
     @State private var loading = false
-    @State private var resultVM: ClaimResultViewModel?
+    @State private var errorMessage: String?
+    @State private var outcomeNav: ClaimOutcomeNav?
 
     var body: some View {
         VStack(spacing: PFSpacing.lg) {
@@ -19,6 +24,14 @@ struct ClaimSlotView: View {
                 "If the slot is still available, PulseFill will lock it for you right away."
             )
             .multilineTextAlignment(.center)
+
+            if let errorMessage {
+                PFTypography.caption(errorMessage)
+                    .foregroundStyle(PFColor.error)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, PFSpacing.lg)
+            }
+
             Spacer()
 
             Button {
@@ -40,13 +53,14 @@ struct ClaimSlotView: View {
         .background(PFColor.background.ignoresSafeArea())
         .navigationTitle("Claim")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(item: $resultVM) { vm in
-            ClaimResultView(viewModel: vm)
+        .navigationDestination(item: $outcomeNav) { nav in
+            ClaimOutcomeView(api: env.apiClient, claimId: nav.id)
         }
     }
 
     private func claim() async {
         loading = true
+        errorMessage = nil
         Haptics.selection()
         defer { loading = false }
 
@@ -57,15 +71,20 @@ struct ClaimSlotView: View {
                 as: ClaimOpenSlotResponse.self
             )
             guard res.ok else {
-                resultVM = ClaimResultViewModel(outcome: .failed("This opening could not be claimed right now."))
+                errorMessage = "This opening could not be claimed right now."
                 Haptics.error()
                 return
             }
             let id = res.claim?.id ?? res.claimId
-            resultVM = ClaimResultViewModel(outcome: .success(claimId: id))
+            guard let id, !id.isEmpty else {
+                errorMessage = "Claim succeeded but no reference was returned."
+                Haptics.error()
+                return
+            }
+            outcomeNav = ClaimOutcomeNav(id: id)
             Haptics.success()
         } catch {
-            resultVM = ClaimResultViewModel(outcome: .failed(APIErrorCopy.message(for: error)))
+            errorMessage = APIErrorCopy.message(for: error)
             Haptics.error()
         }
     }

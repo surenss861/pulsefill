@@ -34,6 +34,19 @@ struct OperatorActionQueueView: View {
             .refreshable {
                 await viewModel.refresh()
             }
+            .alert(
+                "Update",
+                isPresented: Binding(
+                    get: { viewModel.flashMessage != nil },
+                    set: { if !$0 { viewModel.flashMessage = nil } }
+                ),
+                actions: {
+                    Button("OK", role: .cancel) {}
+                },
+                message: {
+                    Text(viewModel.flashMessage ?? "")
+                }
+            )
         }
     }
 
@@ -68,8 +81,53 @@ struct OperatorActionQueueView: View {
     private var contentView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                if let daily = viewModel.dailySummary {
+                    OperatorDailyOpsSummaryBar(summary: daily)
+                }
+
+                if let breakdown = viewModel.opsBreakdown {
+                    OperatorInsightsPreviewCard(breakdown: breakdown)
+                }
+
+                if let delivery = viewModel.deliveryReliability {
+                    OperatorDeliveryReliabilityCard(data: delivery)
+                }
+
                 if let summary = viewModel.summary {
                     OperatorActionQueueSummaryBar(summary: summary)
+                }
+
+                if viewModel.filterOptionsLoading {
+                    Text("Loading filters…")
+                        .font(.system(size: 13))
+                        .foregroundStyle(PFColor.textSecondary)
+                } else {
+                    VStack(alignment: .leading, spacing: 10) {
+                        queueEntityPicker(
+                            "Provider",
+                            viewModel.providerOptions,
+                            selection: Binding(
+                                get: { viewModel.filterProviderId },
+                                set: { viewModel.setFilterProviderId($0) }
+                            )
+                        )
+                        queueEntityPicker(
+                            "Location",
+                            viewModel.locationOptions,
+                            selection: Binding(
+                                get: { viewModel.filterLocationId },
+                                set: { viewModel.setFilterLocationId($0) }
+                            )
+                        )
+                        queueEntityPicker(
+                            "Service",
+                            viewModel.serviceOptions,
+                            selection: Binding(
+                                get: { viewModel.filterServiceId },
+                                set: { viewModel.setFilterServiceId($0) }
+                            )
+                        )
+                    }
                 }
 
                 Picker("Filter", selection: $viewModel.selectedFilter) {
@@ -84,6 +142,7 @@ struct OperatorActionQueueView: View {
                     OperatorActionQueueSectionView(
                         title: "Needs action now",
                         items: viewModel.filteredNeedsAction,
+                        performingItemId: viewModel.performingItemId,
                         onPrimaryAction: handlePrimary,
                         onOpen: openSlot
                     )
@@ -91,6 +150,7 @@ struct OperatorActionQueueView: View {
                     OperatorActionQueueSectionView(
                         title: "Watch / review",
                         items: viewModel.filteredReview,
+                        performingItemId: viewModel.performingItemId,
                         onPrimaryAction: handlePrimary,
                         onOpen: openSlot
                     )
@@ -98,6 +158,7 @@ struct OperatorActionQueueView: View {
                     OperatorActionQueueSectionView(
                         title: "Recently resolved",
                         items: viewModel.filteredResolved,
+                        performingItemId: viewModel.performingItemId,
                         onPrimaryAction: handlePrimary,
                         onOpen: openSlot
                     )
@@ -110,17 +171,45 @@ struct OperatorActionQueueView: View {
     }
 
     private func handlePrimary(_ item: OperatorActionQueueItem) {
-        guard let first = item.actions.first else {
+        if OperatorPrimaryActionDeriver.queueInline(from: item) != nil {
+            Task {
+                await viewModel.performPrimaryAction(for: item)
+            }
+            return
+        }
+
+        guard item.actions.first != nil else {
             openSlot(item)
             return
         }
-        switch first {
-        case .openSlot, .viewSlot, .confirmBooking, .inspectLogs, .retryOffers:
-            path.append(item.openSlotId)
-        }
+        path.append(item.openSlotId)
     }
 
     private func openSlot(_ item: OperatorActionQueueItem) {
         path.append(item.openSlotId)
+    }
+
+    private func queueEntityPicker(
+        _ title: String,
+        _ options: [BusinessNamedRow],
+        selection: Binding<String?>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 12))
+                .foregroundStyle(PFColor.textSecondary)
+
+            Picker(title, selection: selection) {
+                Text("All").tag(String?.none)
+                ForEach(options, id: \.id) { row in
+                    Text(row.name).tag(Optional(row.id))
+                }
+            }
+            .pickerStyle(.menu)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(PFSurface.card)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
     }
 }

@@ -1,15 +1,12 @@
 import SwiftUI
 
 struct HomeView: View {
-    @AppStorage("pf.onboarding.complete") private var onboardingComplete = false
     @EnvironmentObject private var env: AppEnvironment
 
     var body: some View {
         NavigationStack {
             Group {
-                if !onboardingComplete {
-                    OnboardingContainerView(isComplete: $onboardingComplete)
-                } else if !env.sessionStore.isSignedIn {
+                if !env.sessionStore.isSignedIn {
                     LoginView()
                 } else {
                     ScrollView {

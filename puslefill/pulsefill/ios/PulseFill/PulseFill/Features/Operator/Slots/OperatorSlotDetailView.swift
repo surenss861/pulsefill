@@ -77,12 +77,31 @@ struct OperatorSlotDetailView: View {
                 nextActionCard(slot)
                 heroCard(slot)
 
+                OperatorInternalNoteCard(
+                    initialNote: slot.internalNote,
+                    initialResolution: slot.resolutionStatus,
+                    initialUpdatedAt: slot.internalNoteUpdatedAt,
+                    isSaving: viewModel.isSavingNote,
+                    onSave: { note, status in
+                        Task { await viewModel.saveInternalNote(note: note, resolutionStatus: status) }
+                    }
+                )
+
+                if !viewModel.notificationLogs.isEmpty {
+                    OperatorSlotDeliverySummaryCard(logs: viewModel.notificationLogs)
+                }
+
+                if let ctx = viewModel.customerContext {
+                    OperatorCustomerSummaryCard(customer: ctx.customer, delivery: ctx.deliveryContext)
+                    OperatorStandbyPreferencesSection(preferences: ctx.standbyPreferences)
+                }
+
                 if viewModel.hasAttentionCues {
                     attentionCard(slot)
                 }
 
                 if let claim = slot.winningClaim {
-                    winningClaimCard(claim)
+                    winningClaimCard(claim, context: viewModel.customerContext)
                 }
 
                 offerOutcomesCard(slot.slotOffers ?? [])
@@ -96,7 +115,12 @@ struct OperatorSlotDetailView: View {
     private func recentActivityBar(_ slot: StaffOpenSlotDetail) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if let latest = OperatorSlotDetailPresenters.latestMilestone(viewModel.timeline) {
-                Text("Latest activity: \(latest.replacingOccurrences(of: "_", with: " "))")
+                Text("Latest activity: \(latest)")
+                    .font(.system(size: 13))
+                    .foregroundStyle(PFColor.textSecondary)
+            }
+            if let touch = OperatorSlotDetailPresenters.lastTouchedSummary(for: slot) {
+                Text(touch)
                     .font(.system(size: 13))
                     .foregroundStyle(PFColor.textSecondary)
             }
@@ -230,15 +254,24 @@ struct OperatorSlotDetailView: View {
         }
     }
 
-    private func winningClaimCard(_ claim: WinningClaimRow) -> some View {
+    private func winningClaimCard(_ claim: WinningClaimRow, context: OperatorCustomerContextResponse?) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("WINNING CLAIM")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(PFColor.warning)
 
-            Text(shortId(claim.customerId))
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(PFColor.textPrimary)
+            if let name = context?.customer.displayName?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+                Text(name)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(PFColor.textPrimary)
+                Text("Ref \(shortId(claim.customerId))")
+                    .font(.system(size: 13))
+                    .foregroundStyle(PFColor.textSecondary)
+            } else {
+                Text(shortId(claim.customerId))
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(PFColor.textPrimary)
+            }
 
             StatusChipView(status: claim.status)
         }
@@ -280,14 +313,19 @@ struct OperatorSlotDetailView: View {
                     .foregroundStyle(PFColor.textSecondary)
             } else {
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(events.prefix(8)) { event in
+                    ForEach(Array(events.prefix(8))) { event in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(event.eventType.replacingOccurrences(of: "_", with: " "))
+                            Text(OperatorSlotDetailPresenters.timelineEventTitle(for: event.eventType))
                                 .font(.system(size: 17, weight: .medium))
                                 .foregroundStyle(PFColor.textPrimary)
                             Text(DateFormatterPF.medium(event.createdAt))
                                 .font(.system(size: 13))
                                 .foregroundStyle(PFColor.textSecondary)
+                            if let actor = OperatorSlotDetailPresenters.timelineActorLine(for: event) {
+                                Text(actor)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(PFColor.textSecondary)
+                            }
                         }
                     }
                 }

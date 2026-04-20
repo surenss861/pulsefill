@@ -19,6 +19,9 @@ export type ActionQueueItem = {
   description: string;
   open_slot_id: string;
   slot_status: string;
+  provider_id: string | null;
+  location_id: string | null;
+  service_id: string | null;
   provider_name: string | null;
   service_name: string | null;
   location_name: string | null;

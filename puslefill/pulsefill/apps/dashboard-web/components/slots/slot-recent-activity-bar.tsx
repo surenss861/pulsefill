@@ -4,6 +4,17 @@ import { useMemo } from "react";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import { labelForTimelineEvent, pickLatestMilestone } from "@/lib/timeline-presenters";
 import type { OpenSlotDetail } from "@/types/open-slot-detail";
+
+function lastTouchedSummary(slot: OpenSlotDetail): string | null {
+  const at = slot.last_touched_at;
+  if (!at) return null;
+  const who =
+    slot.last_touched_by?.full_name?.trim() ||
+    slot.last_touched_by?.email?.split("@")[0]?.trim() ||
+    (slot.last_touched_by_staff_id ? `Staff ${String(slot.last_touched_by_staff_id).slice(0, 8)}…` : null);
+  if (!who) return `Last touched ${formatRelativeTime(at)}`;
+  return `Last touched by ${who} (${formatRelativeTime(at)})`;
+}
 import type { NotificationLogRow } from "@/types/notification-log";
 import type { SlotTimelineEvent } from "@/types/timeline";
 
@@ -20,6 +31,11 @@ export function SlotRecentActivityBar({ slot, timelineEvents, notificationLogs, 
 
     if (refreshedAt) {
       parts.push(`Dashboard data ${formatRelativeTime(refreshedAt.toISOString())}`);
+    }
+
+    const touch = lastTouchedSummary(slot);
+    if (touch) {
+      parts.push(touch);
     }
 
     if (slot.last_offer_batch_at) {

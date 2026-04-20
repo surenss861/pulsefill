@@ -7,14 +7,31 @@ struct StandbyPreferencesView: View {
     @State private var showSuccess = false
     @State private var deleteTarget: StandbyPreference?
 
-    init(api: APIClient) {
+    private let onboardingMode: Bool
+    /// Called after a successful **create** (not edit). Used by first-run onboarding to advance the flow.
+    private let onSaved: (() -> Void)?
+    private let navigationTitleOverride: String?
+
+    init(
+        api: APIClient,
+        onboardingMode: Bool = false,
+        onSaved: (() -> Void)? = nil,
+        navigationTitleOverride: String? = nil
+    ) {
+        self.onboardingMode = onboardingMode
+        self.onSaved = onSaved
+        self.navigationTitleOverride = navigationTitleOverride
         _viewModel = StateObject(wrappedValue: StandbyPreferencesViewModel(api: api))
     }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                StandbyIntroCard()
+                if onboardingMode {
+                    onboardingHeader
+                } else {
+                    StandbyIntroCard()
+                }
 
                 if viewModel.isEditingExistingPreference {
                     HStack(alignment: .center, spacing: 12) {
@@ -38,21 +55,46 @@ struct StandbyPreferencesView: View {
                     )
                 }
 
+                if onboardingMode {
+                    Text(StandbyOnboardingCopy.Preference.businessHelper)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(PFColor.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
                 ServiceSelectionView(viewModel: viewModel)
+
+                if onboardingMode {
+                    Text(StandbyOnboardingCopy.Preference.availabilityHelper)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(PFColor.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
                 AvailabilitySelectionView(draft: $viewModel.draft)
+
+                if onboardingMode {
+                    Text(StandbyOnboardingCopy.Preference.noticeHelper)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(PFColor.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
                 NoticeWindowSelectionView(draft: $viewModel.draft)
                 NotificationPreferenceView(draft: $viewModel.draft)
                 StandbyPreferenceReviewCard(draft: viewModel.draft, resolved: viewModel.draftResolvedLabels)
 
                 saveSection
 
-                savedPreferencesSection
+                if !onboardingMode || !viewModel.existingPreferences.isEmpty {
+                    savedPreferencesSection
+                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 20)
         }
         .background(PFColor.background.ignoresSafeArea())
-        .navigationTitle("Standby")
+        .navigationTitle(navigationTitleOverride ?? "Standby")
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await viewModel.loadExistingPreferences()
@@ -116,8 +158,13 @@ struct StandbyPreferencesView: View {
 
             Button {
                 Task {
-                    await viewModel.savePreference()
-                    if case .saved = viewModel.saveState {
+                    let hadNoPreferencesBeforeSave = viewModel.existingPreferences.isEmpty
+                    let wasEditing = viewModel.isEditingExistingPreference
+                    let didSave = await viewModel.savePreference()
+                    guard didSave else { return }
+                    if !wasEditing, hadNoPreferencesBeforeSave, let onSaved {
+                        onSaved()
+                    } else {
                         showSuccess = true
                     }
                 }
@@ -143,7 +190,23 @@ struct StandbyPreferencesView: View {
 
     private var saveButtonTitle: String {
         if isSaving { return "Saving…" }
-        return viewModel.isEditingExistingPreference ? "Save changes" : "Save standby preference"
+        if viewModel.isEditingExistingPreference {
+            return onboardingMode ? StandbyOnboardingCopy.Preference.saveChangesCTA : "Save changes"
+        }
+        return onboardingMode ? StandbyOnboardingCopy.Preference.saveCTA : "Save standby preference"
+    }
+
+    private var onboardingHeader: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(StandbyOnboardingCopy.Preference.heading)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(PFColor.textPrimary)
+            Text(StandbyOnboardingCopy.Preference.intro)
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(PFColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
