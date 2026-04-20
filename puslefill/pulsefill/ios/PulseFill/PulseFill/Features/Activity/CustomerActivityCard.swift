@@ -25,6 +25,17 @@ struct CustomerActivityCard: View {
                     .foregroundStyle(PFColor.textSecondary)
             }
 
+            if let business = item.businessName, !business.isEmpty {
+                Text(business)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+            }
+            if let service = item.serviceName, !service.isEmpty {
+                Text(service)
+                    .font(.system(size: 12))
+                    .foregroundStyle(PFColor.textSecondary)
+            }
+
             Text(DateFormatterPF.medium(item.occurredAt))
                 .font(.system(size: 13))
                 .foregroundStyle(PFColor.textSecondary)

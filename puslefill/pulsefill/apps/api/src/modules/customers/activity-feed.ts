@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CustomerEventKind } from "./customer-event-taxonomy.js";
+import {
+  buildStandbyReadinessInputFromLoaded,
+  computeCustomerStandbyReadiness,
+  fetchCustomerStandbyPrereqs,
+  latestStandbyTouchIso,
+} from "./customer-standby-readiness.js";
 import { getCustomerEventCopy } from "./customer-event-copy.js";
 
 type FeedItem = {
@@ -18,6 +24,10 @@ type FeedItem = {
   location_name: string | null;
   starts_at: string | null;
   ends_at: string | null;
+};
+
+export type FetchCustomerActivityFeedOpts = {
+  pushPermissionStatus?: string;
 };
 
 async function slotLabels(
@@ -43,10 +53,10 @@ async function slotLabels(
   };
 }
 
-export async function fetchCustomerActivityFeed(
+async function buildOfferActivity(
   admin: SupabaseClient,
   customerId: string,
-): Promise<{ items: FeedItem[] } | { error: string }> {
+): Promise<FeedItem[]> {
   const { data: offers, error: oErr } = await admin
     .from("slot_offers")
     .select(
@@ -73,37 +83,9 @@ export async function fetchCustomerActivityFeed(
     .order("sent_at", { ascending: false })
     .limit(80);
 
-  if (oErr) return { error: "offers_failed" };
-
-  const { data: claims, error: cErr } = await admin
-    .from("slot_claims")
-    .select(
-      `
-      id,
-      status,
-      claimed_at,
-      open_slot_id,
-      open_slots (
-        id,
-        business_id,
-        location_id,
-        provider_id,
-        service_id,
-        provider_name_snapshot,
-        starts_at,
-        ends_at,
-        status
-      )
-    `,
-    )
-    .eq("customer_id", customerId)
-    .order("claimed_at", { ascending: false })
-    .limit(80);
-
-  if (cErr) return { error: "claims_failed" };
+  if (oErr) throw new Error("offers_failed");
 
   const items: FeedItem[] = [];
-
   for (const raw of offers ?? []) {
     const o = raw as Record<string, unknown>;
     const slot = (Array.isArray(o.open_slots) ? o.open_slots[0] : o.open_slots) as Record<string, unknown> | null;
@@ -136,7 +118,38 @@ export async function fetchCustomerActivityFeed(
       ends_at: slot.ends_at as string,
     });
   }
+  return items;
+}
 
+async function buildClaimActivity(admin: SupabaseClient, customerId: string): Promise<FeedItem[]> {
+  const { data: claims, error: cErr } = await admin
+    .from("slot_claims")
+    .select(
+      `
+      id,
+      status,
+      claimed_at,
+      open_slot_id,
+      open_slots (
+        id,
+        business_id,
+        location_id,
+        provider_id,
+        service_id,
+        provider_name_snapshot,
+        starts_at,
+        ends_at,
+        status
+      )
+    `,
+    )
+    .eq("customer_id", customerId)
+    .order("claimed_at", { ascending: false })
+    .limit(80);
+
+  if (cErr) throw new Error("claims_failed");
+
+  const items: FeedItem[] = [];
   for (const raw of claims ?? []) {
     const c = raw as Record<string, unknown>;
     const slot = (Array.isArray(c.open_slots) ? c.open_slots[0] : c.open_slots) as Record<string, unknown> | null;
@@ -148,7 +161,7 @@ export async function fetchCustomerActivityFeed(
     let kind: CustomerEventKind = "claim_submitted";
     if (cs === "confirmed" && ss === "booked") kind = "booking_confirmed";
     else if (cs === "won" && ss === "claimed") kind = "claim_pending_confirmation";
-    else if (cs === "lost" || cs === "failed") kind = "claim_unavailable";
+    else if (cs === "lost" || cs === "failed") kind = "missed_opportunity";
     else if (cs === "won") kind = "claim_pending_confirmation";
 
     const copy = getCustomerEventCopy({
@@ -187,8 +200,103 @@ export async function fetchCustomerActivityFeed(
       ends_at: slot.ends_at as string,
     });
   }
+  return items;
+}
 
-  items.sort((a, b) => (a.occurred_at < b.occurred_at ? 1 : -1));
+function appendStandbySystemRows(
+  readiness: ReturnType<typeof computeCustomerStandbyReadiness>,
+  touchIso: string,
+): FeedItem[] {
+  const out: FeedItem[] = [];
+  if (readiness.shouldSuggestSetup) {
+    const copy = getCustomerEventCopy({ kind: "standby_setup_suggestion" });
+    out.push({
+      id: "system_standby_setup_suggestion",
+      kind: "standby_setup_suggestion",
+      title: copy.title,
+      detail: copy.detail ?? null,
+      occurred_at: touchIso,
+      state: null,
+      offer_id: null,
+      claim_id: null,
+      open_slot_id: null,
+      business_name: null,
+      service_name: null,
+      provider_name: null,
+      location_name: null,
+      starts_at: null,
+      ends_at: null,
+    });
+  }
+  if (readiness.shouldRemindStatus) {
+    const copy = getCustomerEventCopy({ kind: "standby_status_reminder" });
+    out.push({
+      id: "system_standby_status_reminder",
+      kind: "standby_status_reminder",
+      title: copy.title,
+      detail: copy.detail ?? null,
+      occurred_at: touchIso,
+      state: null,
+      offer_id: null,
+      claim_id: null,
+      open_slot_id: null,
+      business_name: null,
+      service_name: null,
+      provider_name: null,
+      location_name: null,
+      starts_at: null,
+      ends_at: null,
+    });
+  }
+  return out;
+}
 
-  return { items: items.slice(0, 100) };
+function dedupeAndSort(items: FeedItem[]): FeedItem[] {
+  const seen = new Set<string>();
+  const out: FeedItem[] = [];
+  for (const it of items) {
+    const key = `${it.kind}|${it.offer_id ?? ""}|${it.claim_id ?? ""}|${it.open_slot_id ?? ""}|${it.occurred_at}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(it);
+  }
+  out.sort((a, b) => (a.occurred_at < b.occurred_at ? 1 : -1));
+  return out;
+}
+
+export async function fetchCustomerActivityFeed(
+  admin: SupabaseClient,
+  customerId: string,
+  opts: FetchCustomerActivityFeedOpts = {},
+): Promise<{ items: FeedItem[] } | { error: string }> {
+  const pushPermissionStatus = opts.pushPermissionStatus ?? "unknown";
+
+  try {
+    const [offerItems, claimItems, prereqs] = await Promise.all([
+      buildOfferActivity(admin, customerId),
+      buildClaimActivity(admin, customerId),
+      fetchCustomerStandbyPrereqs(admin, customerId),
+    ]);
+
+    const input = buildStandbyReadinessInputFromLoaded({
+      customer: prereqs.customer,
+      prefRows: prereqs.prefRows,
+      pushDeviceCount: prereqs.pushDeviceCount,
+      pushPermissionStatus,
+    });
+    const readiness = computeCustomerStandbyReadiness(input);
+    const touchIso = latestStandbyTouchIso({
+      prefRows: prereqs.prefRows,
+      notificationPrefsUpdatedAt: prereqs.notificationPrefsUpdatedAt,
+      customerCreatedAt: prereqs.customer?.created_at ?? null,
+    });
+    const systemItems = appendStandbySystemRows(readiness, touchIso);
+
+    const merged = dedupeAndSort([...offerItems, ...claimItems, ...systemItems]);
+    return { items: merged.slice(0, 100) };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg === "offers_failed" || msg === "claims_failed") return { error: msg };
+    return { error: "activity_feed_failed" };
+  }
 }

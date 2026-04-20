@@ -255,8 +255,19 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
     "/v1/customers/me/activity-feed",
     { preHandler: requireCustomer },
     async (req, reply) => {
+      const q = z
+        .object({
+          push_permission_status: z
+            .enum(["authorized", "denied", "not_determined", "unknown"])
+            .optional()
+            .default("unknown"),
+        })
+        .parse((req.query as Record<string, string | undefined>) ?? {});
+
       const admin = createServiceSupabase(req.server.env);
-      const out = await fetchCustomerActivityFeed(admin, req.customer!.id);
+      const out = await fetchCustomerActivityFeed(admin, req.customer!.id, {
+        pushPermissionStatus: q.push_permission_status,
+      });
       if ("error" in out) {
         req.log.error({ error: out.error }, "activity feed failed");
         return reply.status(500).send({ error: out.error });

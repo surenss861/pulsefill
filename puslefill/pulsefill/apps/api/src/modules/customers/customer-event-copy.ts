@@ -85,15 +85,15 @@ export function getCustomerEventCopy(input: CustomerEventCopyInput): CustomerEve
     case "missed_opportunity":
       return {
         title: "Missed opportunity",
-        detail: `${clinic} · ${service}`,
+        detail: `${clinic} · ${service} — this opening slipped by. Review standby coverage so the next one fits you.`,
         pushTitle: push.title,
         pushBody: push.body,
         stateLabel: "Missed",
       };
     case "standby_status_reminder":
       return {
-        title: "Check your standby status",
-        detail: "Review your coverage and notification readiness.",
+        title: "Review your standby coverage",
+        detail: "Check notification readiness and active preferences so you do not miss the next match.",
         pushTitle: push.title,
         pushBody: push.body,
         stateLabel: "Status",
@@ -101,7 +101,7 @@ export function getCustomerEventCopy(input: CustomerEventCopyInput): CustomerEve
     case "standby_setup_suggestion":
       return {
         title: "Improve your standby setup",
-        detail: "A few small changes could improve your chances.",
+        detail: "You may miss openings until notifications and preferences are dialed in.",
         pushTitle: push.title,
         pushBody: push.body,
         stateLabel: "Suggestion",

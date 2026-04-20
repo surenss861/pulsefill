@@ -23,7 +23,7 @@ enum CustomerActivityFilter: String, CaseIterable, Identifiable {
         case .confirmed:
             return kind == .bookingConfirmed
         case .missed:
-            return kind == .missedOpportunity || kind == .offerExpired
+            return kind == .missedOpportunity || kind == .offerExpired || kind == .claimUnavailable
         }
     }
 }

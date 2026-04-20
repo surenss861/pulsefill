@@ -13,6 +13,8 @@ enum CustomerStateLabelPresenter {
             PFColor.primary
         case .offerExpired, .claimUnavailable, .missedOpportunity:
             PFColor.warning
+        case .standbyStatusReminder, .standbySetupSuggestion:
+            PFColor.primary
         default:
             PFColor.textSecondary
         }

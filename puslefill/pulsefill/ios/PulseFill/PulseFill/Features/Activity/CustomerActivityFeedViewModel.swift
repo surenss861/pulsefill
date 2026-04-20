@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UserNotifications
 
 @Observable
 @MainActor
@@ -23,12 +24,29 @@ final class CustomerActivityFeedViewModel {
 
     func load() async {
         if items.isEmpty { loadState = .loading }
+        let push = await Self.queryPushPermissionStatus()
         do {
-            let response = try await api.getCustomerActivityFeed()
+            let response = try await api.getCustomerActivityFeed(pushPermissionStatus: push)
             items = response.items.sorted { $0.occurredAt > $1.occurredAt }
             loadState = .loaded
         } catch {
             loadState = .failed(APIErrorCopy.message(for: error))
+        }
+    }
+
+    private static func queryPushPermissionStatus() async -> String {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        switch settings.authorizationStatus {
+        case .authorized:
+            return "authorized"
+        case .denied:
+            return "denied"
+        case .notDetermined:
+            return "not_determined"
+        case .provisional, .ephemeral:
+            return "authorized"
+        @unknown default:
+            return "unknown"
         }
     }
 

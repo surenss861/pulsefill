@@ -9,8 +9,12 @@ extension APIClient {
         try await get("/v1/customers/me/claims/\(claimId)/status", as: ClaimOutcomeResponse.self)
     }
 
-    func getCustomerActivityFeed() async throws -> CustomerActivityFeedResponse {
-        try await get("/v1/customers/me/activity-feed", as: CustomerActivityFeedResponse.self)
+    func getCustomerActivityFeed(pushPermissionStatus: String) async throws -> CustomerActivityFeedResponse {
+        let enc = pushPermissionStatus.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "unknown"
+        return try await get(
+            "/v1/customers/me/activity-feed?push_permission_status=\(enc)",
+            as: CustomerActivityFeedResponse.self
+        )
     }
 
     func getMissedOpportunities() async throws -> MissedOpportunitiesResponse {
