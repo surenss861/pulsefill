@@ -1,0 +1,5 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd puslefill/pulsefill && corepack enable pnpm && pnpm install --frozen-lockfile",
+  "buildCommand": "cd puslefill/pulsefill && pnpm run build:dashboard"
+}
