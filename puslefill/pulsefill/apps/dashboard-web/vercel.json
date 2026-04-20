@@ -1,5 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && npx -y pnpm@9.15.0 install --frozen-lockfile",
-  "buildCommand": "cd ../.. && npx -y pnpm@9.15.0 run build:dashboard"
+  "installCommand": "cd ../.. && npx -y pnpm@9.15.0 install --frozen-lockfile"
 }
