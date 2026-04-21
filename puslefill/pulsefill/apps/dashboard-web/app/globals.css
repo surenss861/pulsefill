@@ -1,40 +1,40 @@
 /**
- * PulseFill — design tokens (charcoal + ember orange + oxblood tension).
- * Orange leads action; red/burgundy supports atmosphere and consequence.
+ * PulseFill — design tokens (black-first + FF7A18 ember + C93B2F tension).
+ * Orange: action / recovery heat. Red: consequence / depth — used sparingly.
  */
 
 :root {
   color-scheme: dark;
 
   /* —— Core neutrals —— */
-  --pf-bg-app: #06070a;
-  --pf-bg-page: #0c0d12;
-  --pf-bg-surface: #11131a;
-  --pf-bg-surface-muted: #0a0b0f;
-  --pf-bg-elevated: #151821;
+  --pf-bg-app: #050505;
+  --pf-bg-page: #0a0a0b;
+  --pf-bg-surface: #0f1013;
+  --pf-bg-surface-muted: #080809;
+  --pf-bg-elevated: #14151a;
 
   --pf-border-subtle: rgba(255, 255, 255, 0.08);
   --pf-border-default: rgba(255, 255, 255, 0.1);
   --pf-border-strong: rgba(255, 255, 255, 0.14);
 
   --pf-text-primary: #f5f7fa;
-  --pf-text-secondary: #b8c0cc;
-  --pf-text-tertiary: rgba(127, 135, 148, 0.92);
-  --pf-text-inverse: #0c0a08;
+  --pf-text-secondary: #a7afbc;
+  --pf-text-tertiary: rgba(167, 175, 188, 0.88);
+  --pf-text-inverse: #0a0908;
 
-  /* —— Brand: ember (primary) + oxblood (secondary / tension) —— */
-  --pf-accent-primary: #f97316;
-  --pf-accent-primary-hover: #fb923c;
+  /* —— Brand —— */
+  --pf-accent-primary: #ff7a18;
+  --pf-accent-primary-hover: #ff8c2a;
   --pf-accent-primary-deep: #c2410c;
-  --pf-accent-primary-soft: rgba(249, 115, 22, 0.14);
-  --pf-accent-primary-border: rgba(249, 115, 22, 0.28);
-  --pf-accent-primary-glow: rgba(249, 115, 22, 0.28);
+  --pf-accent-primary-soft: rgba(255, 122, 24, 0.14);
+  --pf-accent-primary-border: rgba(255, 122, 24, 0.28);
+  --pf-accent-primary-glow: rgba(255, 122, 24, 0.28);
 
-  --pf-accent-secondary: #b91c1c;
-  --pf-accent-secondary-hover: #dc2626;
-  --pf-accent-secondary-soft: rgba(185, 28, 28, 0.12);
-  --pf-accent-secondary-border: rgba(185, 28, 28, 0.24);
-  --pf-accent-secondary-glow: rgba(127, 29, 29, 0.35);
+  --pf-accent-secondary: #c93b2f;
+  --pf-accent-secondary-hover: #e24d40;
+  --pf-accent-secondary-soft: rgba(201, 59, 47, 0.12);
+  --pf-accent-secondary-border: rgba(201, 59, 47, 0.24);
+  --pf-accent-secondary-glow: rgba(201, 59, 47, 0.22);
 
   /* —— Semantic —— */
   --pf-success: #10b981;
@@ -45,26 +45,26 @@
   --pf-warning-soft: rgba(245, 158, 11, 0.12);
   --pf-warning-border: rgba(251, 191, 36, 0.24);
 
-  --pf-danger: #ef4444;
-  --pf-danger-soft: rgba(239, 68, 68, 0.12);
-  --pf-danger-border: rgba(248, 113, 113, 0.24);
+  --pf-danger: #c93b2f;
+  --pf-danger-soft: rgba(201, 59, 47, 0.14);
+  --pf-danger-border: rgba(201, 59, 47, 0.28);
 
   --pf-info: #a8a29e;
   --pf-info-soft: rgba(168, 162, 158, 0.12);
   --pf-info-border: rgba(168, 162, 158, 0.22);
 
   /* —— Shell & cards —— */
-  --pf-card-bg: rgba(17, 19, 26, 0.94);
+  --pf-card-bg: rgba(15, 16, 19, 0.94);
   --pf-card-border: var(--pf-border-default);
   --pf-card-radius-xl: 24px;
-  --pf-card-shadow: 0 8px 30px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  --pf-card-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.02);
 
   --pf-card-quiet-bg: rgba(255, 255, 255, 0.03);
   --pf-card-quiet-border: rgba(255, 255, 255, 0.08);
 
-  --pf-card-hero-bg: radial-gradient(circle at top left, rgba(249, 115, 22, 0.12), transparent 40%),
-    radial-gradient(circle at top right, rgba(127, 29, 29, 0.14), transparent 32%), rgba(17, 19, 26, 0.96);
-  --pf-card-hero-border: rgba(249, 115, 22, 0.22);
+  --pf-card-hero-bg: radial-gradient(circle at top left, rgba(255, 122, 24, 0.11), transparent 40%),
+    radial-gradient(circle at top right, rgba(201, 59, 47, 0.12), transparent 34%), rgba(15, 16, 19, 0.96);
+  --pf-card-hero-border: rgba(255, 122, 24, 0.22);
 
   /* —— Queue row surfaces —— */
   --pf-row-urgent-bg: rgba(255, 255, 255, 0.06);
@@ -74,10 +74,8 @@
   --pf-row-resolved-bg: rgba(255, 255, 255, 0.025);
   --pf-row-resolved-border: rgba(255, 255, 255, 0.07);
 
-  /* —— Typography scale —— */
   --pf-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  /* —— Spacing —— */
   --pf-space-2: 8px;
   --pf-space-3: 12px;
   --pf-space-4: 16px;
@@ -92,40 +90,36 @@
   --pf-row-padding-y: 14px;
   --pf-row-padding-x: 16px;
 
-  /* —— Radius —— */
   --pf-radius-sm: 12px;
   --pf-radius-md: 16px;
   --pf-radius-lg: 20px;
   --pf-radius-xl: 24px;
   --pf-radius-pill: 999px;
 
-  /* —— Buttons —— */
   --pf-btn-primary-bg: var(--pf-accent-primary);
   --pf-btn-primary-bg-hover: var(--pf-accent-primary-hover);
   --pf-btn-primary-text: #fff7ed;
-  --pf-btn-primary-shadow: 0 8px 28px rgba(249, 115, 22, 0.32);
+  --pf-btn-primary-shadow: 0 8px 28px rgba(255, 122, 24, 0.32);
 
   --pf-btn-secondary-bg: rgba(255, 255, 255, 0.04);
   --pf-btn-secondary-bg-hover: rgba(255, 255, 255, 0.07);
   --pf-btn-secondary-border: rgba(255, 255, 255, 0.1);
-  --pf-btn-secondary-border-hover: rgba(249, 115, 22, 0.35);
+  --pf-btn-secondary-border-hover: rgba(255, 122, 24, 0.35);
   --pf-btn-secondary-text: var(--pf-text-primary);
 
   --pf-btn-link-text: #fdba74;
   --pf-btn-link-text-hover: #ffedd5;
 
-  /* —— Chips —— */
   --pf-chip-neutral-bg: rgba(255, 255, 255, 0.05);
   --pf-chip-neutral-border: rgba(255, 255, 255, 0.1);
   --pf-chip-neutral-text: #d6d3d1;
 
-  --pf-chip-primary-bg: rgba(249, 115, 22, 0.14);
-  --pf-chip-primary-border: rgba(249, 115, 22, 0.28);
+  --pf-chip-primary-bg: rgba(255, 122, 24, 0.14);
+  --pf-chip-primary-border: rgba(255, 122, 24, 0.28);
   --pf-chip-primary-text: #fed7aa;
 
-  /* Standby / signal (warm; replaces cool “cyan” chip) */
-  --pf-chip-cyan-bg: rgba(249, 115, 22, 0.1);
-  --pf-chip-cyan-border: rgba(251, 146, 60, 0.22);
+  --pf-chip-cyan-bg: rgba(255, 122, 24, 0.1);
+  --pf-chip-cyan-border: rgba(255, 140, 42, 0.22);
   --pf-chip-cyan-text: #ffedd5;
 
   --pf-chip-warning-bg: var(--pf-warning-soft);
@@ -140,16 +134,13 @@
   --pf-chip-success-border: var(--pf-success-border);
   --pf-chip-success-text: #a7f3d0;
 
-  /* Full-page marketing backdrop */
-  --pf-shell-bg: linear-gradient(180deg, #06070a 0%, #0c0d12 38%, #12141c 100%);
+  --pf-shell-bg: linear-gradient(180deg, #050505 0%, #0a0a0b 40%, #0f1013 100%);
 
-  /* —— Motion —— */
   --pf-hover-lift: translateY(-1px);
-  --pf-focus-ring: 0 0 0 3px rgba(249, 115, 22, 0.28);
+  --pf-focus-ring: 0 0 0 3px rgba(255, 122, 24, 0.28);
   --pf-transition-fast: 140ms ease;
   --pf-transition-base: 180ms ease;
 
-  /* —— Legacy aliases —— */
   --bg: var(--pf-bg-app);
   --surface: var(--pf-bg-surface);
   --text: var(--pf-text-primary);
@@ -163,7 +154,7 @@ body {
   padding: 0;
   min-height: 100%;
   background-color: var(--pf-bg-app);
-  background-image: linear-gradient(180deg, #06070a 0%, #0c0d12 42%, #12141c 100%);
+  background-image: linear-gradient(180deg, #050505 0%, #0a0a0b 42%, #0f1013 100%);
   background-attachment: fixed;
   color: var(--text);
   font-family: var(--pf-font-sans);

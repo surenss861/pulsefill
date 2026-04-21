@@ -85,8 +85,9 @@ function TextLink({ children, href }: { children: ReactNode; href: string }) {
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
-        fontSize: 14,
-        fontWeight: 600,
+        fontSize: 13,
+        fontWeight: 500,
+        letterSpacing: "0.04em",
         color: "var(--pf-btn-link-text)",
         textDecoration: "none",
         padding: "10px 0",
@@ -111,7 +112,7 @@ function MutedTextLink({ children, href }: { children: ReactNode; href: string }
         gap: 5,
         fontSize: 13,
         fontWeight: 500,
-        color: "rgba(148,163,184,0.88)",
+        color: "var(--pf-text-tertiary)",
         textDecoration: "none",
         padding: "10px 0",
       }}
@@ -146,17 +147,17 @@ function NavAnchor({ children, href }: { children: ReactNode; href: string }) {
 
 function HeroEyebrow({ children }: { children: ReactNode }) {
   return (
-    <div style={{ marginBottom: 2 }}>
+    <div style={{ marginBottom: 4 }}>
       <span
         style={{
           display: "inline-block",
-          color: "rgba(226,232,240,0.72)",
+          color: "rgba(245,247,250,0.65)",
           fontSize: 10,
           fontWeight: 700,
-          letterSpacing: "0.16em",
+          letterSpacing: "0.18em",
           textTransform: "uppercase",
-          paddingBottom: 5,
-          borderBottom: `1px solid rgba(148,163,184,0.35)`,
+          paddingBottom: 4,
+          borderBottom: `1px solid rgba(255,122,24,0.28)`,
         }}
       >
         {children}
@@ -238,7 +239,7 @@ function OperatorHeroMock() {
         border: `1px solid ${TOKENS.border}`,
         background: "rgba(5,8,16,0.94)",
         overflow: "hidden",
-        boxShadow: "0 40px 100px rgba(0,0,0,0.62), 0 0 0 1px rgba(249,115,22,0.14), 0 0 140px rgba(249,115,22,0.22)",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,122,24,0.14), 0 0 140px rgba(255,122,24,0.22)",
       }}
     >
       <MockBrowserChrome title="PulseFill — Recovery">
@@ -249,7 +250,7 @@ function OperatorHeroMock() {
             borderRadius: 16,
             padding: 16,
             marginBottom: 12,
-            boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
+            boxShadow: "0 0 0 1px rgba(255,122,24,0.12), 0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
           }}
         >
           <div
@@ -274,7 +275,7 @@ function OperatorHeroMock() {
           <div
             style={{
               borderRadius: 14,
-              border: `1px solid rgba(249,115,22,0.28)`,
+              border: `1px solid rgba(255,122,24,0.28)`,
               background: "rgba(255,255,255,0.04)",
               padding: 12,
               boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
@@ -340,7 +341,7 @@ function CustomerHeroPhone() {
         border: `1px solid rgba(255,255,255,0.08)`,
         background: "linear-gradient(165deg, rgba(14,18,30,0.98), rgba(6,8,14,0.98))",
         padding: 7,
-        boxShadow: "0 22px 56px rgba(0,0,0,0.55), 0 0 48px rgba(249,115,22,0.12)",
+        boxShadow: "0 22px 56px rgba(0,0,0,0.55), 0 0 48px rgba(255,122,24,0.12)",
       }}
     >
       <div
@@ -366,7 +367,7 @@ function CustomerHeroPhone() {
             borderRadius: 16,
             padding: 14,
             background: "var(--pf-card-hero-bg)",
-            border: `1px solid rgba(249,115,22,0.35)`,
+            border: `1px solid rgba(255,122,24,0.35)`,
           }}
         >
           <div style={{ color: TOKENS.text, fontSize: 13, fontWeight: 620 }}>Offer available</div>
@@ -410,10 +411,10 @@ function OperatorPayoffMock() {
     <div
       style={{
         borderRadius: 26,
-        border: `1px solid rgba(249,115,22,0.35)`,
+        border: `1px solid rgba(255,122,24,0.35)`,
         background: "rgba(4,7,14,0.96)",
         overflow: "hidden",
-        boxShadow: "0 40px 100px rgba(0,0,0,0.6), 0 0 140px rgba(249,115,22,0.2)",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.6), 0 0 140px rgba(255,122,24,0.2)",
       }}
     >
       <MockBrowserChrome title="PulseFill — Operator">
@@ -424,7 +425,7 @@ function OperatorPayoffMock() {
             borderRadius: 18,
             padding: 16,
             marginBottom: 14,
-            boxShadow: "0 0 0 1px rgba(249,115,22,0.1), 0 20px 52px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
+            boxShadow: "0 0 0 1px rgba(255,122,24,0.1), 0 20px 52px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
           }}
         >
           <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
@@ -438,7 +439,7 @@ function OperatorPayoffMock() {
           </div>
         </div>
         <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
-          <div style={{ borderRadius: 16, border: `1px solid rgba(249,115,22,0.25)`, background: "rgba(255,255,255,0.04)", padding: 14 }}>
+          <div style={{ borderRadius: 16, border: `1px solid rgba(255,122,24,0.25)`, background: "rgba(255,255,255,0.04)", padding: 14 }}>
             <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 650 }}>What to work first</div>
             <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
               {[
@@ -495,7 +496,7 @@ function CustomerPayoffPhone() {
         border: `1px solid ${TOKENS.border}`,
         background: "rgba(6,10,18,0.98)",
         padding: 10,
-        boxShadow: "0 32px 88px rgba(0,0,0,0.58), 0 0 72px rgba(249,115,22,0.14)",
+        boxShadow: "0 32px 88px rgba(0,0,0,0.58), 0 0 72px rgba(255,122,24,0.14)",
       }}
     >
       <div
@@ -521,7 +522,7 @@ function CustomerPayoffPhone() {
               borderRadius: 18,
               padding: 14,
               background: "var(--pf-card-hero-bg)",
-              border: `1px solid rgba(249,115,22,0.32)`,
+              border: `1px solid rgba(255,122,24,0.32)`,
             }}
           >
             <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 620 }}>Offer available</div>
@@ -593,9 +594,9 @@ export function PulseFillLandingPage() {
     overflowX: "hidden",
     color: TOKENS.text,
     background: `
-      radial-gradient(ellipse 88% 52% at 76% 16%, rgba(249,115,22,0.3), transparent 52%),
-      radial-gradient(ellipse 65% 40% at 10% 20%, rgba(127,29,29,0.14), transparent 46%),
-      radial-gradient(ellipse 120% 78% at 50% 0%, rgba(0,0,0,0.38), transparent 56%),
+      radial-gradient(ellipse 52% 36% at 78% 12%, rgba(255,122,24,0.12), transparent 50%),
+      radial-gradient(ellipse 70% 45% at 8% 18%, rgba(201,59,47,0.08), transparent 48%),
+      radial-gradient(ellipse 120% 78% at 50% 0%, rgba(0,0,0,0.42), transparent 56%),
       var(--pf-shell-bg)
     `,
   };
@@ -608,7 +609,7 @@ export function PulseFillLandingPage() {
           top: 0,
           zIndex: 30,
           backdropFilter: "blur(16px) saturate(1.2)",
-          background: "rgba(5,8,14,0.78)",
+          background: "rgba(5,5,5,0.82)",
           borderBottom: `1px solid ${TOKENS.borderSubtle}`,
         }}
       >
@@ -648,8 +649,8 @@ export function PulseFillLandingPage() {
             position: "absolute",
             inset: 0,
             background: `
-              radial-gradient(ellipse 50% 85% at 18% 42%, rgba(0,0,0,0.5), transparent 52%),
-              radial-gradient(ellipse 62% 78% at 72% 44%, rgba(249,115,22,0.18), transparent 58%)
+              radial-gradient(ellipse 50% 85% at 18% 42%, rgba(0,0,0,0.55), transparent 52%),
+              radial-gradient(ellipse 48% 52% at 70% 46%, rgba(255,122,24,0.07), transparent 55%)
             `,
             pointerEvents: "none",
           }}
@@ -679,13 +680,13 @@ export function PulseFillLandingPage() {
               <HeroEyebrow>Appointment Recovery Operating System</HeroEyebrow>
               <h1
                 style={{
-                  margin: "10px 0 0 0",
+                  margin: "6px 0 0 0",
                   color: TOKENS.text,
                   fontSize: "clamp(44px, 6.2vw, 80px)",
                   lineHeight: 0.94,
                   letterSpacing: "-0.058em",
                   fontWeight: 680,
-                  maxWidth: 380,
+                  maxWidth: 360,
                 }}
               >
                 <span style={{ display: "block" }}>Cancellations are inevitable.</span>
@@ -693,21 +694,21 @@ export function PulseFillLandingPage() {
               </h1>
               <p
                 style={{
-                  margin: "18px 0 0 0",
+                  margin: "22px 0 0 0",
                   color: TOKENS.muted,
                   fontSize: 15,
-                  lineHeight: 1.52,
-                  maxWidth: 310,
+                  lineHeight: 1.5,
+                  maxWidth: 340,
                   fontWeight: 500,
                 }}
               >
-                The operating layer between cancellations and recovered revenue — standby, operators, proof.
+                The operating layer between cancellations and recovered revenue.
               </p>
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px", marginTop: 20 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px", marginTop: 16 }}>
                 <PrimaryButton href={demoHref}>Book a demo</PrimaryButton>
                 <TextLink href="#how-it-works">See the workflow</TextLink>
               </div>
-              <p style={{ marginTop: 14, color: "rgba(148,163,184,0.55)", fontSize: 10, lineHeight: 1.5, maxWidth: 280, letterSpacing: "0.03em" }}>
+              <p style={{ marginTop: 8, color: TOKENS.tertiary, fontSize: 11, lineHeight: 1.5, maxWidth: 300, letterSpacing: "0.02em" }}>
                 For teams where recovery windows close fast.
               </p>
             </div>
@@ -721,21 +722,21 @@ export function PulseFillLandingPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "flex-end",
-                transform: "translateX(clamp(0px, 1.5vw, 32px))",
+                transform: "translateX(clamp(4px, 2vw, 48px))",
               }}
             >
               <div
                 aria-hidden
                 style={{
                   position: "absolute",
-                  width: "min(125%, 760px)",
-                  height: "min(112%, 560px)",
-                  left: "54%",
-                  top: "48%",
+                  width: "min(72%, 520px)",
+                  height: "min(88%, 480px)",
+                  left: "62%",
+                  top: "50%",
                   transform: "translate(-50%, -50%)",
-                  background: "radial-gradient(circle, rgba(249,115,22,0.52) 0%, rgba(249,115,22,0.2) 38%, rgba(249,115,22,0.06) 55%, transparent 72%)",
-                  filter: "blur(52px)",
-                  opacity: 0.95,
+                  background: "radial-gradient(circle, rgba(255,122,24,0.5) 0%, rgba(255,122,24,0.14) 42%, transparent 68%)",
+                  filter: "blur(44px)",
+                  opacity: 0.92,
                   pointerEvents: "none",
                 }}
               />
@@ -743,21 +744,21 @@ export function PulseFillLandingPage() {
                 aria-hidden
                 style={{
                   position: "absolute",
-                  right: "-4%",
-                  bottom: "-2%",
-                  width: 180,
-                  height: 220,
+                  right: "-2%",
+                  bottom: "-4%",
+                  width: 200,
+                  height: 200,
                   borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(63,13,18,0.22), transparent 70%)",
-                  filter: "blur(40px)",
+                  background: "radial-gradient(circle, rgba(201,59,47,0.2), transparent 70%)",
+                  filter: "blur(36px)",
                   pointerEvents: "none",
                 }}
               />
 
-              <div style={{ position: "relative", width: "100%", maxWidth: 700, marginRight: "clamp(-12px, -2vw, 0px)" }}>
+              <div style={{ position: "relative", width: "100%", maxWidth: 720, marginRight: "clamp(-16px, -2vw, 0px)" }}>
                 <div
                   style={{
-                    transform: "rotate(-0.55deg) scale(1.22)",
+                    transform: "rotate(-0.5deg) scale(1.3)",
                     transformOrigin: "center center",
                     filter: "drop-shadow(0 36px 64px rgba(0,0,0,0.62))",
                   }}
@@ -773,10 +774,10 @@ export function PulseFillLandingPage() {
                     zIndex: 6,
                     padding: "9px 12px",
                     borderRadius: 12,
-                    border: "1px solid rgba(249,115,22,0.4)",
+                    border: "1px solid rgba(255,122,24,0.4)",
                     background: "rgba(4,6,12,0.92)",
                     backdropFilter: "blur(14px)",
-                    boxShadow: "0 14px 40px rgba(0,0,0,0.55), 0 0 32px rgba(249,115,22,0.2)",
+                    boxShadow: "0 14px 40px rgba(0,0,0,0.55), 0 0 32px rgba(255,122,24,0.2)",
                   }}
                 >
                   <div style={{ fontSize: 8, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" }}>
@@ -840,7 +841,7 @@ export function PulseFillLandingPage() {
               >
                 Most teams still handle cancellations with a scramble.
               </h2>
-              <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 15, lineHeight: 1.65, maxWidth: 400 }}>
+              <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 15, lineHeight: 1.65, maxWidth: 420 }}>
                 When a near-term appointment falls out of the schedule, recovery usually depends on calls, texts, memory,
                 ad hoc lists, and whoever notices first. Openings expire fast. Staff time gets burned. And most teams still
                 can&apos;t see why a slot was lost.
@@ -850,7 +851,7 @@ export function PulseFillLandingPage() {
               {[
                 {
                   t: "Openings expire fast",
-                  d: "Short windows: every minute of delay costs the fill.",
+                  d: "Short windows. Every minute of delay costs the fill.",
                 },
                 {
                   t: "Manual follow-up doesn't scale",
@@ -858,15 +859,15 @@ export function PulseFillLandingPage() {
                 },
                 {
                   t: "Most tools stop at the calendar",
-                  d: "They store slots — they don't run recovery when the schedule breaks.",
+                  d: "They store slots. They don't run recovery when the schedule breaks.",
                 },
               ].map((row, i) => (
                 <div
                   key={row.t}
                   style={{
-                    padding: "16px 0 16px 16px",
-                    borderLeft: `2px solid ${i === 0 ? "rgba(249,115,22,0.85)" : "rgba(255,255,255,0.05)"}`,
-                    borderBottom: i < 2 ? `1px solid rgba(255,255,255,0.04)` : "none",
+                    padding: "18px 0 18px 16px",
+                    borderLeft: `2px solid ${i === 0 ? "rgba(255,122,24,0.9)" : "rgba(255,255,255,0.06)"}`,
+                    borderBottom: `1px solid rgba(255,255,255,0.06)`,
                     opacity: i === 0 ? 1 : 0.78,
                   }}
                 >
@@ -885,20 +886,28 @@ export function PulseFillLandingPage() {
               ))}
               <div
                 style={{
-                  marginTop: 32,
-                  padding: "20px 20px 22px",
-                  borderRadius: 0,
-                  background: "linear-gradient(180deg, rgba(63,13,18,0.35), rgba(0,0,0,0.88))",
-                  borderLeft: "4px solid rgba(185,28,28,0.75)",
-                  borderTop: "1px solid rgba(255,255,255,0.07)",
-                  boxShadow: "0 24px 56px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
+                  marginTop: 28,
+                  paddingTop: 24,
+                  borderTop: "1px solid rgba(255,122,24,0.15)",
                 }}
               >
-                <div style={{ color: TOKENS.tertiary, fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
-                  What teams actually lack
-                </div>
-                <div style={{ marginTop: 10, color: TOKENS.text, fontSize: 21, fontWeight: 650, letterSpacing: "-0.035em", lineHeight: 1.12 }}>
-                  Visibility into why recovery stalls
+                <div
+                  style={{
+                    padding: "22px 22px 24px",
+                    borderRadius: 0,
+                    background: "linear-gradient(165deg, rgba(201,59,47,0.14), rgba(0,0,0,0.94))",
+                    borderLeft: "4px solid rgba(255,122,24,0.95)",
+                    borderTop: "1px solid rgba(255,255,255,0.06)",
+                    borderRight: "1px solid rgba(255,255,255,0.04)",
+                    boxShadow: "0 28px 64px rgba(0,0,0,0.55), 0 0 48px rgba(201,59,47,0.12), inset 0 1px 0 rgba(255,255,255,0.03)",
+                  }}
+                >
+                  <div style={{ color: TOKENS.text, fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                    What teams actually lack
+                  </div>
+                  <div style={{ marginTop: 12, color: TOKENS.text, fontSize: 22, fontWeight: 650, letterSpacing: "-0.04em", lineHeight: 1.1 }}>
+                    Visibility into why recovery stalls
+                  </div>
                 </div>
               </div>
             </div>
@@ -911,7 +920,7 @@ export function PulseFillLandingPage() {
         id="missing-layer"
         style={{
           padding: "clamp(88px, 14vw, 160px) 0 clamp(72px, 11vw, 120px)",
-          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(249,115,22,0.08), transparent 55%), rgba(0,0,0,0.08)",
+          background: "radial-gradient(ellipse 70% 42% at 50% 0%, rgba(255,122,24,0.045), transparent 55%), rgba(0,0,0,0.1)",
         }}
       >
         <Container>
@@ -953,7 +962,7 @@ export function PulseFillLandingPage() {
                 right: "4%",
                 top: 0,
                 height: 1,
-                background: "linear-gradient(90deg, transparent, rgba(249,115,22,0.25), rgba(249,115,22,0.25), transparent)",
+                background: "linear-gradient(90deg, transparent, rgba(255,122,24,0.25), rgba(255,122,24,0.25), transparent)",
                 opacity: 0.85,
               }}
             />
@@ -961,14 +970,14 @@ export function PulseFillLandingPage() {
               aria-hidden
               style={{
                 position: "absolute",
-                left: "30%",
-                right: "30%",
+                left: "32%",
+                right: "32%",
                 top: 0,
-                height: 2,
-                borderRadius: 2,
-                background: "linear-gradient(90deg, transparent, rgba(249,115,22,0.9), rgba(253,186,116,0.75), rgba(249,115,22,0.9), transparent)",
-                boxShadow: "0 0 24px rgba(249,115,22,0.45)",
-                opacity: 0.95,
+                height: 1,
+                borderRadius: 1,
+                background: "linear-gradient(90deg, transparent, rgba(255,122,24,0.75), rgba(253,186,116,0.55), rgba(255,122,24,0.75), transparent)",
+                boxShadow: "0 0 18px rgba(255,122,24,0.28)",
+                opacity: 0.88,
                 pointerEvents: "none",
               }}
             />
@@ -995,25 +1004,27 @@ export function PulseFillLandingPage() {
                         alignItems: "flex-end",
                         alignSelf: "stretch",
                         paddingBottom: 18,
-                        color: "rgba(251,146,60,0.55)",
-                        fontSize: 15,
-                        fontWeight: 500,
-                        letterSpacing: "0.08em",
+                        color: "rgba(255,122,24,0.32)",
+                        fontSize: 12,
+                        fontWeight: 400,
+                        letterSpacing: "0.2em",
                         flexShrink: 0,
                       }}
                     >
-                      ▸
+                      →
                     </div>
                   ) : null}
                   <div
                     style={{
                       flex: block.emphasis === "hero" ? "1.35 1 220px" : "0.85 1 180px",
                       minWidth: "min(100%, 180px)",
-                      maxWidth: block.emphasis === "hero" ? 360 : 260,
-                      padding: block.emphasis === "hero" ? "4px 4px 22px 0" : "4px 4px 18px 0",
-                      borderBottom: block.emphasis === "hero" ? "3px solid rgba(249,115,22,0.75)" : "1px solid rgba(255,255,255,0.06)",
-                      background: "transparent",
-                      opacity: block.emphasis === "hero" ? 1 : 0.72,
+                      maxWidth: block.emphasis === "hero" ? 380 : 260,
+                      padding: block.emphasis === "hero" ? "14px 14px 22px 14px" : "4px 4px 18px 0",
+                      borderRadius: block.emphasis === "hero" ? 6 : 0,
+                      borderBottom: block.emphasis === "hero" ? "4px solid rgba(255,122,24,0.88)" : "1px solid rgba(255,255,255,0.06)",
+                      background: block.emphasis === "hero" ? "rgba(255,122,24,0.06)" : "transparent",
+                      opacity: block.emphasis === "hero" ? 1 : 0.68,
+                      boxShadow: block.emphasis === "hero" ? "0 0 40px rgba(255,122,24,0.08)" : undefined,
                     }}
                   >
                     <div
@@ -1087,11 +1098,11 @@ export function PulseFillLandingPage() {
                 position: "absolute",
                 left: "2%",
                 right: "2%",
-                top: 11,
+                top: 10,
                 height: 1,
                 borderRadius: 1,
-                background: "linear-gradient(90deg, rgba(249,115,22,0.15), rgba(255,255,255,0.06), rgba(249,115,22,0.15))",
-                opacity: 0.9,
+                background: "linear-gradient(90deg, rgba(255,122,24,0.1), rgba(255,255,255,0.05), rgba(255,122,24,0.1))",
+                opacity: 0.85,
                 pointerEvents: "none",
               }}
             />
@@ -1099,13 +1110,14 @@ export function PulseFillLandingPage() {
               aria-hidden
               style={{
                 position: "absolute",
-                left: "38%",
-                right: "38%",
+                left: "40%",
+                right: "40%",
                 top: 10,
-                height: 2,
-                borderRadius: 2,
-                background: "linear-gradient(90deg, transparent, rgba(249,115,22,0.85), rgba(253,186,116,0.6), rgba(249,115,22,0.85), transparent)",
-                boxShadow: "0 0 20px rgba(249,115,22,0.35)",
+                height: 1,
+                borderRadius: 1,
+                background: "linear-gradient(90deg, transparent, rgba(255,122,24,0.55), rgba(253,186,116,0.4), rgba(255,122,24,0.55), transparent)",
+                boxShadow: "0 0 14px rgba(255,122,24,0.22)",
+                opacity: 0.75,
                 pointerEvents: "none",
               }}
             />
@@ -1134,10 +1146,10 @@ export function PulseFillLandingPage() {
                           fontWeight: 700,
                           color: TOKENS.text,
                           background: isOp
-                            ? "linear-gradient(145deg, rgba(249,115,22,0.55), rgba(10,12,20,0.95))"
-                            : "linear-gradient(145deg, rgba(249,115,22,0.22), rgba(10,12,20,0.92))",
+                            ? "linear-gradient(145deg, rgba(255,122,24,0.55), rgba(10,12,20,0.95))"
+                            : "linear-gradient(145deg, rgba(255,122,24,0.22), rgba(10,12,20,0.92))",
                           border: isOp ? `1px solid rgba(253,186,116,0.55)` : `1px solid rgba(255,255,255,0.1)`,
-                          boxShadow: isOp ? "0 0 20px rgba(249,115,22,0.25)" : undefined,
+                          boxShadow: isOp ? "0 0 20px rgba(255,122,24,0.25)" : undefined,
                           flexShrink: 0,
                           opacity: isBook ? 0.75 : 1,
                         }}
@@ -1151,8 +1163,8 @@ export function PulseFillLandingPage() {
                         borderRadius: isOp ? 14 : 10,
                         padding: isOp ? "16px 14px 18px" : "12px 12px 14px",
                         minHeight: isOp ? 104 : 88,
-                        background: isOp ? "rgba(249,115,22,0.08)" : "rgba(255,255,255,0.012)",
-                        border: isOp ? "1px solid rgba(249,115,22,0.35)" : "1px solid rgba(255,255,255,0.04)",
+                        background: isOp ? "rgba(255,122,24,0.08)" : "rgba(255,255,255,0.012)",
+                        border: isOp ? "1px solid rgba(255,122,24,0.35)" : "1px solid rgba(255,255,255,0.04)",
                         boxShadow: isOp ? "0 12px 40px rgba(0,0,0,0.35)" : undefined,
                         opacity: isBook ? 0.88 : 1,
                       }}
@@ -1165,6 +1177,7 @@ export function PulseFillLandingPage() {
                           lineHeight: 1.2,
                         }}
                       >
+                        <span style={{ color: "rgba(255,255,255,0.28)", marginRight: 8 }}>—</span>
                         {title}
                       </div>
                       <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: isOp ? 12 : 11, lineHeight: 1.5 }}>{body}</p>
@@ -1192,7 +1205,7 @@ export function PulseFillLandingPage() {
             position: "absolute",
             inset: "2% -18% 0",
             background:
-              "radial-gradient(ellipse 78% 68% at 52% 38%, rgba(249,115,22,0.42), transparent 58%), radial-gradient(ellipse 36% 30% at 92% 88%, rgba(127,29,29,0.16), transparent 52%)",
+              "radial-gradient(ellipse 70% 58% at 54% 36%, rgba(255,122,24,0.26), transparent 58%), radial-gradient(ellipse 36% 30% at 92% 88%, rgba(201,59,47,0.12), transparent 52%)",
             pointerEvents: "none",
           }}
         />
@@ -1238,7 +1251,7 @@ export function PulseFillLandingPage() {
               <div style={{ marginTop: 26, display: "grid", gap: 20, maxWidth: 340 }}>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(253,186,116,0.95)" }}>
-                    Operator console
+                    Operator Console
                   </div>
                   <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.5 }}>
                     Command the queue. See delivery. Close the loop on revenue.
@@ -1271,12 +1284,12 @@ export function PulseFillLandingPage() {
                 style={{
                   position: "absolute",
                   inset: "-14% -8% 0 0",
-                  background: "radial-gradient(circle at 50% 30%, rgba(249,115,22,0.45), transparent 60%)",
+                  background: "radial-gradient(circle at 50% 30%, rgba(255,122,24,0.45), transparent 60%)",
                   filter: "blur(36px)",
                   pointerEvents: "none",
                 }}
               />
-              <div style={{ position: "relative", transform: "scale(1.24)", transformOrigin: "top left" }}>
+              <div style={{ position: "relative", transform: "scale(1.32)", transformOrigin: "top left" }}>
                 <OperatorPayoffMock />
               </div>
               <div
@@ -1299,10 +1312,10 @@ export function PulseFillLandingPage() {
                   zIndex: 5,
                   padding: "10px 12px",
                   borderRadius: 11,
-                  border: "1px solid rgba(249,115,22,0.42)",
+                  border: "1px solid rgba(255,122,24,0.42)",
                   background: "rgba(3,5,12,0.94)",
                   backdropFilter: "blur(12px)",
-                  boxShadow: "0 16px 40px rgba(0,0,0,0.55), 0 0 36px rgba(249,115,22,0.18)",
+                  boxShadow: "0 16px 40px rgba(0,0,0,0.55), 0 0 36px rgba(255,122,24,0.18)",
                 }}
               >
                 <div style={{ fontSize: 8, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" }}>
@@ -1379,11 +1392,12 @@ export function PulseFillLandingPage() {
               >
                 <span
                   style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 700,
-                    letterSpacing: "0.14em",
-                    color: "rgba(249,115,22,0.85)",
-                    minWidth: 28,
+                    letterSpacing: "0.18em",
+                    color: "rgba(255,122,24,0.92)",
+                    minWidth: 32,
+                    fontVariantNumeric: "tabular-nums",
                   }}
                 >
                   {row.n}
@@ -1412,7 +1426,7 @@ export function PulseFillLandingPage() {
           style={{
             position: "absolute",
             inset: "20% -20% -10%",
-            background: "radial-gradient(ellipse 70% 55% at 40% 40%, rgba(249,115,22,0.12), transparent 60%)",
+            background: "radial-gradient(ellipse 58% 48% at 38% 38%, rgba(255,122,24,0.08), transparent 58%)",
             pointerEvents: "none",
           }}
         />
@@ -1444,7 +1458,7 @@ export function PulseFillLandingPage() {
                 padding: "40px 28px 44px",
                 background: "rgba(0,0,0,0.55)",
                 border: "1px solid rgba(255,255,255,0.06)",
-                borderLeft: "4px solid rgba(249,115,22,0.85)",
+                borderLeft: "4px solid rgba(255,122,24,0.85)",
                 boxShadow: "0 40px 80px rgba(0,0,0,0.45)",
               }}
             >
@@ -1488,9 +1502,9 @@ export function PulseFillLandingPage() {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "32px 48px" }}>
               {[
-                ["Fill-rate visibility", "Live"],
-                ["Workflow clarity", "High"],
-                ["Manual chaos", "Down"],
+                ["Fill-rate Visibility", "Live"],
+                ["Workflow Clarity", "High"],
+                ["Manual Chaos", "Down"],
               ].map(([k, v]) => (
                 <div key={k}>
                   <div style={{ fontSize: 10, color: TOKENS.muted, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>{k}</div>
@@ -1505,16 +1519,17 @@ export function PulseFillLandingPage() {
         </Container>
       </section>
 
-      {/* —— Trust: field manual (mode: system) —— */}
+      {/* —— Trust: control doctrine (mode: system) —— */}
       <section
         id="trust"
         style={{
-          padding: "clamp(56px, 9vw, 88px) 0 clamp(72px, 11vw, 120px)",
-          background: "rgba(0,0,0,0.16)",
+          padding: "clamp(64px, 10vw, 100px) 0 clamp(80px, 12vw, 120px)",
+          background: "linear-gradient(180deg, rgba(0,0,0,0.22), rgba(5,5,5,0.94))",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
         }}
       >
         <Container>
-          <div style={{ maxWidth: 360 }}>
+          <div style={{ maxWidth: 520 }}>
             <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
               Trust
             </div>
@@ -1526,32 +1541,46 @@ export function PulseFillLandingPage() {
                 fontWeight: 620,
                 letterSpacing: "-0.04em",
                 lineHeight: 1.06,
+                maxWidth: 480,
               }}
             >
               Understandable. Controllable. Real.
             </h2>
-            <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.62, maxWidth: 340 }}>
+            <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.62, maxWidth: 400 }}>
               Legible recovery: attention, wait states, failures, confirmations, thin coverage — all explicit.
             </p>
           </div>
-          <div style={{ marginTop: 44, maxWidth: 480, display: "grid", gap: 22 }}>
-            {["Clear queue reasons", "Explicit operator actions", "Delivery visibility", "No black-box guessing"].map((item) => (
+          <div
+            style={{
+              marginTop: 36,
+              maxWidth: 640,
+              border: "1px solid rgba(255,255,255,0.09)",
+              background: "rgba(0,0,0,0.45)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+            }}
+          >
+            {["Clear queue reasons", "Explicit operator actions", "Delivery visibility", "No black-box guessing"].map((item, i, arr) => (
               <div
                 key={item}
                 style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 14,
+                  padding: "16px 22px",
+                  borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.06)" : undefined,
                   fontSize: 14,
                   fontWeight: 600,
                   color: TOKENS.text,
                   letterSpacing: "-0.02em",
-                  lineHeight: 1.35,
-                  paddingBottom: 2,
+                  lineHeight: 1.4,
                 }}
               >
-                {item}
+                <span style={{ color: "rgba(255,122,24,0.55)", fontSize: 11, fontWeight: 700, width: 14, flexShrink: 0 }}>▸</span>
+                <span>{item}</span>
               </div>
             ))}
           </div>
-          <p style={{ marginTop: 32, color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 320 }}>
+          <p style={{ marginTop: 28, color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 360, fontWeight: 500 }}>
             No ambiguity. No theater.
           </p>
         </Container>
@@ -1581,9 +1610,9 @@ export function PulseFillLandingPage() {
                 position: "absolute",
                 inset: "-8% -12% -20%",
                 background: `
-                  radial-gradient(ellipse 55% 70% at 50% 0%, rgba(249,115,22,0.5), transparent 52%),
-                  radial-gradient(ellipse 42% 45% at 92% 96%, rgba(185,28,28,0.14), transparent 50%),
-                  radial-gradient(circle at 50% 60%, rgba(4,6,12,0.2), rgba(0,0,0,0.88))
+                  radial-gradient(ellipse 48% 58% at 50% 0%, rgba(255,122,24,0.55), transparent 50%),
+                  radial-gradient(ellipse 38% 42% at 94% 98%, rgba(201,59,47,0.16), transparent 52%),
+                  radial-gradient(circle at 50% 60%, rgba(4,6,12,0.2), rgba(0,0,0,0.9))
                 `,
               }}
             />
