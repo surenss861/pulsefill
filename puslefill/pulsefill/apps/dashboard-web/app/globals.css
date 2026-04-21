@@ -138,6 +138,9 @@
   --pf-chip-success-border: var(--pf-success-border);
   --pf-chip-success-text: #a7f3d0;
 
+  /* Full-page marketing backdrop (layers with radial accents in components). */
+  --pf-shell-bg: linear-gradient(180deg, #070b14 0%, #0b1220 40%, #0f172a 100%);
+
   /* —— Motion —— */
   --pf-hover-lift: translateY(-1px);
   --pf-focus-ring: 0 0 0 3px rgba(124, 58, 237, 0.22);

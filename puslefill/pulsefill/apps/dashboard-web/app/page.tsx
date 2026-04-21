@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { PulseFillLandingPage } from "@/components/marketing/pulsefill-landing-page";
 
 export default function Home() {
-  redirect("/overview");
+  return <PulseFillLandingPage />;
 }
