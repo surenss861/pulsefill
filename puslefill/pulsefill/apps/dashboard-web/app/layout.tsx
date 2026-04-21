@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PulseFill — Appointment recovery",
+  title: "PulseFill — The missing layer between cancellations and recovered bookings",
   description:
-    "Recover same-day and near-term cancellations through a two-sided standby system and operator recovery workflow.",
+    "Recovery infrastructure for appointment businesses: standby matching, operator workflow, and measurable revenue recovery.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
