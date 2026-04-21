@@ -27,9 +27,9 @@ export function ActionQueuePreviewCard({
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Needs attention</h2>
+          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Needs attention now</h2>
           <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 14, maxWidth: 520 }}>
-            Urgent items across claims, deliveries, and retries. Open the full queue for everything.
+            The highest-priority recovery items currently waiting on operator action.
           </p>
         </div>
         <Link
@@ -45,7 +45,7 @@ export function ActionQueuePreviewCard({
             whiteSpace: "nowrap",
           }}
         >
-          Open action queue
+          Open Action Queue
         </Link>
       </div>
 
@@ -53,13 +53,15 @@ export function ActionQueuePreviewCard({
       {loading ? <p style={{ color: "var(--muted)", marginTop: 16 }}>Loading…</p> : null}
 
       {!loading && !error && top.length === 0 ? (
-        <p style={{ color: "var(--muted)", marginTop: 16, marginBottom: 0 }}>Nothing urgent right now.</p>
+        <p style={{ color: "var(--muted)", marginTop: 16, marginBottom: 0 }}>
+          No urgent recovery work right now. Review open slots or check delivery health below.
+        </p>
       ) : null}
 
       {!loading && top.length > 0 ? (
         <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
           {top.map((item) => (
-            <ActionQueueItemCard key={item.id} item={item} />
+            <ActionQueueItemCard key={item.id} item={item} section="needs_action" />
           ))}
         </div>
       ) : null}

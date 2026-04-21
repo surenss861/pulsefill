@@ -2,11 +2,14 @@ import SwiftUI
 
 struct OperatorSlotsListView: View {
     @EnvironmentObject private var env: AppEnvironment
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: OperatorSlotsListViewModel
     @State private var path = NavigationPath()
+    private let digestContext: OperatorSlotsDigestContext?
 
-    init(api: APIClient) {
-        _viewModel = StateObject(wrappedValue: OperatorSlotsListViewModel(api: api))
+    init(api: APIClient, digestContext: OperatorSlotsDigestContext? = nil) {
+        self.digestContext = digestContext
+        _viewModel = StateObject(wrappedValue: OperatorSlotsListViewModel(api: api, digestContext: digestContext))
     }
 
     var body: some View {
@@ -83,6 +86,10 @@ struct OperatorSlotsListView: View {
     private var contentView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                if let digest = digestContext {
+                    digestBanner(digest)
+                }
+
                 OperatorSlotsSummaryBar(counts: viewModel.counts)
 
                 Picker("Filter", selection: $viewModel.selectedFilter) {
@@ -153,6 +160,38 @@ struct OperatorSlotsListView: View {
             .padding(.top, 16)
             .padding(.horizontal, 20)
         }
+    }
+
+    private func digestBanner(_ digest: OperatorSlotsDigestContext) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(digest.title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(PFColor.textPrimary)
+                    if let sub = digest.subtitle, !sub.isEmpty {
+                        Text(sub)
+                            .font(.system(size: 12))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                Spacer()
+                Button("Done") {
+                    dismiss()
+                }
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(PFColor.primary)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PFSurface.card)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(PFColor.textSecondary.opacity(0.15), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var emptyCopy: String {

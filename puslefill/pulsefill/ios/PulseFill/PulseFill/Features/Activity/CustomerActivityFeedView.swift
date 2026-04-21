@@ -44,7 +44,7 @@ struct CustomerActivityFeedView: View {
                                         ForEach(viewModel.filteredItems) { item in
                                             Button {
                                                 if let dest = CustomerRouteMapper.destinationForActivityItem(item) {
-                                                    path.append(dest)
+                                                    env.customerNavigation.open(dest)
                                                 }
                                             } label: {
                                                 CustomerActivityCard(item: item)

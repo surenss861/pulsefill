@@ -24,6 +24,10 @@ struct OperatorSlotListRow: View {
 
                 StatusChipView(status: slot.status)
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onOpen()
+            }
 
             HStack(spacing: 10) {
                 if let primaryAction {

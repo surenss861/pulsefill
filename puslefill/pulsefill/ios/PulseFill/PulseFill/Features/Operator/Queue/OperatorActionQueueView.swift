@@ -1,9 +1,24 @@
 import SwiftUI
 
+private struct MorningDigestSlotsRoute: Identifiable, Hashable {
+    let id: String
+    let slotIds: [String]
+    let title: String
+    let subtitle: String?
+
+    init(section: MorningRecoveryDigestSection) {
+        id = section.kind.rawValue
+        slotIds = section.slotIds
+        title = section.title
+        subtitle = section.detail
+    }
+}
+
 struct OperatorActionQueueView: View {
     @EnvironmentObject private var env: AppEnvironment
     @StateObject private var viewModel: OperatorActionQueueViewModel
     @State private var path = NavigationPath()
+    @State private var digestSlotsSheet: MorningDigestSlotsRoute?
 
     init(api: APIClient) {
         _viewModel = StateObject(wrappedValue: OperatorActionQueueViewModel(api: api))
@@ -47,6 +62,17 @@ struct OperatorActionQueueView: View {
                     Text(viewModel.flashMessage ?? "")
                 }
             )
+            .sheet(item: $digestSlotsSheet) { route in
+                OperatorSlotsListView(
+                    api: env.apiClient,
+                    digestContext: OperatorSlotsDigestContext(
+                        slotIds: route.slotIds,
+                        title: route.title,
+                        subtitle: route.subtitle
+                    )
+                )
+                .environmentObject(env)
+            }
         }
     }
 
@@ -81,6 +107,10 @@ struct OperatorActionQueueView: View {
     private var contentView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                if let digest = viewModel.morningDigest {
+                    OperatorMorningRecoveryDigestBlock(digest: digest, onTapSection: handleDigestSectionTap)
+                }
+
                 if let daily = viewModel.dailySummary {
                     OperatorDailyOpsSummaryBar(summary: daily)
                 }
@@ -187,6 +217,15 @@ struct OperatorActionQueueView: View {
 
     private func openSlot(_ item: OperatorActionQueueItem) {
         path.append(item.openSlotId)
+    }
+
+    private func handleDigestSectionTap(_ section: MorningRecoveryDigestSection) {
+        switch section.kind {
+        case .manualFollowUp:
+            viewModel.selectedFilter = .needsAction
+        case .workFirst, .improveCoverage, .laterToday:
+            digestSlotsSheet = MorningDigestSlotsRoute(section: section)
+        }
     }
 
     private func queueEntityPicker(

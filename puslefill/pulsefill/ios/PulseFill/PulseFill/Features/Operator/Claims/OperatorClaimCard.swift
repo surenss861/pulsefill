@@ -8,37 +8,43 @@ struct OperatorClaimCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(OperatorClaimsPresenters.bannerTitle(for: claim))
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(OperatorClaimsPresenters.isAwaiting(claim) ? PFColor.warning : PFColor.success)
+            VStack(alignment: .leading, spacing: 12) {
+                Text(OperatorClaimsPresenters.bannerTitle(for: claim))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(OperatorClaimsPresenters.isAwaiting(claim) ? PFColor.warning : PFColor.success)
 
-            Text("RECOVERY SLOT")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(PFColor.textSecondary)
-
-            if let providerName = claim.providerName, !providerName.isEmpty {
-                Text(providerName)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(PFColor.textPrimary)
-            }
-
-            if let sid = claim.serviceId {
-                Text(shortId(sid))
-                    .font(.system(size: 13))
-                    .foregroundStyle(PFColor.textSecondary)
-            }
-
-            Text(DateFormatterPF.dateTimeRange(start: claim.startsAt, end: claim.endsAt))
-                .font(.system(size: 13))
-                .foregroundStyle(PFColor.textSecondary)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("WINNING CUSTOMER")
+                Text("RECOVERY SLOT")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(PFColor.textSecondary)
-                Text(claim.customerLabel())
-                    .font(.system(size: 17))
-                    .foregroundStyle(PFColor.textPrimary)
+
+                if let providerName = claim.providerName, !providerName.isEmpty {
+                    Text(providerName)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(PFColor.textPrimary)
+                }
+
+                if let sid = claim.serviceId {
+                    Text(shortId(sid))
+                        .font(.system(size: 13))
+                        .foregroundStyle(PFColor.textSecondary)
+                }
+
+                Text(DateFormatterPF.dateTimeRange(start: claim.startsAt, end: claim.endsAt))
+                    .font(.system(size: 13))
+                    .foregroundStyle(PFColor.textSecondary)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("WINNING CUSTOMER")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(PFColor.textSecondary)
+                    Text(claim.customerLabel())
+                        .font(.system(size: 17))
+                        .foregroundStyle(PFColor.textPrimary)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onOpen()
             }
 
             HStack(spacing: 10) {

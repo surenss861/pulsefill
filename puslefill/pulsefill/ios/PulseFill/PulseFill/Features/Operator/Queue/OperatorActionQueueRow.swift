@@ -35,6 +35,10 @@ struct OperatorActionQueueRow: View {
 
                 Spacer(minLength: 0)
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onOpen(item)
+            }
 
             HStack(spacing: 10) {
                 if let primary = item.actions.first {

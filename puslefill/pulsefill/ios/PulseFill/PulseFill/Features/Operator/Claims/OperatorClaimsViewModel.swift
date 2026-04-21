@@ -20,9 +20,26 @@ final class OperatorClaimsViewModel: ObservableObject {
     @Published var flashMessage: String?
 
     private let api: APIClient
+    private var operatorRefreshTokens = Set<AnyCancellable>()
 
     init(api: APIClient) {
         self.api = api
+
+        NotificationCenter.default.publisher(for: OperatorRefreshNotifications.slotUpdated)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await self.load() }
+            }
+            .store(in: &operatorRefreshTokens)
+
+        NotificationCenter.default.publisher(for: OperatorRefreshNotifications.slotNoteUpdated)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await self.load() }
+            }
+            .store(in: &operatorRefreshTokens)
     }
 
     func load() async {
@@ -57,13 +74,13 @@ final class OperatorClaimsViewModel: ObservableObject {
         defer { confirmingClaimId = nil }
         do {
             let res = try await api.confirmOpenSlotClaim(slotId: claim.openSlotId, claimId: claim.claimId)
+            OperatorMutationNotifier.postSlotUpdated(slotId: claim.openSlotId, action: .confirmBooking)
             let trimmed = res.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if trimmed.isEmpty {
                 flashMessage = res.result == "already_confirmed" ? "This booking was already confirmed." : "Booking confirmed."
             } else {
                 flashMessage = trimmed
             }
-            await load()
         } catch {
             flashMessage = APIErrorCopy.message(for: error)
         }

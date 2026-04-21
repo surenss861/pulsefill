@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { OperatorFilterBar } from "@/components/operator/operator-filter-bar";
 import { OperatorSavedViews } from "@/components/operator/operator-saved-views";
 import { OperatorBulkActionBar } from "@/components/slots/operator-bulk-action-bar";
@@ -17,8 +17,10 @@ import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useOperatorFilterOptions } from "@/hooks/useOperatorFilterOptions";
 import { useOperatorFilters } from "@/hooks/useOperatorFilters";
 import { useOperatorRowAction } from "@/hooks/useOperatorRowAction";
+import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscription";
 import { useOperatorSlotsList } from "@/hooks/useOperatorSlotsList";
 import { runOperatorBulkAction } from "@/lib/operator-bulk-actions";
+import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
 import { digestSectionBannerTitle } from "@/lib/morning-recovery-digest-ui";
@@ -87,6 +89,14 @@ function OpenSlotsPageInner() {
 
   const rowAction = useOperatorRowAction(() => reload({ silent: true }));
 
+  const refreshFromOperatorEvent = useCallback(() => {
+    void reload({ silent: true });
+  }, [reload]);
+
+  useOperatorRefreshSubscription({
+    onSlotUpdated: refreshFromOperatorEvent,
+  });
+
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => isSelected(id));
 
   const digestBanner =
@@ -116,6 +126,7 @@ function OpenSlotsPageInner() {
       const res = await runOperatorBulkAction({ action: bulkPendingAction, openSlotIds: ids });
       setBulkResult(res);
       clearBulkSelection();
+      emitOperatorRefreshAfterBulkSlotAction(res);
       await reload({ silent: true });
     } catch (err) {
       showToast({

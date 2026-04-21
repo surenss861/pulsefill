@@ -77,7 +77,7 @@ export function OperatorMorningRecoveryDigestPanel({ onAfterMutation }: Props) {
   if (loading && !data) {
     return (
       <section style={{ marginTop: 28 }}>
-        <h2 style={{ margin: "0 0 8px 0", fontSize: 18, fontWeight: 650 }}>Morning recovery digest</h2>
+        <h2 style={{ margin: "0 0 8px 0", fontSize: 18, fontWeight: 650 }}>What to work first</h2>
         <p style={{ color: "var(--muted)", fontSize: 14 }}>Loading digest…</p>
       </section>
     );
@@ -86,7 +86,7 @@ export function OperatorMorningRecoveryDigestPanel({ onAfterMutation }: Props) {
   if (error) {
     return (
       <section style={{ marginTop: 28 }}>
-        <h2 style={{ margin: "0 0 8px 0", fontSize: 18, fontWeight: 650 }}>Morning recovery digest</h2>
+        <h2 style={{ margin: "0 0 8px 0", fontSize: 18, fontWeight: 650 }}>What to work first</h2>
         <p style={{ color: "#f87171", fontSize: 14 }}>{error}</p>
       </section>
     );
@@ -99,16 +99,19 @@ export function OperatorMorningRecoveryDigestPanel({ onAfterMutation }: Props) {
   return (
     <section style={{ marginTop: 28 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 650 }}>Morning recovery digest</h2>
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 650 }}>What to work first</h2>
         <span style={{ fontSize: 12, color: "var(--muted)" }}>
           Updated {new Date(generated_at).toLocaleString()}
         </span>
       </div>
       <p style={{ margin: "8px 0 16px 0", fontSize: 13, color: "var(--muted)", maxWidth: 720 }}>
-        Act on grouped openings from today&apos;s queue. &quot;Retry all&quot; uses the same bulk offer flow as Open
-        slots.
+        Priority groups based on current slot state, delivery status, and standby coverage. &quot;Retry all&quot; uses
+        the same bulk offer flow as Open slots.
       </p>
 
+      <div style={{ fontSize: 12, fontWeight: 650, color: "var(--muted)", marginBottom: 8, letterSpacing: "0.02em" }}>
+        Quick scan
+      </div>
       <div
         style={{
           display: "grid",

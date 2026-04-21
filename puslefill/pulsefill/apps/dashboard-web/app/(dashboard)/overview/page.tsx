@@ -7,9 +7,15 @@ import { OverviewMetricCard } from "@/components/ui/overview-metric-card";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
 import { DailyOpsStatusStrip } from "@/components/overview/daily-ops-status-strip";
 import { DailyOpsSummaryGrid } from "@/components/overview/daily-ops-summary-grid";
-import { DeliveryReliabilityCard } from "@/components/overview/delivery-reliability-card";
-import { OpsBreakdownHighlights } from "@/components/overview/ops-breakdown-highlights";
+import {
+  OverviewDeliveryReliabilityBlock,
+  OverviewOpsBreakdownBlock,
+} from "@/components/overview/overview-diagnostics-blocks";
+import { OverviewLongRangeRecoveryBlock } from "@/components/overview/overview-long-range-recovery-block";
+import { OverviewOperationalPulse } from "@/components/overview/overview-operational-pulse";
+import { OverviewRecoveryHeroStrip } from "@/components/overview/overview-recovery-hero-strip";
 import { useActionQueue } from "@/hooks/useActionQueue";
+import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscription";
 import { useBusinessMetrics } from "@/hooks/useBusinessMetrics";
 import { useDailyOpsSummary } from "@/hooks/useDailyOpsSummary";
 import { useDeliveryReliability } from "@/hooks/useDeliveryReliability";
@@ -62,6 +68,12 @@ export default function OverviewPage() {
     setRefreshedAt(new Date());
   }, [reloadMetrics, setup.reload, actionQueue.reload, dailyOps.reload, opsBreakdown.reload, deliveryReliability.reload]);
 
+  useOperatorRefreshSubscription({
+    onSlotUpdated: () => {
+      void refresh();
+    },
+  });
+
   useEffect(() => {
     if (!loading && metrics) setRefreshedAt(new Date());
   }, [loading, metrics]);
@@ -82,12 +94,7 @@ export default function OverviewPage() {
           <p style={{ color: "var(--muted)", maxWidth: 560, marginBottom: 0 }}>
             {showGettingStarted
               ? "Set up the basics so PulseFill can start helping recover cancelled appointments."
-              : `Last ${metrics?.window_days ?? 30} days for your business (from `}
-            {!showGettingStarted ? (
-              <>
-                <code style={{ color: "var(--primary)" }}>GET /v1/businesses/mine/metrics</code>).
-              </>
-            ) : null}
+              : "Same-day recovery, prioritized follow-ups, and checks for offers, confirmations, and delivery health."}
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -126,70 +133,68 @@ export default function OverviewPage() {
       {showGettingStarted && !loading ? <GettingStartedCard state={checklist} /> : null}
 
       {!showGettingStarted && !loading ? (
-        <section style={{ marginTop: 28 }}>
-          <h2 style={{ margin: "0 0 8px 0", fontSize: 18, fontWeight: 650 }}>Today&apos;s recovery</h2>
+        <>
           {dailyOps.loading ? (
-            <p style={{ color: "var(--muted)", fontSize: 14 }}>Loading daily summary…</p>
+            <OverviewRecoveryHeroStrip eyebrow="Live view of today's cancellation recovery workflow.">
+              <p style={{ color: "var(--muted)", fontSize: 14 }}>Loading daily summary…</p>
+            </OverviewRecoveryHeroStrip>
           ) : dailyOps.data ? (
-            <>
-              <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "var(--muted)" }}>
-                Operational pulse for {dailyOps.data.date} ({dailyOps.data.timezone}).
-              </p>
+            <OverviewRecoveryHeroStrip
+              eyebrow="Live view of today's cancellation recovery workflow."
+              aside={
+                <OverviewOperationalPulse
+                  contextLine={`Coverage for ${dailyOps.data.date} (${dailyOps.data.timezone}).`}
+                />
+              }
+            >
               <DailyOpsSummaryGrid data={dailyOps.data} />
               <div style={{ marginTop: 14 }}>
                 <DailyOpsStatusStrip byStatus={dailyOps.data.breakdown?.by_status} />
               </div>
-              {opsBreakdown.loading ? (
-                <p style={{ color: "var(--muted)", fontSize: 14, marginTop: 20 }}>Loading recovery breakdown…</p>
-              ) : opsBreakdown.data ? (
-                <div style={{ marginTop: 22 }}>
-                  <h3 style={{ margin: "0 0 10px 0", fontSize: 16, fontWeight: 650 }}>Where today&apos;s recovery is happening</h3>
-                  <OpsBreakdownHighlights data={opsBreakdown.data} />
-                </div>
-              ) : null}
-              {deliveryReliability.loading ? (
-                <p style={{ color: "var(--muted)", fontSize: 14, marginTop: 16 }}>Loading delivery reliability…</p>
-              ) : deliveryReliability.data ? (
-                <div style={{ marginTop: 16 }}>
-                  <DeliveryReliabilityCard data={deliveryReliability.data} />
-                </div>
-              ) : null}
-            </>
+            </OverviewRecoveryHeroStrip>
           ) : null}
-        </section>
+
+          <OperatorMorningRecoveryDigestPanel
+            onAfterMutation={async () => {
+              await Promise.all([
+                actionQueue.reload({ silent: true }),
+                dailyOps.reload({ silent: true }),
+                opsBreakdown.reload({ silent: true }),
+                deliveryReliability.reload({ silent: true }),
+              ]);
+            }}
+          />
+
+          <ActionQueuePreviewCard
+            items={actionQueue.data?.sections.needs_action ?? []}
+            loading={actionQueue.loading}
+            error={actionQueue.error}
+          />
+
+          <OverviewDeliveryReliabilityBlock data={deliveryReliability.data} loading={deliveryReliability.loading} />
+          <OverviewOpsBreakdownBlock data={opsBreakdown.data} loading={opsBreakdown.loading} />
+
+          {metrics ? (
+            <OverviewLongRangeRecoveryBlock>
+              <div
+                style={{
+                  display: "grid",
+                  gap: 16,
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                }}
+              >
+                <OverviewMetricCard label="Open slots created" value={metrics.open_slots_created} />
+                <OverviewMetricCard label="Offers sent" value={metrics.offers_sent} />
+                <OverviewMetricCard label="Slots booked" value={metrics.slots_booked} />
+                <OverviewMetricCard label="Recovered revenue" value={metrics.recovered_revenue_cents} isCurrency />
+                <OverviewMetricCard label="Open slots (now)" value={setup.openSlotsCount} />
+              </div>
+            </OverviewLongRangeRecoveryBlock>
+          ) : null}
+        </>
       ) : null}
 
-      {!showGettingStarted && !loading ? (
-        <OperatorMorningRecoveryDigestPanel
-          onAfterMutation={async () => {
-            await Promise.all([
-              actionQueue.reload({ silent: true }),
-              dailyOps.reload({ silent: true }),
-              opsBreakdown.reload({ silent: true }),
-              deliveryReliability.reload({ silent: true }),
-            ]);
-          }}
-        />
-      ) : null}
-
-      {metrics && !loading ? (
-        <div
-          style={{
-            marginTop: 24,
-            display: "grid",
-            gap: 16,
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          }}
-        >
-          <OverviewMetricCard label="Open slots created" value={metrics.open_slots_created} />
-          <OverviewMetricCard label="Offers sent" value={metrics.offers_sent} />
-          <OverviewMetricCard label="Slots booked" value={metrics.slots_booked} />
-          <OverviewMetricCard label="Recovered revenue" value={metrics.recovered_revenue_cents} isCurrency />
-          <OverviewMetricCard label="Open slots (now)" value={setup.openSlotsCount} />
-        </div>
-      ) : null}
-
-      {!loading ? (
+      {showGettingStarted && !loading ? (
         <ActionQueuePreviewCard
           items={actionQueue.data?.sections.needs_action ?? []}
           loading={actionQueue.loading}

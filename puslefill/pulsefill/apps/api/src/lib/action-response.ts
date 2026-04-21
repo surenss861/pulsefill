@@ -6,6 +6,7 @@ export type ActionErrorCode =
   | "slot_already_booked"
   | "slot_expired"
   | "slot_cancelled"
+  | "operator_action_not_allowed"
   | "forbidden"
   | "not_found"
   | "invalid_request"

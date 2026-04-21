@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscription";
 import { ClaimWinnerCard } from "@/components/claims/claim-winner-card";
 import { ActionEmptyState } from "@/components/ui/action-empty-state";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
@@ -16,6 +17,12 @@ export default function ClaimsPage() {
     await reload({ silent: true });
     setRefreshedAt(new Date());
   }, [reload]);
+
+  useOperatorRefreshSubscription({
+    onSlotUpdated: () => {
+      void silentReload();
+    },
+  });
 
   useEffect(() => {
     if (!loading) setRefreshedAt(new Date());
@@ -79,7 +86,7 @@ export default function ClaimsPage() {
 
       <div style={{ marginTop: 24, display: "grid", gap: 16 }}>
         {claims.map((c) => (
-          <ClaimWinnerCard key={c.open_slot_id} claim={c} onConfirmed={reload} />
+          <ClaimWinnerCard key={c.open_slot_id} claim={c} />
         ))}
       </div>
     </main>

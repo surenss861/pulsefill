@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { emitOperatorRefreshEvent } from "@/lib/operator-refresh-events";
 import { useToast } from "@/components/ui/toast-provider";
 import { pressableHandlers, pressablePrimary } from "@/lib/pressable";
 
@@ -9,9 +10,11 @@ type Props = {
   openSlotId: string;
   claimId: string;
   onConfirmed?: () => void;
+  /** Fired when the API rejects with `operator_action_not_allowed` (stale UI / state changed). */
+  onConflict?: () => void | Promise<void>;
 };
 
-export function ConfirmBookingButton({ openSlotId, claimId, onConfirmed }: Props) {
+export function ConfirmBookingButton({ openSlotId, claimId, onConfirmed, onConflict }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
@@ -28,8 +31,18 @@ export function ConfirmBookingButton({ openSlotId, claimId, onConfirmed }: Props
         title: res.message?.trim() || "Booking confirmed.",
         tone: "success",
       });
+      emitOperatorRefreshEvent("slot:updated", { slotId: openSlotId, action: "confirm_booking" });
       onConfirmed?.();
     } catch (err) {
+      const code = err instanceof Error ? (err as { code?: string }).code : undefined;
+      if (code === "operator_action_not_allowed") {
+        showToast({
+          title: "This opening changed — refreshing.",
+          tone: "info",
+        });
+        await onConflict?.();
+        return;
+      }
       const message = err instanceof Error ? err.message : "Failed to confirm booking";
       setError(message);
       showToast({ title: message, tone: "error" });

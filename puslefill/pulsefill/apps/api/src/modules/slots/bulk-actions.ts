@@ -2,6 +2,8 @@ import type { Env } from "../../config/env.js";
 import type { createServiceSupabase } from "../../config/supabase.js";
 import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
 import { filterMatchingPreferences, type OpenSlotRow, type StandbyPreferenceRow } from "../../lib/standby-matcher.js";
+import { canPerformAction } from "./operator-slot-rules.js";
+import { loadSlotRuleContext } from "./load-slot-rule-context.js";
 import { mergeMetadata, touchOpenSlotByStaff } from "./staff-attribution.js";
 
 type Admin = ReturnType<typeof createServiceSupabase>;
@@ -66,31 +68,24 @@ async function retryOffersOne(
     staffId: string;
     authUserId: string;
     slotId: string;
-    slot: Record<string, unknown>;
   },
 ): Promise<BulkSlotActionItemResult> {
-  const { businessId, staffId, authUserId, slotId, slot } = ctx;
-  const status = String(slot.status ?? "");
-
-  if (status === "claimed") {
-    return withId(slotId, skip("slot_already_claimed", "This opening already has a claimant and can’t be re-offered."));
+  const { businessId, staffId, authUserId, slotId } = ctx;
+  const ruleCtx = await loadSlotRuleContext(admin, { openSlotId: slotId, businessId });
+  if (!ruleCtx) {
+    return withId(slotId, skip("not_found", "This opening no longer exists."));
   }
-  if (status === "booked") {
-    return withId(slotId, skip("slot_already_booked", "This opening has already been confirmed."));
-  }
-  if (status === "expired") {
-    return withId(slotId, skip("slot_expired", "This opening has expired and can no longer send offers."));
-  }
-  if (status === "cancelled") {
-    return withId(slotId, skip("slot_cancelled", "This opening was cancelled and can no longer send offers."));
-  }
-  if (status !== "open" && status !== "offered") {
+  if (!canPerformAction("retry_offers", ruleCtx.signals)) {
     return withId(
       slotId,
-      skip("invalid_request", "This opening cannot send offers in its current state."),
+      fail(
+        "operator_action_not_allowed",
+        "Retry offers is not allowed for this slot in its current state.",
+      ),
     );
   }
 
+  const slot = ruleCtx.slot;
   const businessIdRow = String(slot.business_id ?? "");
   if (businessIdRow !== businessId) {
     return withId(slotId, skip("not_found", "This opening no longer exists."));
@@ -206,6 +201,20 @@ async function expireOne(
 ): Promise<BulkSlotActionItemResult> {
   const { businessId, staffId, authUserId, slotId } = ctx;
 
+  const ruleCtx = await loadSlotRuleContext(admin, { openSlotId: slotId, businessId });
+  if (!ruleCtx) {
+    return withId(slotId, skip("not_found", "This opening no longer exists."));
+  }
+  if (!canPerformAction("expire_slot", ruleCtx.signals)) {
+    return withId(
+      slotId,
+      fail(
+        "operator_action_not_allowed",
+        "Expire slot is not allowed for this opening in its current state.",
+      ),
+    );
+  }
+
   const { data, error } = await admin.rpc("staff_expire_open_slot", {
     p_open_slot_id: slotId,
     p_staff_auth_user_id: authUserId,
@@ -307,7 +316,6 @@ export async function executeBulkOpenSlotAction(
           staffId: args.staffId,
           authUserId: args.authUserId,
           slotId,
-          slot,
         });
         results.push(r);
       } else {

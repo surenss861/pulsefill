@@ -9,7 +9,9 @@ import { OperatorInternalNoteCard } from "@/components/slots/operator-internal-n
 import { SlotAttentionCues } from "@/components/slots/slot-attention-cues";
 import { SlotDetailHero } from "@/components/slots/slot-detail-hero";
 import { SlotRecentActivityBar } from "@/components/slots/slot-recent-activity-bar";
-import { SlotNextActionStrip } from "@/components/slots/slot-next-action-strip";
+import { OperatorSlotActionBar } from "@/components/slots/operator-slot-action-bar";
+import { OperatorSlotOffersSummary } from "@/components/slots/operator-slot-offers-summary";
+import { OperatorSlotReasonBanner } from "@/components/slots/operator-slot-reason-banner";
 import { SlotOffersInspector } from "@/components/slots/slot-offers-inspector";
 import { SlotTimeline } from "@/components/slots/slot-timeline";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
@@ -26,7 +28,7 @@ import { useSlotTimeline } from "@/hooks/useSlotTimeline";
 export default function OpenSlotDetailPage() {
   const params = useParams<{ id: string }>();
   const slotId = params?.id;
-  const { slot, loading, error, reload } = useOpenSlotDetail(slotId);
+  const { slot, queueContext, availableActions, loading, error, reload } = useOpenSlotDetail(slotId);
   const options = useSlotFormOptions();
   const {
     events: timelineEvents,
@@ -124,22 +126,30 @@ export default function OpenSlotDetailPage() {
 
       {slot ? (
         <div style={{ display: "grid", gap: 20, marginTop: 16 }}>
-          <SlotNextActionStrip
-            status={slot.status}
+          <OperatorSlotReasonBanner queueContext={queueContext} />
+
+          <OperatorSlotActionBar
             openSlotId={slot.id}
             claimId={claimId}
-            onActionDone={() => void refreshAll()}
+            availableActions={availableActions}
+            onMutationsDone={() => void refreshAll()}
+            onAddNote={() => document.getElementById("operator-slot-internal-note")?.scrollIntoView({ behavior: "smooth" })}
+            onInspectLogs={() =>
+              document.getElementById("operator-slot-notification-logs")?.scrollIntoView({ behavior: "smooth" })
+            }
           />
 
           <SlotAttentionCues slot={slot} logs={notificationLogs} />
 
-          <OperatorInternalNoteCard
-            openSlotId={slot.id}
-            initialNote={slot.internal_note}
-            initialResolutionStatus={slot.resolution_status}
-            initialUpdatedAt={slot.internal_note_updated_at}
-            onSaved={() => void silentRefresh()}
-          />
+          <div id="operator-slot-internal-note">
+            <OperatorInternalNoteCard
+              openSlotId={slot.id}
+              initialNote={slot.internal_note}
+              initialResolutionStatus={slot.resolution_status}
+              initialUpdatedAt={slot.internal_note_updated_at}
+              onSaved={() => void silentRefresh()}
+            />
+          </div>
 
           {winningCustomerId ? (
             <OperatorCustomerContextSection
@@ -173,6 +183,8 @@ export default function OpenSlotDetailPage() {
             ) : null}
           </SlotRowShell>
 
+          <OperatorSlotOffersSummary slot={slot} />
+
           <SlotOffersInspector slot={slot} />
 
           {timelineLoading ? <p style={{ color: "var(--muted)" }}>Loading timeline…</p> : null}
@@ -182,7 +194,11 @@ export default function OpenSlotDetailPage() {
           {notificationLogsLoading ? <p style={{ color: "var(--muted)" }}>Loading notification logs…</p> : null}
           {notificationLogsError ? <p style={{ color: "#f87171" }}>{notificationLogsError}</p> : null}
           {!notificationLogsLoading && notificationLogs.length > 0 ? <SlotDeliverySummary logs={notificationLogs} /> : null}
-          {!notificationLogsLoading ? <NotificationLogsInspector logs={notificationLogs} /> : null}
+          {!notificationLogsLoading ? (
+            <div id="operator-slot-notification-logs">
+              <NotificationLogsInspector logs={notificationLogs} />
+            </div>
+          ) : null}
         </div>
       ) : null}
     </main>

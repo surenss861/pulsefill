@@ -32,12 +32,24 @@ final class OperatorSlotsListViewModel: ObservableObject {
     @Published var filterOptionsLoading = false
 
     private let api: APIClient
+    /// When set, `filteredSlots` is restricted to these open slot ids (digest handoff).
+    private let digestContext: OperatorSlotsDigestContext?
+    private var operatorRefreshTokens = Set<AnyCancellable>()
 
-    init(api: APIClient) {
+    init(api: APIClient, digestContext: OperatorSlotsDigestContext? = nil) {
         self.api = api
+        self.digestContext = digestContext
         filterProviderId = UserDefaults.standard.string(forKey: OperatorSlotsFilterStorage.providerId)
         filterLocationId = UserDefaults.standard.string(forKey: OperatorSlotsFilterStorage.locationId)
         filterServiceId = UserDefaults.standard.string(forKey: OperatorSlotsFilterStorage.serviceId)
+
+        NotificationCenter.default.publisher(for: OperatorRefreshNotifications.slotUpdated)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await self.load() }
+            }
+            .store(in: &operatorRefreshTokens)
     }
 
     private func persistFilters() {
@@ -110,7 +122,10 @@ final class OperatorSlotsListViewModel: ObservableObject {
     }
 
     var filteredSlots: [StaffOpenSlotListRow] {
-        slots.filter { selectedFilter.matches(status: $0.status) && matchesEntityFilters($0) }
+        let base = slots.filter { selectedFilter.matches(status: $0.status) && matchesEntityFilters($0) }
+        guard let digest = digestContext, !digest.slotIds.isEmpty else { return base }
+        let allow = Set(digest.slotIds)
+        return base.filter { allow.contains($0.id) }
     }
 
     var counts: [String: Int] {
@@ -130,8 +145,6 @@ final class OperatorSlotsListViewModel: ObservableObject {
         do {
             let msg = try await OperatorInlineActionRunner(api: api).run(action, openSlotId: slot.id)
             flashMessage = msg
-
-            await load()
         } catch {
             flashMessage = APIErrorCopy.message(for: error)
         }

@@ -8,7 +8,7 @@ import {
 } from "./customer-standby-readiness.js";
 import { getCustomerEventCopy } from "./customer-event-copy.js";
 
-type FeedItem = {
+export type FeedItem = {
   id: string;
   kind: CustomerEventKind;
   title: string;
@@ -92,8 +92,7 @@ async function buildOfferActivity(
     if (!slot) continue;
     const labels = await slotLabels(admin, slot);
     const st = String(o.status ?? "");
-    const isExpired = st === "expired" || st === "failed" || st === "cancelled";
-    const kind: CustomerEventKind = isExpired ? "offer_expired" : "offer_received";
+    const kind: CustomerEventKind = offerRowStatusToFeedKind(st);
     const copy = getCustomerEventCopy({
       kind,
       businessName: labels.business_name,
@@ -119,6 +118,24 @@ async function buildOfferActivity(
     });
   }
   return items;
+}
+
+/** Pure mapping used when building claim rows (exported for tests). */
+export function claimStatusToEventKind(claimStatus: string, slotStatus: string): CustomerEventKind {
+  const cs = String(claimStatus ?? "");
+  const ss = String(slotStatus ?? "");
+  if (cs === "confirmed" && ss === "booked") return "booking_confirmed";
+  if (cs === "won" && ss === "claimed") return "claim_pending_confirmation";
+  if (cs === "lost" || cs === "failed") return "missed_opportunity";
+  if (cs === "won") return "claim_pending_confirmation";
+  return "claim_submitted";
+}
+
+/** Pure mapping for offer row status → feed kind (exported for tests). */
+export function offerRowStatusToFeedKind(status: string): "offer_received" | "offer_expired" {
+  const st = String(status ?? "");
+  const isExpired = st === "expired" || st === "failed" || st === "cancelled";
+  return isExpired ? "offer_expired" : "offer_received";
 }
 
 async function buildClaimActivity(admin: SupabaseClient, customerId: string): Promise<FeedItem[]> {
@@ -157,12 +174,7 @@ async function buildClaimActivity(admin: SupabaseClient, customerId: string): Pr
     const labels = await slotLabels(admin, slot);
     const cs = String(c.status ?? "");
     const ss = String(slot.status ?? "");
-
-    let kind: CustomerEventKind = "claim_submitted";
-    if (cs === "confirmed" && ss === "booked") kind = "booking_confirmed";
-    else if (cs === "won" && ss === "claimed") kind = "claim_pending_confirmation";
-    else if (cs === "lost" || cs === "failed") kind = "missed_opportunity";
-    else if (cs === "won") kind = "claim_pending_confirmation";
+    const kind = claimStatusToEventKind(cs, ss);
 
     const copy = getCustomerEventCopy({
       kind,
@@ -203,7 +215,7 @@ async function buildClaimActivity(admin: SupabaseClient, customerId: string): Pr
   return items;
 }
 
-function appendStandbySystemRows(
+export function appendStandbySystemRows(
   readiness: ReturnType<typeof computeCustomerStandbyReadiness>,
   touchIso: string,
 ): FeedItem[] {
@@ -251,7 +263,7 @@ function appendStandbySystemRows(
   return out;
 }
 
-function dedupeAndSort(items: FeedItem[]): FeedItem[] {
+export function dedupeAndSort(items: FeedItem[]): FeedItem[] {
   const seen = new Set<string>();
   const out: FeedItem[] = [];
   for (const it of items) {

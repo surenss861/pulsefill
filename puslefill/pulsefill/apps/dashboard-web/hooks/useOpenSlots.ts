@@ -9,6 +9,7 @@ export type OpenSlotListRow = {
   starts_at: string;
   ends_at: string;
   provider_name_snapshot?: string | null;
+  location_name?: string | null;
   winning_claim?: { id: string; status: string } | null;
 };
 

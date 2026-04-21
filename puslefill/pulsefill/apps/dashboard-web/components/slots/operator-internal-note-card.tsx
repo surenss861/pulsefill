@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/toast-provider";
 import { pressableHandlers, pressablePrimary } from "@/lib/pressable";
+import { emitOperatorRefreshEvent } from "@/lib/operator-refresh-events";
 import { saveOperatorSlotNote } from "@/lib/operator-slot-notes";
 import { OPERATOR_RESOLUTION_STATUSES, type OperatorResolutionStatusValue } from "@/lib/operator-resolution-status";
 
@@ -58,6 +59,7 @@ export function OperatorInternalNoteCard({
         title: res.message?.trim() || "Internal note saved.",
         tone: "success",
       });
+      emitOperatorRefreshEvent("slot:note_updated", { slotId: openSlotId, action: "add_note" });
       onSaved?.();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not save internal note";

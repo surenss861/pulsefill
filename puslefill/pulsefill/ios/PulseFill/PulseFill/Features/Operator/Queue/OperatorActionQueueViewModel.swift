@@ -22,6 +22,7 @@ final class OperatorActionQueueViewModel: ObservableObject {
     @Published var dailySummary: OperatorDailyOpsSummaryResponse?
     @Published var opsBreakdown: OperatorOpsBreakdownResponse?
     @Published var deliveryReliability: OperatorDeliveryReliabilityResponse?
+    @Published var morningDigest: MorningRecoveryDigestResponse?
     @Published var selectedFilter: OperatorQueueFilter = .all
     @Published var lastUpdatedAt: Date?
     @Published var isRefreshing = false
@@ -38,12 +39,21 @@ final class OperatorActionQueueViewModel: ObservableObject {
     @Published var filterOptionsLoading = false
 
     private let api: APIClient
+    private var operatorRefreshTokens = Set<AnyCancellable>()
 
     init(api: APIClient) {
         self.api = api
         filterProviderId = UserDefaults.standard.string(forKey: OperatorQueueFilterStorage.providerId)
         filterLocationId = UserDefaults.standard.string(forKey: OperatorQueueFilterStorage.locationId)
         filterServiceId = UserDefaults.standard.string(forKey: OperatorQueueFilterStorage.serviceId)
+
+        NotificationCenter.default.publisher(for: OperatorRefreshNotifications.slotUpdated)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await self.load(silent: true) }
+            }
+            .store(in: &operatorRefreshTokens)
     }
 
     private func persistFilters() {
@@ -93,11 +103,13 @@ final class OperatorActionQueueViewModel: ObservableObject {
             async let summaryTask = api.getOperatorDailyOpsSummary()
             async let breakdownTask = api.getOperatorOpsBreakdown()
             async let deliveryTask = api.getOperatorDeliveryReliability()
+            async let digestTask = api.getMorningRecoveryDigestIfAvailable()
 
             let result = try await queueTask
             let summary = try? await summaryTask
             let breakdown = try? await breakdownTask
             let delivery = try? await deliveryTask
+            let digest = await digestTask
 
             let providers = (try? await api.getBusinessNamedProviders()) ?? []
             let locations = (try? await api.getBusinessNamedLocations()) ?? []
@@ -107,6 +119,7 @@ final class OperatorActionQueueViewModel: ObservableObject {
             dailySummary = summary
             opsBreakdown = breakdown
             deliveryReliability = delivery
+            morningDigest = digest
             providerOptions = providers
             locationOptions = locations
             serviceOptions = services
@@ -173,8 +186,6 @@ final class OperatorActionQueueViewModel: ObservableObject {
         do {
             let msg = try await OperatorInlineActionRunner(api: api).run(derived, openSlotId: item.openSlotId)
             flashMessage = msg
-
-            await load(silent: true)
         } catch {
             flashMessage = APIErrorCopy.message(for: error)
         }

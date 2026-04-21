@@ -23,6 +23,8 @@ export function operatorActionMessageForCode(code: string | undefined, fallback:
       return "This opening no longer exists.";
     case "invalid_request":
       return "That request wasn’t valid. Refresh and try again.";
+    case "operator_action_not_allowed":
+      return "This opening changed. Refreshing the latest state.";
     case "server_error":
       return "Something went wrong. Try again.";
     default:

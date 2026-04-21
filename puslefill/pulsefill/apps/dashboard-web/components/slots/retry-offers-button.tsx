@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { emitOperatorRefreshEvent, type OperatorRefreshAction } from "@/lib/operator-refresh-events";
 import { useToast } from "@/components/ui/toast-provider";
 import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
 
@@ -23,12 +24,23 @@ export type LastSendOffersResult = {
 
 type Props = {
   openSlotId: string;
+  /** Used for cross-surface refresh; defaults to send_offers. */
+  refreshAction?: Extract<OperatorRefreshAction, "send_offers" | "retry_offers">;
   onDone?: () => void;
+  /** When send/retry is rejected because slot state no longer allows it. */
+  onConflict?: () => void | Promise<void>;
   emphasis?: "primary" | "secondary";
   label?: string;
 };
 
-export function RetryOffersButton({ openSlotId, onDone, emphasis = "secondary", label }: Props) {
+export function RetryOffersButton({
+  openSlotId,
+  refreshAction = "send_offers",
+  onDone,
+  onConflict,
+  emphasis = "secondary",
+  label,
+}: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<LastSendOffersResult | null>(null);
@@ -67,8 +79,18 @@ export function RetryOffersButton({ openSlotId, onDone, emphasis = "secondary", 
         title: nextMessage,
         tone: nextMessage.includes("No matching") || nextMessage.includes("No new offers") ? "info" : "success",
       });
+      emitOperatorRefreshEvent("slot:updated", { slotId: openSlotId, action: refreshAction });
       onDone?.();
     } catch (err) {
+      const code = err instanceof Error ? (err as { code?: string }).code : undefined;
+      if (code === "operator_action_not_allowed") {
+        showToast({
+          title: "This opening changed — refreshing.",
+          tone: "info",
+        });
+        await onConflict?.();
+        return;
+      }
       const nextError = err instanceof Error ? err.message : "Failed to send offers";
       setError(nextError);
       showToast({ title: "Couldn’t send offers.", tone: "error" });

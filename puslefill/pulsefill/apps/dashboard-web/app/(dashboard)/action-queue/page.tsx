@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionQueueEmptyState } from "@/components/action-queue/action-queue-empty-state";
 import { ActionQueueItemCard } from "@/components/action-queue/action-queue-item-card";
+import { ActionQueuePageHeader } from "@/components/action-queue/action-queue-page-header";
 import { ActionQueueSection } from "@/components/action-queue/action-queue-section";
 import { ActionQueueSummaryBar } from "@/components/action-queue/action-queue-summary-bar";
 import { OperatorFilterBar } from "@/components/operator/operator-filter-bar";
 import { OperatorSavedViews } from "@/components/operator/operator-saved-views";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
 import { useActionQueue } from "@/hooks/useActionQueue";
+import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscription";
 import { useOperatorFilterOptions } from "@/hooks/useOperatorFilterOptions";
 import { useOperatorFilters } from "@/hooks/useOperatorFilters";
 import { useOperatorRowAction } from "@/hooks/useOperatorRowAction";
@@ -25,9 +27,16 @@ const filterTabs: Array<{ id: ActionQueueFilter; label: string }> = [
 
 export default function ActionQueuePage() {
   const { data, loading, error, reload } = useActionQueue(15_000);
-  const rowAction = useOperatorRowAction(() => reload({ silent: true }));
   const [filter, setFilter] = useState<ActionQueueFilter>("all");
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
+  const rowAction = useOperatorRowAction(() => reload({ silent: true }));
+  const refreshQueueSilent = useCallback(() => {
+    void reload({ silent: true });
+    setRefreshedAt(new Date());
+  }, [reload]);
+  useOperatorRefreshSubscription({
+    onSlotUpdated: refreshQueueSilent,
+  });
   const opFilter = useOperatorFilters({
     filtersStorageKey: "pf.operator.action-queue.filters",
     viewsStorageKey: "pf.operator.action-queue.views",
@@ -80,23 +89,7 @@ export default function ActionQueuePage() {
 
   return (
     <main style={{ padding: 0, maxWidth: 900 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 16,
-          flexWrap: "wrap",
-          marginBottom: 8,
-        }}
-      >
-        <div>
-          <h1 style={{ marginTop: 0 }}>Action queue</h1>
-          <p style={{ color: "var(--muted)", maxWidth: 560, marginBottom: 0 }}>
-            What needs action now, what to watch, and what recently resolved — derived from slots, claims, offers, and
-            notifications.
-          </p>
-        </div>
+      <ActionQueuePageHeader>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <RefreshIndicator updatedAt={refreshedAt} />
           <button
@@ -120,7 +113,7 @@ export default function ActionQueuePage() {
             Refresh
           </button>
         </div>
-      </div>
+      </ActionQueuePageHeader>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
         {filterTabs.map((t) => (
@@ -179,17 +172,21 @@ export default function ActionQueuePage() {
 
           {show.needs ? (
             <ActionQueueSection
-              title="Needs action now"
-              subtitle="Highest urgency — confirm claims, fix failed deliveries, retry offers."
+              title="Needs action"
+              subtitle="Slots waiting on confirmation, retry, or operator intervention right now."
               count={filteredSections.needs_action.length}
             >
               {filteredSections.needs_action.length === 0 ? (
-                <ActionQueueEmptyState title="Nothing urgent right now" body="When claims stall or notifications fail, they will show up here." />
+                <ActionQueueEmptyState
+                  title="Nothing urgent right now"
+                  body="Review lower-priority items below."
+                />
               ) : (
                 filteredSections.needs_action.map((item) => (
                   <ActionQueueItemCard
                     key={item.id}
                     item={item}
+                    section="needs_action"
                     busy={rowAction.busyId === item.id}
                     onPrimaryAction={handleQueuePrimary}
                   />
@@ -200,17 +197,18 @@ export default function ActionQueuePage() {
 
           {show.review ? (
             <ActionQueueSection
-              title="Watch / review"
-              subtitle="Awareness items — no matches, active offers, recently expired slots."
+              title="Review"
+              subtitle="Slots worth checking once urgent recovery work is handled."
               count={filteredSections.review.length}
             >
               {filteredSections.review.length === 0 ? (
-                <ActionQueueEmptyState title="No items to review" body="Offers in flight and edge cases will land here." />
+                <ActionQueueEmptyState title="Nothing waiting in review" />
               ) : (
                 filteredSections.review.map((item) => (
                   <ActionQueueItemCard
                     key={item.id}
                     item={item}
+                    section="review"
                     busy={rowAction.busyId === item.id}
                     onPrimaryAction={handleQueuePrimary}
                   />
@@ -221,14 +219,16 @@ export default function ActionQueuePage() {
 
           {show.resolved ? (
             <ActionQueueSection
-              title="Recently resolved"
-              subtitle="Bookings recovered in the last week (by slot created time)."
+              title="Resolved"
+              subtitle="Recently handled or recovered slots kept visible for short-term follow-through."
               count={filteredSections.resolved.length}
             >
               {filteredSections.resolved.length === 0 ? (
-                <ActionQueueEmptyState title="No recent bookings yet" body="Confirmed slots will appear here as you recover cancellations." />
+                <ActionQueueEmptyState title="No recently resolved items" body="Confirmed slots will appear here as you recover cancellations." />
               ) : (
-                filteredSections.resolved.map((item) => <ActionQueueItemCard key={item.id} item={item} />)
+                filteredSections.resolved.map((item) => (
+                  <ActionQueueItemCard key={item.id} item={item} section="resolved" />
+                ))
               )}
             </ActionQueueSection>
           ) : null}

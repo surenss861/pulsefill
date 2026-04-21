@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { runOperatorInlineAction, type OperatorInlineActionKind } from "@/lib/operator-inline-actions";
 import { useToast } from "@/components/ui/toast-provider";
+import { emitOperatorRefreshEvent } from "@/lib/operator-refresh-events";
+import { runOperatorInlineAction, type OperatorInlineActionKind } from "@/lib/operator-inline-actions";
 
 export function useOperatorRowAction(onSuccess?: () => Promise<void> | void) {
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -23,6 +24,7 @@ export function useOperatorRowAction(onSuccess?: () => Promise<void> | void) {
       const toastTitle =
         typeof res?.message === "string" && res.message.trim() ? res.message : successTitle;
       showToast({ title: toastTitle, tone: "success" });
+      emitOperatorRefreshEvent("slot:updated", { slotId: rest.openSlotId, action: rest.kind });
       await onSuccess?.();
     } catch (err) {
       showToast({

@@ -11,6 +11,22 @@ export async function requireStaff(req: FastifyRequest, reply: FastifyReply) {
   await requireAuth(req, reply);
   if (reply.sent) return;
 
+  const isRouteTestPrincipal = req.authUser?.email === "operator-route-test@pulsefill.invalid";
+  if (
+    process.env.PULSEFILL_API_TEST === "1" &&
+    req.headers["x-pulsefill-route-test"] === "1" &&
+    isRouteTestPrincipal &&
+    process.env.PULSEFILL_TEST_STAFF_ID &&
+    process.env.PULSEFILL_TEST_BUSINESS_ID
+  ) {
+    req.staff = {
+      id: process.env.PULSEFILL_TEST_STAFF_ID,
+      business_id: process.env.PULSEFILL_TEST_BUSINESS_ID,
+      role: "owner",
+    };
+    return;
+  }
+
   const admin = createServiceSupabase(req.server.env);
   const { data: rows, error } = await admin
     .from("staff_users")

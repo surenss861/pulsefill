@@ -3,6 +3,8 @@ import SwiftUI
 struct OperatorSlotDetailView: View {
     @StateObject private var viewModel: OperatorSlotDetailViewModel
     @State private var showFlash = false
+    @State private var confirmExpire = false
+    @State private var confirmCancel = false
 
     init(api: APIClient, slotId: String) {
         _viewModel = StateObject(wrappedValue: OperatorSlotDetailViewModel(api: api, slotId: slotId))
@@ -41,6 +43,22 @@ struct OperatorSlotDetailView: View {
         } message: {
             Text(viewModel.flashMessage ?? "")
         }
+        .confirmationDialog("Expire this opening?", isPresented: $confirmExpire, titleVisibility: .visible) {
+            Button("Expire", role: .destructive) {
+                Task { await viewModel.expireSlot() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("It can no longer receive offers after this.")
+        }
+        .confirmationDialog("Cancel this opening for patients?", isPresented: $confirmCancel, titleVisibility: .visible) {
+            Button("Cancel slot", role: .destructive) {
+                Task { await viewModel.cancelSlot() }
+            }
+            Button("Go back", role: .cancel) {}
+        } message: {
+            Text("This cannot be undone from the app.")
+        }
     }
 
     private var loadingView: some View {
@@ -71,76 +89,192 @@ struct OperatorSlotDetailView: View {
     }
 
     private func slotContent(_ slot: StaffOpenSlotDetail) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                recentActivityBar(slot)
-                nextActionCard(slot)
-                heroCard(slot)
-
-                OperatorInternalNoteCard(
-                    initialNote: slot.internalNote,
-                    initialResolution: slot.resolutionStatus,
-                    initialUpdatedAt: slot.internalNoteUpdatedAt,
-                    isSaving: viewModel.isSavingNote,
-                    onSave: { note, status in
-                        Task { await viewModel.saveInternalNote(note: note, resolutionStatus: status) }
+        ScrollViewReader { scroll in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    recentActivityBar(slot)
+                    if viewModel.usesServerActionMatrix {
+                        queueContextBanner
+                        serverActionBar(slot: slot, scroll: scroll)
+                    } else {
+                        legacyNextActionCard(slot)
                     }
-                )
+                    heroCard(slot)
 
-                if !viewModel.notificationLogs.isEmpty {
-                    OperatorSlotDeliverySummaryCard(logs: viewModel.notificationLogs)
+                    OperatorInternalNoteCard(
+                        initialNote: slot.internalNote,
+                        initialResolution: slot.resolutionStatus,
+                        initialUpdatedAt: slot.internalNoteUpdatedAt,
+                        isSaving: viewModel.isSavingNote,
+                        onSave: { note, status in
+                            Task { await viewModel.saveInternalNote(note: note, resolutionStatus: status) }
+                        }
+                    )
+                    .id("operatorInternalNote")
+
+                    Group {
+                        if !viewModel.notificationLogs.isEmpty {
+                            OperatorSlotDeliverySummaryCard(logs: viewModel.notificationLogs)
+                        }
+                    }
+                    .id("operatorNotificationLogs")
+
+                    if let ctx = viewModel.customerContext {
+                        OperatorCustomerSummaryCard(customer: ctx.customer, delivery: ctx.deliveryContext)
+                        OperatorStandbyPreferencesSection(preferences: ctx.standbyPreferences)
+                    }
+
+                    if viewModel.hasAttentionCues {
+                        attentionCard(slot)
+                    }
+
+                    if let claim = slot.winningClaim {
+                        winningClaimCard(claim, context: viewModel.customerContext)
+                    }
+
+                    offerOutcomesCard(slot.slotOffers ?? [])
+                    timelineCard(viewModel.timeline)
                 }
-
-                if let ctx = viewModel.customerContext {
-                    OperatorCustomerSummaryCard(customer: ctx.customer, delivery: ctx.deliveryContext)
-                    OperatorStandbyPreferencesSection(preferences: ctx.standbyPreferences)
-                }
-
-                if viewModel.hasAttentionCues {
-                    attentionCard(slot)
-                }
-
-                if let claim = slot.winningClaim {
-                    winningClaimCard(claim, context: viewModel.customerContext)
-                }
-
-                offerOutcomesCard(slot.slotOffers ?? [])
-                timelineCard(viewModel.timeline)
+                .padding(20)
+                .padding(.bottom, 28)
             }
-            .padding(20)
-            .padding(.bottom, 28)
         }
     }
 
-    private func recentActivityBar(_ slot: StaffOpenSlotDetail) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let latest = OperatorSlotDetailPresenters.latestMilestone(viewModel.timeline) {
-                Text("Latest activity: \(latest)")
-                    .font(.system(size: 13))
-                    .foregroundStyle(PFColor.textSecondary)
+    private var isMutatingBusy: Bool {
+        viewModel.isRetrying || viewModel.isConfirming || viewModel.isExpiring || viewModel.isCancelling
+    }
+
+    @ViewBuilder
+    private var queueContextBanner: some View {
+        if let q = viewModel.queueContext, let title = q.reasonTitle, !title.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(PFColor.textPrimary)
+                if let detail = q.reasonDetail, !detail.isEmpty {
+                    Text(detail)
+                        .font(.system(size: 14))
+                        .foregroundStyle(PFColor.textSecondary)
+                }
             }
-            if let touch = OperatorSlotDetailPresenters.lastTouchedSummary(for: slot) {
-                Text(touch)
-                    .font(.system(size: 13))
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(bannerBackground(for: q.severity))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(bannerBorder(for: q.severity), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+    }
+
+    private func bannerBackground(for severity: String?) -> Color {
+        switch severity {
+        case "high": PFColor.warning.opacity(0.12)
+        case "medium": PFColor.primary.opacity(0.10)
+        default: PFColor.surface1
+        }
+    }
+
+    private func bannerBorder(for severity: String?) -> Color {
+        switch severity {
+        case "high": PFColor.warning.opacity(0.35)
+        case "medium": PFColor.primary.opacity(0.28)
+        default: PFColor.primary.opacity(0.14)
+        }
+    }
+
+    private func serverActionBar(slot: StaffOpenSlotDetail, scroll: ScrollViewProxy) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("ACTIONS")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(PFColor.textSecondary)
+
+            if viewModel.primaryRowActions.isEmpty, viewModel.secondaryRowActions.isEmpty {
+                Text("No actions available for this opening right now.")
+                    .font(.system(size: 14))
                     .foregroundStyle(PFColor.textSecondary)
-            }
-            if slot.status == "claimed" {
-                Text("Awaiting staff confirmation")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(PFColor.warning)
+            } else {
+                if !viewModel.primaryRowActions.isEmpty {
+                    HStack(spacing: 10) {
+                        ForEach(viewModel.primaryRowActions, id: \.self) { action in
+                            actionButton(action, slot: slot, scroll: scroll)
+                        }
+                    }
+                }
+                if !viewModel.secondaryRowActions.isEmpty {
+                    VStack(spacing: 8) {
+                        ForEach(viewModel.secondaryRowActions, id: \.self) { action in
+                            actionButton(action, slot: slot, scroll: scroll)
+                        }
+                    }
+                }
             }
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFColor.primary.opacity(0.08))
+        .background(PFSurface.card)
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(PFColor.primary.opacity(0.14), lineWidth: 1)
+            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
+                .stroke(PFColor.primary.opacity(0.16), lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
     }
 
-    private func nextActionCard(_ slot: StaffOpenSlotDetail) -> some View {
+    @ViewBuilder
+    private func actionButton(_ action: OperatorSlotAvailableAction, slot: StaffOpenSlotDetail, scroll: ScrollViewProxy) -> some View {
+        switch action {
+        case .confirmBooking:
+            Button(viewModel.isConfirming ? "Confirming…" : action.title) {
+                Task { await viewModel.runAvailableAction(action) }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(PFColor.primaryDark)
+            .disabled(isMutatingBusy)
+
+        case .sendOffers, .retryOffers:
+            Button(viewModel.isRetrying ? "Sending…" : action.title) {
+                Task { await viewModel.runAvailableAction(action) }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(PFColor.primaryDark)
+            .disabled(isMutatingBusy)
+
+        case .expireSlot:
+            Button(viewModel.isExpiring ? "Expiring…" : action.title) {
+                confirmExpire = true
+            }
+            .buttonStyle(.bordered)
+            .disabled(viewModel.isExpiring || isMutatingBusy)
+
+        case .cancelSlot:
+            Button(viewModel.isCancelling ? "Cancelling…" : action.title) {
+                confirmCancel = true
+            }
+            .buttonStyle(.bordered)
+            .tint(.red)
+            .disabled(viewModel.isCancelling || isMutatingBusy)
+
+        case .addNote:
+            Button(action.title) {
+                withAnimation {
+                    scroll.scrollTo("operatorInternalNote", anchor: .top)
+                }
+            }
+            .buttonStyle(.bordered)
+
+        case .inspectNotificationLogs:
+            Button(action.title) {
+                withAnimation {
+                    scroll.scrollTo("operatorNotificationLogs", anchor: .top)
+                }
+            }
+            .buttonStyle(.bordered)
+        }
+    }
+
+    private func legacyNextActionCard(_ slot: StaffOpenSlotDetail) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(OperatorSlotDetailPresenters.nextActionTitle(for: slot.status).uppercased())
                 .font(.system(size: 11, weight: .semibold))
@@ -176,6 +310,34 @@ struct OperatorSlotDetailView: View {
                 .stroke(PFColor.primary.opacity(0.16), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+    }
+
+    private func recentActivityBar(_ slot: StaffOpenSlotDetail) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let latest = OperatorSlotDetailPresenters.latestMilestone(viewModel.timeline) {
+                Text("Latest activity: \(latest)")
+                    .font(.system(size: 13))
+                    .foregroundStyle(PFColor.textSecondary)
+            }
+            if let touch = OperatorSlotDetailPresenters.lastTouchedSummary(for: slot) {
+                Text(touch)
+                    .font(.system(size: 13))
+                    .foregroundStyle(PFColor.textSecondary)
+            }
+            if slot.status == "claimed" {
+                Text("Awaiting staff confirmation")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(PFColor.warning)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PFColor.primary.opacity(0.08))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(PFColor.primary.opacity(0.14), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private func heroCard(_ slot: StaffOpenSlotDetail) -> some View {

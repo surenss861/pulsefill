@@ -11,6 +11,8 @@ export interface OperatorSlotsListItem {
   id: string;
   status: OperatorSlotStatus;
   provider_name_snapshot?: string | null;
+  /** Resolved from `locations` when `location_id` is set (open-slots list API). */
+  location_name?: string | null;
   provider_id?: string | null;
   service_id?: string | null;
   location_id?: string | null;

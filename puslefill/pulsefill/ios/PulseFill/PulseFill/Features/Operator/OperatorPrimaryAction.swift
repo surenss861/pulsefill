@@ -31,10 +31,7 @@ enum OperatorPrimaryActionDeriver {
     static func queueInline(from item: OperatorActionQueueItem) -> OperatorPrimaryAction? {
         guard let first = item.actions.first else { return nil }
 
-        if first == .inspectLogs {
-            return nil
-        }
-        if first == .viewSlot {
+        if first == .inspectLogs || first == .viewSlot || first == .openSlot {
             return nil
         }
 

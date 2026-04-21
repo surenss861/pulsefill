@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { displayCustomer } from "@/lib/customer-ref";
+import { openSlotDetailPath } from "@/lib/open-slot-routes";
 import { SlotRowShell } from "@/components/ui/slot-row-shell";
 import { StateChip } from "@/components/ui/state-chip";
 import type { ClaimRow } from "@/types/claim";
@@ -138,6 +140,21 @@ export function ClaimWinnerCard({
           value={claim.winning_claim?.claimed_at ? formatDate(claim.winning_claim.claimed_at) : "—"}
         />
         <Metric label="Claim status" value={claim.winning_claim?.status ?? "—"} emphasized />
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <Link
+          href={openSlotDetailPath(claim.open_slot_id)}
+          prefetch={false}
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "#7dd3fc",
+            textDecoration: "none",
+          }}
+        >
+          Open detail
+        </Link>
       </div>
 
       <div style={{ marginTop: 20 }}>

@@ -12,12 +12,16 @@ final class OperatorSlotDetailViewModel: ObservableObject {
 
     @Published var loadState: LoadState = .idle
     @Published var slot: StaffOpenSlotDetail?
+    @Published var queueContext: OperatorSlotQueueContext?
+    @Published var availableActions: [OperatorSlotAvailableAction] = []
     @Published var customerContext: OperatorCustomerContextResponse?
     @Published var timeline: [OperatorTimelineEvent] = []
     @Published var notificationLogs: [OperatorNotificationLogRow] = []
     @Published var isRetrying = false
     @Published var isConfirming = false
     @Published var isSavingNote = false
+    @Published var isExpiring = false
+    @Published var isCancelling = false
     @Published var flashMessage: String?
 
     private let api: APIClient
@@ -26,6 +30,29 @@ final class OperatorSlotDetailViewModel: ObservableObject {
     init(api: APIClient, slotId: String) {
         self.api = api
         self.slotId = slotId
+    }
+
+    var sortedActions: [OperatorSlotAvailableAction] {
+        availableActions.sorted { $0.sortIndex < $1.sortIndex }
+    }
+
+    var primaryRowActions: [OperatorSlotAvailableAction] {
+        let mutating = sortedActions.filter { !$0.isUtility }
+        return Array(mutating.prefix(2))
+    }
+
+    var secondaryRowActions: [OperatorSlotAvailableAction] {
+        let mutating = sortedActions.filter { !$0.isUtility }
+        let tail = Array(mutating.dropFirst(2))
+        let utils = sortedActions.filter(\.isUtility)
+        return tail + utils
+    }
+
+    /// When the API omits the new contract fields, keep legacy status-based actions.
+    var usesServerActionMatrix: Bool {
+        if !availableActions.isEmpty { return true }
+        if let t = queueContext?.reasonTitle, !t.isEmpty { return true }
+        return false
     }
 
     func load() async {
@@ -38,6 +65,8 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             async let logs = api.getSlotNotificationLogs(slotId: slotId)
             let (d, t, l) = try await (detail, tl, logs)
             slot = d.slot
+            queueContext = d.queueContext
+            availableActions = d.availableActions ?? []
             timeline = t.events
             notificationLogs = l.logs
 
@@ -61,24 +90,49 @@ final class OperatorSlotDetailViewModel: ObservableObject {
         await load()
     }
 
+    func runAvailableAction(_ action: OperatorSlotAvailableAction) async {
+        guard let slot else { return }
+        switch action {
+        case .confirmBooking:
+            await confirmBooking()
+        case .retryOffers, .sendOffers:
+            await retryOffers(for: action)
+        case .expireSlot:
+            await expireSlot()
+        case .cancelSlot:
+            await cancelSlot()
+        case .addNote, .inspectNotificationLogs:
+            break
+        }
+    }
+
+    /// Legacy / convenience path (infers send vs retry from slot status).
     func retryOffers() async {
+        guard let slot else { return }
+        let action: OperatorSlotAvailableAction = slot.status == "offered" ? .retryOffers : .sendOffers
+        await retryOffers(for: action)
+    }
+
+    func retryOffers(for action: OperatorSlotAvailableAction) async {
         guard let slot else { return }
         guard slot.status == "open" || slot.status == "offered" else { return }
         isRetrying = true
         defer { isRetrying = false }
         do {
             let res = try await api.sendOffers(slotId: slot.id)
+            let refresh: OperatorMutationRefreshAction = action == .retryOffers ? .retryOffers : .sendOffers
+            OperatorMutationNotifier.postSlotUpdated(slotId: slot.id, action: refresh)
             let trimmed = res.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if !trimmed.isEmpty {
                 flashMessage = trimmed
             } else if res.result == "no_matches" {
                 flashMessage = "No matching standby customers were found."
             } else {
-                flashMessage = slot.status == "offered" ? "Offers retried." : "Offers sent."
+                flashMessage = action == .retryOffers || slot.status == "offered" ? "Offers retried." : "Offers sent."
             }
             await load()
         } catch {
-            flashMessage = APIErrorCopy.message(for: error)
+            await handleMutationError(error)
         }
     }
 
@@ -95,6 +149,8 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             self.slot = slot.applyingSavedNote(res)
             let trimmed = res.message.trimmingCharacters(in: .whitespacesAndNewlines)
             flashMessage = trimmed.isEmpty ? "Internal note saved." : trimmed
+            OperatorMutationNotifier.postSlotNoteUpdated(slotId: slot.id)
+            await load()
         } catch {
             flashMessage = APIErrorCopy.message(for: error)
         }
@@ -106,6 +162,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
         defer { isConfirming = false }
         do {
             let res = try await api.confirmOpenSlotClaim(slotId: slot.id, claimId: claimId)
+            OperatorMutationNotifier.postSlotUpdated(slotId: slot.id, action: .confirmBooking)
             let trimmed = res.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if trimmed.isEmpty {
                 flashMessage = res.result == "already_confirmed" ? "This booking was already confirmed." : "Booking confirmed."
@@ -114,7 +171,35 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             }
             await load()
         } catch {
-            flashMessage = APIErrorCopy.message(for: error)
+            await handleMutationError(error)
+        }
+    }
+
+    func expireSlot() async {
+        guard let slot else { return }
+        isExpiring = true
+        defer { isExpiring = false }
+        do {
+            _ = try await api.expireOpenSlot(slotId: slot.id)
+            OperatorMutationNotifier.postSlotUpdated(slotId: slot.id, action: .expireSlot)
+            flashMessage = "Slot expired."
+            await load()
+        } catch {
+            await handleMutationError(error)
+        }
+    }
+
+    func cancelSlot() async {
+        guard let slot else { return }
+        isCancelling = true
+        defer { isCancelling = false }
+        do {
+            _ = try await api.cancelOpenSlot(slotId: slot.id)
+            OperatorMutationNotifier.postSlotUpdated(slotId: slot.id, action: .cancelSlot)
+            flashMessage = "Slot cancelled."
+            await load()
+        } catch {
+            await handleMutationError(error)
         }
     }
 
@@ -123,5 +208,22 @@ final class OperatorSlotDetailViewModel: ObservableObject {
         let failedOffers = (slot.slotOffers ?? []).contains { $0.status == "failed" }
         let failedLogs = notificationLogs.contains { $0.status == "failed" }
         return failedOffers || failedLogs
+    }
+
+    private func handleMutationError(_ error: Error) async {
+        if isOperatorActionConflict(error) {
+            flashMessage = "This opening changed — refreshed latest state."
+            await load()
+        } else {
+            flashMessage = APIErrorCopy.message(for: error)
+        }
+    }
+
+    private func isOperatorActionConflict(_ error: Error) -> Bool {
+        guard let apiErr = error as? APIError else { return false }
+        if case let .structured(statusCode, code, _, _) = apiErr {
+            return statusCode == 409 && code == "operator_action_not_allowed"
+        }
+        return false
     }
 }

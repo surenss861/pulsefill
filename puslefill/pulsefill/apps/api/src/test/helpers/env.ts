@@ -1,0 +1,15 @@
+import type { Env } from "../../config/env.js";
+
+/** Valid `Env` for route tests (no real Supabase calls on the paths we exercise). */
+export function createTestEnv(): Env {
+  return {
+    NODE_ENV: "test",
+    PORT: 0,
+    SUPABASE_URL: "http://127.0.0.1:54321",
+    SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key-placeholder",
+    LOG_LEVEL: "silent",
+    REDIS_URL: undefined,
+    STRIPE_SECRET_KEY: undefined,
+    STRIPE_WEBHOOK_SECRET: undefined,
+  };
+}

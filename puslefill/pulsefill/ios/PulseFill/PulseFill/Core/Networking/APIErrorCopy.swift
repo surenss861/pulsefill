@@ -51,6 +51,8 @@ enum APIErrorCopy {
             return "This opening has expired."
         case "slot_cancelled":
             return "This opening was cancelled."
+        case "operator_action_not_allowed":
+            return "This opening changed — refreshed latest state."
         case "not_found":
             return "This opening no longer exists."
         case "forbidden":

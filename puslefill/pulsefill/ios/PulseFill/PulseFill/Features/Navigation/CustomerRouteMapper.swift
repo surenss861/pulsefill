@@ -12,7 +12,13 @@ enum CustomerRouteMapper {
             guard let claimId = item.claimId else { return nil }
             return .claimOutcome(claimId)
 
-        case .offerExpired, .missedOpportunity:
+        case .offerExpired:
+            if let offerId = item.offerId, !offerId.isEmpty {
+                return .offerDetail(offerId)
+            }
+            return .missedOpportunities
+
+        case .missedOpportunity:
             return .missedOpportunities
 
         case .standbyStatusReminder:
@@ -42,7 +48,13 @@ enum CustomerRouteMapper {
             }
             return .activity
 
-        case "offer_expired", "offer_missed", "offer_unavailable", "missed_opportunity":
+        case "offer_expired":
+            if let offerId, !offerId.isEmpty {
+                return .offerDetail(offerId)
+            }
+            return .missedOpportunities
+
+        case "offer_missed", "offer_unavailable", "missed_opportunity":
             return .missedOpportunities
 
         case "standby_status", "standby_status_reminder":

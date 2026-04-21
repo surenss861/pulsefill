@@ -4,6 +4,12 @@ import Foundation
 
 struct OpenSlotDetailAPIResponse: Codable {
     let slot: StaffOpenSlotDetail
+    let queueContext: OperatorSlotQueueContext?
+    let availableActions: [OperatorSlotAvailableAction]?
+}
+
+struct SimpleOkResponse: Decodable {
+    let ok: Bool?
 }
 
 struct StaffTouchRow: Codable, Hashable {

@@ -1,6 +1,17 @@
 import Foundation
 
+private struct OperatorEmptyPOSTBody: Encodable {}
+
 extension APIClient {
+    func getMorningRecoveryDigest() async throws -> MorningRecoveryDigestResponse {
+        try await get("/v1/businesses/mine/morning-recovery-digest", as: MorningRecoveryDigestResponse.self)
+    }
+
+    /// Non-throwing wrapper so the queue screen can load digest in parallel without failing the whole load.
+    func getMorningRecoveryDigestIfAvailable() async -> MorningRecoveryDigestResponse? {
+        try? await getMorningRecoveryDigest()
+    }
+
     func getOperatorActionQueue() async throws -> OperatorActionQueueResponse {
         try await get("/v1/businesses/mine/action-queue", as: OperatorActionQueueResponse.self)
     }
@@ -43,6 +54,14 @@ extension APIClient {
 
     func sendOffers(slotId: String) async throws -> SendOffersAPIResponse {
         try await post("/v1/open-slots/\(slotId)/send-offers", body: SendOffersRequest(), as: SendOffersAPIResponse.self)
+    }
+
+    func expireOpenSlot(slotId: String) async throws -> SimpleOkResponse {
+        try await post("/v1/open-slots/\(slotId)/expire", body: OperatorEmptyPOSTBody(), as: SimpleOkResponse.self)
+    }
+
+    func cancelOpenSlot(slotId: String) async throws -> SimpleOkResponse {
+        try await post("/v1/open-slots/\(slotId)/cancel", body: OperatorEmptyPOSTBody(), as: SimpleOkResponse.self)
     }
 
     func confirmOpenSlotClaim(slotId: String, claimId: String) async throws -> ConfirmOpenSlotResponse {

@@ -19,7 +19,7 @@ export function operatorActivityKindLabel(kind: OperatorActivityKind): string {
     case "slot_cancelled":
       return "Cancelled";
     case "internal_note_updated":
-      return "Note updated";
+      return "Internal note updated";
     case "recovery_feedback_added":
       return "Feedback";
     default:

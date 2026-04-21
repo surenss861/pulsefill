@@ -7,6 +7,9 @@ import type { OpenSlotCreatedSummary } from "@/components/slots/open-slot-create
 import { useToast } from "@/components/ui/toast-provider";
 import { apiFetch } from "@/lib/api";
 import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
+import { navigateToOpenSlotDetail } from "@/lib/operator-navigation";
+import { emitOperatorRefreshEvent } from "@/lib/operator-refresh-events";
+import { openSlotDetailPath } from "@/lib/open-slot-routes";
 
 type SendOffersResponse = {
   ok?: boolean;
@@ -49,7 +52,8 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
         title: msg,
         tone: msg.includes("No matching") ? "info" : "success",
       });
-      router.push(`/open-slots/${slotId}`);
+      emitOperatorRefreshEvent("slot:updated", { slotId, action: "send_offers" });
+      navigateToOpenSlotDetail(router, slotId);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to send offers";
       setSendError(message);
@@ -72,7 +76,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
     >
       <h2 style={{ margin: 0, fontSize: 18, fontWeight: 650 }}>Open slot created</h2>
       <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>
-        The opening is ready. Send offers to matching standby customers now, or open the slot detail to review before
+        The opening is ready. Send offers to matching standby customers now, or open detail to review before
         sending.
       </p>
 
@@ -126,7 +130,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
           {sending ? "Sending…" : "Send offers now"}
         </button>
         <Link
-          href={`/open-slots/${slotId}`}
+          href={openSlotDetailPath(slotId)}
           style={{
             ...pressableSecondary,
             display: "inline-flex",
@@ -134,7 +138,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
             textDecoration: "none",
           }}
         >
-          View slot detail
+          Open detail
         </Link>
       </div>
 

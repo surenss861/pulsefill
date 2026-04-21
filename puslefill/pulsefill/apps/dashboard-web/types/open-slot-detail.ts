@@ -1,3 +1,35 @@
+export type OperatorSlotQueueCategory =
+  | "awaiting_confirmation"
+  | "delivery_failed"
+  | "retry_recommended"
+  | "no_matches"
+  | "offered_active"
+  | "expired_unfilled"
+  | "confirmed_booking";
+
+export type OperatorSlotQueueSection = "needs_action" | "review" | "resolved";
+
+export type OperatorSlotQueueSeverity = "high" | "medium" | "low";
+
+/** From `GET /v1/open-slots/:id` — server-owned queue classification. */
+export type OperatorSlotQueueContext = {
+  current_category: OperatorSlotQueueCategory | null;
+  current_section: OperatorSlotQueueSection | null;
+  reason_title: string | null;
+  reason_detail: string | null;
+  severity: OperatorSlotQueueSeverity | null;
+};
+
+/** From `GET /v1/open-slots/:id` — server-owned action matrix. */
+export type OperatorSlotAvailableAction =
+  | "confirm_booking"
+  | "retry_offers"
+  | "send_offers"
+  | "expire_slot"
+  | "cancel_slot"
+  | "add_note"
+  | "inspect_notification_logs";
+
 export type OpenSlotDetail = {
   id: string;
   status: string;
@@ -42,4 +74,10 @@ export type OpenSlotDetail = {
     claimed_at?: string | null;
     status: string;
   } | null;
+};
+
+export type OpenSlotDetailApiResponse = {
+  slot: OpenSlotDetail;
+  queue_context: OperatorSlotQueueContext;
+  available_actions: OperatorSlotAvailableAction[];
 };

@@ -9,6 +9,8 @@ struct OperatorInlineActionRunner {
         switch action.kind {
         case .sendOffers, .retryOffers:
             let r = try await api.sendOffers(slotId: openSlotId)
+            let refresh: OperatorMutationRefreshAction = action.kind == .retryOffers ? .retryOffers : .sendOffers
+            OperatorMutationNotifier.postSlotUpdated(slotId: openSlotId, action: refresh)
             let trimmed = r.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if !trimmed.isEmpty { return trimmed }
             return defaultSendMessage(result: r.result, kind: action.kind)
@@ -23,6 +25,7 @@ struct OperatorInlineActionRunner {
             }
             let r = try await api.confirmOpenSlotClaim(slotId: openSlotId, claimId: claimId)
             let trimmed = r.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            OperatorMutationNotifier.postSlotUpdated(slotId: openSlotId, action: .confirmBooking)
             if !trimmed.isEmpty { return trimmed }
             if r.result == "already_confirmed" {
                 return "This booking was already confirmed."

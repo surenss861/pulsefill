@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import Observation
 import UserNotifications
@@ -17,9 +18,26 @@ final class CustomerActivityFeedViewModel {
     var selectedFilter: CustomerActivityFilter = .all
 
     private let api: APIClient
+    private var operatorRefreshTokens = Set<AnyCancellable>()
 
     init(api: APIClient) {
         self.api = api
+
+        NotificationCenter.default.publisher(for: OperatorRefreshNotifications.slotUpdated)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await self.load() }
+            }
+            .store(in: &operatorRefreshTokens)
+
+        NotificationCenter.default.publisher(for: OperatorRefreshNotifications.slotNoteUpdated)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await self.load() }
+            }
+            .store(in: &operatorRefreshTokens)
     }
 
     func load() async {

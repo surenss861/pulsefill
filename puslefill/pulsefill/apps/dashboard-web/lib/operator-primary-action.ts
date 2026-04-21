@@ -3,8 +3,8 @@ import type { OperatorSlotsListItem } from "@/types/operator-slots-list";
 
 export type DerivedOperatorPrimaryAction =
   | { kind: "send_offers"; label: "Send offers" }
-  | { kind: "retry_offers"; label: "Retry" }
-  | { kind: "confirm_booking"; label: "Confirm"; claimId: string }
+  | { kind: "retry_offers"; label: "Retry offers" }
+  | { kind: "confirm_booking"; label: "Confirm booking"; claimId: string }
   | null;
 
 /** Slots list + shared status/claim rules. */
@@ -19,13 +19,13 @@ export function deriveOperatorPrimaryAction(input: {
   }
 
   if (status === "offered") {
-    return { kind: "retry_offers", label: "Retry" };
+    return { kind: "retry_offers", label: "Retry offers" };
   }
 
   if (status === "claimed" && input.winningClaimId) {
     return {
       kind: "confirm_booking",
-      label: "Confirm",
+      label: "Confirm booking",
       claimId: input.winningClaimId,
     };
   }
@@ -57,7 +57,7 @@ export function deriveQueueInlinePrimaryAction(item: ActionQueueItem): DerivedOp
 
   if (first === "confirm_booking") {
     if (status === "claimed" && item.claim_id) {
-      return { kind: "confirm_booking", label: "Confirm", claimId: item.claim_id };
+      return { kind: "confirm_booking", label: "Confirm booking", claimId: item.claim_id };
     }
     return null;
   }
@@ -67,7 +67,7 @@ export function deriveQueueInlinePrimaryAction(item: ActionQueueItem): DerivedOp
       return { kind: "send_offers", label: "Send offers" };
     }
     if (status === "offered") {
-      return { kind: "retry_offers", label: "Retry" };
+      return { kind: "retry_offers", label: "Retry offers" };
     }
     return null;
   }

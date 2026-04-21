@@ -7,6 +7,23 @@ import { filterMatchingPreferences, type OpenSlotRow, type StandbyPreferenceRow 
 import { requireCustomer, requireStaff } from "../../plugins/guards.js";
 import { executeBulkOpenSlotAction } from "./bulk-actions.js";
 import {
+  buildOperatorActionRejectionDetails,
+  checkOperatorActionAllowed,
+  checkSendOrRetryOffersAllowed,
+} from "./assert-operator-action-allowed.js";
+import { canPerformAction } from "./operator-slot-rules.js";
+import {
+  baseSignalsFromOpenSlotRow,
+  buildOperatorAvailableActions,
+  buildOperatorSlotQueueContext,
+  enrichOperatorSlotDetailSignals,
+} from "./operator-slot-detail-context.js";
+import { loadSlotRuleContext } from "./load-slot-rule-context.js";
+import {
+  getConfirmOpenSlotMutationTestDelegate,
+  getSendOffersMutationTestDelegate,
+} from "./open-slots-route-test-seams.js";
+import {
   loadStaffActorLabels,
   mergeMetadata,
   touchOpenSlotByStaff,
@@ -87,11 +104,28 @@ function pickWinningClaim(claims: unknown): Record<string, unknown> | null {
   return (won as Record<string, unknown>) ?? null;
 }
 
+function locationNameFromEmbed(loc: unknown): string | null {
+  if (loc == null) return null;
+  if (Array.isArray(loc)) {
+    const first = loc[0];
+    if (first && typeof first === "object" && first !== null && "name" in first) {
+      return String((first as { name: unknown }).name);
+    }
+    return null;
+  }
+  if (typeof loc === "object" && "name" in loc) {
+    return String((loc as { name: unknown }).name);
+  }
+  return null;
+}
+
 function mapSlotListRow(row: Record<string, unknown>) {
-  const { slot_claims: claims, ...rest } = row;
+  const { slot_claims: claims, locations: loc, ...rest } = row;
+  const location_name = locationNameFromEmbed(loc);
   return {
     ...rest,
     winning_claim: pickWinningClaim(claims),
+    location_name,
   };
 }
 
@@ -101,7 +135,7 @@ async function listOpenSlots(req: FastifyRequest, reply: FastifyReply) {
 
   let query = admin
     .from("open_slots")
-    .select("*, slot_claims(id, customer_id, claimed_at, status)")
+    .select("*, slot_claims(id, customer_id, claimed_at, status), locations(name)")
     .eq("business_id", req.staff!.business_id)
     .order("starts_at", { ascending: true });
 
@@ -279,6 +313,11 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         .single();
       if (error) return reply.status(500).send({ error: "load_failed" });
       const row = data as Record<string, unknown>;
+      const signalsBase = baseSignalsFromOpenSlotRow(row);
+      const signals = await enrichOperatorSlotDetailSignals(admin, req.staff!.business_id, id, signalsBase);
+      const queue_context = buildOperatorSlotQueueContext(signals);
+      const available_actions = buildOperatorAvailableActions(signals, queue_context);
+
       const { slot_claims: claims, last_touched_staff: lastTouchedStaff, ...slotRest } = row;
       return reply.send({
         slot: {
@@ -286,6 +325,8 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           winning_claim: pickWinningClaim(claims),
           last_touched_by: lastTouchedStaff ?? null,
         },
+        queue_context,
+        available_actions,
       });
     },
   );
@@ -316,66 +357,42 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const id = z.string().uuid().parse((req.params as { id?: string }).id);
       const opts = sendOffersBody.parse(req.body ?? {});
 
-      const ok = await assertSlotInBusiness(admin, id, req.staff!.business_id);
-      if (!ok) {
-        return sendActionError(reply, 404, "not_found", "This opening no longer exists.", false);
+      const sendGuard = await checkSendOrRetryOffersAllowed(admin, {
+        openSlotId: id,
+        businessId: req.staff!.business_id,
+      });
+      if (!sendGuard.ok) {
+        if (sendGuard.status === 404) {
+          return sendActionError(reply, 404, "not_found", "This opening no longer exists.", false);
+        }
+        return sendActionError(
+          reply,
+          409,
+          "operator_action_not_allowed",
+          "Send or retry offers is not allowed for this slot in its current state.",
+          false,
+          sendGuard.details as Record<string, unknown>,
+        );
       }
 
-      const { data: slot, error: slotErr } = await admin.from("open_slots").select("*").eq("id", id).single();
-      if (slotErr || !slot) {
-        req.log.error({ slotErr }, "slot load failed");
-        return sendActionError(reply, 404, "not_found", "This opening no longer exists.", false);
-      }
-
+      const slot = sendGuard.loaded.slot;
       const status = String(slot.status ?? "");
       const previousStatus = status;
 
-      if (status === "claimed") {
-        return sendActionError(
-          reply,
-          409,
-          "slot_already_claimed",
-          "This opening already has a claimant and can’t be re-offered.",
-          false,
-        );
-      }
-      if (status === "booked") {
-        return sendActionError(
-          reply,
-          409,
-          "slot_already_booked",
-          "This opening has already been confirmed.",
-          false,
-        );
-      }
-      if (status === "expired") {
-        return sendActionError(
-          reply,
-          409,
-          "slot_expired",
-          "This opening has expired and can no longer send offers.",
-          false,
-        );
-      }
-      if (status === "cancelled") {
-        return sendActionError(
-          reply,
-          409,
-          "slot_cancelled",
-          "This opening was cancelled and can no longer send offers.",
-          false,
-        );
-      }
-
-      if (status !== "open" && status !== "offered") {
-        return sendActionError(
-          reply,
-          409,
-          "invalid_request",
-          "This opening cannot send offers in its current state.",
-          false,
-          { current_status: status },
-        );
+      const sendOffersTestMutation = getSendOffersMutationTestDelegate();
+      if (sendOffersTestMutation) {
+        const out = await sendOffersTestMutation({
+          openSlotId: id,
+          businessId: req.staff!.business_id,
+          staffId: req.staff!.id,
+          authUserId: req.authUser!.id,
+          previousStatus,
+        });
+        return sendSendOffersSuccess(reply, {
+          ok: true,
+          open_slot_id: id,
+          ...out,
+        });
       }
 
       const { data: business, error: bizErr } = await admin
@@ -554,22 +571,15 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       }
       const body = parsed.data;
 
-      const ok = await assertSlotInBusiness(admin, slotId, req.staff!.business_id);
-      if (!ok) {
+      const loaded = await loadSlotRuleContext(admin, {
+        openSlotId: slotId,
+        businessId: req.staff!.business_id,
+      });
+      if (!loaded) {
         return sendActionError(reply, 404, "not_found", "This opening or claim no longer exists.", false);
       }
 
-      const { data: slotRow, error: slotLoadErr } = await admin
-        .from("open_slots")
-        .select("id, status")
-        .eq("id", slotId)
-        .maybeSingle();
-
-      if (slotLoadErr || !slotRow) {
-        return sendActionError(reply, 404, "not_found", "This opening or claim no longer exists.", false);
-      }
-
-      const st = String((slotRow as { status: string }).status);
+      const st = String(loaded.slot.status ?? "");
 
       if (st === "booked") {
         const { data: claimRow } = await admin
@@ -630,6 +640,43 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           false,
           { current_status: st },
         );
+      }
+
+      const guardReload = await loadSlotRuleContext(admin, {
+        openSlotId: slotId,
+        businessId: req.staff!.business_id,
+      });
+      if (!guardReload) {
+        return sendActionError(reply, 404, "not_found", "This opening or claim no longer exists.", false);
+      }
+      if (!canPerformAction("confirm_booking", guardReload.signals)) {
+        return sendActionError(
+          reply,
+          409,
+          "operator_action_not_allowed",
+          "Confirm booking is not allowed for this slot in its current state.",
+          false,
+          buildOperatorActionRejectionDetails("confirm_booking", guardReload.signals) as Record<string, unknown>,
+        );
+      }
+
+      const confirmTestMutation = getConfirmOpenSlotMutationTestDelegate();
+      if (confirmTestMutation) {
+        await confirmTestMutation({
+          openSlotId: slotId,
+          claimId: body.claim_id,
+          businessId: req.staff!.business_id,
+          staffId: req.staff!.id,
+          authUserId: req.authUser!.id,
+        });
+        return sendConfirmSuccess(reply, {
+          ok: true,
+          result: "confirmed",
+          open_slot_id: slotId,
+          claim_id: body.claim_id,
+          status: "booked",
+          message: "Booking confirmed.",
+        });
       }
 
       const { data, error } = await admin.rpc("confirm_open_slot_claim", {
@@ -733,8 +780,24 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const admin = createServiceSupabase(req.server.env);
       const id = z.string().uuid().parse((req.params as { id?: string }).id);
 
-      const ok = await assertSlotInBusiness(admin, id, req.staff!.business_id);
-      if (!ok) return reply.status(404).send({ error: "not_found" });
+      const cancelGuard = await checkOperatorActionAllowed(admin, {
+        openSlotId: id,
+        businessId: req.staff!.business_id,
+        action: "cancel_slot",
+      });
+      if (!cancelGuard.ok) {
+        if (cancelGuard.status === 404) {
+          return reply.status(404).send({ error: "not_found" });
+        }
+        return sendActionError(
+          reply,
+          409,
+          "operator_action_not_allowed",
+          "Cancel slot is not allowed for this opening in its current state.",
+          false,
+          cancelGuard.details as Record<string, unknown>,
+        );
+      }
 
       const { data, error } = await admin.rpc("staff_cancel_open_slot", {
         p_open_slot_id: id,
@@ -839,8 +902,24 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const admin = createServiceSupabase(req.server.env);
       const id = z.string().uuid().parse((req.params as { id?: string }).id);
 
-      const ok = await assertSlotInBusiness(admin, id, req.staff!.business_id);
-      if (!ok) return reply.status(404).send({ error: "not_found" });
+      const expireGuard = await checkOperatorActionAllowed(admin, {
+        openSlotId: id,
+        businessId: req.staff!.business_id,
+        action: "expire_slot",
+      });
+      if (!expireGuard.ok) {
+        if (expireGuard.status === 404) {
+          return reply.status(404).send({ error: "not_found" });
+        }
+        return sendActionError(
+          reply,
+          409,
+          "operator_action_not_allowed",
+          "Expire slot is not allowed for this opening in its current state.",
+          false,
+          expireGuard.details as Record<string, unknown>,
+        );
+      }
 
       const { data, error } = await admin.rpc("staff_expire_open_slot", {
         p_open_slot_id: id,

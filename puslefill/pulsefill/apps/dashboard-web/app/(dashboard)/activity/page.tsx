@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { OperatorActivityBulkActionBar } from "@/components/activity/operator-activity-bulk-action-bar";
 import { OperatorActivityCard } from "@/components/activity/operator-activity-card";
 import { OperatorBulkActionConfirmModal } from "@/components/slots/operator-bulk-action-confirm-modal";
@@ -10,10 +10,12 @@ import { RefreshIndicator } from "@/components/ui/refresh-indicator";
 import { useToast } from "@/components/ui/toast-provider";
 import { useOperatorActivityBulkSelection } from "@/hooks/useOperatorActivityBulkSelection";
 import { useOperatorActivityFeed } from "@/hooks/useOperatorActivityFeed";
+import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscription";
 import {
   openSlotsUrlForActivitySelection,
   retrySelectedActivitySlots,
 } from "@/lib/operator-activity-bulk-actions";
+import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
 import { groupOperatorActivityItems } from "@/lib/operator-activity-grouping";
 import {
   matchesOperatorActivityFilter,
@@ -26,6 +28,15 @@ export default function OperatorActivityPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const { items, loading, error, reload } = useOperatorActivityFeed(30_000);
+
+  const refreshActivitySilent = useCallback(() => {
+    void reload({ silent: true });
+  }, [reload]);
+
+  useOperatorRefreshSubscription({
+    onSlotUpdated: refreshActivitySilent,
+    onSlotNoteUpdated: refreshActivitySilent,
+  });
   const [filter, setFilter] = useState<OperatorActivityFilter>("all");
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
@@ -55,7 +66,10 @@ export default function OperatorActivityPage() {
     setBulkResult(null);
     try {
       const res = await retrySelectedActivitySlots(bulk.selectedSlotIds);
-      if (res) setBulkResult(res);
+      if (res) {
+        setBulkResult(res);
+        emitOperatorRefreshAfterBulkSlotAction(res);
+      }
       showToast({
         title: `Bulk retry finished — ${res?.message ?? "Done."}`,
         tone: "success",
