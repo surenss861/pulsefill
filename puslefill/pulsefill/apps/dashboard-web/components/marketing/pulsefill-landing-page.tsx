@@ -246,8 +246,9 @@ function OperatorHeroMock() {
             background: "var(--pf-card-hero-bg)",
             border: `1px solid ${TOKENS.violetBorder}`,
             borderRadius: 16,
-            padding: 14,
+            padding: 16,
             marginBottom: 12,
+            boxShadow: "0 0 0 1px rgba(124,58,237,0.12), 0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
           }}
         >
           <div
@@ -268,9 +269,17 @@ function OperatorHeroMock() {
             <MetricTile label="Failed" value="3" compact />
           </div>
         </div>
-        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr" }}>
-          <div style={{ borderRadius: 14, border: `1px solid ${TOKENS.borderSubtle}`, background: TOKENS.surface, padding: 12 }}>
-            <div style={{ color: TOKENS.text, fontSize: 13, fontWeight: 620 }}>What to work first</div>
+        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr", opacity: 0.97 }}>
+          <div
+            style={{
+              borderRadius: 14,
+              border: `1px solid rgba(124,58,237,0.28)`,
+              background: "rgba(255,255,255,0.04)",
+              padding: 12,
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+            }}
+          >
+            <div style={{ color: TOKENS.text, fontSize: 13, fontWeight: 650 }}>What to work first</div>
             <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
               {[
                 ["Work first", "6"],
@@ -283,9 +292,10 @@ function OperatorHeroMock() {
                     justifyContent: "space-between",
                     padding: "8px 10px",
                     borderRadius: 12,
-                    background: "rgba(255,255,255,0.03)",
+                    background: "rgba(0,0,0,0.28)",
                     fontSize: 12,
                     color: TOKENS.text,
+                    border: "1px solid rgba(255,255,255,0.06)",
                   }}
                 >
                   <span>{label}</span>
@@ -294,8 +304,8 @@ function OperatorHeroMock() {
               ))}
             </div>
           </div>
-          <div style={{ borderRadius: 14, border: `1px solid ${TOKENS.borderSubtle}`, background: TOKENS.surface, padding: 12 }}>
-            <div style={{ color: TOKENS.text, fontSize: 13, fontWeight: 620 }}>Needs attention</div>
+          <div style={{ borderRadius: 14, border: `1px solid rgba(255,255,255,0.05)`, background: "rgba(255,255,255,0.02)", padding: 12, opacity: 0.82 }}>
+            <div style={{ color: TOKENS.muted, fontSize: 12, fontWeight: 620 }}>Needs attention</div>
             <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
               {["Botox · awaiting confirm", "Hygiene · delivery failed"].map((t) => (
                 <div
@@ -303,7 +313,7 @@ function OperatorHeroMock() {
                   style={{
                     padding: "8px 10px",
                     borderRadius: 12,
-                    background: "rgba(255,255,255,0.03)",
+                    background: "rgba(255,255,255,0.02)",
                     fontSize: 11,
                     color: TOKENS.muted,
                   }}
@@ -403,6 +413,7 @@ function OperatorPayoffMock() {
             borderRadius: 18,
             padding: 16,
             marginBottom: 14,
+            boxShadow: "0 0 0 1px rgba(124,58,237,0.1), 0 20px 52px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
           }}
         >
           <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
@@ -416,8 +427,8 @@ function OperatorPayoffMock() {
           </div>
         </div>
         <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
-          <div style={{ borderRadius: 16, border: `1px solid ${TOKENS.border}`, background: TOKENS.surface, padding: 14 }}>
-            <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 620 }}>What to work first</div>
+          <div style={{ borderRadius: 16, border: `1px solid rgba(124,58,237,0.25)`, background: "rgba(255,255,255,0.04)", padding: 14 }}>
+            <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 650 }}>What to work first</div>
             <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
               {[
                 ["Work first", "6"],
@@ -431,8 +442,8 @@ function OperatorPayoffMock() {
                     justifyContent: "space-between",
                     padding: "10px 12px",
                     borderRadius: 14,
-                    background: "rgba(255,255,255,0.04)",
-                    border: `1px solid ${TOKENS.borderSubtle}`,
+                    background: "rgba(0,0,0,0.22)",
+                    border: `1px solid rgba(255,255,255,0.06)`,
                     fontSize: 13,
                     color: TOKENS.text,
                   }}
@@ -443,8 +454,8 @@ function OperatorPayoffMock() {
               ))}
             </div>
           </div>
-          <div style={{ borderRadius: 16, border: `1px solid ${TOKENS.border}`, background: TOKENS.surface, padding: 14 }}>
-            <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 620 }}>Needs attention now</div>
+          <div style={{ borderRadius: 16, border: `1px solid rgba(255,255,255,0.06)`, background: "rgba(255,255,255,0.02)", padding: 14, opacity: 0.84 }}>
+            <div style={{ color: TOKENS.muted, fontSize: 13, fontWeight: 620 }}>Needs attention now</div>
             <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
               {[
                 ["Botox Consult", "Awaiting confirmation"],
@@ -524,26 +535,30 @@ function CustomerPayoffPhone() {
   );
 }
 
-const STEPS: { step: string; title: string; body: string }[] = [
+const STEPS: { step: string; title: string; body: string; emphasis: "bookend" | "bridge" | "operator" }[] = [
   {
     step: "1",
     title: "A slot opens",
-    body: "Near-term cancellation creates revenue risk and a short recovery window.",
+    body: "Revenue risk, minutes to act.",
+    emphasis: "bookend",
   },
   {
     step: "2",
     title: "Standby demand is matched",
-    body: "Preferences, availability, and recovery logic surface the right customers.",
+    body: "Logic surfaces the right customers.",
+    emphasis: "bridge",
   },
   {
     step: "3",
     title: "Operators are guided",
-    body: "Queue, retry, confirm, or follow up — with clear reasons and context.",
+    body: "Queue, confirm, follow up — with reasons and context.",
+    emphasis: "operator",
   },
   {
     step: "4",
     title: "Recovery becomes visible",
-    body: "Recovered bookings and revenue surface where the team already works.",
+    body: "Bookings and revenue where the team already works.",
+    emphasis: "bookend",
   },
 ];
 
@@ -638,17 +653,17 @@ export function PulseFillLandingPage() {
               rowGap: "clamp(36px, 5vw, 52px)",
             }}
           >
-            <div style={{ flex: "1 1 280px", maxWidth: 420, minWidth: 0, paddingBottom: "clamp(0px, 2vw, 20px)" }}>
+            <div style={{ flex: "1 1 280px", maxWidth: 400, minWidth: 0, paddingBottom: "clamp(0px, 2vw, 16px)" }}>
               <HeroEyebrow>Appointment Recovery Operating System</HeroEyebrow>
               <h1
                 style={{
-                  margin: "12px 0 0 0",
+                  margin: "10px 0 0 0",
                   color: TOKENS.text,
                   fontSize: "clamp(44px, 6.2vw, 80px)",
                   lineHeight: 0.94,
                   letterSpacing: "-0.058em",
                   fontWeight: 680,
-                  maxWidth: 420,
+                  maxWidth: 380,
                 }}
               >
                 <span style={{ display: "block" }}>Cancellations are inevitable.</span>
@@ -656,22 +671,22 @@ export function PulseFillLandingPage() {
               </h1>
               <p
                 style={{
-                  margin: "22px 0 0 0",
+                  margin: "18px 0 0 0",
                   color: TOKENS.muted,
                   fontSize: 15,
-                  lineHeight: 1.58,
-                  maxWidth: 360,
+                  lineHeight: 1.52,
+                  maxWidth: 310,
+                  fontWeight: 500,
                 }}
               >
-                PulseFill gives appointment businesses a real operating system for standby demand, operator action, and
-                measurable recovery.
+                The operating layer between cancellations and recovered revenue — standby, operators, proof.
               </p>
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px", marginTop: 22 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px", marginTop: 20 }}>
                 <PrimaryButton href={demoHref}>Book a demo</PrimaryButton>
                 <TextLink href="#how-it-works">See the workflow</TextLink>
               </div>
-              <p style={{ marginTop: 18, color: TOKENS.tertiary, fontSize: 11, lineHeight: 1.55, maxWidth: 340, letterSpacing: "0.02em" }}>
-                Built for teams where cancellations happen fast and recovery windows close faster.
+              <p style={{ marginTop: 14, color: "rgba(148,163,184,0.55)", fontSize: 10, lineHeight: 1.5, maxWidth: 280, letterSpacing: "0.03em" }}>
+                For teams where recovery windows close fast.
               </p>
             </div>
 
@@ -812,45 +827,54 @@ export function PulseFillLandingPage() {
               {[
                 {
                   t: "Openings expire fast",
-                  d: "Close-in cancellations create short recovery windows where every minute of delay lowers the odds of filling the slot.",
+                  d: "Short windows: every minute of delay costs the fill.",
                 },
                 {
                   t: "Manual follow-up doesn't scale",
-                  d: "The front desk becomes the workflow — juggling callbacks, messages, and guesswork instead of running a system.",
+                  d: "The desk becomes the workflow — not a system.",
                 },
                 {
                   t: "Most tools stop at the calendar",
-                  d: "They store appointments, but they don't actively run recovery when the schedule breaks.",
+                  d: "They store slots — they don't run recovery when the schedule breaks.",
                 },
               ].map((row, i) => (
                 <div
                   key={row.t}
                   style={{
-                    padding: "18px 0 18px 16px",
-                    borderLeft: `2px solid ${i === 0 ? "rgba(124,58,237,0.75)" : "rgba(255,255,255,0.06)"}`,
-                    borderBottom: i < 2 ? `1px solid rgba(255,255,255,0.05)` : "none",
+                    padding: "16px 0 16px 16px",
+                    borderLeft: `2px solid ${i === 0 ? "rgba(124,58,237,0.85)" : "rgba(255,255,255,0.05)"}`,
+                    borderBottom: i < 2 ? `1px solid rgba(255,255,255,0.04)` : "none",
+                    opacity: i === 0 ? 1 : 0.78,
                   }}
                 >
-                  <div style={{ color: TOKENS.text, fontSize: 16, fontWeight: i === 0 ? 650 : 600, letterSpacing: "-0.02em" }}>{row.t}</div>
-                  <p style={{ margin: "8px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.58 }}>{row.d}</p>
+                  <div
+                    style={{
+                      color: TOKENS.text,
+                      fontSize: i === 0 ? 17 : 14,
+                      fontWeight: i === 0 ? 650 : 580,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    {row.t}
+                  </div>
+                  <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: i === 0 ? 13 : 12, lineHeight: 1.52 }}>{row.d}</p>
                 </div>
               ))}
               <div
                 style={{
-                  marginTop: 20,
-                  padding: "16px 18px 18px",
+                  marginTop: 32,
+                  padding: "20px 20px 22px",
                   borderRadius: 0,
-                  background: "rgba(3,4,10,0.75)",
-                  borderLeft: "3px solid rgba(124,58,237,0.65)",
-                  borderTop: "1px solid rgba(255,255,255,0.06)",
-                  borderRight: "1px solid rgba(255,255,255,0.04)",
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                  background: "rgba(0,0,0,0.82)",
+                  borderLeft: "4px solid rgba(124,58,237,0.85)",
+                  borderTop: "1px solid rgba(255,255,255,0.07)",
+                  boxShadow: "0 24px 56px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
                 }}
               >
-                <div style={{ color: TOKENS.tertiary, fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+                <div style={{ color: TOKENS.tertiary, fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
                   What teams actually lack
                 </div>
-                <div style={{ marginTop: 8, color: TOKENS.text, fontSize: 20, fontWeight: 650, letterSpacing: "-0.03em", lineHeight: 1.15 }}>
+                <div style={{ marginTop: 10, color: TOKENS.text, fontSize: 21, fontWeight: 650, letterSpacing: "-0.035em", lineHeight: 1.12 }}>
                   Visibility into why recovery stalls
                 </div>
               </div>
@@ -868,7 +892,7 @@ export function PulseFillLandingPage() {
         }}
       >
         <Container>
-          <div style={{ maxWidth: 560, marginBottom: "clamp(40px, 6vw, 64px)" }}>
+          <div style={{ maxWidth: 560, marginBottom: "clamp(48px, 7vw, 80px)" }}>
             <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
               The missing layer
             </div>
@@ -894,30 +918,45 @@ export function PulseFillLandingPage() {
           <div
             style={{
               position: "relative",
-              padding: "clamp(8px, 2vw, 16px) 0 8px",
-              borderTop: "1px solid rgba(255,255,255,0.06)",
+              padding: "clamp(20px, 4vw, 36px) 0 clamp(28px, 5vw, 48px)",
+              borderTop: "1px solid rgba(255,255,255,0.07)",
             }}
           >
             <div
               aria-hidden
               style={{
                 position: "absolute",
-                left: "6%",
-                right: "6%",
+                left: "4%",
+                right: "4%",
                 top: 0,
                 height: 1,
-                background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.45), rgba(124,58,237,0.65), rgba(124,58,237,0.45), transparent)",
-                opacity: 0.9,
+                background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.25), rgba(124,58,237,0.25), transparent)",
+                opacity: 0.85,
+              }}
+            />
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                left: "30%",
+                right: "30%",
+                top: 0,
+                height: 2,
+                borderRadius: 2,
+                background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.9), rgba(196,181,253,0.75), rgba(124,58,237,0.9), transparent)",
+                boxShadow: "0 0 24px rgba(124,58,237,0.45)",
+                opacity: 0.95,
+                pointerEvents: "none",
               }}
             />
             <div
               style={{
                 display: "flex",
                 flexWrap: "wrap",
-                alignItems: "stretch",
+                alignItems: "flex-end",
                 justifyContent: "space-between",
-                gap: "12px 8px",
-                marginTop: 28,
+                gap: "8px 12px",
+                marginTop: 36,
               }}
             >
               {[
@@ -930,27 +969,28 @@ export function PulseFillLandingPage() {
                     <div
                       style={{
                         display: "flex",
-                        alignItems: "center",
-                        alignSelf: "center",
-                        color: "rgba(148,163,184,0.45)",
-                        fontSize: 20,
-                        fontWeight: 300,
-                        letterSpacing: "0.12em",
-                        padding: "0 4px",
+                        alignItems: "flex-end",
+                        alignSelf: "stretch",
+                        paddingBottom: 18,
+                        color: "rgba(167,139,250,0.55)",
+                        fontSize: 15,
+                        fontWeight: 500,
+                        letterSpacing: "0.08em",
                         flexShrink: 0,
                       }}
                     >
-                      ——
+                      ▸
                     </div>
                   ) : null}
                   <div
                     style={{
-                      flex: block.emphasis === "hero" ? "1.25 1 220px" : "1 1 200px",
-                      minWidth: "min(100%, 200px)",
-                      maxWidth: block.emphasis === "hero" ? 340 : 280,
-                      padding: block.emphasis === "hero" ? "8px 8px 20px 0" : "8px 8px 16px 0",
-                      borderBottom: block.emphasis === "hero" ? "2px solid rgba(124,58,237,0.65)" : "1px solid rgba(255,255,255,0.07)",
+                      flex: block.emphasis === "hero" ? "1.35 1 220px" : "0.85 1 180px",
+                      minWidth: "min(100%, 180px)",
+                      maxWidth: block.emphasis === "hero" ? 360 : 260,
+                      padding: block.emphasis === "hero" ? "4px 4px 22px 0" : "4px 4px 18px 0",
+                      borderBottom: block.emphasis === "hero" ? "3px solid rgba(124,58,237,0.75)" : "1px solid rgba(255,255,255,0.06)",
                       background: "transparent",
+                      opacity: block.emphasis === "hero" ? 1 : 0.72,
                     }}
                   >
                     <div
@@ -959,18 +999,18 @@ export function PulseFillLandingPage() {
                         fontWeight: 700,
                         letterSpacing: "0.18em",
                         textTransform: "uppercase",
-                        color: block.emphasis === "hero" ? "rgba(196,181,253,0.95)" : TOKENS.tertiary,
+                        color: block.emphasis === "hero" ? "rgba(196,181,253,0.95)" : "rgba(148,163,184,0.65)",
                       }}
                     >
                       {block.k}
                     </div>
                     <p
                       style={{
-                        margin: "12px 0 0 0",
+                        margin: "10px 0 0 0",
                         color: TOKENS.text,
-                        fontSize: block.emphasis === "hero" ? 17 : 15,
-                        lineHeight: 1.5,
-                        fontWeight: block.emphasis === "hero" ? 650 : 600,
+                        fontSize: block.emphasis === "hero" ? 18 : 14,
+                        lineHeight: 1.45,
+                        fontWeight: block.emphasis === "hero" ? 650 : 580,
                         letterSpacing: "-0.02em",
                       }}
                     >
@@ -981,7 +1021,7 @@ export function PulseFillLandingPage() {
               ))}
             </div>
           </div>
-          <p style={{ marginTop: 36, color: TOKENS.muted, fontSize: 14, lineHeight: 1.65, maxWidth: 520, letterSpacing: "0.01em" }}>
+          <p style={{ marginTop: 44, color: TOKENS.muted, fontSize: 14, lineHeight: 1.65, maxWidth: 480, letterSpacing: "0.01em" }}>
             From schedule disruption to measurable recovery — in one operational flow.
           </p>
         </Container>
@@ -1027,8 +1067,22 @@ export function PulseFillLandingPage() {
                 top: 11,
                 height: 1,
                 borderRadius: 1,
-                background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.5), rgba(124,58,237,0.75), rgba(124,58,237,0.5), transparent)",
-                opacity: 0.85,
+                background: "linear-gradient(90deg, rgba(124,58,237,0.15), rgba(255,255,255,0.06), rgba(124,58,237,0.15))",
+                opacity: 0.9,
+                pointerEvents: "none",
+              }}
+            />
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                left: "38%",
+                right: "38%",
+                top: 10,
+                height: 2,
+                borderRadius: 2,
+                background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.85), rgba(196,181,253,0.6), rgba(124,58,237,0.85), transparent)",
+                boxShadow: "0 0 20px rgba(124,58,237,0.35)",
                 pointerEvents: "none",
               }}
             />
@@ -1040,42 +1094,61 @@ export function PulseFillLandingPage() {
                 alignItems: "stretch",
               }}
             >
-              {STEPS.map(({ step, title, body }) => (
-                <div key={step} style={{ paddingTop: 4 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              {STEPS.map(({ step, title, body, emphasis }) => {
+                const isOp = emphasis === "operator";
+                const isBook = emphasis === "bookend";
+                return (
+                  <div key={step} style={{ paddingTop: 4 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                      <div
+                        style={{
+                          width: isOp ? 22 : 20,
+                          height: isOp ? 22 : 20,
+                          borderRadius: 999,
+                          display: "grid",
+                          placeItems: "center",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: TOKENS.text,
+                          background: isOp
+                            ? "linear-gradient(145deg, rgba(124,58,237,0.55), rgba(10,12,20,0.95))"
+                            : "linear-gradient(145deg, rgba(124,58,237,0.22), rgba(10,12,20,0.92))",
+                          border: isOp ? `1px solid rgba(196,181,253,0.55)` : `1px solid rgba(255,255,255,0.1)`,
+                          boxShadow: isOp ? "0 0 20px rgba(124,58,237,0.25)" : undefined,
+                          flexShrink: 0,
+                          opacity: isBook ? 0.75 : 1,
+                        }}
+                      >
+                        {step}
+                      </div>
+                      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)", minWidth: 8, borderRadius: 1 }} />
+                    </div>
                     <div
                       style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 999,
-                        display: "grid",
-                        placeItems: "center",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: TOKENS.text,
-                        background: "linear-gradient(145deg, rgba(124,58,237,0.4), rgba(10,12,20,0.95))",
-                        border: `1px solid rgba(167,139,250,0.45)`,
-                        flexShrink: 0,
+                        borderRadius: isOp ? 14 : 10,
+                        padding: isOp ? "16px 14px 18px" : "12px 12px 14px",
+                        minHeight: isOp ? 104 : 88,
+                        background: isOp ? "rgba(124,58,237,0.08)" : "rgba(255,255,255,0.012)",
+                        border: isOp ? "1px solid rgba(124,58,237,0.35)" : "1px solid rgba(255,255,255,0.04)",
+                        boxShadow: isOp ? "0 12px 40px rgba(0,0,0,0.35)" : undefined,
+                        opacity: isBook ? 0.88 : 1,
                       }}
                     >
-                      {step}
+                      <div
+                        style={{
+                          color: TOKENS.text,
+                          fontSize: isOp ? 15 : 13,
+                          fontWeight: isOp ? 650 : 600,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {title}
+                      </div>
+                      <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: isOp ? 12 : 11, lineHeight: 1.5 }}>{body}</p>
                     </div>
-                    <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)", minWidth: 8, borderRadius: 1 }} />
                   </div>
-                  <div
-                    style={{
-                      borderRadius: 12,
-                      padding: "14px 14px 16px",
-                      minHeight: 96,
-                      background: "rgba(255,255,255,0.018)",
-                      border: "1px solid rgba(255,255,255,0.045)",
-                    }}
-                  >
-                    <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 620, lineHeight: 1.22 }}>{title}</div>
-                    <p style={{ margin: "8px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.55 }}>{body}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </Container>
@@ -1136,24 +1209,24 @@ export function PulseFillLandingPage() {
               >
                 One recovery console. One standby experience.
               </h2>
-              <p style={{ margin: "14px 0 0 0", color: TOKENS.muted, fontSize: 14, lineHeight: 1.58, maxWidth: 340 }}>
-                Operators run the workflow. Customers respond to real openings — one recovery system.
+              <p style={{ margin: "14px 0 0 0", color: TOKENS.muted, fontSize: 14, lineHeight: 1.55, maxWidth: 320, fontWeight: 500 }}>
+                Not another inbox. A single recovery surface: operators execute, customers claim, revenue returns.
               </p>
-              <div style={{ marginTop: 24, display: "grid", gap: 18, maxWidth: 340 }}>
+              <div style={{ marginTop: 26, display: "grid", gap: 20, maxWidth: 340 }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(196,181,253,0.95)" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(196,181,253,0.95)" }}>
                     Operator console
                   </div>
-                  <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.55 }}>
-                    Overview, queue, slot detail, recovery status, delivery visibility, recovered revenue.
+                  <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.5 }}>
+                    Command the queue. See delivery. Close the loop on revenue.
                   </p>
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: TOKENS.tertiary }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: TOKENS.tertiary }}>
                     Standby experience
                   </div>
-                  <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.55 }}>
-                    Preferences, matched openings, claim flow, active standby, status.
+                  <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.5 }}>
+                    Real openings. Fast claims. Status without noise.
                   </p>
                 </div>
               </div>
@@ -1219,17 +1292,17 @@ export function PulseFillLandingPage() {
         </Container>
       </section>
 
-      {/* —— Why: category separation (mode: poster / calm) —— */}
+      {/* —— Why: manifesto strip (mode: poster) —— */}
       <section
         id="why"
         style={{
-          padding: "clamp(72px, 11vw, 120px) 0",
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-          background: "linear-gradient(180deg, rgba(0,0,0,0.06), transparent)",
+          padding: "clamp(80px, 12vw, 132px) 0",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          background: "linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.02))",
         }}
       >
         <Container>
-          <div style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 40px" }}>
+          <div style={{ maxWidth: 560, marginBottom: 48 }}>
             <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
               Why PulseFill
             </div>
@@ -1237,70 +1310,65 @@ export function PulseFillLandingPage() {
               style={{
                 margin: "14px 0 0 0",
                 color: TOKENS.text,
-                fontSize: "clamp(26px, 3.6vw, 40px)",
+                fontSize: "clamp(28px, 3.8vw, 42px)",
                 fontWeight: 620,
-                letterSpacing: "-0.04em",
-                lineHeight: 1.08,
+                letterSpacing: "-0.042em",
+                lineHeight: 1.05,
+                maxWidth: 520,
               }}
             >
               More than reminders. More than scheduling. A real recovery system.
             </h2>
-            <p style={{ margin: "16px auto 0", color: TOKENS.muted, fontSize: 14, lineHeight: 1.62, maxWidth: 480 }}>
-              The gap between a cancellation and a recovered booking is still handled too manually in too many businesses.
-              PulseFill is the operational layer that closes it.
+            <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 14, lineHeight: 1.58, maxWidth: 400 }}>
+              The gap from cancellation to recovered booking is still improvisation for too many teams. PulseFill is the
+              layer that makes it operational.
             </p>
           </div>
-          <div style={{ maxWidth: 720, margin: "0 auto", display: "grid", gap: 0 }}>
+          <div style={{ maxWidth: 880, display: "grid", gap: 0 }}>
             {[
               {
+                n: "01",
                 title: "Built for near-term recovery",
-                body: "Same-day and short-window openings need speed, ownership, and workflow — not admin overhead.",
-                weight: 1,
+                body: "Same-day and short-window openings need speed and ownership — not admin theater.",
               },
               {
+                n: "02",
                 title: "Rules-based and explainable",
-                body: "Teams can see why a slot needs action, what should happen next, and where recovery is stalling.",
-                weight: 2,
+                body: "See why a slot needs action, what happens next, and where recovery stalls.",
               },
               {
+                n: "03",
                 title: "One product across both sides",
-                body: "Standby demand and operator execution share one system instead of disconnected tools and workarounds.",
-                weight: 3,
+                body: "Standby demand and operator execution in one system — not parallel hacks.",
               },
             ].map((row, i) => (
               <div
                 key={row.title}
                 style={{
-                  padding: "28px 0 28px 0",
-                  borderTop: i === 0 ? `1px solid rgba(255,255,255,0.07)` : undefined,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "baseline",
+                  gap: "16px 28px",
+                  padding: "22px 0",
+                  borderTop: i === 0 ? `1px solid rgba(255,255,255,0.08)` : undefined,
                   borderBottom: `1px solid rgba(255,255,255,0.06)`,
                 }}
               >
-                <div
+                <span
                   style={{
-                    color: TOKENS.text,
-                    fontSize: row.weight === 2 ? "clamp(19px, 2.4vw, 24px)" : "clamp(17px, 2.1vw, 20px)",
-                    fontWeight: row.weight === 2 ? 650 : 620,
-                    letterSpacing: "-0.025em",
-                    maxWidth: 560,
-                    margin: "0 auto",
-                    textAlign: "center",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.14em",
+                    color: "rgba(124,58,237,0.85)",
+                    minWidth: 28,
                   }}
                 >
-                  {row.title}
+                  {row.n}
+                </span>
+                <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+                  <div style={{ color: TOKENS.text, fontSize: "clamp(17px, 2.1vw, 20px)", fontWeight: 650, letterSpacing: "-0.03em" }}>{row.title}</div>
+                  <p style={{ margin: "8px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.55, maxWidth: 520 }}>{row.body}</p>
                 </div>
-                <p
-                  style={{
-                    margin: "10px auto 0",
-                    color: TOKENS.muted,
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    maxWidth: 480,
-                    textAlign: "center",
-                  }}
-                >
-                  {row.body}
-                </p>
               </div>
             ))}
           </div>
@@ -1346,62 +1414,70 @@ export function PulseFillLandingPage() {
               Recovery becomes measurable when the workflow is visible.
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: 16 }}>
             <div
               style={{
-                borderRadius: 18,
-                padding: "36px 32px 40px",
-                background: "var(--pf-card-hero-bg)",
-                border: `1px solid ${TOKENS.violetBorder}`,
-                boxShadow: "0 32px 72px rgba(124,58,237,0.22)",
+                borderRadius: 4,
+                padding: "40px 28px 44px",
+                background: "rgba(0,0,0,0.55)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderLeft: "4px solid rgba(124,58,237,0.85)",
+                boxShadow: "0 40px 80px rgba(0,0,0,0.45)",
               }}
             >
-              <div style={{ color: TOKENS.tertiary, fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" }}>Recovered Bookings</div>
-              <div style={{ marginTop: 18, fontSize: "clamp(56px, 8vw, 72px)", fontWeight: 650, letterSpacing: "-0.05em", lineHeight: 0.9 }}>12</div>
-              <p style={{ margin: "18px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.55, maxWidth: 280 }}>
-                Track recovered appointments where your team already works.
+              <div style={{ color: TOKENS.tertiary, fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>Recovered Bookings</div>
+              <div style={{ marginTop: 12, fontSize: "clamp(60px, 9vw, 80px)", fontWeight: 650, letterSpacing: "-0.055em", lineHeight: 0.88, color: TOKENS.text }}>
+                12
+              </div>
+              <p style={{ margin: "20px 0 0 0", color: "rgba(148,163,184,0.92)", fontSize: 12, lineHeight: 1.5, maxWidth: 260 }}>
+                Proof where the team already works — not a buried report.
               </p>
             </div>
             <div
               style={{
-                borderRadius: 18,
-                padding: "36px 32px 40px",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                boxShadow: "0 28px 64px rgba(0,0,0,0.35)",
+                borderRadius: 4,
+                padding: "40px 28px 44px",
+                background: "rgba(0,0,0,0.45)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderLeft: "4px solid rgba(255,255,255,0.2)",
+                boxShadow: "0 32px 72px rgba(0,0,0,0.4)",
               }}
             >
-              <div style={{ color: TOKENS.tertiary, fontSize: 9, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" }}>Recovered Revenue</div>
-              <div style={{ marginTop: 18, fontSize: "clamp(56px, 8vw, 72px)", fontWeight: 650, letterSpacing: "-0.05em", lineHeight: 0.9 }}>$1.8K</div>
-              <p style={{ margin: "18px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.55, maxWidth: 280 }}>
-                Tie recovery back to revenue the desk already understands.
+              <div style={{ color: TOKENS.tertiary, fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>Recovered Revenue</div>
+              <div style={{ marginTop: 12, fontSize: "clamp(60px, 9vw, 80px)", fontWeight: 650, letterSpacing: "-0.055em", lineHeight: 0.88, color: TOKENS.text }}>
+                $1.8K
+              </div>
+              <p style={{ margin: "20px 0 0 0", color: "rgba(148,163,184,0.92)", fontSize: 12, lineHeight: 1.5, maxWidth: 260 }}>
+                Revenue the desk recognizes — tied to recovery, not guesswork.
               </p>
             </div>
           </div>
           <div
             style={{
-              marginTop: 28,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "28px 40px",
-              paddingTop: 28,
-              borderTop: "1px solid rgba(255,255,255,0.06)",
-              maxWidth: 720,
+              marginTop: 32,
+              padding: "24px 0 8px",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              maxWidth: 760,
             }}
           >
-            {[
-              ["Fill-rate Visibility", "Live"],
-              ["Workflow Clarity", "High"],
-              ["Less Manual Chaos", "Down"],
-            ].map(([k, v]) => (
-              <div key={k} style={{ minWidth: "min(100%, 200px)" }}>
-                <div style={{ fontSize: 9, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" }}>{k}</div>
-                <div style={{ marginTop: 6, fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em" }}>{v}</div>
-              </div>
-            ))}
+            <div style={{ fontSize: 9, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 16 }}>
+              Operating signals
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "32px 48px" }}>
+              {[
+                ["Fill-rate visibility", "Live"],
+                ["Workflow clarity", "High"],
+                ["Manual chaos", "Down"],
+              ].map(([k, v]) => (
+                <div key={k}>
+                  <div style={{ fontSize: 10, color: TOKENS.muted, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>{k}</div>
+                  <div style={{ marginTop: 4, fontSize: 22, fontWeight: 650, letterSpacing: "-0.03em" }}>{v}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <p style={{ marginTop: 32, color: TOKENS.muted, fontSize: 13, lineHeight: 1.6, maxWidth: 480 }}>
-            PulseFill doesn&apos;t only help teams recover bookings — it helps them understand recovery as a system.
+          <p style={{ marginTop: 28, color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 400 }}>
+            Recovery you can read — not folklore passed desk to desk.
           </p>
         </Container>
       </section>
@@ -1415,7 +1491,7 @@ export function PulseFillLandingPage() {
         }}
       >
         <Container>
-          <div style={{ maxWidth: 480 }}>
+          <div style={{ maxWidth: 360 }}>
             <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
               Trust
             </div>
@@ -1431,41 +1507,29 @@ export function PulseFillLandingPage() {
             >
               Understandable. Controllable. Real.
             </h2>
-            <p style={{ margin: "14px 0 0 0", color: TOKENS.muted, fontSize: 14, lineHeight: 1.65, maxWidth: 420 }}>
-              PulseFill makes recovery legible: what needs attention, what can wait, what failed to deliver, what needs
-              confirmation, and where coverage is thin.
+            <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.62, maxWidth: 340 }}>
+              Legible recovery: attention, wait states, failures, confirmations, thin coverage — all explicit.
             </p>
           </div>
-          <div
-            style={{
-              marginTop: 32,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
-              columnGap: 40,
-              rowGap: 20,
-              maxWidth: 640,
-            }}
-          >
-            {["Clear queue reasons", "Explicit operator actions", "Delivery visibility", "Workflow breakdowns", "No black-box guessing"].map(
-              (item) => (
-                <div
-                  key={item}
-                  style={{
-                    fontSize: 13,
-                    color: TOKENS.text,
-                    letterSpacing: "-0.01em",
-                    paddingLeft: 14,
-                    borderLeft: "1px solid rgba(255,255,255,0.1)",
-                    lineHeight: 1.45,
-                  }}
-                >
-                  {item}
-                </div>
-              ),
-            )}
+          <div style={{ marginTop: 44, maxWidth: 480, display: "grid", gap: 22 }}>
+            {["Clear queue reasons", "Explicit operator actions", "Delivery visibility", "No black-box guessing"].map((item) => (
+              <div
+                key={item}
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: TOKENS.text,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.35,
+                  paddingBottom: 2,
+                }}
+              >
+                {item}
+              </div>
+            ))}
           </div>
-          <p style={{ marginTop: 28, color: TOKENS.muted, fontSize: 12, lineHeight: 1.6, maxWidth: 400 }}>
-            Teams should never have to guess why a slot was lost or what they should do next.
+          <p style={{ marginTop: 32, color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 320 }}>
+            No ambiguity. No theater.
           </p>
         </Container>
       </section>
@@ -1473,8 +1537,9 @@ export function PulseFillLandingPage() {
       {/* —— Final CTA: ceremonial close (mode: poster) —— */}
       <section
         style={{
-          padding: "clamp(120px, 18vw, 220px) 0 clamp(120px, 18vw, 220px)",
-          background: "radial-gradient(ellipse 90% 60% at 50% 0%, rgba(0,0,0,0.35), rgba(0,0,0,0.65))",
+          padding: "clamp(100px, 16vw, 200px) 0 clamp(112px, 17vw, 200px)",
+          background: "radial-gradient(ellipse 90% 55% at 50% 0%, rgba(0,0,0,0.45), rgba(0,0,0,0.78))",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
         }}
       >
         <Container>
@@ -1482,7 +1547,7 @@ export function PulseFillLandingPage() {
             style={{
               position: "relative",
               textAlign: "center",
-              padding: "clamp(72px, 12vw, 140px) clamp(20px, 5vw, 56px)",
+              padding: "clamp(80px, 14vw, 160px) clamp(20px, 5vw, 48px)",
               borderRadius: 0,
               overflow: "visible",
             }}
@@ -1508,7 +1573,7 @@ export function PulseFillLandingPage() {
                 pointerEvents: "none",
               }}
             />
-            <div style={{ position: "relative", zIndex: 1, maxWidth: 560, margin: "0 auto" }}>
+            <div style={{ position: "relative", zIndex: 1, maxWidth: 500, margin: "0 auto" }}>
               <div
                 style={{
                   color: TOKENS.tertiary,
@@ -1522,27 +1587,23 @@ export function PulseFillLandingPage() {
               </div>
               <h2
                 style={{
-                  margin: "18px 0 0 0",
+                  margin: "20px 0 0 0",
                   color: TOKENS.text,
-                  fontSize: "clamp(28px, 4.2vw, 46px)",
-                  lineHeight: 1.05,
-                  letterSpacing: "-0.042em",
-                  fontWeight: 620,
+                  fontSize: "clamp(26px, 4vw, 44px)",
+                  lineHeight: 1.04,
+                  letterSpacing: "-0.045em",
+                  fontWeight: 630,
                 }}
               >
                 Run cancellation recovery like infrastructure — not improvisation.
               </h2>
-              <p style={{ margin: "18px auto 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.65, maxWidth: 440 }}>
-                PulseFill gives appointment businesses the missing operational layer between cancellations and recovered
-                bookings.
+              <p style={{ margin: "16px auto 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 380 }}>
+                The operational layer between cancellations and recovered bookings.
               </p>
-              <div style={{ marginTop: 36, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "12px 24px", alignItems: "center" }}>
+              <div style={{ marginTop: 40, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px 28px", alignItems: "center" }}>
                 <PrimaryButton href={demoHref}>Book a demo</PrimaryButton>
                 <MutedTextLink href={workflowHref}>Operator sign in</MutedTextLink>
               </div>
-              <p style={{ marginTop: 22, color: TOKENS.tertiary, fontSize: 11, lineHeight: 1.55, maxWidth: 360, marginLeft: "auto", marginRight: "auto" }}>
-                For teams ready to treat recovery like an operating system, not a daily fire drill.
-              </p>
             </div>
           </div>
         </Container>
