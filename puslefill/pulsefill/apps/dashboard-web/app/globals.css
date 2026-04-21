@@ -1,26 +1,175 @@
+/**
+ * PulseFill operator dashboard — design tokens (midnight + violet / cyan).
+ * Components may use legacy aliases (--bg, --text, --primary, …) or explicit --pf-* names.
+ */
+
 :root {
   color-scheme: dark;
-  --bg: #0a0c10;
-  --surface: #131722;
-  --text: #f5f7fb;
-  --muted: #99a3b3;
-  --primary: #4de2c5;
+
+  /* —— Core neutrals —— */
+  --pf-bg-app: #070b14;
+  --pf-bg-page: #0f172a;
+  --pf-bg-surface: #111827;
+  --pf-bg-surface-muted: #0b1220;
+  --pf-bg-elevated: #152033;
+
+  --pf-border-subtle: rgba(148, 163, 184, 0.12);
+  --pf-border-default: rgba(148, 163, 184, 0.16);
+  --pf-border-strong: rgba(148, 163, 184, 0.24);
+
+  --pf-text-primary: #e5eef8;
+  --pf-text-secondary: #94a3b8;
+  --pf-text-tertiary: rgba(229, 238, 248, 0.48);
+  --pf-text-inverse: #050816;
+
+  /* —— Brand / accent —— */
+  --pf-accent-primary: #7c3aed;
+  --pf-accent-primary-hover: #8b5cf6;
+  --pf-accent-primary-soft: rgba(124, 58, 237, 0.16);
+  --pf-accent-primary-border: rgba(167, 139, 250, 0.28);
+  --pf-accent-primary-glow: rgba(124, 58, 237, 0.24);
+
+  --pf-accent-secondary: #22d3ee;
+  --pf-accent-secondary-hover: #67e8f9;
+  --pf-accent-secondary-soft: rgba(34, 211, 238, 0.12);
+  --pf-accent-secondary-border: rgba(103, 232, 249, 0.24);
+  --pf-accent-secondary-glow: rgba(34, 211, 238, 0.18);
+
+  /* —— Semantic —— */
+  --pf-success: #10b981;
+  --pf-success-soft: rgba(16, 185, 129, 0.12);
+  --pf-success-border: rgba(52, 211, 153, 0.24);
+
+  --pf-warning: #f59e0b;
+  --pf-warning-soft: rgba(245, 158, 11, 0.12);
+  --pf-warning-border: rgba(251, 191, 36, 0.24);
+
+  --pf-danger: #ef4444;
+  --pf-danger-soft: rgba(239, 68, 68, 0.12);
+  --pf-danger-border: rgba(248, 113, 113, 0.24);
+
+  --pf-info: #38bdf8;
+  --pf-info-soft: rgba(56, 189, 248, 0.12);
+  --pf-info-border: rgba(125, 211, 252, 0.24);
+
+  /* —— Shell & cards —— */
+  --pf-card-bg: rgba(17, 24, 39, 0.92);
+  --pf-card-border: var(--pf-border-default);
+  --pf-card-radius-xl: 24px;
+  --pf-card-shadow: 0 8px 30px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+
+  --pf-card-quiet-bg: rgba(255, 255, 255, 0.03);
+  --pf-card-quiet-border: rgba(255, 255, 255, 0.08);
+
+  --pf-card-hero-bg: radial-gradient(circle at top left, rgba(124, 58, 237, 0.16), transparent 38%),
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.08), transparent 30%), rgba(17, 24, 39, 0.96);
+  --pf-card-hero-border: rgba(167, 139, 250, 0.24);
+
+  /* —— Queue row surfaces —— */
+  --pf-row-urgent-bg: rgba(255, 255, 255, 0.06);
+  --pf-row-urgent-border: rgba(255, 255, 255, 0.16);
+  --pf-row-review-bg: rgba(255, 255, 255, 0.045);
+  --pf-row-review-border: rgba(255, 255, 255, 0.1);
+  --pf-row-resolved-bg: rgba(255, 255, 255, 0.025);
+  --pf-row-resolved-border: rgba(255, 255, 255, 0.07);
+
+  /* —— Typography scale —— */
+  --pf-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* —— Spacing —— */
+  --pf-space-2: 8px;
+  --pf-space-3: 12px;
+  --pf-space-4: 16px;
+  --pf-space-5: 20px;
+  --pf-space-6: 24px;
+  --pf-space-7: 28px;
+  --pf-space-8: 32px;
+
+  --pf-page-section-gap: 28px;
+  --pf-card-padding: 20px;
+  --pf-card-padding-lg: 24px;
+  --pf-row-padding-y: 14px;
+  --pf-row-padding-x: 16px;
+
+  /* —— Radius —— */
+  --pf-radius-sm: 12px;
+  --pf-radius-md: 16px;
+  --pf-radius-lg: 20px;
+  --pf-radius-xl: 24px;
+  --pf-radius-pill: 999px;
+
+  /* —— Buttons —— */
+  --pf-btn-primary-bg: var(--pf-accent-primary);
+  --pf-btn-primary-bg-hover: var(--pf-accent-primary-hover);
+  --pf-btn-primary-text: #ffffff;
+  --pf-btn-primary-shadow: 0 8px 24px rgba(124, 58, 237, 0.24);
+
+  --pf-btn-secondary-bg: rgba(255, 255, 255, 0.04);
+  --pf-btn-secondary-bg-hover: rgba(255, 255, 255, 0.07);
+  --pf-btn-secondary-border: rgba(255, 255, 255, 0.1);
+  --pf-btn-secondary-border-hover: rgba(103, 232, 249, 0.24);
+  --pf-btn-secondary-text: var(--pf-text-primary);
+
+  --pf-btn-link-text: var(--pf-accent-secondary-hover);
+  --pf-btn-link-text-hover: #a5f3fc;
+
+  /* —— Chips —— */
+  --pf-chip-neutral-bg: rgba(255, 255, 255, 0.05);
+  --pf-chip-neutral-border: rgba(255, 255, 255, 0.1);
+  --pf-chip-neutral-text: #cbd5e1;
+
+  --pf-chip-primary-bg: rgba(124, 58, 237, 0.16);
+  --pf-chip-primary-border: rgba(167, 139, 250, 0.28);
+  --pf-chip-primary-text: #ddd6fe;
+
+  --pf-chip-cyan-bg: rgba(34, 211, 238, 0.12);
+  --pf-chip-cyan-border: rgba(103, 232, 249, 0.24);
+  --pf-chip-cyan-text: #cffafe;
+
+  --pf-chip-warning-bg: var(--pf-warning-soft);
+  --pf-chip-warning-border: var(--pf-warning-border);
+  --pf-chip-warning-text: #fde68a;
+
+  --pf-chip-danger-bg: var(--pf-danger-soft);
+  --pf-chip-danger-border: var(--pf-danger-border);
+  --pf-chip-danger-text: #fecaca;
+
+  --pf-chip-success-bg: var(--pf-success-soft);
+  --pf-chip-success-border: var(--pf-success-border);
+  --pf-chip-success-text: #a7f3d0;
+
+  /* —— Motion —— */
+  --pf-hover-lift: translateY(-1px);
+  --pf-focus-ring: 0 0 0 3px rgba(124, 58, 237, 0.22);
+  --pf-transition-fast: 140ms ease;
+  --pf-transition-base: 180ms ease;
+
+  /* —— Legacy aliases (existing components) —— */
+  --bg: var(--pf-bg-app);
+  --surface: var(--pf-bg-surface);
+  --text: var(--pf-text-primary);
+  --muted: var(--pf-text-secondary);
+  --primary: var(--pf-accent-primary);
 }
 
 html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  min-height: 100%;
+  background-color: var(--pf-bg-app);
+  background-image: linear-gradient(180deg, #070b14 0%, #0b1220 40%, #0f172a 100%);
+  background-attachment: fixed;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  font-family: var(--pf-font-sans);
 }
 
 a {
-  color: var(--primary);
+  color: var(--pf-btn-link-text);
   text-decoration: none;
 }
 
 a:hover {
+  color: var(--pf-btn-link-text-hover);
   text-decoration: underline;
 }
