@@ -12,10 +12,11 @@ const TOKENS = {
   surface: "var(--pf-card-bg)",
   quiet: "var(--pf-card-quiet-bg)",
   hero: "var(--pf-card-hero-bg)",
-  violet: "var(--pf-accent-primary)",
-  violetBorder: "var(--pf-accent-primary-border)",
-  cyan: "var(--pf-accent-secondary)",
-  cyanBorder: "var(--pf-accent-secondary-border)",
+  ember: "var(--pf-accent-primary)",
+  emberBorder: "var(--pf-accent-primary-border)",
+  /** Oxblood / tension (borders, consequence — use sparingly) */
+  tension: "var(--pf-accent-secondary)",
+  tensionBorder: "var(--pf-accent-secondary-border)",
 } as const;
 
 const container: CSSProperties = {
@@ -169,7 +170,7 @@ function MetricTile({ label, value, accent = false, compact = false }: { label: 
     <div
       style={{
         background: accent ? "rgba(255,255,255,0.06)" : TOKENS.quiet,
-        border: `1px solid ${accent ? TOKENS.violetBorder : TOKENS.borderSubtle}`,
+        border: `1px solid ${accent ? TOKENS.emberBorder : TOKENS.borderSubtle}`,
         borderRadius: compact ? 16 : 20,
         padding: compact ? 14 : 18,
       }}
@@ -237,18 +238,18 @@ function OperatorHeroMock() {
         border: `1px solid ${TOKENS.border}`,
         background: "rgba(5,8,16,0.94)",
         overflow: "hidden",
-        boxShadow: "0 40px 100px rgba(0,0,0,0.62), 0 0 0 1px rgba(124,58,237,0.14), 0 0 140px rgba(124,58,237,0.22)",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.62), 0 0 0 1px rgba(249,115,22,0.14), 0 0 140px rgba(249,115,22,0.22)",
       }}
     >
       <MockBrowserChrome title="PulseFill — Recovery">
         <div
           style={{
             background: "var(--pf-card-hero-bg)",
-            border: `1px solid ${TOKENS.violetBorder}`,
+            border: `1px solid ${TOKENS.emberBorder}`,
             borderRadius: 16,
             padding: 16,
             marginBottom: 12,
-            boxShadow: "0 0 0 1px rgba(124,58,237,0.12), 0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
+            boxShadow: "0 0 0 1px rgba(249,115,22,0.12), 0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
           }}
         >
           <div
@@ -273,7 +274,7 @@ function OperatorHeroMock() {
           <div
             style={{
               borderRadius: 14,
-              border: `1px solid rgba(124,58,237,0.28)`,
+              border: `1px solid rgba(249,115,22,0.28)`,
               background: "rgba(255,255,255,0.04)",
               padding: 12,
               boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
@@ -299,7 +300,7 @@ function OperatorHeroMock() {
                   }}
                 >
                   <span>{label}</span>
-                  <span style={{ color: "rgba(196,181,253,0.95)", fontWeight: 700 }}>{count}</span>
+                  <span style={{ color: "rgba(253,186,116,0.95)", fontWeight: 700 }}>{count}</span>
                 </div>
               ))}
             </div>
@@ -339,7 +340,7 @@ function CustomerHeroPhone() {
         border: `1px solid rgba(255,255,255,0.08)`,
         background: "linear-gradient(165deg, rgba(14,18,30,0.98), rgba(6,8,14,0.98))",
         padding: 7,
-        boxShadow: "0 22px 56px rgba(0,0,0,0.55), 0 0 48px rgba(124,58,237,0.12)",
+        boxShadow: "0 22px 56px rgba(0,0,0,0.55), 0 0 48px rgba(249,115,22,0.12)",
       }}
     >
       <div
@@ -365,12 +366,22 @@ function CustomerHeroPhone() {
             borderRadius: 16,
             padding: 14,
             background: "var(--pf-card-hero-bg)",
-            border: `1px solid rgba(124,58,237,0.35)`,
+            border: `1px solid rgba(249,115,22,0.35)`,
           }}
         >
           <div style={{ color: TOKENS.text, fontSize: 13, fontWeight: 620 }}>Offer available</div>
           <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
-            <div style={{ borderRadius: 12, padding: "10px 12px", background: TOKENS.violet, color: "#fff", fontSize: 12, fontWeight: 700, textAlign: "center" }}>
+            <div
+              style={{
+                borderRadius: 12,
+                padding: "10px 12px",
+                background: TOKENS.ember,
+                color: "var(--pf-btn-primary-text)",
+                fontSize: 12,
+                fontWeight: 700,
+                textAlign: "center",
+              }}
+            >
               Claim opening
             </div>
             <div
@@ -399,21 +410,21 @@ function OperatorPayoffMock() {
     <div
       style={{
         borderRadius: 26,
-        border: `1px solid rgba(124,58,237,0.35)`,
+        border: `1px solid rgba(249,115,22,0.35)`,
         background: "rgba(4,7,14,0.96)",
         overflow: "hidden",
-        boxShadow: "0 40px 100px rgba(0,0,0,0.6), 0 0 140px rgba(124,58,237,0.2)",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.6), 0 0 140px rgba(249,115,22,0.2)",
       }}
     >
       <MockBrowserChrome title="PulseFill — Operator">
         <div
           style={{
             background: "var(--pf-card-hero-bg)",
-            border: `1px solid ${TOKENS.violetBorder}`,
+            border: `1px solid ${TOKENS.emberBorder}`,
             borderRadius: 18,
             padding: 16,
             marginBottom: 14,
-            boxShadow: "0 0 0 1px rgba(124,58,237,0.1), 0 20px 52px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
+            boxShadow: "0 0 0 1px rgba(249,115,22,0.1), 0 20px 52px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
           }}
         >
           <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
@@ -427,7 +438,7 @@ function OperatorPayoffMock() {
           </div>
         </div>
         <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
-          <div style={{ borderRadius: 16, border: `1px solid rgba(124,58,237,0.25)`, background: "rgba(255,255,255,0.04)", padding: 14 }}>
+          <div style={{ borderRadius: 16, border: `1px solid rgba(249,115,22,0.25)`, background: "rgba(255,255,255,0.04)", padding: 14 }}>
             <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 650 }}>What to work first</div>
             <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
               {[
@@ -449,7 +460,7 @@ function OperatorPayoffMock() {
                   }}
                 >
                   <span>{label}</span>
-                  <span style={{ color: "rgba(196,181,253,0.95)", fontWeight: 700 }}>{count}</span>
+                  <span style={{ color: "rgba(253,186,116,0.95)", fontWeight: 700 }}>{count}</span>
                 </div>
               ))}
             </div>
@@ -484,7 +495,7 @@ function CustomerPayoffPhone() {
         border: `1px solid ${TOKENS.border}`,
         background: "rgba(6,10,18,0.98)",
         padding: 10,
-        boxShadow: "0 32px 88px rgba(0,0,0,0.58), 0 0 72px rgba(124,58,237,0.14)",
+        boxShadow: "0 32px 88px rgba(0,0,0,0.58), 0 0 72px rgba(249,115,22,0.14)",
       }}
     >
       <div
@@ -510,13 +521,24 @@ function CustomerPayoffPhone() {
               borderRadius: 18,
               padding: 14,
               background: "var(--pf-card-hero-bg)",
-              border: `1px solid rgba(124,58,237,0.32)`,
+              border: `1px solid rgba(249,115,22,0.32)`,
             }}
           >
             <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 620 }}>Offer available</div>
             <div style={{ marginTop: 6, color: TOKENS.muted, fontSize: 12 }}>Today · 2:30 PM</div>
             <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <div style={{ flex: 1, borderRadius: 12, padding: "10px", background: TOKENS.violet, color: "#fff", fontSize: 12, fontWeight: 700, textAlign: "center" }}>
+              <div
+                style={{
+                  flex: 1,
+                  borderRadius: 12,
+                  padding: "10px",
+                  background: TOKENS.ember,
+                  color: "var(--pf-btn-primary-text)",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textAlign: "center",
+                }}
+              >
                 Claim
               </div>
               <div style={{ flex: 1, borderRadius: 12, padding: "10px", border: `1px solid ${TOKENS.borderSubtle}`, fontSize: 12, fontWeight: 600, textAlign: "center" }}>
@@ -571,8 +593,8 @@ export function PulseFillLandingPage() {
     overflowX: "hidden",
     color: TOKENS.text,
     background: `
-      radial-gradient(ellipse 88% 52% at 76% 16%, rgba(124,58,237,0.3), transparent 52%),
-      radial-gradient(ellipse 65% 40% at 10% 20%, rgba(34,211,238,0.045), transparent 46%),
+      radial-gradient(ellipse 88% 52% at 76% 16%, rgba(249,115,22,0.3), transparent 52%),
+      radial-gradient(ellipse 65% 40% at 10% 20%, rgba(127,29,29,0.14), transparent 46%),
       radial-gradient(ellipse 120% 78% at 50% 0%, rgba(0,0,0,0.38), transparent 56%),
       var(--pf-shell-bg)
     `,
@@ -627,7 +649,7 @@ export function PulseFillLandingPage() {
             inset: 0,
             background: `
               radial-gradient(ellipse 50% 85% at 18% 42%, rgba(0,0,0,0.5), transparent 52%),
-              radial-gradient(ellipse 62% 78% at 72% 44%, rgba(124,58,237,0.18), transparent 58%)
+              radial-gradient(ellipse 62% 78% at 72% 44%, rgba(249,115,22,0.18), transparent 58%)
             `,
             pointerEvents: "none",
           }}
@@ -711,7 +733,7 @@ export function PulseFillLandingPage() {
                   left: "54%",
                   top: "48%",
                   transform: "translate(-50%, -50%)",
-                  background: "radial-gradient(circle, rgba(124,58,237,0.52) 0%, rgba(124,58,237,0.2) 38%, rgba(124,58,237,0.06) 55%, transparent 72%)",
+                  background: "radial-gradient(circle, rgba(249,115,22,0.52) 0%, rgba(249,115,22,0.2) 38%, rgba(249,115,22,0.06) 55%, transparent 72%)",
                   filter: "blur(52px)",
                   opacity: 0.95,
                   pointerEvents: "none",
@@ -726,7 +748,7 @@ export function PulseFillLandingPage() {
                   width: 180,
                   height: 220,
                   borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(34,211,238,0.055), transparent 70%)",
+                  background: "radial-gradient(circle, rgba(63,13,18,0.22), transparent 70%)",
                   filter: "blur(40px)",
                   pointerEvents: "none",
                 }}
@@ -751,10 +773,10 @@ export function PulseFillLandingPage() {
                     zIndex: 6,
                     padding: "9px 12px",
                     borderRadius: 12,
-                    border: "1px solid rgba(124,58,237,0.4)",
+                    border: "1px solid rgba(249,115,22,0.4)",
                     background: "rgba(4,6,12,0.92)",
                     backdropFilter: "blur(14px)",
-                    boxShadow: "0 14px 40px rgba(0,0,0,0.55), 0 0 32px rgba(124,58,237,0.2)",
+                    boxShadow: "0 14px 40px rgba(0,0,0,0.55), 0 0 32px rgba(249,115,22,0.2)",
                   }}
                 >
                   <div style={{ fontSize: 8, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" }}>
@@ -787,7 +809,8 @@ export function PulseFillLandingPage() {
         id="broken-workflow"
         style={{
           padding: "clamp(44px, 7vw, 72px) 0 clamp(52px, 8vw, 88px)",
-          background: "linear-gradient(180deg, rgba(0,0,0,0.14), rgba(0,0,0,0.02))",
+          background:
+            "radial-gradient(ellipse 70% 55% at 100% 0%, rgba(127,29,29,0.14), transparent 52%), linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0.02))",
         }}
       >
         <Container>
@@ -842,7 +865,7 @@ export function PulseFillLandingPage() {
                   key={row.t}
                   style={{
                     padding: "16px 0 16px 16px",
-                    borderLeft: `2px solid ${i === 0 ? "rgba(124,58,237,0.85)" : "rgba(255,255,255,0.05)"}`,
+                    borderLeft: `2px solid ${i === 0 ? "rgba(249,115,22,0.85)" : "rgba(255,255,255,0.05)"}`,
                     borderBottom: i < 2 ? `1px solid rgba(255,255,255,0.04)` : "none",
                     opacity: i === 0 ? 1 : 0.78,
                   }}
@@ -865,8 +888,8 @@ export function PulseFillLandingPage() {
                   marginTop: 32,
                   padding: "20px 20px 22px",
                   borderRadius: 0,
-                  background: "rgba(0,0,0,0.82)",
-                  borderLeft: "4px solid rgba(124,58,237,0.85)",
+                  background: "linear-gradient(180deg, rgba(63,13,18,0.35), rgba(0,0,0,0.88))",
+                  borderLeft: "4px solid rgba(185,28,28,0.75)",
                   borderTop: "1px solid rgba(255,255,255,0.07)",
                   boxShadow: "0 24px 56px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
                 }}
@@ -888,7 +911,7 @@ export function PulseFillLandingPage() {
         id="missing-layer"
         style={{
           padding: "clamp(88px, 14vw, 160px) 0 clamp(72px, 11vw, 120px)",
-          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(124,58,237,0.08), transparent 55%), rgba(0,0,0,0.08)",
+          background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(249,115,22,0.08), transparent 55%), rgba(0,0,0,0.08)",
         }}
       >
         <Container>
@@ -930,7 +953,7 @@ export function PulseFillLandingPage() {
                 right: "4%",
                 top: 0,
                 height: 1,
-                background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.25), rgba(124,58,237,0.25), transparent)",
+                background: "linear-gradient(90deg, transparent, rgba(249,115,22,0.25), rgba(249,115,22,0.25), transparent)",
                 opacity: 0.85,
               }}
             />
@@ -943,8 +966,8 @@ export function PulseFillLandingPage() {
                 top: 0,
                 height: 2,
                 borderRadius: 2,
-                background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.9), rgba(196,181,253,0.75), rgba(124,58,237,0.9), transparent)",
-                boxShadow: "0 0 24px rgba(124,58,237,0.45)",
+                background: "linear-gradient(90deg, transparent, rgba(249,115,22,0.9), rgba(253,186,116,0.75), rgba(249,115,22,0.9), transparent)",
+                boxShadow: "0 0 24px rgba(249,115,22,0.45)",
                 opacity: 0.95,
                 pointerEvents: "none",
               }}
@@ -972,7 +995,7 @@ export function PulseFillLandingPage() {
                         alignItems: "flex-end",
                         alignSelf: "stretch",
                         paddingBottom: 18,
-                        color: "rgba(167,139,250,0.55)",
+                        color: "rgba(251,146,60,0.55)",
                         fontSize: 15,
                         fontWeight: 500,
                         letterSpacing: "0.08em",
@@ -988,7 +1011,7 @@ export function PulseFillLandingPage() {
                       minWidth: "min(100%, 180px)",
                       maxWidth: block.emphasis === "hero" ? 360 : 260,
                       padding: block.emphasis === "hero" ? "4px 4px 22px 0" : "4px 4px 18px 0",
-                      borderBottom: block.emphasis === "hero" ? "3px solid rgba(124,58,237,0.75)" : "1px solid rgba(255,255,255,0.06)",
+                      borderBottom: block.emphasis === "hero" ? "3px solid rgba(249,115,22,0.75)" : "1px solid rgba(255,255,255,0.06)",
                       background: "transparent",
                       opacity: block.emphasis === "hero" ? 1 : 0.72,
                     }}
@@ -999,7 +1022,7 @@ export function PulseFillLandingPage() {
                         fontWeight: 700,
                         letterSpacing: "0.18em",
                         textTransform: "uppercase",
-                        color: block.emphasis === "hero" ? "rgba(196,181,253,0.95)" : "rgba(148,163,184,0.65)",
+                        color: block.emphasis === "hero" ? "rgba(253,186,116,0.95)" : "rgba(148,163,184,0.65)",
                       }}
                     >
                       {block.k}
@@ -1067,7 +1090,7 @@ export function PulseFillLandingPage() {
                 top: 11,
                 height: 1,
                 borderRadius: 1,
-                background: "linear-gradient(90deg, rgba(124,58,237,0.15), rgba(255,255,255,0.06), rgba(124,58,237,0.15))",
+                background: "linear-gradient(90deg, rgba(249,115,22,0.15), rgba(255,255,255,0.06), rgba(249,115,22,0.15))",
                 opacity: 0.9,
                 pointerEvents: "none",
               }}
@@ -1081,8 +1104,8 @@ export function PulseFillLandingPage() {
                 top: 10,
                 height: 2,
                 borderRadius: 2,
-                background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.85), rgba(196,181,253,0.6), rgba(124,58,237,0.85), transparent)",
-                boxShadow: "0 0 20px rgba(124,58,237,0.35)",
+                background: "linear-gradient(90deg, transparent, rgba(249,115,22,0.85), rgba(253,186,116,0.6), rgba(249,115,22,0.85), transparent)",
+                boxShadow: "0 0 20px rgba(249,115,22,0.35)",
                 pointerEvents: "none",
               }}
             />
@@ -1111,10 +1134,10 @@ export function PulseFillLandingPage() {
                           fontWeight: 700,
                           color: TOKENS.text,
                           background: isOp
-                            ? "linear-gradient(145deg, rgba(124,58,237,0.55), rgba(10,12,20,0.95))"
-                            : "linear-gradient(145deg, rgba(124,58,237,0.22), rgba(10,12,20,0.92))",
-                          border: isOp ? `1px solid rgba(196,181,253,0.55)` : `1px solid rgba(255,255,255,0.1)`,
-                          boxShadow: isOp ? "0 0 20px rgba(124,58,237,0.25)" : undefined,
+                            ? "linear-gradient(145deg, rgba(249,115,22,0.55), rgba(10,12,20,0.95))"
+                            : "linear-gradient(145deg, rgba(249,115,22,0.22), rgba(10,12,20,0.92))",
+                          border: isOp ? `1px solid rgba(253,186,116,0.55)` : `1px solid rgba(255,255,255,0.1)`,
+                          boxShadow: isOp ? "0 0 20px rgba(249,115,22,0.25)" : undefined,
                           flexShrink: 0,
                           opacity: isBook ? 0.75 : 1,
                         }}
@@ -1128,8 +1151,8 @@ export function PulseFillLandingPage() {
                         borderRadius: isOp ? 14 : 10,
                         padding: isOp ? "16px 14px 18px" : "12px 12px 14px",
                         minHeight: isOp ? 104 : 88,
-                        background: isOp ? "rgba(124,58,237,0.08)" : "rgba(255,255,255,0.012)",
-                        border: isOp ? "1px solid rgba(124,58,237,0.35)" : "1px solid rgba(255,255,255,0.04)",
+                        background: isOp ? "rgba(249,115,22,0.08)" : "rgba(255,255,255,0.012)",
+                        border: isOp ? "1px solid rgba(249,115,22,0.35)" : "1px solid rgba(255,255,255,0.04)",
                         boxShadow: isOp ? "0 12px 40px rgba(0,0,0,0.35)" : undefined,
                         opacity: isBook ? 0.88 : 1,
                       }}
@@ -1169,7 +1192,7 @@ export function PulseFillLandingPage() {
             position: "absolute",
             inset: "2% -18% 0",
             background:
-              "radial-gradient(ellipse 78% 68% at 52% 38%, rgba(124,58,237,0.42), transparent 58%), radial-gradient(ellipse 36% 30% at 92% 88%, rgba(34,211,238,0.045), transparent 52%)",
+              "radial-gradient(ellipse 78% 68% at 52% 38%, rgba(249,115,22,0.42), transparent 58%), radial-gradient(ellipse 36% 30% at 92% 88%, rgba(127,29,29,0.16), transparent 52%)",
             pointerEvents: "none",
           }}
         />
@@ -1214,7 +1237,7 @@ export function PulseFillLandingPage() {
               </p>
               <div style={{ marginTop: 26, display: "grid", gap: 20, maxWidth: 340 }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(196,181,253,0.95)" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(253,186,116,0.95)" }}>
                     Operator console
                   </div>
                   <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.5 }}>
@@ -1248,7 +1271,7 @@ export function PulseFillLandingPage() {
                 style={{
                   position: "absolute",
                   inset: "-14% -8% 0 0",
-                  background: "radial-gradient(circle at 50% 30%, rgba(124,58,237,0.45), transparent 60%)",
+                  background: "radial-gradient(circle at 50% 30%, rgba(249,115,22,0.45), transparent 60%)",
                   filter: "blur(36px)",
                   pointerEvents: "none",
                 }}
@@ -1276,10 +1299,10 @@ export function PulseFillLandingPage() {
                   zIndex: 5,
                   padding: "10px 12px",
                   borderRadius: 11,
-                  border: "1px solid rgba(124,58,237,0.42)",
+                  border: "1px solid rgba(249,115,22,0.42)",
                   background: "rgba(3,5,12,0.94)",
                   backdropFilter: "blur(12px)",
-                  boxShadow: "0 16px 40px rgba(0,0,0,0.55), 0 0 36px rgba(124,58,237,0.18)",
+                  boxShadow: "0 16px 40px rgba(0,0,0,0.55), 0 0 36px rgba(249,115,22,0.18)",
                 }}
               >
                 <div style={{ fontSize: 8, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" }}>
@@ -1359,7 +1382,7 @@ export function PulseFillLandingPage() {
                     fontSize: 11,
                     fontWeight: 700,
                     letterSpacing: "0.14em",
-                    color: "rgba(124,58,237,0.85)",
+                    color: "rgba(249,115,22,0.85)",
                     minWidth: 28,
                   }}
                 >
@@ -1389,7 +1412,7 @@ export function PulseFillLandingPage() {
           style={{
             position: "absolute",
             inset: "20% -20% -10%",
-            background: "radial-gradient(ellipse 70% 55% at 40% 40%, rgba(124,58,237,0.12), transparent 60%)",
+            background: "radial-gradient(ellipse 70% 55% at 40% 40%, rgba(249,115,22,0.12), transparent 60%)",
             pointerEvents: "none",
           }}
         />
@@ -1421,7 +1444,7 @@ export function PulseFillLandingPage() {
                 padding: "40px 28px 44px",
                 background: "rgba(0,0,0,0.55)",
                 border: "1px solid rgba(255,255,255,0.06)",
-                borderLeft: "4px solid rgba(124,58,237,0.85)",
+                borderLeft: "4px solid rgba(249,115,22,0.85)",
                 boxShadow: "0 40px 80px rgba(0,0,0,0.45)",
               }}
             >
@@ -1558,8 +1581,8 @@ export function PulseFillLandingPage() {
                 position: "absolute",
                 inset: "-8% -12% -20%",
                 background: `
-                  radial-gradient(ellipse 55% 70% at 50% 0%, rgba(124,58,237,0.5), transparent 52%),
-                  radial-gradient(ellipse 42% 45% at 92% 96%, rgba(34,211,238,0.09), transparent 50%),
+                  radial-gradient(ellipse 55% 70% at 50% 0%, rgba(249,115,22,0.5), transparent 52%),
+                  radial-gradient(ellipse 42% 45% at 92% 96%, rgba(185,28,28,0.14), transparent 50%),
                   radial-gradient(circle at 50% 60%, rgba(4,6,12,0.2), rgba(0,0,0,0.88))
                 `,
               }}
