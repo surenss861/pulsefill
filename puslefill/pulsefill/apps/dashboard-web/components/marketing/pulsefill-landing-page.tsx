@@ -102,23 +102,26 @@ function TextLink({ children, href }: { children: ReactNode; href: string }) {
 }
 
 /** Quieter secondary for closing CTA */
-function MutedTextLink({ children, href }: { children: ReactNode; href: string }) {
+function MutedTextLink({ children, href, variant = "default" }: { children: ReactNode; href: string; variant?: "default" | "cta" }) {
+  const cta = variant === "cta";
   return (
     <Link
       href={href}
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: 5,
-        fontSize: 13,
-        fontWeight: 500,
-        color: "var(--pf-text-tertiary)",
+        gap: cta ? 6 : 5,
+        fontSize: cta ? 12 : 13,
+        fontWeight: cta ? 620 : 500,
+        letterSpacing: cta ? "0.04em" : undefined,
+        color: cta ? "rgba(186,194,210,0.92)" : "var(--pf-text-tertiary)",
         textDecoration: "none",
-        padding: "10px 0",
+        padding: cta ? "8px 0" : "10px 0",
+        borderBottom: cta ? "1px solid rgba(255,255,255,0.08)" : undefined,
       }}
     >
       {children}
-      <span style={{ opacity: 0.55 }} aria-hidden>
+      <span style={{ opacity: cta ? 0.45 : 0.55 }} aria-hidden>
         →
       </span>
     </Link>
@@ -562,25 +565,25 @@ const STEPS: { step: string; title: string; body: string; emphasis: "bookend" | 
   {
     step: "1",
     title: "A slot opens",
-    body: "Revenue risk, minutes to act.",
+    body: "Risk on the clock.",
     emphasis: "bookend",
   },
   {
     step: "2",
     title: "Standby demand is matched",
-    body: "Logic surfaces the right customers.",
+    body: "Right customers surfaced.",
     emphasis: "bridge",
   },
   {
     step: "3",
     title: "Operators are guided",
-    body: "Queue, confirm, follow up — with reasons and context.",
+    body: "Queue, confirm, follow up — with context.",
     emphasis: "operator",
   },
   {
     step: "4",
     title: "Recovery becomes visible",
-    body: "Bookings and revenue where the team already works.",
+    body: "Bookings and revenue where teams work.",
     emphasis: "bookend",
   },
 ];
@@ -649,8 +652,8 @@ export function PulseFillLandingPage() {
             position: "absolute",
             inset: 0,
             background: `
-              radial-gradient(ellipse 50% 85% at 18% 42%, rgba(0,0,0,0.55), transparent 52%),
-              radial-gradient(ellipse 48% 52% at 70% 46%, rgba(255,122,24,0.07), transparent 55%)
+              radial-gradient(ellipse 58% 90% at 14% 44%, rgba(0,0,0,0.78), transparent 55%),
+              radial-gradient(ellipse 42% 48% at 76% 48%, rgba(255,122,24,0.05), transparent 58%)
             `,
             pointerEvents: "none",
           }}
@@ -682,11 +685,11 @@ export function PulseFillLandingPage() {
                 style={{
                   margin: "6px 0 0 0",
                   color: TOKENS.text,
-                  fontSize: "clamp(44px, 6.2vw, 80px)",
-                  lineHeight: 0.94,
-                  letterSpacing: "-0.058em",
+                  fontSize: "clamp(38px, 5.4vw, 72px)",
+                  lineHeight: 0.92,
+                  letterSpacing: "-0.056em",
                   fontWeight: 680,
-                  maxWidth: 360,
+                  maxWidth: 380,
                 }}
               >
                 <span style={{ display: "block" }}>Cancellations are inevitable.</span>
@@ -694,12 +697,12 @@ export function PulseFillLandingPage() {
               </h1>
               <p
                 style={{
-                  margin: "22px 0 0 0",
-                  color: TOKENS.muted,
+                  margin: "26px 0 0 0",
+                  color: "rgba(231,236,245,0.88)",
                   fontSize: 15,
-                  lineHeight: 1.5,
-                  maxWidth: 340,
-                  fontWeight: 500,
+                  lineHeight: 1.52,
+                  maxWidth: 400,
+                  fontWeight: 520,
                 }}
               >
                 The operating layer between cancellations and recovered revenue.
@@ -722,21 +725,21 @@ export function PulseFillLandingPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "flex-end",
-                transform: "translateX(clamp(4px, 2vw, 48px))",
+                transform: "translateX(clamp(12px, 3vw, 56px))",
               }}
             >
               <div
                 aria-hidden
                 style={{
                   position: "absolute",
-                  width: "min(72%, 520px)",
-                  height: "min(88%, 480px)",
-                  left: "62%",
+                  width: "min(68%, 500px)",
+                  height: "min(84%, 460px)",
+                  left: "66%",
                   top: "50%",
                   transform: "translate(-50%, -50%)",
-                  background: "radial-gradient(circle, rgba(255,122,24,0.5) 0%, rgba(255,122,24,0.14) 42%, transparent 68%)",
-                  filter: "blur(44px)",
-                  opacity: 0.92,
+                  background: "radial-gradient(circle, rgba(255,122,24,0.44) 0%, rgba(255,122,24,0.1) 40%, transparent 66%)",
+                  filter: "blur(42px)",
+                  opacity: 0.82,
                   pointerEvents: "none",
                 }}
               />
@@ -755,10 +758,10 @@ export function PulseFillLandingPage() {
                 }}
               />
 
-              <div style={{ position: "relative", width: "100%", maxWidth: 720, marginRight: "clamp(-16px, -2vw, 0px)" }}>
+              <div style={{ position: "relative", width: "100%", maxWidth: 740, marginRight: "clamp(-20px, -3vw, 0px)" }}>
                 <div
                   style={{
-                    transform: "rotate(-0.5deg) scale(1.3)",
+                    transform: "rotate(-0.28deg) scale(1.34)",
                     transformOrigin: "center center",
                     filter: "drop-shadow(0 36px 64px rgba(0,0,0,0.62))",
                   }}
@@ -794,7 +797,7 @@ export function PulseFillLandingPage() {
                     bottom: "clamp(-8px, -0.5vw, 4px)",
                     zIndex: 5,
                     filter: "drop-shadow(0 26px 42px rgba(0,0,0,0.68))",
-                    transform: "rotate(3deg) translateY(22px) translateX(6px) scale(0.82)",
+                    transform: "rotate(1.25deg) translateY(20px) translateX(8px) scale(0.84)",
                   }}
                 >
                   <CustomerHeroPhone />
@@ -811,7 +814,7 @@ export function PulseFillLandingPage() {
         style={{
           padding: "clamp(44px, 7vw, 72px) 0 clamp(52px, 8vw, 88px)",
           background:
-            "radial-gradient(ellipse 70% 55% at 100% 0%, rgba(127,29,29,0.14), transparent 52%), linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0.02))",
+            "radial-gradient(ellipse 70% 55% at 100% 0%, rgba(127,29,29,0.1), transparent 52%), linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0.02))",
         }}
       >
         <Container>
@@ -824,7 +827,7 @@ export function PulseFillLandingPage() {
               justifyContent: "space-between",
             }}
           >
-            <div style={{ flex: "1 1 300px", maxWidth: 520, minWidth: 0 }}>
+            <div style={{ flex: "1 1 300px", maxWidth: 520, minWidth: 0, paddingTop: 6 }}>
               <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
                 The problem
               </div>
@@ -841,7 +844,7 @@ export function PulseFillLandingPage() {
               >
                 Most teams still handle cancellations with a scramble.
               </h2>
-              <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 15, lineHeight: 1.65, maxWidth: 420 }}>
+              <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 15, lineHeight: 1.62, maxWidth: 380 }}>
                 When a near-term appointment falls out of the schedule, recovery usually depends on calls, texts, memory,
                 ad hoc lists, and whoever notices first. Openings expire fast. Staff time gets burned. And most teams still
                 can&apos;t see why a slot was lost.
@@ -865,10 +868,11 @@ export function PulseFillLandingPage() {
                 <div
                   key={row.t}
                   style={{
-                    padding: "18px 0 18px 16px",
-                    borderLeft: `2px solid ${i === 0 ? "rgba(255,122,24,0.9)" : "rgba(255,255,255,0.06)"}`,
+                    padding: "12px 0 12px 16px",
+                    borderLeft: `3px solid ${i === 0 ? "rgba(255,122,24,0.98)" : "rgba(255,255,255,0.06)"}`,
                     borderBottom: `1px solid rgba(255,255,255,0.06)`,
                     opacity: i === 0 ? 1 : 0.78,
+                    boxShadow: i === 0 ? "inset 6px 0 18px rgba(255,122,24,0.06)" : undefined,
                   }}
                 >
                   <div
@@ -881,31 +885,31 @@ export function PulseFillLandingPage() {
                   >
                     {row.t}
                   </div>
-                  <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: i === 0 ? 13 : 12, lineHeight: 1.52 }}>{row.d}</p>
+                  <p style={{ margin: "5px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.5, maxWidth: 300 }}>{row.d}</p>
                 </div>
               ))}
               <div
                 style={{
-                  marginTop: 28,
-                  paddingTop: 24,
-                  borderTop: "1px solid rgba(255,122,24,0.15)",
+                  marginTop: 22,
+                  paddingTop: 20,
+                  borderTop: "1px solid rgba(255,122,24,0.18)",
                 }}
               >
                 <div
                   style={{
-                    padding: "22px 22px 24px",
+                    padding: "20px 20px 22px",
                     borderRadius: 0,
-                    background: "linear-gradient(165deg, rgba(201,59,47,0.14), rgba(0,0,0,0.94))",
-                    borderLeft: "4px solid rgba(255,122,24,0.95)",
-                    borderTop: "1px solid rgba(255,255,255,0.06)",
+                    background: "linear-gradient(165deg, rgba(201,59,47,0.1), rgba(0,0,0,0.97))",
+                    borderLeft: "4px solid rgba(255,122,24,0.98)",
+                    borderTop: "1px solid rgba(255,255,255,0.05)",
                     borderRight: "1px solid rgba(255,255,255,0.04)",
-                    boxShadow: "0 28px 64px rgba(0,0,0,0.55), 0 0 48px rgba(201,59,47,0.12), inset 0 1px 0 rgba(255,255,255,0.03)",
+                    boxShadow: "0 32px 72px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.02)",
                   }}
                 >
                   <div style={{ color: TOKENS.text, fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase" }}>
                     What teams actually lack
                   </div>
-                  <div style={{ marginTop: 12, color: TOKENS.text, fontSize: 22, fontWeight: 650, letterSpacing: "-0.04em", lineHeight: 1.1 }}>
+                  <div style={{ marginTop: 10, color: TOKENS.text, fontSize: 24, fontWeight: 660, letterSpacing: "-0.042em", lineHeight: 1.08 }}>
                     Visibility into why recovery stalls
                   </div>
                 </div>
@@ -920,11 +924,11 @@ export function PulseFillLandingPage() {
         id="missing-layer"
         style={{
           padding: "clamp(88px, 14vw, 160px) 0 clamp(72px, 11vw, 120px)",
-          background: "radial-gradient(ellipse 70% 42% at 50% 0%, rgba(255,122,24,0.045), transparent 55%), rgba(0,0,0,0.1)",
+          background: "radial-gradient(ellipse 62% 36% at 50% 0%, rgba(255,122,24,0.03), transparent 56%), rgba(0,0,0,0.1)",
         }}
       >
         <Container>
-          <div style={{ maxWidth: 560, marginBottom: "clamp(48px, 7vw, 80px)" }}>
+          <div style={{ maxWidth: 560, marginBottom: "clamp(36px, 5vw, 56px)" }}>
             <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
               The missing layer
             </div>
@@ -958,27 +962,14 @@ export function PulseFillLandingPage() {
               aria-hidden
               style={{
                 position: "absolute",
-                left: "4%",
-                right: "4%",
+                left: "2%",
+                right: "2%",
                 top: 0,
-                height: 1,
-                background: "linear-gradient(90deg, transparent, rgba(255,122,24,0.25), rgba(255,122,24,0.25), transparent)",
-                opacity: 0.85,
-              }}
-            />
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                left: "32%",
-                right: "32%",
-                top: 0,
-                height: 1,
+                height: 2,
                 borderRadius: 1,
-                background: "linear-gradient(90deg, transparent, rgba(255,122,24,0.75), rgba(253,186,116,0.55), rgba(255,122,24,0.75), transparent)",
-                boxShadow: "0 0 18px rgba(255,122,24,0.28)",
-                opacity: 0.88,
-                pointerEvents: "none",
+                background: "linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,122,24,0.42), rgba(253,186,116,0.35), rgba(255,122,24,0.42), rgba(255,255,255,0.04))",
+                opacity: 0.75,
+                boxShadow: "0 0 22px rgba(255,122,24,0.12)",
               }}
             />
             <div
@@ -987,14 +978,14 @@ export function PulseFillLandingPage() {
                 flexWrap: "wrap",
                 alignItems: "flex-end",
                 justifyContent: "space-between",
-                gap: "8px 12px",
-                marginTop: 36,
+                gap: "4px 8px",
+                marginTop: 24,
               }}
             >
               {[
-                { k: "Cancellation", t: "A near-term opening appears.", emphasis: "quiet" as const },
+                { k: "Cancellation", t: "A near-term opening appears.", emphasis: "low" as const },
                 { k: "Recovery Logic", t: "PulseFill matches demand and guides action.", emphasis: "hero" as const },
-                { k: "Recovered Outcome", t: "Bookings and revenue return to the schedule.", emphasis: "quiet" as const },
+                { k: "Recovered Outcome", t: "Bookings and revenue return to the schedule.", emphasis: "medium" as const },
               ].map((block, i) => (
                 <Fragment key={block.k}>
                   {i > 0 ? (
@@ -1003,28 +994,38 @@ export function PulseFillLandingPage() {
                         display: "flex",
                         alignItems: "flex-end",
                         alignSelf: "stretch",
-                        paddingBottom: 18,
-                        color: "rgba(255,122,24,0.32)",
-                        fontSize: 12,
-                        fontWeight: 400,
-                        letterSpacing: "0.2em",
+                        paddingBottom: 14,
+                        color: "rgba(255,122,24,0.38)",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        letterSpacing: "0.24em",
                         flexShrink: 0,
                       }}
                     >
-                      →
+                      —
                     </div>
                   ) : null}
                   <div
                     style={{
-                      flex: block.emphasis === "hero" ? "1.35 1 220px" : "0.85 1 180px",
-                      minWidth: "min(100%, 180px)",
-                      maxWidth: block.emphasis === "hero" ? 380 : 260,
-                      padding: block.emphasis === "hero" ? "14px 14px 22px 14px" : "4px 4px 18px 0",
+                      flex:
+                        block.emphasis === "hero"
+                          ? "1.5 1 240px"
+                          : block.emphasis === "medium"
+                            ? "0.95 1 200px"
+                            : "0.7 1 160px",
+                      minWidth: "min(100%, 160px)",
+                      maxWidth: block.emphasis === "hero" ? 400 : block.emphasis === "medium" ? 280 : 240,
+                      padding: block.emphasis === "hero" ? "16px 16px 24px 16px" : "2px 2px 14px 0",
                       borderRadius: block.emphasis === "hero" ? 6 : 0,
-                      borderBottom: block.emphasis === "hero" ? "4px solid rgba(255,122,24,0.88)" : "1px solid rgba(255,255,255,0.06)",
-                      background: block.emphasis === "hero" ? "rgba(255,122,24,0.06)" : "transparent",
-                      opacity: block.emphasis === "hero" ? 1 : 0.68,
-                      boxShadow: block.emphasis === "hero" ? "0 0 40px rgba(255,122,24,0.08)" : undefined,
+                      borderBottom:
+                        block.emphasis === "hero"
+                          ? "5px solid rgba(255,122,24,0.9)"
+                          : block.emphasis === "medium"
+                            ? "2px solid rgba(255,255,255,0.1)"
+                            : "1px solid rgba(255,255,255,0.05)",
+                      background: block.emphasis === "hero" ? "rgba(255,122,24,0.07)" : "transparent",
+                      opacity: block.emphasis === "hero" ? 1 : block.emphasis === "medium" ? 0.82 : 0.52,
+                      boxShadow: block.emphasis === "hero" ? "0 0 48px rgba(255,122,24,0.1), inset 0 -1px 0 rgba(255,122,24,0.12)" : undefined,
                     }}
                   >
                     <div
@@ -1033,7 +1034,12 @@ export function PulseFillLandingPage() {
                         fontWeight: 700,
                         letterSpacing: "0.18em",
                         textTransform: "uppercase",
-                        color: block.emphasis === "hero" ? "rgba(253,186,116,0.95)" : "rgba(148,163,184,0.65)",
+                        color:
+                          block.emphasis === "hero"
+                            ? "rgba(253,186,116,0.95)"
+                            : block.emphasis === "medium"
+                              ? "rgba(148,163,184,0.78)"
+                              : "rgba(148,163,184,0.52)",
                       }}
                     >
                       {block.k}
@@ -1042,9 +1048,9 @@ export function PulseFillLandingPage() {
                       style={{
                         margin: "10px 0 0 0",
                         color: TOKENS.text,
-                        fontSize: block.emphasis === "hero" ? 18 : 14,
-                        lineHeight: 1.45,
-                        fontWeight: block.emphasis === "hero" ? 650 : 580,
+                        fontSize: block.emphasis === "hero" ? 19 : block.emphasis === "medium" ? 15 : 13,
+                        lineHeight: 1.42,
+                        fontWeight: block.emphasis === "hero" ? 660 : block.emphasis === "medium" ? 600 : 560,
                         letterSpacing: "-0.02em",
                       }}
                     >
@@ -1055,7 +1061,7 @@ export function PulseFillLandingPage() {
               ))}
             </div>
           </div>
-          <p style={{ marginTop: 44, color: TOKENS.muted, fontSize: 14, lineHeight: 1.65, maxWidth: 480, letterSpacing: "0.01em" }}>
+          <p style={{ marginTop: 24, color: TOKENS.muted, fontSize: 14, lineHeight: 1.62, maxWidth: 480, letterSpacing: "0.01em" }}>
             From schedule disruption to measurable recovery — in one operational flow.
           </p>
         </Container>
@@ -1096,91 +1102,76 @@ export function PulseFillLandingPage() {
               aria-hidden
               style={{
                 position: "absolute",
-                left: "2%",
-                right: "2%",
-                top: 10,
+                left: "3%",
+                right: "3%",
+                top: 8,
                 height: 1,
                 borderRadius: 1,
-                background: "linear-gradient(90deg, rgba(255,122,24,0.1), rgba(255,255,255,0.05), rgba(255,122,24,0.1))",
-                opacity: 0.85,
-                pointerEvents: "none",
-              }}
-            />
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                left: "40%",
-                right: "40%",
-                top: 10,
-                height: 1,
-                borderRadius: 1,
-                background: "linear-gradient(90deg, transparent, rgba(255,122,24,0.55), rgba(253,186,116,0.4), rgba(255,122,24,0.55), transparent)",
-                boxShadow: "0 0 14px rgba(255,122,24,0.22)",
-                opacity: 0.75,
+                background: "linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,122,24,0.22), rgba(255,255,255,0.04))",
+                opacity: 0.55,
                 pointerEvents: "none",
               }}
             />
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
-                gap: 12,
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 188px), 1fr))",
+                gap: 8,
                 alignItems: "stretch",
               }}
             >
               {STEPS.map(({ step, title, body, emphasis }) => {
                 const isOp = emphasis === "operator";
                 const isBook = emphasis === "bookend";
+                const inactive = isBook || emphasis === "bridge";
                 return (
-                  <div key={step} style={{ paddingTop: 4 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <div key={step} style={{ paddingTop: 2 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
                       <div
                         style={{
-                          width: isOp ? 22 : 20,
-                          height: isOp ? 22 : 20,
+                          width: isOp ? 22 : 19,
+                          height: isOp ? 22 : 19,
                           borderRadius: 999,
                           display: "grid",
                           placeItems: "center",
                           fontSize: 10,
                           fontWeight: 700,
-                          color: TOKENS.text,
+                          color: isOp ? TOKENS.text : "rgba(226,232,240,0.55)",
                           background: isOp
-                            ? "linear-gradient(145deg, rgba(255,122,24,0.55), rgba(10,12,20,0.95))"
-                            : "linear-gradient(145deg, rgba(255,122,24,0.22), rgba(10,12,20,0.92))",
-                          border: isOp ? `1px solid rgba(253,186,116,0.55)` : `1px solid rgba(255,255,255,0.1)`,
-                          boxShadow: isOp ? "0 0 20px rgba(255,122,24,0.25)" : undefined,
+                            ? "linear-gradient(145deg, rgba(255,122,24,0.5), rgba(10,12,20,0.98))"
+                            : "rgba(8,10,16,0.96)",
+                          border: isOp ? `1px solid rgba(253,186,116,0.5)` : `1px solid rgba(255,255,255,0.07)`,
+                          boxShadow: isOp ? "0 0 16px rgba(255,122,24,0.18)" : "none",
                           flexShrink: 0,
-                          opacity: isBook ? 0.75 : 1,
                         }}
                       >
                         {step}
                       </div>
-                      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)", minWidth: 8, borderRadius: 1 }} />
+                      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)", minWidth: 6, borderRadius: 1 }} />
                     </div>
                     <div
                       style={{
-                        borderRadius: isOp ? 14 : 10,
-                        padding: isOp ? "16px 14px 18px" : "12px 12px 14px",
-                        minHeight: isOp ? 104 : 88,
-                        background: isOp ? "rgba(255,122,24,0.08)" : "rgba(255,255,255,0.012)",
-                        border: isOp ? "1px solid rgba(255,122,24,0.35)" : "1px solid rgba(255,255,255,0.04)",
-                        boxShadow: isOp ? "0 12px 40px rgba(0,0,0,0.35)" : undefined,
-                        opacity: isBook ? 0.88 : 1,
+                        borderRadius: isOp ? 12 : 8,
+                        padding: isOp ? "14px 12px 16px" : "11px 10px 12px",
+                        minHeight: isOp ? 96 : isBook ? 76 : 80,
+                        background: isOp ? "rgba(255,122,24,0.07)" : "rgba(0,0,0,0.38)",
+                        border: isOp ? "1px solid rgba(255,122,24,0.42)" : "1px solid rgba(255,255,255,0.05)",
+                        boxShadow: isOp ? "0 10px 32px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.04)" : "inset 0 1px 0 rgba(255,255,255,0.02)",
+                        opacity: inactive ? 0.74 : 1,
                       }}
                     >
                       <div
                         style={{
                           color: TOKENS.text,
                           fontSize: isOp ? 15 : 13,
-                          fontWeight: isOp ? 650 : 600,
-                          lineHeight: 1.2,
+                          fontWeight: isOp ? 650 : 590,
+                          lineHeight: 1.18,
                         }}
                       >
-                        <span style={{ color: "rgba(255,255,255,0.28)", marginRight: 8 }}>—</span>
+                        <span style={{ color: "rgba(255,255,255,0.22)", marginRight: 6 }}>—</span>
                         {title}
                       </div>
-                      <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: isOp ? 12 : 11, lineHeight: 1.5 }}>{body}</p>
+                      <p style={{ margin: "5px 0 0 0", color: TOKENS.muted, fontSize: isOp ? 12 : 11, lineHeight: 1.45 }}>{body}</p>
                     </div>
                   </div>
                 );
@@ -1205,7 +1196,7 @@ export function PulseFillLandingPage() {
             position: "absolute",
             inset: "2% -18% 0",
             background:
-              "radial-gradient(ellipse 70% 58% at 54% 36%, rgba(255,122,24,0.26), transparent 58%), radial-gradient(ellipse 36% 30% at 92% 88%, rgba(201,59,47,0.12), transparent 52%)",
+              "radial-gradient(ellipse 66% 54% at 54% 36%, rgba(255,122,24,0.17), transparent 58%), radial-gradient(ellipse 36% 30% at 92% 88%, rgba(201,59,47,0.1), transparent 52%)",
             pointerEvents: "none",
           }}
         />
@@ -1234,7 +1225,7 @@ export function PulseFillLandingPage() {
               </div>
               <h2
                 style={{
-                  margin: "12px 0 0 0",
+                  margin: "10px 0 0 0",
                   color: TOKENS.text,
                   fontSize: "clamp(32px, 4.5vw, 52px)",
                   fontWeight: 620,
@@ -1245,24 +1236,24 @@ export function PulseFillLandingPage() {
               >
                 One recovery console. One standby experience.
               </h2>
-              <p style={{ margin: "14px 0 0 0", color: TOKENS.muted, fontSize: 14, lineHeight: 1.55, maxWidth: 320, fontWeight: 500 }}>
-                Not another inbox. A single recovery surface: operators execute, customers claim, revenue returns.
+              <p style={{ margin: "12px 0 0 0", color: TOKENS.muted, fontSize: 14, lineHeight: 1.52, maxWidth: 300, fontWeight: 520 }}>
+                One surface: operators execute, customers claim, revenue returns.
               </p>
-              <div style={{ marginTop: 26, display: "grid", gap: 20, maxWidth: 340 }}>
+              <div style={{ marginTop: 20, display: "grid", gap: 16, maxWidth: 320 }}>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(253,186,116,0.95)" }}>
                     Operator Console
                   </div>
-                  <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.5 }}>
-                    Command the queue. See delivery. Close the loop on revenue.
+                  <p style={{ margin: "5px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.48 }}>
+                    Queue, delivery, close the loop.
                   </p>
                 </div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: TOKENS.tertiary }}>
                     Standby experience
                   </div>
-                  <p style={{ margin: "6px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.5 }}>
-                    Real openings. Fast claims. Status without noise.
+                  <p style={{ margin: "5px 0 0 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.48 }}>
+                    Real openings, fast claims, quiet status.
                   </p>
                 </div>
               </div>
@@ -1284,12 +1275,12 @@ export function PulseFillLandingPage() {
                 style={{
                   position: "absolute",
                   inset: "-14% -8% 0 0",
-                  background: "radial-gradient(circle at 50% 30%, rgba(255,122,24,0.45), transparent 60%)",
-                  filter: "blur(36px)",
+                  background: "radial-gradient(circle at 50% 30%, rgba(255,122,24,0.32), transparent 60%)",
+                  filter: "blur(34px)",
                   pointerEvents: "none",
                 }}
               />
-              <div style={{ position: "relative", transform: "scale(1.32)", transformOrigin: "top left" }}>
+              <div style={{ position: "relative", transform: "scale(1.38)", transformOrigin: "top left" }}>
                 <OperatorPayoffMock />
               </div>
               <div
@@ -1312,10 +1303,10 @@ export function PulseFillLandingPage() {
                   zIndex: 5,
                   padding: "10px 12px",
                   borderRadius: 11,
-                  border: "1px solid rgba(255,122,24,0.42)",
+                  border: "1px solid rgba(255,122,24,0.38)",
                   background: "rgba(3,5,12,0.94)",
                   backdropFilter: "blur(12px)",
-                  boxShadow: "0 16px 40px rgba(0,0,0,0.55), 0 0 36px rgba(255,122,24,0.18)",
+                  boxShadow: "0 16px 40px rgba(0,0,0,0.55), 0 0 24px rgba(255,122,24,0.12)",
                 }}
               >
                 <div style={{ fontSize: 8, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" }}>
@@ -1338,7 +1329,7 @@ export function PulseFillLandingPage() {
         }}
       >
         <Container>
-          <div style={{ maxWidth: 560, marginBottom: 48 }}>
+          <div style={{ maxWidth: 520, marginBottom: 40 }}>
             <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
               Why PulseFill
             </div>
@@ -1360,7 +1351,7 @@ export function PulseFillLandingPage() {
               layer that makes it operational.
             </p>
           </div>
-          <div style={{ maxWidth: 880, display: "grid", gap: 0 }}>
+          <div style={{ maxWidth: 600, display: "grid", gap: 0 }}>
             {[
               {
                 n: "01",
@@ -1384,27 +1375,30 @@ export function PulseFillLandingPage() {
                   display: "flex",
                   flexWrap: "wrap",
                   alignItems: "baseline",
-                  gap: "16px 28px",
-                  padding: "22px 0",
-                  borderTop: i === 0 ? `1px solid rgba(255,255,255,0.08)` : undefined,
-                  borderBottom: `1px solid rgba(255,255,255,0.06)`,
+                  gap: "14px 24px",
+                  padding: "16px 0",
+                  borderTop: i === 0 ? `1px solid rgba(255,255,255,0.1)` : undefined,
+                  borderBottom: `1px solid rgba(255,255,255,0.08)`,
                 }}
               >
                 <span
                   style={{
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: 700,
-                    letterSpacing: "0.18em",
-                    color: "rgba(255,122,24,0.92)",
-                    minWidth: 32,
+                    letterSpacing: "0.22em",
+                    color: "rgba(255,122,24,0.88)",
+                    minWidth: 28,
                     fontVariantNumeric: "tabular-nums",
+                    textShadow: "0 0 22px rgba(255,122,24,0.12)",
                   }}
                 >
                   {row.n}
                 </span>
                 <div style={{ flex: "1 1 220px", minWidth: 0 }}>
-                  <div style={{ color: TOKENS.text, fontSize: "clamp(17px, 2.1vw, 20px)", fontWeight: 650, letterSpacing: "-0.03em" }}>{row.title}</div>
-                  <p style={{ margin: "8px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.55, maxWidth: 520 }}>{row.body}</p>
+                  <div style={{ color: TOKENS.text, fontSize: "clamp(17px, 2.1vw, 20px)", fontWeight: 660, letterSpacing: "-0.032em" }}>{row.title}</div>
+                  <p style={{ margin: "6px 0 0 0", color: "rgba(148,163,184,0.88)", fontSize: 13, lineHeight: 1.52, maxWidth: 480 }}>
+                    {row.body}
+                  </p>
                 </div>
               </div>
             ))}
@@ -1426,7 +1420,7 @@ export function PulseFillLandingPage() {
           style={{
             position: "absolute",
             inset: "20% -20% -10%",
-            background: "radial-gradient(ellipse 58% 48% at 38% 38%, rgba(255,122,24,0.08), transparent 58%)",
+            background: "radial-gradient(ellipse 52% 44% at 38% 36%, rgba(255,122,24,0.06), transparent 58%)",
             pointerEvents: "none",
           }}
         />
@@ -1456,14 +1450,14 @@ export function PulseFillLandingPage() {
               style={{
                 borderRadius: 4,
                 padding: "40px 28px 44px",
-                background: "rgba(0,0,0,0.55)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderLeft: "4px solid rgba(255,122,24,0.85)",
-                boxShadow: "0 40px 80px rgba(0,0,0,0.45)",
+                background: "rgba(0,0,0,0.58)",
+                border: "1px solid rgba(255,255,255,0.05)",
+                borderLeft: "4px solid rgba(255,122,24,0.88)",
+                boxShadow: "0 28px 64px rgba(0,0,0,0.42)",
               }}
             >
               <div style={{ color: TOKENS.tertiary, fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>Recovered Bookings</div>
-              <div style={{ marginTop: 12, fontSize: "clamp(60px, 9vw, 80px)", fontWeight: 650, letterSpacing: "-0.055em", lineHeight: 0.88, color: TOKENS.text }}>
+              <div style={{ marginTop: 12, fontSize: "clamp(62px, 9.2vw, 84px)", fontWeight: 660, letterSpacing: "-0.056em", lineHeight: 0.86, color: TOKENS.text }}>
                 12
               </div>
               <p style={{ margin: "20px 0 0 0", color: "rgba(148,163,184,0.92)", fontSize: 12, lineHeight: 1.5, maxWidth: 260 }}>
@@ -1474,14 +1468,14 @@ export function PulseFillLandingPage() {
               style={{
                 borderRadius: 4,
                 padding: "40px 28px 44px",
-                background: "rgba(0,0,0,0.45)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderLeft: "4px solid rgba(255,255,255,0.2)",
-                boxShadow: "0 32px 72px rgba(0,0,0,0.4)",
+                background: "rgba(0,0,0,0.52)",
+                border: "1px solid rgba(255,255,255,0.05)",
+                borderLeft: "4px solid rgba(255,255,255,0.14)",
+                boxShadow: "0 24px 56px rgba(0,0,0,0.38)",
               }}
             >
               <div style={{ color: TOKENS.tertiary, fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>Recovered Revenue</div>
-              <div style={{ marginTop: 12, fontSize: "clamp(60px, 9vw, 80px)", fontWeight: 650, letterSpacing: "-0.055em", lineHeight: 0.88, color: TOKENS.text }}>
+              <div style={{ marginTop: 12, fontSize: "clamp(62px, 9.2vw, 84px)", fontWeight: 660, letterSpacing: "-0.056em", lineHeight: 0.86, color: TOKENS.text }}>
                 $1.8K
               </div>
               <p style={{ margin: "20px 0 0 0", color: "rgba(148,163,184,0.92)", fontSize: 12, lineHeight: 1.5, maxWidth: 260 }}>
@@ -1491,30 +1485,30 @@ export function PulseFillLandingPage() {
           </div>
           <div
             style={{
-              marginTop: 32,
-              padding: "24px 0 8px",
-              borderTop: "1px solid rgba(255,255,255,0.08)",
-              maxWidth: 760,
+              marginTop: 36,
+              padding: "28px 0 4px",
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+              maxWidth: 720,
             }}
           >
-            <div style={{ fontSize: 9, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 16 }}>
+            <div style={{ fontSize: 9, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 18 }}>
               Operating signals
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "32px 48px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "28px 44px" }}>
               {[
                 ["Fill-rate Visibility", "Live"],
                 ["Workflow Clarity", "High"],
                 ["Manual Chaos", "Down"],
               ].map(([k, v]) => (
                 <div key={k}>
-                  <div style={{ fontSize: 10, color: TOKENS.muted, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>{k}</div>
-                  <div style={{ marginTop: 4, fontSize: 22, fontWeight: 650, letterSpacing: "-0.03em" }}>{v}</div>
+                  <div style={{ fontSize: 9, color: TOKENS.muted, fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" }}>{k}</div>
+                  <div style={{ marginTop: 6, fontSize: 24, fontWeight: 680, letterSpacing: "-0.035em", color: TOKENS.text }}>{v}</div>
                 </div>
               ))}
             </div>
           </div>
-          <p style={{ marginTop: 28, color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 400 }}>
-            Recovery you can read — not folklore passed desk to desk.
+          <p style={{ marginTop: 22, color: TOKENS.muted, fontSize: 12, lineHeight: 1.52, maxWidth: 380 }}>
+            Recovery you can read — not desk folklore.
           </p>
         </Container>
       </section>
@@ -1552,11 +1546,11 @@ export function PulseFillLandingPage() {
           </div>
           <div
             style={{
-              marginTop: 36,
-              maxWidth: 640,
-              border: "1px solid rgba(255,255,255,0.09)",
-              background: "rgba(0,0,0,0.45)",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+              marginTop: 32,
+              maxWidth: 620,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(0,0,0,0.72)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.02)",
             }}
           >
             {["Clear queue reasons", "Explicit operator actions", "Delivery visibility", "No black-box guessing"].map((item, i, arr) => (
@@ -1564,18 +1558,19 @@ export function PulseFillLandingPage() {
                 key={item}
                 style={{
                   display: "flex",
-                  alignItems: "baseline",
-                  gap: 14,
-                  padding: "16px 22px",
-                  borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.06)" : undefined,
-                  fontSize: 14,
-                  fontWeight: 600,
+                  alignItems: "center",
+                  gap: 0,
+                  padding: "14px 20px 14px 0",
+                  borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.08)" : undefined,
+                  fontSize: 13,
+                  fontWeight: 620,
                   color: TOKENS.text,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.4,
+                  letterSpacing: "-0.018em",
+                  lineHeight: 1.35,
+                  borderLeft: "3px solid rgba(255,122,24,0.42)",
+                  paddingLeft: 18,
                 }}
               >
-                <span style={{ color: "rgba(255,122,24,0.55)", fontSize: 11, fontWeight: 700, width: 14, flexShrink: 0 }}>▸</span>
                 <span>{item}</span>
               </div>
             ))}
@@ -1589,7 +1584,7 @@ export function PulseFillLandingPage() {
       {/* —— Final CTA: ceremonial close (mode: poster) —— */}
       <section
         style={{
-          padding: "clamp(100px, 16vw, 200px) 0 clamp(112px, 17vw, 200px)",
+          padding: "clamp(80px, 13vw, 160px) 0 clamp(96px, 14vw, 180px)",
           background: "radial-gradient(ellipse 90% 55% at 50% 0%, rgba(0,0,0,0.45), rgba(0,0,0,0.78))",
           borderTop: "1px solid rgba(255,255,255,0.06)",
         }}
@@ -1599,7 +1594,7 @@ export function PulseFillLandingPage() {
             style={{
               position: "relative",
               textAlign: "center",
-              padding: "clamp(80px, 14vw, 160px) clamp(20px, 5vw, 48px)",
+              padding: "clamp(64px, 11vw, 132px) clamp(20px, 5vw, 48px)",
               borderRadius: 0,
               overflow: "visible",
             }}
@@ -1608,10 +1603,10 @@ export function PulseFillLandingPage() {
               aria-hidden
               style={{
                 position: "absolute",
-                inset: "-8% -12% -20%",
+                inset: "-6% -8% -18%",
                 background: `
-                  radial-gradient(ellipse 48% 58% at 50% 0%, rgba(255,122,24,0.55), transparent 50%),
-                  radial-gradient(ellipse 38% 42% at 94% 98%, rgba(201,59,47,0.16), transparent 52%),
+                  radial-gradient(ellipse 38% 48% at 50% 0%, rgba(255,122,24,0.48), transparent 52%),
+                  radial-gradient(ellipse 32% 36% at 94% 98%, rgba(201,59,47,0.12), transparent 52%),
                   radial-gradient(circle at 50% 60%, rgba(4,6,12,0.2), rgba(0,0,0,0.9))
                 `,
               }}
@@ -1625,7 +1620,7 @@ export function PulseFillLandingPage() {
                 pointerEvents: "none",
               }}
             />
-            <div style={{ position: "relative", zIndex: 1, maxWidth: 500, margin: "0 auto" }}>
+            <div style={{ position: "relative", zIndex: 1, maxWidth: 440, margin: "0 auto" }}>
               <div
                 style={{
                   color: TOKENS.tertiary,
@@ -1649,12 +1644,14 @@ export function PulseFillLandingPage() {
               >
                 Run cancellation recovery like infrastructure — not improvisation.
               </h2>
-              <p style={{ margin: "16px auto 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 380 }}>
+              <p style={{ margin: "14px auto 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.52, maxWidth: 340 }}>
                 The operational layer between cancellations and recovered bookings.
               </p>
-              <div style={{ marginTop: 40, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px 28px", alignItems: "center" }}>
+              <div style={{ marginTop: 34, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px 28px", alignItems: "center" }}>
                 <PrimaryButton href={demoHref}>Book a demo</PrimaryButton>
-                <MutedTextLink href={workflowHref}>Operator sign in</MutedTextLink>
+                <MutedTextLink href={workflowHref} variant="cta">
+                  Operator sign in
+                </MutedTextLink>
               </div>
             </div>
           </div>
