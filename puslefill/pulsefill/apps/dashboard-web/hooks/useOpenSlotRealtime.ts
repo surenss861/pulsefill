@@ -28,9 +28,9 @@ export function useOpenSlotRealtime(slotId: string | undefined, onChanged: () =>
           table: "open_slots",
           filter: `id=eq.${slotId}`,
         },
-        (payload) => {
+        (_payload: unknown) => {
           if (realtimeDebug) {
-            console.log("[PulseFill realtime] slot detail open_slots UPDATE", payload);
+            console.log("[PulseFill realtime] slot detail open_slots UPDATE", _payload);
           }
           if (!cancelled) onChanged();
         },

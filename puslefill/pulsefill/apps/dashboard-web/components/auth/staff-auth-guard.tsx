@@ -24,7 +24,7 @@ export function StaffAuthGuard({ children }: { children: React.ReactNode }) {
         setReady(true);
         return;
       }
-      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+      router.replace(`/sign-in?next=${encodeURIComponent(pathname)}`);
     }
 
     void check();

@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { signOutStaff } from "@/lib/auth";
+import { signOutAction } from "@/app/actions/auth";
 import { useLiveCounts } from "@/hooks/useLiveCounts";
 import { useNeedsAttentionCount } from "@/hooks/useNeedsAttentionCount";
 
@@ -35,18 +34,8 @@ const badgeBase = {
 } as const;
 
 export function Sidebar() {
-  const router = useRouter();
   const counts = useLiveCounts();
   const needsAttention = useNeedsAttentionCount();
-
-  async function handleLogout() {
-    try {
-      await signOutStaff();
-    } catch {
-      // still navigate away
-    }
-    router.replace("/login");
-  }
 
   return (
     <aside
@@ -127,22 +116,23 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
-      <button
-        type="button"
-        onClick={() => void handleLogout()}
-        style={{
-          marginTop: 16,
-          padding: "10px 12px",
-          borderRadius: 12,
-          border: "1px solid rgba(255,255,255,0.12)",
-          background: "rgba(255,255,255,0.05)",
-          color: "var(--muted)",
-          cursor: "pointer",
-          fontSize: 13,
-        }}
-      >
-        Log out
-      </button>
+      <form action={signOutAction} style={{ marginTop: 16 }}>
+        <button
+          type="submit"
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.05)",
+            color: "var(--muted)",
+            cursor: "pointer",
+            fontSize: 13,
+          }}
+        >
+          Log out
+        </button>
+      </form>
     </aside>
   );
 }

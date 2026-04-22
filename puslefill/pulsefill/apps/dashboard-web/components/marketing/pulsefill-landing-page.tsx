@@ -590,7 +590,7 @@ const STEPS: { step: string; title: string; body: string; emphasis: "bookend" | 
 
 export function PulseFillLandingPage() {
   const demoHref = "mailto:hello@pulsefill.com?subject=PulseFill%20demo";
-  const workflowHref = "/login";
+  const workflowHref = "/sign-in";
 
   const mainBg: CSSProperties = {
     minHeight: "100vh",
@@ -1682,7 +1682,7 @@ export function PulseFillLandingPage() {
             </span>
           </div>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            <Link href="/login" style={{ color: "var(--pf-btn-link-text)", textDecoration: "none", fontWeight: 600 }}>
+            <Link href="/sign-in" style={{ color: "var(--pf-btn-link-text)", textDecoration: "none", fontWeight: 600 }}>
               Operator sign in
             </Link>
             <a href={demoHref} style={{ color: "var(--pf-btn-link-text)", textDecoration: "none", fontWeight: 600 }}>

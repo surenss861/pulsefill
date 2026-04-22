@@ -53,6 +53,9 @@ importers:
 
   apps/dashboard-web:
     dependencies:
+      '@supabase/ssr':
+        specifier: ^0.10.2
+        version: 0.10.2(@supabase/supabase-js@2.103.2)
       '@supabase/supabase-js':
         specifier: ^2.49.1
         version: 2.103.2
@@ -693,6 +696,11 @@ packages:
   '@supabase/realtime-js@2.103.2':
     resolution: {integrity: sha512-zj/JruFaSJScdtq0W2cI+WbLuQmwYBD8i++0YFlzwyAeeZy9RwEAfjT1mkvhBNHPCy2V4LIsE4F0rAHSGR8AOg==}
     engines: {node: '>=20.0.0'}
+
+  '@supabase/ssr@0.10.2':
+    resolution: {integrity: sha512-JFbchN63CXLFHJRNT7udec4/RoD9PmXkSGko3QSO6vUuqGBtSzdmxR7FPfQNr7SuFd65I7Xv46q66ALjEN1cgQ==}
+    peerDependencies:
+      '@supabase/supabase-js': ^2.102.1
 
   '@supabase/storage-js@2.103.2':
     resolution: {integrity: sha512-d40lZ29EyWJ4cOTtSBH4myaRuYSa9kOdt+NFkUmR+a3SAy2VpbdI1/nE3QWIrdifOa4pxTo8RXGC3BngPMVhRw==}
@@ -1695,6 +1703,11 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@supabase/ssr@0.10.2(@supabase/supabase-js@2.103.2)':
+    dependencies:
+      '@supabase/supabase-js': 2.103.2
+      cookie: 1.1.1
 
   '@supabase/storage-js@2.103.2':
     dependencies:

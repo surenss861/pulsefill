@@ -169,3 +169,31 @@ a:hover {
   color: var(--pf-btn-link-text-hover);
   text-decoration: underline;
 }
+
+/* Auth surfaces — secure console inputs */
+.pf-auth-input::placeholder {
+  color: rgba(245, 247, 250, 0.28);
+}
+
+.pf-auth-input:focus {
+  outline: none;
+  border-color: rgba(255, 122, 24, 0.65) !important;
+  box-shadow:
+    0 0 0 3px rgba(255, 122, 24, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.pf-auth-input--error:focus {
+  border-color: rgba(248, 180, 180, 0.85) !important;
+  box-shadow:
+    0 0 0 3px rgba(248, 113, 113, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.pf-auth-input:-webkit-autofill,
+.pf-auth-input:-webkit-autofill:hover,
+.pf-auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--pf-text-primary) !important;
+  box-shadow: 0 0 0 1000px #090b10 inset !important;
+  transition: background-color 9999s ease-out;
+}

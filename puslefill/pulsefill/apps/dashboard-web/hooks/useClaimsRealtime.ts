@@ -23,9 +23,9 @@ export function useClaimsRealtime(onSlotChanged: () => void, enabled = true) {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "open_slots" },
-        (payload) => {
+        (_payload: unknown) => {
           if (realtimeDebug) {
-            console.log("[PulseFill realtime] claims open_slots UPDATE", payload);
+            console.log("[PulseFill realtime] claims open_slots UPDATE", _payload);
           }
           if (!cancelled) onSlotChanged();
         },

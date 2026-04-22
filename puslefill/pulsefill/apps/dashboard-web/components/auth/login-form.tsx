@@ -157,8 +157,9 @@ export function LoginForm() {
 
       {!legacyMode ? (
         <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>
-          Configure <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in{" "}
-          <code>.env.local</code>, or use the legacy JWT option above.
+          Prefer the operator sign-in experience? <a href="/sign-in">Open /sign-in</a>. Configure{" "}
+          <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in <code>.env.local</code>, or
+          use the legacy JWT option above.
         </p>
       ) : null}
     </main>

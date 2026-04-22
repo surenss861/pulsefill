@@ -1,16 +1,12 @@
-import { Suspense } from "react";
-import { LoginForm } from "@/components/auth/login-form";
+import { redirect } from "next/navigation";
 
-export default function LoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <main style={{ padding: 40 }}>
-          <p style={{ color: "var(--muted)" }}>Loading…</p>
-        </main>
-      }
-    >
-      <LoginForm />
-    </Suspense>
-  );
+export default async function LoginRedirectPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const sp = await searchParams;
+  const next = sp.next;
+  const qs = next ? `?next=${encodeURIComponent(next)}` : "";
+  redirect(`/sign-in${qs}`);
 }
