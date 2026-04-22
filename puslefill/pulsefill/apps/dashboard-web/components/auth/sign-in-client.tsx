@@ -35,18 +35,22 @@ export function SignInClient() {
       }
     >
       <AuthCard
+        overtitle="Operator access"
         title="Sign in"
-        description="Access the recovery console and the workflow your team runs."
+        description="Access PulseFill and continue running recovery with clarity."
         footer={
           <div style={{ display: "flex", flexDirection: "column", gap: 14, fontSize: 14, color: "var(--muted)" }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 20px", justifyContent: "space-between" }}>
               <Link href="/forgot-password">Forgot password</Link>
               <span>
-                New here? <Link href="/sign-up">Create account</Link>
+                Don&apos;t have an account? <Link href="/sign-up">Create one</Link>
               </span>
             </div>
             <span style={{ fontSize: 12, color: "rgba(245,247,250,0.45)" }}>
-              Internal: <Link href="/staff-login">paste access token</Link>
+              Internal: <Link href="/staff-login">Paste access token</Link>
+            </span>
+            <span style={{ fontSize: 11, lineHeight: 1.45, color: "rgba(245,247,250,0.38)", maxWidth: 400 }}>
+              Protected operator access. Session activity may be monitored.
             </span>
           </div>
         }

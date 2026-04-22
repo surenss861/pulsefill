@@ -29,11 +29,16 @@ export default function SignUpPage() {
       }
     >
       <AuthCard
-        title="Create account"
-        description="Workspace details can wait — start with identity and access."
+        title="Create your account"
+        description="Set up PulseFill and start turning recovery into a system."
         footer={
-          <div style={{ fontSize: 14, color: "var(--muted)" }}>
-            Already have an account? <Link href="/sign-in">Sign in</Link>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 14, color: "var(--muted)" }}>
+            <span>
+              Already have an account? <Link href="/sign-in">Sign in</Link>
+            </span>
+            <span style={{ fontSize: 11, lineHeight: 1.45, color: "rgba(245,247,250,0.38)" }}>
+              By continuing, you agree to PulseFill&apos;s Terms and Privacy Policy.
+            </span>
           </div>
         }
       >
@@ -67,9 +72,6 @@ export default function SignUpPage() {
             </div>
           ) : null}
           <SubmitButton pendingText="Creating account…">Create account</SubmitButton>
-          <p style={{ margin: 0, fontSize: 11, lineHeight: 1.5, color: "rgba(245,247,250,0.42)" }}>
-            By creating an account you agree to operational use of this product under your organization&apos;s policies.
-          </p>
         </form>
       </AuthCard>
     </AuthShell>

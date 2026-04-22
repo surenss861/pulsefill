@@ -16,8 +16,8 @@ export default function ForgotPasswordPage() {
   return (
     <AuthShell variant="center">
       <AuthCard
-        title="Reset access"
-        description="We’ll send a secure link to get you back into PulseFill."
+        title="Forgot password"
+        description="Enter your email and we’ll send a secure reset link."
         showMobileWordmark
         footer={
           <div style={{ fontSize: 14, color: "var(--muted)" }}>

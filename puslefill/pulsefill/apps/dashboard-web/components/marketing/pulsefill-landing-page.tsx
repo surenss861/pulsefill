@@ -1,7 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Fragment, type CSSProperties, type ReactNode } from "react";
+import { CtaChamberMotion } from "@/components/landing/cta-chamber-motion";
+import { HeroEntranceMotion } from "@/components/landing/hero-entrance-motion";
+
+const HeroAtmosphere = dynamic(
+  () => import("@/components/landing/hero-atmosphere").then((m) => ({ default: m.HeroAtmosphere })),
+  { ssr: false },
+);
+import { HowItWorksPipeline } from "@/components/landing/how-it-works-pipeline";
+import { LANDING_PIPELINE_STEPS } from "@/components/landing/landing-data";
 
 const TOKENS = {
   text: "var(--pf-text-primary)",
@@ -561,33 +571,6 @@ function CustomerPayoffPhone() {
   );
 }
 
-const STEPS: { step: string; title: string; body: string; emphasis: "bookend" | "bridge" | "operator" }[] = [
-  {
-    step: "1",
-    title: "A slot opens",
-    body: "Risk on the clock.",
-    emphasis: "bookend",
-  },
-  {
-    step: "2",
-    title: "Standby demand is matched",
-    body: "Right customers surfaced.",
-    emphasis: "bridge",
-  },
-  {
-    step: "3",
-    title: "Operators are guided",
-    body: "Queue, confirm, follow up — with context.",
-    emphasis: "operator",
-  },
-  {
-    step: "4",
-    title: "Recovery becomes visible",
-    body: "Bookings and revenue where teams work.",
-    emphasis: "bookend",
-  },
-];
-
 export function PulseFillLandingPage() {
   const demoHref = "mailto:hello@pulsefill.com?subject=PulseFill%20demo";
   const workflowHref = "/sign-in";
@@ -668,66 +651,81 @@ export function PulseFillLandingPage() {
             pointerEvents: "none",
           }}
         />
+        <HeroAtmosphere />
         <Container style={{ position: "relative", zIndex: 1 }}>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              justifyContent: "space-between",
-              columnGap: "clamp(28px, 5vw, 56px)",
-              rowGap: "clamp(36px, 5vw, 52px)",
-            }}
-          >
-            <div style={{ flex: "1 1 280px", maxWidth: 400, minWidth: 0, paddingBottom: "clamp(0px, 2vw, 16px)" }}>
-              <HeroEyebrow>Appointment Recovery Operating System</HeroEyebrow>
-              <h1
-                style={{
-                  margin: "6px 0 0 0",
-                  color: TOKENS.text,
-                  fontSize: "clamp(38px, 5.4vw, 72px)",
-                  lineHeight: 0.92,
-                  letterSpacing: "-0.056em",
-                  fontWeight: 680,
-                  maxWidth: 380,
-                }}
-              >
-                <span style={{ display: "block" }}>Cancellations are inevitable.</span>
-                <span style={{ display: "block" }}>Lost revenue is not.</span>
-              </h1>
-              <p
-                style={{
-                  margin: "26px 0 0 0",
-                  color: "rgba(231,236,245,0.88)",
-                  fontSize: 15,
-                  lineHeight: 1.52,
-                  maxWidth: 400,
-                  fontWeight: 520,
-                }}
-              >
-                The operating layer between cancellations and recovered revenue.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px", marginTop: 16 }}>
-                <PrimaryButton href={demoHref}>Book a demo</PrimaryButton>
-                <TextLink href="#how-it-works">See the workflow</TextLink>
-              </div>
-              <p style={{ marginTop: 8, color: TOKENS.tertiary, fontSize: 11, lineHeight: 1.5, maxWidth: 300, letterSpacing: "0.02em" }}>
-                For teams where recovery windows close fast.
-              </p>
-            </div>
-
+          <HeroEntranceMotion>
             <div
               style={{
-                position: "relative",
-                flex: "1.15 1 300px",
-                minWidth: 0,
-                minHeight: 420,
                 display: "flex",
+                flexWrap: "wrap",
                 alignItems: "center",
-                justifyContent: "flex-end",
-                transform: "translateX(clamp(12px, 3vw, 56px))",
+                justifyContent: "space-between",
+                columnGap: "clamp(28px, 5vw, 56px)",
+                rowGap: "clamp(36px, 5vw, 52px)",
               }}
             >
+              <div style={{ flex: "1 1 280px", maxWidth: 400, minWidth: 0, paddingBottom: "clamp(0px, 2vw, 16px)" }}>
+                <div data-hero-reveal>
+                  <HeroEyebrow>Appointment Recovery Operating System</HeroEyebrow>
+                </div>
+                <h1
+                  style={{
+                    margin: "6px 0 0 0",
+                    color: TOKENS.text,
+                    fontSize: "clamp(40px, 5.8vw, 76px)",
+                    lineHeight: 0.9,
+                    letterSpacing: "-0.056em",
+                    fontWeight: 680,
+                    maxWidth: 420,
+                  }}
+                >
+                  <span data-hero-reveal style={{ display: "block" }}>
+                    Cancellations are inevitable.
+                  </span>
+                  <span data-hero-reveal style={{ display: "block" }}>
+                    Lost revenue is not.
+                  </span>
+                </h1>
+                <p
+                  data-hero-reveal
+                  style={{
+                    margin: "26px 0 0 0",
+                    color: "rgba(231,236,245,0.88)",
+                    fontSize: 15,
+                    lineHeight: 1.52,
+                    maxWidth: 400,
+                    fontWeight: 520,
+                  }}
+                >
+                  The operating layer between cancellations and recovered revenue.
+                </p>
+                <div
+                  data-hero-reveal
+                  style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px", marginTop: 16 }}
+                >
+                  <PrimaryButton href={demoHref}>Book a demo</PrimaryButton>
+                  <TextLink href="#how-it-works">See the workflow</TextLink>
+                </div>
+                <p
+                  data-hero-reveal
+                  style={{ marginTop: 8, color: TOKENS.tertiary, fontSize: 11, lineHeight: 1.5, maxWidth: 300, letterSpacing: "0.02em" }}
+                >
+                  For teams where recovery windows close fast.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  position: "relative",
+                  flex: "1.15 1 300px",
+                  minWidth: 0,
+                  minHeight: 420,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  transform: "translateX(clamp(12px, 3vw, 56px))",
+                }}
+              >
               <div
                 aria-hidden
                 style={{
@@ -758,7 +756,16 @@ export function PulseFillLandingPage() {
                 }}
               />
 
-              <div style={{ position: "relative", width: "100%", maxWidth: 740, marginRight: "clamp(-20px, -3vw, 0px)" }}>
+              <div
+                data-hero-stage
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  maxWidth: 740,
+                  marginRight: "clamp(-20px, -3vw, 0px)",
+                  transformStyle: "preserve-3d",
+                }}
+              >
                 <div
                   style={{
                     transform: "rotate(-0.28deg) scale(1.34)",
@@ -805,6 +812,7 @@ export function PulseFillLandingPage() {
               </div>
             </div>
           </div>
+          </HeroEntranceMotion>
         </Container>
       </section>
 
@@ -1097,87 +1105,7 @@ export function PulseFillLandingPage() {
             </p>
           </div>
 
-          <div style={{ position: "relative" }}>
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                left: "3%",
-                right: "3%",
-                top: 8,
-                height: 1,
-                borderRadius: 1,
-                background: "linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,122,24,0.22), rgba(255,255,255,0.04))",
-                opacity: 0.55,
-                pointerEvents: "none",
-              }}
-            />
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 188px), 1fr))",
-                gap: 8,
-                alignItems: "stretch",
-              }}
-            >
-              {STEPS.map(({ step, title, body, emphasis }) => {
-                const isOp = emphasis === "operator";
-                const isBook = emphasis === "bookend";
-                const inactive = isBook || emphasis === "bridge";
-                return (
-                  <div key={step} style={{ paddingTop: 2 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                      <div
-                        style={{
-                          width: isOp ? 22 : 19,
-                          height: isOp ? 22 : 19,
-                          borderRadius: 999,
-                          display: "grid",
-                          placeItems: "center",
-                          fontSize: 10,
-                          fontWeight: 700,
-                          color: isOp ? TOKENS.text : "rgba(226,232,240,0.55)",
-                          background: isOp
-                            ? "linear-gradient(145deg, rgba(255,122,24,0.5), rgba(10,12,20,0.98))"
-                            : "rgba(8,10,16,0.96)",
-                          border: isOp ? `1px solid rgba(253,186,116,0.5)` : `1px solid rgba(255,255,255,0.07)`,
-                          boxShadow: isOp ? "0 0 16px rgba(255,122,24,0.18)" : "none",
-                          flexShrink: 0,
-                        }}
-                      >
-                        {step}
-                      </div>
-                      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)", minWidth: 6, borderRadius: 1 }} />
-                    </div>
-                    <div
-                      style={{
-                        borderRadius: isOp ? 12 : 8,
-                        padding: isOp ? "14px 12px 16px" : "11px 10px 12px",
-                        minHeight: isOp ? 96 : isBook ? 76 : 80,
-                        background: isOp ? "rgba(255,122,24,0.07)" : "rgba(0,0,0,0.38)",
-                        border: isOp ? "1px solid rgba(255,122,24,0.42)" : "1px solid rgba(255,255,255,0.05)",
-                        boxShadow: isOp ? "0 10px 32px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.04)" : "inset 0 1px 0 rgba(255,255,255,0.02)",
-                        opacity: inactive ? 0.74 : 1,
-                      }}
-                    >
-                      <div
-                        style={{
-                          color: TOKENS.text,
-                          fontSize: isOp ? 15 : 13,
-                          fontWeight: isOp ? 650 : 590,
-                          lineHeight: 1.18,
-                        }}
-                      >
-                        <span style={{ color: "rgba(255,255,255,0.22)", marginRight: 6 }}>—</span>
-                        {title}
-                      </div>
-                      <p style={{ margin: "5px 0 0 0", color: TOKENS.muted, fontSize: isOp ? 12 : 11, lineHeight: 1.45 }}>{body}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <HowItWorksPipeline steps={LANDING_PIPELINE_STEPS} />
         </Container>
       </section>
 
@@ -1590,71 +1518,82 @@ export function PulseFillLandingPage() {
         }}
       >
         <Container>
-          <div
-            style={{
-              position: "relative",
-              textAlign: "center",
-              padding: "clamp(64px, 11vw, 132px) clamp(20px, 5vw, 48px)",
-              borderRadius: 0,
-              overflow: "visible",
-            }}
-          >
+          <CtaChamberMotion>
             <div
-              aria-hidden
               style={{
-                position: "absolute",
-                inset: "-6% -8% -18%",
-                background: `
+                position: "relative",
+                textAlign: "center",
+                padding: "clamp(64px, 11vw, 132px) clamp(20px, 5vw, 48px)",
+                borderRadius: 0,
+                overflow: "visible",
+              }}
+            >
+              <div
+                data-cta-glow
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  inset: "-6% -8% -18%",
+                  background: `
                   radial-gradient(ellipse 38% 48% at 50% 0%, rgba(255,122,24,0.48), transparent 52%),
                   radial-gradient(ellipse 32% 36% at 94% 98%, rgba(201,59,47,0.12), transparent 52%),
                   radial-gradient(circle at 50% 60%, rgba(4,6,12,0.2), rgba(0,0,0,0.9))
                 `,
-              }}
-            />
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                inset: 0,
-                boxShadow: "inset 0 0 160px rgba(0,0,0,0.6)",
-                pointerEvents: "none",
-              }}
-            />
-            <div style={{ position: "relative", zIndex: 1, maxWidth: 440, margin: "0 auto" }}>
+                }}
+              />
               <div
+                aria-hidden
                 style={{
-                  color: TOKENS.tertiary,
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase",
+                  position: "absolute",
+                  inset: 0,
+                  boxShadow: "inset 0 0 160px rgba(0,0,0,0.6)",
+                  pointerEvents: "none",
                 }}
-              >
-                Ready to replace the scramble?
-              </div>
-              <h2
-                style={{
-                  margin: "20px 0 0 0",
-                  color: TOKENS.text,
-                  fontSize: "clamp(26px, 4vw, 44px)",
-                  lineHeight: 1.04,
-                  letterSpacing: "-0.045em",
-                  fontWeight: 630,
-                }}
-              >
-                Run cancellation recovery like infrastructure — not improvisation.
-              </h2>
-              <p style={{ margin: "14px auto 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.52, maxWidth: 340 }}>
-                The operational layer between cancellations and recovered bookings.
-              </p>
-              <div style={{ marginTop: 34, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px 28px", alignItems: "center" }}>
-                <PrimaryButton href={demoHref}>Book a demo</PrimaryButton>
-                <MutedTextLink href={workflowHref} variant="cta">
-                  Operator sign in
-                </MutedTextLink>
+              />
+              <div style={{ position: "relative", zIndex: 1, maxWidth: 440, margin: "0 auto" }}>
+                <div
+                  data-cta-reveal
+                  style={{
+                    color: TOKENS.tertiary,
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Ready to replace the scramble?
+                </div>
+                <h2
+                  data-cta-reveal
+                  style={{
+                    margin: "20px 0 0 0",
+                    color: TOKENS.text,
+                    fontSize: "clamp(26px, 4vw, 44px)",
+                    lineHeight: 1.04,
+                    letterSpacing: "-0.045em",
+                    fontWeight: 630,
+                  }}
+                >
+                  Run cancellation recovery like infrastructure — not improvisation.
+                </h2>
+                <p
+                  data-cta-reveal
+                  style={{ margin: "14px auto 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.52, maxWidth: 340 }}
+                >
+                  The operational layer between cancellations and recovered bookings.
+                </p>
+                <div
+                  data-cta-reveal
+                  style={{ marginTop: 34, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px 28px", alignItems: "center" }}
+                >
+                  <PrimaryButton href={demoHref}>Book a demo</PrimaryButton>
+                  <MutedTextLink href={workflowHref} variant="cta">
+                    Operator sign in
+                  </MutedTextLink>
+                </div>
               </div>
             </div>
-          </div>
+          </CtaChamberMotion>
         </Container>
       </section>
 

@@ -194,6 +194,6 @@ a:hover {
 .pf-auth-input:-webkit-autofill:hover,
 .pf-auth-input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--pf-text-primary) !important;
-  box-shadow: 0 0 0 1000px #090b10 inset !important;
+  box-shadow: 0 0 0 1000px #0a0f1a inset !important;
   transition: background-color 9999s ease-out;
 }

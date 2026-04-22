@@ -5,8 +5,8 @@ const ambient = {
   inset: 0,
   pointerEvents: "none" as const,
   background: `
-    radial-gradient(circle at 72% 14%, rgba(255, 122, 24, 0.14), transparent 32%),
-    radial-gradient(circle at 12% 88%, rgba(120, 24, 24, 0.1), transparent 28%),
+    radial-gradient(circle at 72% 14%, rgba(255, 122, 24, 0.12), transparent 32%),
+    radial-gradient(circle at 8% 92%, rgba(158, 42, 31, 0.1), transparent 26%),
     linear-gradient(180deg, #050505 0%, #060606 48%, #050505 100%)
   `,
 };

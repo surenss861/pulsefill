@@ -16,8 +16,8 @@ export default function ResetPasswordPage() {
   return (
     <AuthShell variant="center">
       <AuthCard
-        title="Set new password"
-        description="Choose a strong password for your workspace. You need a valid recovery session from your email link."
+        title="Reset password"
+        description="Set a new password to regain access to PulseFill. Use the link from your email so this session stays valid."
         showMobileWordmark
         footer={
           <div style={{ fontSize: 14, color: "var(--muted)" }}>

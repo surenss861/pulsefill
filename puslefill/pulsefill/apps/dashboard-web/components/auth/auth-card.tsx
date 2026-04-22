@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 type AuthCardProps = {
+  overtitle?: string;
   title: string;
   description?: string;
   children: ReactNode;
@@ -9,6 +10,7 @@ type AuthCardProps = {
 };
 
 export function AuthCard({
+  overtitle,
   title,
   description,
   children,
@@ -18,11 +20,11 @@ export function AuthCard({
   return (
     <div
       style={{
-        borderRadius: 28,
+        borderRadius: 30,
         border: "1px solid rgba(255,255,255,0.08)",
-        background: "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018))",
-        padding: "clamp(24px, 4vw, 36px)",
-        boxShadow: "0 40px 120px rgba(0,0,0,0.55)",
+        background: "linear-gradient(180deg, rgba(15,18,28,0.92), rgba(8,10,18,0.96))",
+        padding: "clamp(28px, 4vw, 40px)",
+        boxShadow: "0 40px 120px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)",
         backdropFilter: "blur(20px)",
       }}
     >
@@ -48,6 +50,20 @@ export function AuthCard({
               PulseFill
             </span>
           </div>
+        ) : null}
+        {overtitle ? (
+          <p
+            style={{
+              margin: 0,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: "rgba(245,247,250,0.42)",
+            }}
+          >
+            {overtitle}
+          </p>
         ) : null}
         <h2
           style={{
