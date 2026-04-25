@@ -51,6 +51,13 @@ enum DateFormatterPF {
         return f.string(from: date)
     }
 
+    static func relative(_ iso: String) -> String {
+        guard let date = parse(iso) else { return "" }
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .short
+        return f.localizedString(for: date, relativeTo: Date())
+    }
+
     /// Same-day range for operator lists (local timezone).
     static func dateTimeRange(start: String, end: String?) -> String {
         guard let s = parse(start) else { return start }

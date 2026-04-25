@@ -11,6 +11,12 @@ const schema = z.object({
   REDIS_URL: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  PUSH_PROVIDER: z.enum(["noop", "apns"]).default("noop"),
+  APNS_TEAM_ID: z.string().optional(),
+  APNS_KEY_ID: z.string().optional(),
+  APNS_PRIVATE_KEY: z.string().optional(),
+  APNS_BUNDLE_ID: z.string().optional(),
+  APNS_ENVIRONMENT: z.enum(["sandbox", "production"]).default("sandbox"),
 });
 
 export type Env = z.infer<typeof schema>;

@@ -19,7 +19,7 @@ export function useActionQueue(pollMs = 15_000) {
       setData(res);
     } catch (err) {
       if (!silent) {
-        setError(err instanceof Error ? err.message : "Failed to load action queue");
+        setError(err instanceof Error ? err.message : "Failed to load Recovery Queue");
         setData(null);
       }
     } finally {

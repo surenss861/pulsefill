@@ -9,6 +9,16 @@ enum OperatorQueuePresenters {
         }
     }
 
+
+
+    static func severityPillVariant(_ severity: OperatorQueueSeverity) -> PFStatusPill.Variant {
+        switch severity {
+        case .high: return .danger
+        case .medium: return .primary
+        case .low: return .success
+        }
+    }
+
     static func kindTitle(_ kind: OperatorQueueItemKind) -> String {
         switch kind {
         case .awaitingConfirmation: "Awaiting confirmation"

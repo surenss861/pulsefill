@@ -30,6 +30,7 @@ export type SendOffersMutationTestDelegateResult = {
   result: "offers_sent" | "offers_retried" | "no_matches";
   matched: number;
   offer_ids: string[];
+  offer_customer_ids?: Array<{ offer_id: string; customer_id: string }>;
   message: string;
   notification_queue?: { queued: boolean; count: number };
 };
@@ -38,8 +39,32 @@ export type SendOffersMutationTestDelegate = (
   args: SendOffersMutationTestDelegateArgs,
 ) => Promise<SendOffersMutationTestDelegateResult>;
 
+export type ExpireOpenSlotMutationTestDelegateArgs = {
+  openSlotId: string;
+  businessId: string;
+  staffId: string;
+  authUserId: string;
+};
+
+export type ExpireOpenSlotMutationTestDelegate = (
+  args: ExpireOpenSlotMutationTestDelegateArgs,
+) => Promise<{ ok: boolean; error?: string }>;
+
+export type CancelOpenSlotMutationTestDelegateArgs = {
+  openSlotId: string;
+  businessId: string;
+  staffId: string;
+  authUserId: string;
+};
+
+export type CancelOpenSlotMutationTestDelegate = (
+  args: CancelOpenSlotMutationTestDelegateArgs,
+) => Promise<{ ok: boolean; error?: string }>;
+
 let confirmOpenSlotMutationTestDelegate: ConfirmOpenSlotMutationTestDelegate | null = null;
 let sendOffersMutationTestDelegate: SendOffersMutationTestDelegate | null = null;
+let expireOpenSlotMutationTestDelegate: ExpireOpenSlotMutationTestDelegate | null = null;
+let cancelOpenSlotMutationTestDelegate: CancelOpenSlotMutationTestDelegate | null = null;
 
 export function getConfirmOpenSlotMutationTestDelegate(): ConfirmOpenSlotMutationTestDelegate | null {
   return process.env.PULSEFILL_API_TEST === "1" ? confirmOpenSlotMutationTestDelegate : null;
@@ -47,6 +72,14 @@ export function getConfirmOpenSlotMutationTestDelegate(): ConfirmOpenSlotMutatio
 
 export function getSendOffersMutationTestDelegate(): SendOffersMutationTestDelegate | null {
   return process.env.PULSEFILL_API_TEST === "1" ? sendOffersMutationTestDelegate : null;
+}
+
+export function getExpireOpenSlotMutationTestDelegate(): ExpireOpenSlotMutationTestDelegate | null {
+  return process.env.PULSEFILL_API_TEST === "1" ? expireOpenSlotMutationTestDelegate : null;
+}
+
+export function getCancelOpenSlotMutationTestDelegate(): CancelOpenSlotMutationTestDelegate | null {
+  return process.env.PULSEFILL_API_TEST === "1" ? cancelOpenSlotMutationTestDelegate : null;
 }
 
 export function setConfirmOpenSlotMutationTestDelegate(delegate: ConfirmOpenSlotMutationTestDelegate | null) {
@@ -69,9 +102,31 @@ export function setSendOffersMutationTestDelegate(delegate: SendOffersMutationTe
   sendOffersMutationTestDelegate = delegate;
 }
 
+export function setExpireOpenSlotMutationTestDelegate(delegate: ExpireOpenSlotMutationTestDelegate | null) {
+  if (process.env.PULSEFILL_API_TEST !== "1") {
+    if (delegate != null) {
+      throw new Error("setExpireOpenSlotMutationTestDelegate is only valid when PULSEFILL_API_TEST=1");
+    }
+    return;
+  }
+  expireOpenSlotMutationTestDelegate = delegate;
+}
+
+export function setCancelOpenSlotMutationTestDelegate(delegate: CancelOpenSlotMutationTestDelegate | null) {
+  if (process.env.PULSEFILL_API_TEST !== "1") {
+    if (delegate != null) {
+      throw new Error("setCancelOpenSlotMutationTestDelegate is only valid when PULSEFILL_API_TEST=1");
+    }
+    return;
+  }
+  cancelOpenSlotMutationTestDelegate = delegate;
+}
+
 export function resetOpenSlotsRouteMutationTestDelegates() {
   if (process.env.PULSEFILL_API_TEST === "1") {
     confirmOpenSlotMutationTestDelegate = null;
     sendOffersMutationTestDelegate = null;
+    expireOpenSlotMutationTestDelegate = null;
+    cancelOpenSlotMutationTestDelegate = null;
   }
 }

@@ -34,10 +34,61 @@ const pushDeviceBody = z
   .object({
     device_token: z.string().min(10),
     platform: z.literal("ios"),
+    token_type: z.enum(["apns", "expo"]).default("apns"),
     environment: z.enum(["development", "production"]).default("development"),
     app_build: z.string().max(64).optional(),
+    replace_existing: z.boolean().default(true),
   })
   .strict();
+
+const deactivatePushDeviceBody = z
+  .object({
+    device_token: z.string().min(10),
+    platform: z.literal("ios").optional(),
+    token_type: z.enum(["apns", "expo"]).optional(),
+  })
+  .strict();
+
+type RegisterPushDeviceRow = {
+  id: string;
+  token_type: "apns" | "expo";
+  replace_existing: boolean;
+  last_seen_at: string;
+};
+
+type RegisterPushDeviceTestDelegateArgs = {
+  customerId: string;
+  body: z.infer<typeof pushDeviceBody>;
+};
+
+type DeactivatePushDeviceTestDelegateArgs = {
+  customerId: string;
+  body: z.infer<typeof deactivatePushDeviceBody>;
+};
+
+let registerPushDeviceTestDelegate:
+  | null
+  | ((args: RegisterPushDeviceTestDelegateArgs) => Promise<RegisterPushDeviceRow>) = null;
+let deactivatePushDeviceTestDelegate:
+  | null
+  | ((args: DeactivatePushDeviceTestDelegateArgs) => Promise<{ deactivated: boolean; device_token: string }>) = null;
+
+export function setRegisterPushDeviceTestDelegate(
+  delegate: ((args: RegisterPushDeviceTestDelegateArgs) => Promise<RegisterPushDeviceRow>) | null,
+) {
+  registerPushDeviceTestDelegate = delegate;
+}
+
+export function setDeactivatePushDeviceTestDelegate(
+  delegate: ((args: DeactivatePushDeviceTestDelegateArgs) => Promise<{ deactivated: boolean; device_token: string }>) | null,
+) {
+  deactivatePushDeviceTestDelegate = delegate;
+}
+
+export function resetCustomerPushDeviceTestDelegates() {
+  registerPushDeviceTestDelegate = null;
+  deactivatePushDeviceTestDelegate = null;
+}
 
 function mapCustomerOfferRow(row: Record<string, unknown>) {
   const { open_slots: nestedSlot, ...rest } = row;
@@ -357,7 +408,26 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
     { preHandler: requireCustomer },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
-      const body = pushDeviceBody.parse(req.body ?? {});
+      const parsed = pushDeviceBody.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return reply.status(400).send({ error: "invalid_body" });
+      }
+      const body = parsed.data;
+      const nowIso = new Date().toISOString();
+
+      if (registerPushDeviceTestDelegate) {
+        const row = await registerPushDeviceTestDelegate({
+          customerId: req.customer!.id,
+          body,
+        });
+        return reply.send({
+          registered: true,
+          id: row.id,
+          token_type: row.token_type,
+          replaced_existing: row.replace_existing,
+          last_seen_at: row.last_seen_at,
+        });
+      }
 
       const { data, error } = await admin
         .from("customer_push_devices")
@@ -365,11 +435,13 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
           {
             customer_id: req.customer!.id,
             platform: body.platform,
+            token_type: body.token_type,
             device_token: body.device_token,
             environment: body.environment,
             app_build: body.app_build ?? null,
             active: true,
-            updated_at: new Date().toISOString(),
+            last_seen_at: nowIso,
+            updated_at: nowIso,
           },
           { onConflict: "customer_id,device_token" },
         )
@@ -381,7 +453,81 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         return reply.status(500).send({ error: "register_failed" });
       }
 
-      return reply.send({ registered: true, id: data.id });
+      if (body.replace_existing) {
+        const { error: deactivationError } = await admin
+          .from("customer_push_devices")
+          .update({
+            active: false,
+            updated_at: nowIso,
+          })
+          .eq("customer_id", req.customer!.id)
+          .eq("platform", body.platform)
+          .eq("token_type", body.token_type)
+          .neq("device_token", body.device_token)
+          .eq("active", true);
+        if (deactivationError) {
+          req.log.error({ deactivationError }, "push device replacement deactivate failed");
+          return reply.status(500).send({ error: "register_failed" });
+        }
+      }
+
+      return reply.send({
+        registered: true,
+        id: data.id,
+        token_type: body.token_type,
+        replaced_existing: body.replace_existing,
+        last_seen_at: nowIso,
+      });
+    },
+  );
+
+  app.post(
+    "/v1/customers/me/push-devices/deactivate",
+    { preHandler: requireCustomer },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const parsed = deactivatePushDeviceBody.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return reply.status(400).send({ error: "invalid_body" });
+      }
+      const body = parsed.data;
+      const nowIso = new Date().toISOString();
+
+      if (deactivatePushDeviceTestDelegate) {
+        const out = await deactivatePushDeviceTestDelegate({
+          customerId: req.customer!.id,
+          body,
+        });
+        return reply.send(out);
+      }
+
+      let update = admin
+        .from("customer_push_devices")
+        .update({
+          active: false,
+          updated_at: nowIso,
+        })
+        .eq("customer_id", req.customer!.id)
+        .eq("device_token", body.device_token)
+        .eq("active", true);
+
+      if (body.platform) {
+        update = update.eq("platform", body.platform);
+      }
+      if (body.token_type) {
+        update = update.eq("token_type", body.token_type);
+      }
+
+      const { error } = await update;
+      if (error) {
+        req.log.error({ error }, "push device deactivate failed");
+        return reply.status(500).send({ error: "deactivate_failed" });
+      }
+
+      return reply.send({
+        deactivated: true,
+        device_token: body.device_token,
+      });
     },
   );
 

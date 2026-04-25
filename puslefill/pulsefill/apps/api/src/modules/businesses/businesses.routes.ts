@@ -9,6 +9,39 @@ import { buildOpsBreakdown } from "./ops-breakdown.js";
 import { buildMorningRecoveryDigest } from "./morning-recovery-digest.js";
 import { buildOperatorActivityFeed } from "./activity-feed.js";
 import { buildOperatorCustomerContext } from "./operator-customer-context.js";
+import { buildOutcomesPage } from "./outcomes-page.js";
+
+
+
+let buildOutcomesPageTestDelegate:
+  | null
+  | ((admin: ReturnType<typeof createServiceSupabase>, businessId: string) => Promise<unknown>) = null;
+
+export function setBuildOutcomesPageTestDelegate(
+  delegate: ((admin: ReturnType<typeof createServiceSupabase>, businessId: string) => Promise<unknown>) | null,
+) {
+  buildOutcomesPageTestDelegate = delegate;
+}
+
+type NotificationAttemptFilterInput = {
+  status?: "queued" | "suppressed" | "sent" | "failed";
+  type?: string;
+  open_slot_id?: string;
+  customer_id?: string;
+  limit: number;
+};
+
+let listNotificationAttemptsTestDelegate:
+  | null
+  | ((args: { businessId: string; filters: NotificationAttemptFilterInput }) => Promise<{ items: unknown[] }>) = null;
+
+export function setListNotificationAttemptsTestDelegate(
+  delegate:
+    | ((args: { businessId: string; filters: NotificationAttemptFilterInput }) => Promise<{ items: unknown[] }>)
+    | null,
+) {
+  listNotificationAttemptsTestDelegate = delegate;
+}
 
 const patchBody = z
   .object({
@@ -22,6 +55,57 @@ const patchBody = z
   .strict();
 
 export async function registerBusinessRoutes(app: FastifyInstance) {
+  app.get(
+    "/v1/businesses/mine/notification-attempts",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const filters = z
+        .object({
+          status: z.enum(["queued", "suppressed", "sent", "failed"]).optional(),
+          type: z.string().min(1).max(120).optional(),
+          open_slot_id: z.string().uuid().optional(),
+          customer_id: z.string().uuid().optional(),
+          limit: z.coerce.number().int().min(1).max(200).default(50),
+        })
+        .parse((req.query as Record<string, string | undefined>) ?? {});
+
+      try {
+        if (listNotificationAttemptsTestDelegate) {
+          const out = await listNotificationAttemptsTestDelegate({
+            businessId: req.staff!.business_id,
+            filters,
+          });
+          return reply.send(out);
+        }
+
+        let query = admin
+          .from("notification_delivery_attempts")
+          .select(
+            "id, type, status, decision, suppression_reason, retryable, dedupe_key, open_slot_id, customer_id, claim_id, provider, error_code, error_message, created_at, updated_at",
+          )
+          .eq("business_id", req.staff!.business_id)
+          .order("created_at", { ascending: false })
+          .limit(filters.limit);
+
+        if (filters.status) query = query.eq("status", filters.status);
+        if (filters.type) query = query.eq("type", filters.type);
+        if (filters.open_slot_id) query = query.eq("open_slot_id", filters.open_slot_id);
+        if (filters.customer_id) query = query.eq("customer_id", filters.customer_id);
+
+        const { data, error } = await query;
+        if (error) {
+          req.log.error({ error }, "notification attempts failed");
+          return reply.status(500).send({ error: "notification_attempts_failed" });
+        }
+        return reply.send({ items: data ?? [] });
+      } catch (e) {
+        req.log.error({ e }, "notification attempts failed");
+        return reply.status(500).send({ error: "notification_attempts_failed" });
+      }
+    },
+  );
+
   app.get(
     "/v1/businesses/mine",
     { preHandler: requireStaff },
@@ -167,6 +251,23 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
       } catch (e) {
         req.log.error({ e }, "ops_breakdown_failed");
         return reply.status(500).send({ error: "ops_breakdown_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/outcomes",
+    { preHandler: requireStaff },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = buildOutcomesPageTestDelegate
+          ? await buildOutcomesPageTestDelegate(admin, req.staff!.business_id)
+          : await buildOutcomesPage(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "outcomes_page_failed");
+        return reply.status(500).send({ error: "outcomes_page_failed" });
       }
     },
   );

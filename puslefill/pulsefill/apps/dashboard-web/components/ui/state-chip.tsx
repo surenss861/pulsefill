@@ -17,39 +17,39 @@ function chipStyle(status: string): CSSProperties {
   if (normalized === "booked") {
     return {
       ...base,
-      borderColor: "rgba(52, 211, 153, 0.35)",
-      background: "rgba(16, 185, 129, 0.12)",
-      color: "#6ee7b7",
+      borderColor: "var(--pf-success-border)",
+      background: "var(--pf-success-soft)",
+      color: "var(--pf-chip-success-text)",
     };
   }
   if (normalized === "claimed") {
     return {
       ...base,
-      borderColor: "rgba(251, 191, 36, 0.35)",
-      background: "rgba(245, 158, 11, 0.12)",
-      color: "#fcd34d",
+      borderColor: "var(--pf-warning-border)",
+      background: "var(--pf-warning-soft)",
+      color: "var(--pf-chip-warning-text)",
     };
   }
   if (normalized === "offered") {
     return {
       ...base,
-      borderColor: "rgba(56, 189, 248, 0.35)",
-      background: "rgba(14, 165, 233, 0.12)",
-      color: "#7dd3fc",
+      borderColor: "var(--pf-accent-primary-border)",
+      background: "var(--pf-accent-primary-soft)",
+      color: "var(--pf-chip-primary-text)",
     };
   }
   if (normalized === "cancelled" || normalized === "failed") {
     return {
       ...base,
-      borderColor: "rgba(248, 113, 113, 0.35)",
-      background: "rgba(239, 68, 68, 0.12)",
-      color: "#fecaca",
+      borderColor: "var(--pf-danger-border)",
+      background: "var(--pf-danger-soft)",
+      color: "var(--pf-chip-danger-text)",
     };
   }
   if (normalized === "expired") {
     return {
       ...base,
-      borderColor: "rgba(255,255,255,0.1)",
+      borderColor: "var(--pf-border-subtle)",
       background: "rgba(255,255,255,0.05)",
       color: "var(--muted)",
     };
@@ -57,23 +57,23 @@ function chipStyle(status: string): CSSProperties {
   if (normalized === "delivered") {
     return {
       ...base,
-      borderColor: "rgba(52, 211, 153, 0.35)",
-      background: "rgba(16, 185, 129, 0.12)",
-      color: "#6ee7b7",
+      borderColor: "var(--pf-success-border)",
+      background: "var(--pf-success-soft)",
+      color: "var(--pf-chip-success-text)",
     };
   }
   if (normalized.includes("queued") || normalized === "sent" || normalized === "skipped_no_queue") {
     return {
       ...base,
-      borderColor: "rgba(56, 189, 248, 0.35)",
-      background: "rgba(14, 165, 233, 0.1)",
-      color: "#7dd3fc",
+      borderColor: "var(--pf-accent-primary-border)",
+      background: "rgba(255, 122, 24, 0.1)",
+      color: "#ffedd5",
     };
   }
   return {
     ...base,
-    borderColor: "rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.06)",
+    borderColor: "var(--pf-chip-neutral-border)",
+    background: "var(--pf-chip-neutral-bg)",
     color: "rgba(255,255,255,0.75)",
   };
 }

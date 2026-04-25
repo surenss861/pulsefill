@@ -28,6 +28,9 @@ final class OperatorActionQueueViewModel: ObservableObject {
     @Published var isRefreshing = false
     @Published var performingItemId: String?
     @Published var flashMessage: String?
+    @Published var errorMessage: String?
+    @Published var successPulseItemId: String?
+    @Published var successPulseTick = 0
 
     @Published var filterProviderId: String?
     @Published var filterLocationId: String?
@@ -179,15 +182,21 @@ final class OperatorActionQueueViewModel: ObservableObject {
 
     func performPrimaryAction(for item: OperatorActionQueueItem) async {
         guard let derived = OperatorPrimaryActionDeriver.queueInline(from: item) else { return }
+        guard performingItemId == nil else { return }
 
         performingItemId = item.id
+        errorMessage = nil
         defer { performingItemId = nil }
 
         do {
             let msg = try await OperatorInlineActionRunner(api: api).run(derived, openSlotId: item.openSlotId)
             flashMessage = msg
+            successPulseItemId = item.id
+            successPulseTick += 1
         } catch {
-            flashMessage = APIErrorCopy.message(for: error)
+            let message = APIErrorCopy.message(for: error)
+            errorMessage = message
+            flashMessage = message
         }
     }
 }

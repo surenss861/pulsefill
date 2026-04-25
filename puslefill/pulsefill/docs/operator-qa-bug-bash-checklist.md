@@ -5,7 +5,7 @@ Manual regression matrix for the **operator console**: server-driven slot detail
 **Architecture under test**
 
 - **Server:** `queue_context`, `available_actions`, guarded operator routes (`operator_action_not_allowed` / 409).
-- **Web canonical detail:** `apps/dashboard-web/app/(dashboard)/open-slots/[id]/page.tsx` — refresh bus: `lib/operator-refresh-events.ts`, `hooks/useOperatorRefreshSubscription.ts`.
+- **Web canonical detail:** `apps/dashboard-web/app/(protected)/open-slots/[id]/page.tsx` — refresh bus: `lib/operator-refresh-events.ts`, `hooks/useOperatorRefreshSubscription.ts`.
 - **iOS canonical detail:** `OperatorSlotDetailView` / `OperatorSlotDetailViewModel` — refresh bus: `OperatorMutationNotifier` + `OperatorRefreshNotifications` (NotificationCenter).
 
 Use this doc for a focused pass: **trust and correctness**, not new features.

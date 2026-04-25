@@ -25,7 +25,7 @@ struct OperatorSlotsListView: View {
                 }
             }
             .background(PFColor.background.ignoresSafeArea())
-            .navigationTitle("Slots")
+            .navigationTitle("Open Slots")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -55,11 +55,17 @@ struct OperatorSlotsListView: View {
     }
 
     private var loadingView: some View {
-        VStack {
-            Spacer()
-            ProgressView()
-                .tint(PFColor.primary)
-            Spacer()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                PFPageHeader(
+                    overline: "Slots",
+                    title: "Open Slots",
+                    subtitle: "Inventory view across all openings and their recovery state."
+                )
+                PFLoadingSkeleton(count: 4)
+            }
+            .padding(.top, 16)
+            .padding(.horizontal, 20)
         }
     }
 
@@ -86,6 +92,12 @@ struct OperatorSlotsListView: View {
     private var contentView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                PFPageHeader(
+                    overline: "Slots",
+                    title: "Open Slots",
+                    subtitle: "Inventory view across all openings and their recovery state."
+                )
+
                 if let digest = digestContext {
                     digestBanner(digest)
                 }
@@ -145,6 +157,7 @@ struct OperatorSlotsListView: View {
                                 slot: slot,
                                 primaryAction: viewModel.primaryAction(for: slot),
                                 isPerforming: viewModel.performingSlotId == slot.id,
+                                successPulseTrigger: (viewModel.successPulseItemId == slot.id) ? "\(slot.id)-\(viewModel.successPulseTick)" : slot.id,
                                 onPrimaryAction: {
                                     Task { await viewModel.performPrimaryAction(for: slot) }
                                 },

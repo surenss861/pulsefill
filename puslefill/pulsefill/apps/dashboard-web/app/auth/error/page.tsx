@@ -1,6 +1,13 @@
 import Link from "next/link";
 
-export default function AuthErrorPage() {
+type Props = {
+  searchParams: Promise<{ reason?: string }>;
+};
+
+export default async function AuthErrorPage({ searchParams }: Props) {
+  const { reason } = await searchParams;
+  const profileMissing = reason === "profile";
+
   return (
     <main
       style={{
@@ -23,14 +30,25 @@ export default function AuthErrorPage() {
           padding: 32,
         }}
       >
-        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)" }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            color: "var(--muted)",
+          }}
+        >
           Auth error
         </p>
         <h1 style={{ margin: "16px 0 0", fontSize: 32, fontWeight: 620, letterSpacing: "-0.04em", lineHeight: 1.1 }}>
-          This link is invalid or expired.
+          {profileMissing ? "Your account profile is not ready yet." : "This link is invalid or expired."}
         </h1>
         <p style={{ margin: "16px 0 0", color: "var(--muted)", lineHeight: 1.55, fontSize: 14 }}>
-          Request a fresh sign-in or reset link and try again.
+          {profileMissing
+            ? "You are signed in, but we could not load your PulseFill profile. Try signing out and back in, or contact support if this persists."
+            : "Request a fresh sign-in or reset link and try again."}
         </p>
         <div style={{ marginTop: 28 }}>
           <Link

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { displayCustomer } from "@/lib/customer-ref";
-import { openSlotDetailPath } from "@/lib/open-slot-routes";
+import { claimsDetailPath } from "@/lib/open-slot-routes";
 import { SlotRowShell } from "@/components/ui/slot-row-shell";
 import { StateChip } from "@/components/ui/state-chip";
 import type { ClaimRow } from "@/types/claim";
@@ -144,7 +144,7 @@ export function ClaimWinnerCard({
 
       <div style={{ marginTop: 16 }}>
         <Link
-          href={openSlotDetailPath(claim.open_slot_id)}
+          href={claimsDetailPath(claim.open_slot_id)}
           prefetch={false}
           style={{
             fontSize: 14,

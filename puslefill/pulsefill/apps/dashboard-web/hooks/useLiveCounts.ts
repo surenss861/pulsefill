@@ -2,22 +2,28 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { usePollingEffect } from "@/hooks/usePollingEffect";
+import type { LiveCountsResponse } from "@/types/live-counts";
 
-export type LiveCounts = {
-  claimed: number;
-  open: number;
-};
+export function useLiveCounts(pollMs = 30_000) {
+  const [data, setData] = useState<LiveCountsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export function useLiveCounts() {
-  const [counts, setCounts] = useState<LiveCounts>({ claimed: 0, open: 0 });
-
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
     try {
-      const data = await apiFetch<{ counts: LiveCounts }>("/v1/businesses/mine/live-counts");
-      setCounts(data.counts);
-    } catch {
-      // Keep last counts for unobtrusive nav badges
+      if (!silent) {
+        setLoading(true);
+        setError(null);
+      }
+      const res = await apiFetch<LiveCountsResponse>("/v1/businesses/mine/live-counts");
+      setData(res);
+    } catch (err) {
+      if (!silent) {
+        setError(err instanceof Error ? err.message : "Failed to load live counts");
+        setData(null);
+      }
+    } finally {
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -25,7 +31,21 @@ export function useLiveCounts() {
     void load();
   }, [load]);
 
-  usePollingEffect(load, 15000, true);
+  useEffect(() => {
+    if (pollMs <= 0) return;
+    const id = setInterval(() => void load(true), pollMs);
+    return () => clearInterval(id);
+  }, [load, pollMs]);
 
-  return counts;
+  const reload = useCallback((opts?: { silent?: boolean }) => load(opts?.silent ?? false), [load]);
+
+  return {
+    data,
+    loading,
+    error,
+    reload,
+    /** Sidebar badges — same numbers as `data.counts` when loaded. */
+    open: data?.counts.open ?? 0,
+    claimed: data?.counts.claimed ?? 0,
+  };
 }

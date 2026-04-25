@@ -12,12 +12,14 @@ function formatCurrency(cents: number) {
   }).format(cents / 100);
 }
 
+/** Ember-led accents: recovery heat for offers/opens, neutral for volume, danger undertone only when label implies risk. */
 function accentForKey(label: string): string {
   const l = label.toLowerCase();
-  if (l.includes("booked") || l.includes("revenue")) return "rgba(52, 211, 153, 0.22)";
-  if (l.includes("offer")) return "rgba(56, 189, 248, 0.2)";
-  if (l.includes("created") || l.includes("open")) return "rgba(255,255,255,0.12)";
-  return "rgba(255,255,255,0.1)";
+  if (l.includes("fail") || l.includes("error") || l.includes("lost")) return "var(--pf-danger-border)";
+  if (l.includes("booked") || l.includes("revenue")) return "var(--pf-accent-primary-border)";
+  if (l.includes("offer")) return "var(--pf-accent-primary-border)";
+  if (l.includes("created") || l.includes("open")) return "var(--pf-border-strong)";
+  return "var(--pf-border-subtle)";
 }
 
 type Props = {
@@ -42,7 +44,7 @@ export function OverviewMetricCard({ label, value, isCurrency = false }: Props) 
   const borderColor = accentForKey(label);
 
   const shell: CSSProperties = {
-    borderRadius: 20,
+    borderRadius: "var(--pf-radius-xl)",
     border: `1px solid ${borderColor}`,
     background: flash ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
     padding: "18px 20px",

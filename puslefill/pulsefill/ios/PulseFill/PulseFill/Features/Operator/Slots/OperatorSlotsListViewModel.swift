@@ -20,7 +20,10 @@ final class OperatorSlotsListViewModel: ObservableObject {
     @Published var slots: [StaffOpenSlotListRow] = []
     @Published var selectedFilter: OperatorSlotsFilter = .all
     @Published var flashMessage: String?
+    @Published var errorMessage: String?
     @Published var performingSlotId: String?
+    @Published var successPulseItemId: String?
+    @Published var successPulseTick = 0
 
     @Published var filterProviderId: String?
     @Published var filterLocationId: String?
@@ -138,15 +141,21 @@ final class OperatorSlotsListViewModel: ObservableObject {
 
     func performPrimaryAction(for slot: StaffOpenSlotListRow) async {
         guard let action = primaryAction(for: slot) else { return }
+        guard performingSlotId == nil else { return }
 
         performingSlotId = slot.id
+        errorMessage = nil
         defer { performingSlotId = nil }
 
         do {
             let msg = try await OperatorInlineActionRunner(api: api).run(action, openSlotId: slot.id)
             flashMessage = msg
+            successPulseItemId = slot.id
+            successPulseTick += 1
         } catch {
-            flashMessage = APIErrorCopy.message(for: error)
+            let message = APIErrorCopy.message(for: error)
+            errorMessage = message
+            flashMessage = message
         }
     }
 }

@@ -247,8 +247,8 @@ export function OperatorSlotActionBar({
         gap: 12,
       }}
     >
-      <p style={{ margin: 0, fontSize: 11, fontWeight: 650, letterSpacing: "0.06em", color: "var(--muted)" }}>
-        ACTIONS
+      <p style={{ margin: 0, fontSize: 11, fontWeight: 650, letterSpacing: "0.14em", color: "rgba(245,247,250,0.42)", textTransform: "uppercase" }}>
+        Operator controls
       </p>
       {primary.length > 0 ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-start" }}>

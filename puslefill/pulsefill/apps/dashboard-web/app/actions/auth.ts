@@ -45,8 +45,9 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
 export async function signInAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const nextRaw = String(formData.get("next") ?? "/overview");
-  const next = nextRaw.startsWith("/") ? nextRaw : "/overview";
+  const nextRaw = String(formData.get("next") ?? "/overview").trim();
+  const next =
+    nextRaw.startsWith("/") && !nextRaw.startsWith("//") && !nextRaw.includes("://") ? nextRaw : "/overview";
 
   if (!email || !password) {
     return { error: "Enter your email and password." };

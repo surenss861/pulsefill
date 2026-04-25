@@ -3,66 +3,112 @@ import SwiftUI
 struct OperatorActionQueueRow: View {
     let item: OperatorActionQueueItem
     let isBusy: Bool
+    let successPulseTrigger: String
     let onPrimaryAction: (OperatorActionQueueItem) -> Void
     let onOpen: (OperatorActionQueueItem) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 10) {
-                Circle()
-                    .fill(OperatorQueuePresenters.severityColor(item.severity))
-                    .frame(width: 10, height: 10)
-                    .padding(.top, 5)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(OperatorQueuePresenters.kindTitle(item.kind).uppercased())
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(PFColor.textSecondary)
-
-                    Text(item.headline)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(PFColor.textPrimary)
-
-                    if let detail = item.detail, !detail.isEmpty {
-                        Text(detail)
-                            .font(.system(size: 13))
+        PFSectionCard(borderColor: OperatorQueuePresenters.severityColor(item.severity).opacity(0.22)) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .center, spacing: 8) {
+                    PFStatusPill(
+                        text: OperatorQueuePresenters.kindTitle(item.kind),
+                        variant: OperatorQueuePresenters.severityPillVariant(item.severity),
+                        uppercase: false
+                    )
+                    Spacer()
+                    let freshness = DateFormatterPF.relative(item.createdAt)
+                    if !freshness.isEmpty {
+                        Text(freshness)
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(PFColor.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
                     }
-
-                    metadata
                 }
 
-                Spacer(minLength: 0)
+                Text(titleText)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(PFColor.textPrimary)
+                    .lineLimit(2)
+
+                Text(contextLine)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineLimit(2)
+
+                Text(guidanceLine)
+                    .font(.system(size: 13))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 10) {
+                    if let primary = item.actions.first {
+                        Button(isBusy ? "Working…" : primaryButtonTitle(primary: primary)) {
+                            onPrimaryAction(item)
+                        }
+                        .buttonStyle(PFPrimaryButtonStyle())
+                        .disabled(isBusy)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Button("Open detail") {
+                        onOpen(item)
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(PFColor.textSecondary)
+                }
             }
             .contentShape(Rectangle())
             .onTapGesture {
                 onOpen(item)
             }
-
-            HStack(spacing: 10) {
-                if let primary = item.actions.first {
-                    Button(isBusy ? "Working…" : primaryButtonTitle(primary: primary)) {
-                        onPrimaryAction(item)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(PFColor.primaryDark)
-                    .disabled(isBusy)
-                }
-
-                Button("Open") {
-                    onOpen(item)
-                }
-                .buttonStyle(.bordered)
-            }
         }
-        .padding(16)
-        .background(PFSurface.card)
-        .overlay(
-            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .stroke(OperatorQueuePresenters.severityColor(item.severity).opacity(0.2), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+        .pfPressableCard()
+        .pfSuccessPulse(trigger: successPulseTrigger)
+    }
+
+    private var titleText: String {
+        let service = item.serviceName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let service, !service.isEmpty {
+            return service
+        }
+        return item.headline
+    }
+
+    private var contextLine: String {
+        var parts: [String] = []
+        if let provider = item.providerName?.trimmingCharacters(in: .whitespacesAndNewlines), !provider.isEmpty {
+            parts.append(provider)
+        }
+        if let location = item.locationName?.trimmingCharacters(in: .whitespacesAndNewlines), !location.isEmpty {
+            parts.append(location)
+        }
+        parts.append(DateFormatterPF.dateTimeRange(start: item.startsAt, end: item.endsAt))
+        return parts.joined(separator: " · ")
+    }
+
+    private var guidanceLine: String {
+        if let detail = item.detail?.trimmingCharacters(in: .whitespacesAndNewlines), !detail.isEmpty {
+            return detail
+        }
+        switch item.kind {
+        case .awaitingConfirmation:
+            return "Confirm the claim to close the recovery loop."
+        case .deliveryFailed:
+            return "Outreach failed. Review and retry when appropriate."
+        case .retryRecommended:
+            return "Previous outreach did not convert. Retry now."
+        case .noMatches:
+            return "No matching standby demand found for this opening."
+        case .offeredActive:
+            return "Offers are active. Monitor for claim progression."
+        case .expiredUnfilled:
+            return "This opening expired without a confirmed recovery."
+        case .confirmedBooking:
+            return "Recovered and confirmed. Open detail for full record."
+        }
     }
 
     private func primaryButtonTitle(primary: OperatorQueueAction) -> String {
@@ -70,30 +116,5 @@ struct OperatorActionQueueRow: View {
             return inline.label
         }
         return OperatorQueuePresenters.primaryActionTitle(primary)
-    }
-
-    @ViewBuilder
-    private var metadata: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            let line = [item.serviceName, item.providerName].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
-            if !line.isEmpty {
-                Text(line)
-                    .font(.system(size: 13))
-                    .foregroundStyle(PFColor.textSecondary)
-            }
-            if let loc = item.locationName, !loc.isEmpty {
-                Text(loc)
-                    .font(.system(size: 13))
-                    .foregroundStyle(PFColor.textSecondary)
-            }
-            Text(DateFormatterPF.dateTimeRange(start: item.startsAt, end: item.endsAt))
-                .font(.system(size: 13))
-                .foregroundStyle(PFColor.textSecondary)
-            if let customerLabel = item.customerLabel, !customerLabel.isEmpty {
-                Text("Customer: \(customerLabel)")
-                    .font(.system(size: 13))
-                    .foregroundStyle(PFColor.textPrimary)
-            }
-        }
     }
 }

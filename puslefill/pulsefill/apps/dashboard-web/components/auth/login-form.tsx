@@ -16,6 +16,7 @@ export function LoginForm() {
   const [legacyMode, setLegacyMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tokenSaved, setTokenSaved] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -45,6 +46,7 @@ export function LoginForm() {
           onClick={() => {
             setLegacyMode(!legacyMode);
             setError(null);
+            setTokenSaved(false);
           }}
           style={{
             background: "none",
@@ -62,6 +64,11 @@ export function LoginForm() {
 
       {legacyMode ? (
         <div style={{ display: "grid", gap: 12, marginBottom: 24 }}>
+          {tokenSaved ? (
+            <p style={{ margin: 0, fontSize: 13, color: "rgba(167, 243, 208, 0.95)" }}>
+              Token saved for this browser. Use email and password to open the dashboard.
+            </p>
+          ) : null}
           <textarea
             value={legacyToken}
             onChange={(e) => setLegacyToken(e.target.value)}
@@ -81,7 +88,8 @@ export function LoginForm() {
             type="button"
             onClick={() => {
               setStaffAccessToken(legacyToken.trim() || null);
-              router.push(next);
+              setError(null);
+              setTokenSaved(true);
             }}
             style={{
               padding: "12px 16px",
@@ -92,7 +100,7 @@ export function LoginForm() {
               cursor: "pointer",
             }}
           >
-            Continue with pasted token
+            Save token for API requests
           </button>
         </div>
       ) : null}
@@ -158,10 +166,15 @@ export function LoginForm() {
       {!legacyMode ? (
         <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>
           Prefer the operator sign-in experience? <a href="/sign-in">Open /sign-in</a>. Configure{" "}
-          <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in <code>.env.local</code>, or
-          use the legacy JWT option above.
+          <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in <code>.env.local</code>. Pasted
+          JWTs are for local API tooling only; the dashboard requires a Supabase session.
         </p>
-      ) : null}
+      ) : (
+        <p style={{ marginTop: 16, fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>
+          Token is stored in this browser for client-side API calls. To open the app shell, use email and password above (same
+          Supabase account), then go to <a href="/overview">/overview</a>.
+        </p>
+      )}
     </main>
   );
 }

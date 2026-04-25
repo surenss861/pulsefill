@@ -5,6 +5,16 @@ struct ProfileView: View {
     @AppStorage("pf.preferCustomerTabs") private var preferCustomerTabs = false
     @AppStorage("pf.onboarding.standby.justCompleted") private var standbyJustCompleted = false
     @State private var path = NavigationPath()
+    @State private var pushDebug = PushDebugSnapshot(
+        permission: "Unknown",
+        registrationState: .never,
+        registrationAt: nil,
+        deactivationState: .never,
+        deactivationAt: nil,
+        environment: "Unknown",
+        appBuild: "Unknown",
+        maskedToken: nil
+    )
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -15,6 +25,7 @@ struct ProfileView: View {
 
                 standbySection
                 preferencesSection
+                pushDebugSection
 
                 Section {
                     if let uid = env.sessionStore.userId {
@@ -42,12 +53,13 @@ struct ProfileView: View {
             }
             .scrollContentBackground(.hidden)
             .background(PFColor.background)
-            .navigationTitle("Profile")
+            .navigationTitle("Account & settings")
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .onAppear {
                 clearCompletionBannerLaterIfNeeded()
                 consumePendingRouteIfNeeded()
+                Task { await refreshPushDebug() }
             }
             .onChange(of: env.customerNavigation.pendingCustomerDestination) { _, _ in
                 consumePendingRouteIfNeeded()
@@ -55,6 +67,7 @@ struct ProfileView: View {
             .onChange(of: env.customerNavigation.selectedTab) { _, tab in
                 if tab == .profile {
                     consumePendingRouteIfNeeded()
+                    Task { await refreshPushDebug() }
                 }
             }
             .navigationDestination(for: CustomerDestination.self) { destination in
@@ -141,6 +154,21 @@ struct ProfileView: View {
         }
     }
 
+    private var pushDebugSection: some View {
+        Section("Push notifications") {
+            LabeledContent("Permission", value: pushDebug.permission)
+            LabeledContent("Registration", value: attemptLabel(state: pushDebug.registrationState, at: pushDebug.registrationAt))
+            LabeledContent("Deactivation", value: attemptLabel(state: pushDebug.deactivationState, at: pushDebug.deactivationAt))
+            LabeledContent("Environment", value: pushDebug.environment)
+            LabeledContent("App build", value: pushDebug.appBuild)
+            if let token = pushDebug.maskedToken {
+                LabeledContent("Token", value: token)
+            } else {
+                LabeledContent("Token", value: "—")
+            }
+        }
+    }
+
     private func consumePendingRouteIfNeeded() {
         guard env.customerNavigation.selectedTab == .profile else { return }
         if let destination = env.customerNavigation.takePendingDestination(matching: {
@@ -160,5 +188,15 @@ struct ProfileView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             standbyJustCompleted = false
         }
+    }
+
+    private func refreshPushDebug() async {
+        await env.pushRegistrationManager.refreshAuthorizationStatus()
+        pushDebug = env.pushRegistrationManager.debugSnapshot()
+    }
+
+    private func attemptLabel(state: PushDebugSnapshot.AttemptState, at: Date?) -> String {
+        guard let at else { return state.rawValue }
+        return "\(state.rawValue) · \(at.formatted(date: .abbreviated, time: .shortened))"
     }
 }

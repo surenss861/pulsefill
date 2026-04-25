@@ -16,8 +16,18 @@ struct CustomerActivityFeedView: View {
                 Group {
                     switch viewModel.loadState {
                     case .idle, .loading:
-                        ProgressView("Loading activity…")
-                            .tint(PFColor.primary)
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 14) {
+                                PFPageHeader(
+                                    overline: "Activity",
+                                    title: "Operational record",
+                                    subtitle: "Live timeline of operator and system events."
+                                )
+                                PFLoadingSkeleton(count: 4)
+                            }
+                            .padding(.top, 16)
+                            .padding(.horizontal, 20)
+                        }
 
                     case let .failed(message):
                         EmptyStateView(
@@ -43,7 +53,9 @@ struct CustomerActivityFeedView: View {
                                     LazyVStack(spacing: 12) {
                                         ForEach(viewModel.filteredItems) { item in
                                             Button {
-                                                if let dest = CustomerRouteMapper.destinationForActivityItem(item) {
+                                                if env.sessionStore.isStaffUser, let slotId = item.openSlotId, !slotId.isEmpty {
+                                                    path.append(slotId)
+                                                } else if let dest = CustomerRouteMapper.destinationForActivityItem(item) {
                                                     env.customerNavigation.open(dest)
                                                 }
                                             } label: {
@@ -62,7 +74,7 @@ struct CustomerActivityFeedView: View {
                     }
                 }
             }
-            .navigationTitle("Activity")
+            .navigationTitle("Operational record")
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .task {
@@ -79,6 +91,9 @@ struct CustomerActivityFeedView: View {
             }
             .navigationDestination(for: CustomerDestination.self) { destination in
                 destinationView(for: destination)
+            }
+            .navigationDestination(for: String.self) { slotId in
+                OperatorSlotDetailView(api: env.apiClient, slotId: slotId)
             }
         }
     }

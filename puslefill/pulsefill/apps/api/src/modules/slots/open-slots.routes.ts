@@ -4,6 +4,11 @@ import { createServiceSupabase } from "../../config/supabase.js";
 import { sendActionError, sendConfirmSuccess, sendSendOffersSuccess } from "../../lib/action-replies.js";
 import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
 import { filterMatchingPreferences, type OpenSlotRow, type StandbyPreferenceRow } from "../../lib/standby-matcher.js";
+import {
+  handleCustomerBookingConfirmedNotificationEvent,
+  handleCustomerOfferSentNotificationEvent,
+} from "../notifications/notification-events.js";
+import { createPushProviderFromEnv } from "../notifications/provider-factory.js";
 import { requireCustomer, requireStaff } from "../../plugins/guards.js";
 import { executeBulkOpenSlotAction } from "./bulk-actions.js";
 import {
@@ -17,10 +22,14 @@ import {
   buildOperatorAvailableActions,
   buildOperatorSlotQueueContext,
   enrichOperatorSlotDetailSignals,
+  type OperatorSlotAvailableAction,
+  type OperatorSlotQueueContext,
 } from "./operator-slot-detail-context.js";
 import { loadSlotRuleContext } from "./load-slot-rule-context.js";
 import {
+  getCancelOpenSlotMutationTestDelegate,
   getConfirmOpenSlotMutationTestDelegate,
+  getExpireOpenSlotMutationTestDelegate,
   getSendOffersMutationTestDelegate,
 } from "./open-slots-route-test-seams.js";
 import {
@@ -96,6 +105,139 @@ async function assertSlotInBusiness(
     .eq("business_id", businessId)
     .maybeSingle();
   return Boolean(data);
+}
+
+type OpenSlotDetailResponse = {
+  slot: Record<string, unknown>;
+  queue_context: OperatorSlotQueueContext;
+  available_actions: OperatorSlotAvailableAction[];
+};
+
+type OpenSlotDetailRouteLoadResult =
+  | { kind: "ok"; payload: OpenSlotDetailResponse }
+  | { kind: "not_found" };
+
+let openSlotDetailTestDelegate:
+  | null
+  | ((
+      admin: ReturnType<typeof createServiceSupabase>,
+      input: { slotId: string; businessId: string },
+    ) => Promise<OpenSlotDetailRouteLoadResult>) = null;
+
+export function setOpenSlotDetailTestDelegate(
+  delegate:
+    | ((
+        admin: ReturnType<typeof createServiceSupabase>,
+        input: { slotId: string; businessId: string },
+      ) => Promise<OpenSlotDetailRouteLoadResult>)
+    | null,
+) {
+  openSlotDetailTestDelegate = delegate;
+}
+
+type NotificationEventHookDelegate = {
+  onCustomerOfferSent?: (input: {
+    businessId: string;
+    offerId: string;
+    customerId: string;
+  }) => Promise<void>;
+  onCustomerBookingConfirmed?: (input: {
+    businessId: string;
+    claimId: string;
+  }) => Promise<void>;
+};
+
+let notificationEventHookDelegate: NotificationEventHookDelegate | null = null;
+
+export function setNotificationEventHookTestDelegate(delegate: NotificationEventHookDelegate | null) {
+  notificationEventHookDelegate = delegate;
+}
+
+async function notifyCustomerOfferSent(params: {
+  env: FastifyInstance["env"];
+  supabase: ReturnType<typeof createServiceSupabase>;
+  businessId: string;
+  offerId: string;
+  customerId: string;
+}) {
+  if (notificationEventHookDelegate?.onCustomerOfferSent) {
+    await notificationEventHookDelegate.onCustomerOfferSent({
+      businessId: params.businessId,
+      offerId: params.offerId,
+      customerId: params.customerId,
+    });
+    return;
+  }
+  await handleCustomerOfferSentNotificationEvent({
+    supabase: params.supabase as any,
+    provider: createPushProviderFromEnv(params.env),
+    nowIso: new Date().toISOString(),
+    businessId: params.businessId,
+    offerId: params.offerId,
+    customerId: params.customerId,
+  });
+}
+
+async function notifyCustomerBookingConfirmed(params: {
+  env: FastifyInstance["env"];
+  supabase: ReturnType<typeof createServiceSupabase>;
+  businessId: string;
+  claimId: string;
+}) {
+  if (notificationEventHookDelegate?.onCustomerBookingConfirmed) {
+    await notificationEventHookDelegate.onCustomerBookingConfirmed({
+      businessId: params.businessId,
+      claimId: params.claimId,
+    });
+    return;
+  }
+  await handleCustomerBookingConfirmedNotificationEvent({
+    supabase: params.supabase as any,
+    provider: createPushProviderFromEnv(params.env),
+    nowIso: new Date().toISOString(),
+    businessId: params.businessId,
+    claimId: params.claimId,
+  });
+}
+
+async function loadOpenSlotDetailRoutePayload(
+  admin: ReturnType<typeof createServiceSupabase>,
+  input: { slotId: string; businessId: string },
+): Promise<OpenSlotDetailRouteLoadResult> {
+  const { slotId, businessId } = input;
+  const ok = await assertSlotInBusiness(admin, slotId, businessId);
+  if (!ok) return { kind: "not_found" };
+
+  const { data, error } = await admin
+    .from("open_slots")
+    .select(
+      "*, slot_offers(id, customer_id, channel, status, sent_at, expires_at), slot_claims(id, customer_id, claimed_at, status), last_touched_staff:staff_users!last_touched_by_staff_id(id, full_name, email)",
+    )
+    .eq("id", slotId)
+    .single();
+  if (error) {
+    throw new Error("load_failed");
+  }
+
+  const row = data as Record<string, unknown>;
+  const signalsBase = baseSignalsFromOpenSlotRow(row);
+  const signals = await enrichOperatorSlotDetailSignals(admin, businessId, slotId, signalsBase);
+  const queue_context = buildOperatorSlotQueueContext(signals);
+  const available_actions = buildOperatorAvailableActions(signals, queue_context);
+  const { slot_claims: claims, last_touched_staff: lastTouchedStaff, ...slotRest } = row;
+
+  return {
+    kind: "ok",
+    payload: {
+      slot: {
+        ...slotRest,
+        winning_claim: pickWinningClaim(claims),
+        last_touched_by: lastTouchedStaff ?? null,
+      },
+      queue_context,
+      available_actions,
+    },
+  };
 }
 
 function pickWinningClaim(claims: unknown): Record<string, unknown> | null {
@@ -301,33 +443,16 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const admin = createServiceSupabase(req.server.env);
       const id = z.string().uuid().parse((req.params as { id?: string }).id);
 
-      const ok = await assertSlotInBusiness(admin, id, req.staff!.business_id);
-      if (!ok) return reply.status(404).send({ error: "not_found" });
+      try {
+        const result = openSlotDetailTestDelegate
+          ? await openSlotDetailTestDelegate(admin, { slotId: id, businessId: req.staff!.business_id })
+          : await loadOpenSlotDetailRoutePayload(admin, { slotId: id, businessId: req.staff!.business_id });
 
-      const { data, error } = await admin
-        .from("open_slots")
-        .select(
-          "*, slot_offers(id, customer_id, channel, status, sent_at, expires_at), slot_claims(id, customer_id, claimed_at, status), last_touched_staff:staff_users!last_touched_by_staff_id(id, full_name, email)",
-        )
-        .eq("id", id)
-        .single();
-      if (error) return reply.status(500).send({ error: "load_failed" });
-      const row = data as Record<string, unknown>;
-      const signalsBase = baseSignalsFromOpenSlotRow(row);
-      const signals = await enrichOperatorSlotDetailSignals(admin, req.staff!.business_id, id, signalsBase);
-      const queue_context = buildOperatorSlotQueueContext(signals);
-      const available_actions = buildOperatorAvailableActions(signals, queue_context);
-
-      const { slot_claims: claims, last_touched_staff: lastTouchedStaff, ...slotRest } = row;
-      return reply.send({
-        slot: {
-          ...slotRest,
-          winning_claim: pickWinningClaim(claims),
-          last_touched_by: lastTouchedStaff ?? null,
-        },
-        queue_context,
-        available_actions,
-      });
+        if (result.kind === "not_found") return reply.status(404).send({ error: "not_found" });
+        return reply.send(result.payload);
+      } catch {
+        return reply.status(500).send({ error: "load_failed" });
+      }
     },
   );
 
@@ -388,6 +513,21 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           authUserId: req.authUser!.id,
           previousStatus,
         });
+        if (out.offer_customer_ids?.length) {
+          for (const pair of out.offer_customer_ids) {
+            try {
+              await notifyCustomerOfferSent({
+                env: req.server.env,
+                supabase: admin,
+                businessId: req.staff!.business_id,
+                offerId: pair.offer_id,
+                customerId: pair.customer_id,
+              });
+            } catch (e) {
+              req.log.warn({ e, pair }, "customer_offer_sent_notification_failed");
+            }
+          }
+        }
         return sendSendOffersSuccess(reply, {
           ok: true,
           open_slot_id: id,
@@ -500,6 +640,20 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       });
 
       await touchOpenSlotByStaff(admin, id, req.staff!.id);
+
+      for (const row of offerRowsForQueue) {
+        try {
+          await notifyCustomerOfferSent({
+            env: req.server.env,
+            supabase: admin,
+            businessId: req.staff!.business_id,
+            offerId: row.id,
+            customerId: row.customer_id,
+          });
+        } catch (e) {
+          req.log.warn({ e, offerId: row.id, customerId: row.customer_id }, "customer_offer_sent_notification_failed");
+        }
+      }
 
       const count = offerIds.length;
       const resultKind = previousStatus === "open" ? "offers_sent" : "offers_retried";
@@ -669,6 +823,16 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           staffId: req.staff!.id,
           authUserId: req.authUser!.id,
         });
+        try {
+          await notifyCustomerBookingConfirmed({
+            env: req.server.env,
+            supabase: admin,
+            businessId: req.staff!.business_id,
+            claimId: body.claim_id,
+          });
+        } catch (e) {
+          req.log.warn({ e, claimId: body.claim_id }, "customer_booking_confirmed_notification_failed");
+        }
         return sendConfirmSuccess(reply, {
           ok: true,
           result: "confirmed",
@@ -762,6 +926,17 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       await touchOpenSlotByStaff(admin, slotId, req.staff!.id);
 
+      try {
+        await notifyCustomerBookingConfirmed({
+          env: req.server.env,
+          supabase: admin,
+          businessId: req.staff!.business_id,
+          claimId: body.claim_id,
+        });
+      } catch (e) {
+        req.log.warn({ e, claimId: body.claim_id }, "customer_booking_confirmed_notification_failed");
+      }
+
       return sendConfirmSuccess(reply, {
         ok: true,
         result: "confirmed",
@@ -799,13 +974,34 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         );
       }
 
-      const { data, error } = await admin.rpc("staff_cancel_open_slot", {
-        p_open_slot_id: id,
-        p_staff_auth_user_id: req.authUser!.id,
-      });
+      const cancelTestMutation = getCancelOpenSlotMutationTestDelegate();
+      let result: { ok?: boolean; error?: string } | null = null;
+      try {
+        const { data, error } = cancelTestMutation
+          ? ({ data: null, error: null } as const)
+          : await admin.rpc("staff_cancel_open_slot", {
+              p_open_slot_id: id,
+              p_staff_auth_user_id: req.authUser!.id,
+            });
 
-      if (error) return reply.status(500).send({ error: "cancel_failed" });
-      const result = data as { ok?: boolean; error?: string };
+        const mutationOut = cancelTestMutation
+          ? await cancelTestMutation({
+              openSlotId: id,
+              businessId: req.staff!.business_id,
+              staffId: req.staff!.id,
+              authUserId: req.authUser!.id,
+            })
+          : null;
+
+        if (!cancelTestMutation && error) {
+          throw new Error("cancel_rpc_failed");
+        }
+        result = (mutationOut ?? (data as { ok?: boolean; error?: string })) as { ok?: boolean; error?: string };
+      } catch (error) {
+        req.log.error({ error }, "cancel slot mutation failed");
+        return sendActionError(reply, 500, "cancel_slot_failed", "Could not cancel slot.", true);
+      }
+
       if (!result?.ok) return reply.status(409).send({ error: result?.error ?? "cancel_rejected" });
 
       await admin.from("audit_events").insert({
@@ -819,7 +1015,12 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       });
       await touchOpenSlotByStaff(admin, id, req.staff!.id);
 
-      return reply.send({ ok: true });
+      return reply.send({
+        ok: true,
+        result: "cancelled",
+        status: "cancelled",
+        message: "Slot cancelled.",
+      });
     },
   );
 
@@ -921,13 +1122,34 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         );
       }
 
-      const { data, error } = await admin.rpc("staff_expire_open_slot", {
-        p_open_slot_id: id,
-        p_staff_auth_user_id: req.authUser!.id,
-      });
+      const expireTestMutation = getExpireOpenSlotMutationTestDelegate();
+      let result: { ok?: boolean; error?: string } | null = null;
+      try {
+        const { data, error } = expireTestMutation
+          ? ({ data: null, error: null } as const)
+          : await admin.rpc("staff_expire_open_slot", {
+              p_open_slot_id: id,
+              p_staff_auth_user_id: req.authUser!.id,
+            });
 
-      if (error) return reply.status(500).send({ error: "expire_failed" });
-      const result = data as { ok?: boolean; error?: string };
+        const mutationOut = expireTestMutation
+          ? await expireTestMutation({
+              openSlotId: id,
+              businessId: req.staff!.business_id,
+              staffId: req.staff!.id,
+              authUserId: req.authUser!.id,
+            })
+          : null;
+
+        if (!expireTestMutation && error) {
+          throw new Error("expire_rpc_failed");
+        }
+        result = (mutationOut ?? (data as { ok?: boolean; error?: string })) as { ok?: boolean; error?: string };
+      } catch (error) {
+        req.log.error({ error }, "expire slot mutation failed");
+        return sendActionError(reply, 500, "expire_slot_failed", "Could not expire slot.", true);
+      }
+
       if (!result?.ok) return reply.status(409).send({ error: result?.error ?? "expire_rejected" });
 
       await admin.from("audit_events").insert({
@@ -941,7 +1163,12 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       });
       await touchOpenSlotByStaff(admin, id, req.staff!.id);
 
-      return reply.send({ ok: true });
+      return reply.send({
+        ok: true,
+        result: "expired",
+        status: "expired",
+        message: "Slot expired.",
+      });
     },
   );
 }

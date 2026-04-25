@@ -4,9 +4,9 @@ import { DailyOpsSummaryCard } from "@/components/overview/daily-ops-summary-car
 import type { DailyOpsSummaryResponse } from "@/types/daily-ops-summary";
 
 function formatCurrency(cents: number) {
-  return new Intl.NumberFormat("en-CA", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "CAD",
+    currency: "USD",
     maximumFractionDigits: 0,
   }).format((cents || 0) / 100);
 }

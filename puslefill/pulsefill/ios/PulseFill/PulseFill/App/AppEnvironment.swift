@@ -24,13 +24,18 @@ final class AppEnvironment: ObservableObject {
         self.sessionStore = sessionStore
         let api = APIClient(baseURL: apiBaseURL, sessionStore: sessionStore)
         self.apiClient = api
+        let pushRegistrationManager = PushRegistrationManager(apiClient: api)
+        self.pushRegistrationManager = pushRegistrationManager
         let authClient = SupabaseAuthClient(supabaseURL: supabaseURL, anonKey: supabaseAnonKey)
-        self.authManager = AuthManager(authClient: authClient, sessionStore: sessionStore, apiClient: api)
+        self.authManager = AuthManager(
+            authClient: authClient,
+            sessionStore: sessionStore,
+            apiClient: api,
+            pushRegistrationManager: pushRegistrationManager
+        )
 
         let customerNavigation = CustomerNavigationCoordinator()
         self.customerNavigation = customerNavigation
-        let pushRegistrationManager = PushRegistrationManager(apiClient: api)
-        self.pushRegistrationManager = pushRegistrationManager
         self.pushCoordinator = PushNotificationCoordinator(
             customerNavigation: customerNavigation,
             pushRegistration: pushRegistrationManager

@@ -5,6 +5,8 @@ import {
   baseSignalsFromOpenSlotRow,
   buildOperatorAvailableActions,
   buildOperatorSlotQueueContext,
+  type OperatorSlotAvailableAction,
+  type OperatorSlotDetailSignals,
 } from "./operator-slot-detail-context.js";
 
 const nowMs = Date.parse("2026-04-16T12:00:00.000Z");
@@ -85,4 +87,100 @@ test("buildOperatorSlotQueueContext null category for old booked slot", () => {
   assert.equal(q.current_category, null);
   const actions = buildOperatorAvailableActions(detail, q, nowMs);
   assert.ok(actions.includes("add_note"));
+});
+
+test("state matrix keeps detail action exposure aligned with rules", () => {
+  const scenarios: Array<{
+    label: string;
+    detail: OperatorSlotDetailSignals;
+    shouldInclude: OperatorSlotAvailableAction[];
+    shouldExclude: OperatorSlotAvailableAction[];
+  }> = [
+    {
+      label: "claimed pending confirmation",
+      detail: {
+        slotStatus: "claimed",
+        slotCreatedAt: "2026-04-15T10:00:00.000Z",
+        lastOfferBatchAt: "2026-04-16T09:00:00.000Z",
+        resolutionStatus: "none",
+        offers: [],
+        claims: [{ id: "c1", status: "won", customer_id: "x", claimed_at: "2026-04-16T10:00:00.000Z" }],
+        latestFailedNotification: null,
+        hasRecentNoMatchAudit: false,
+      },
+      shouldInclude: ["confirm_booking"],
+      shouldExclude: ["send_offers", "retry_offers"],
+    },
+    {
+      label: "offered with live offers",
+      detail: {
+        slotStatus: "offered",
+        slotCreatedAt: "2026-04-15T10:00:00.000Z",
+        lastOfferBatchAt: "2026-04-16T09:00:00.000Z",
+        resolutionStatus: "none",
+        offers: [{ status: "sent", expires_at: "2026-04-16T14:00:00.000Z" }],
+        claims: [],
+        latestFailedNotification: null,
+        hasRecentNoMatchAudit: false,
+      },
+      shouldInclude: [],
+      shouldExclude: ["send_offers", "retry_offers", "confirm_booking"],
+    },
+    {
+      label: "open clean slot",
+      detail: {
+        slotStatus: "open",
+        slotCreatedAt: "2026-04-15T10:00:00.000Z",
+        lastOfferBatchAt: null,
+        resolutionStatus: "none",
+        offers: [],
+        claims: [],
+        latestFailedNotification: null,
+        hasRecentNoMatchAudit: false,
+      },
+      shouldInclude: ["send_offers"],
+      shouldExclude: ["confirm_booking"],
+    },
+    {
+      label: "booked slot",
+      detail: {
+        slotStatus: "booked",
+        slotCreatedAt: "2026-04-15T10:00:00.000Z",
+        lastOfferBatchAt: null,
+        resolutionStatus: "none",
+        offers: [],
+        claims: [],
+        latestFailedNotification: null,
+        hasRecentNoMatchAudit: false,
+      },
+      shouldInclude: [],
+      shouldExclude: ["confirm_booking", "send_offers", "retry_offers"],
+    },
+    {
+      label: "expired slot",
+      detail: {
+        slotStatus: "expired",
+        slotCreatedAt: "2026-04-15T10:00:00.000Z",
+        lastOfferBatchAt: "2026-04-15T09:00:00.000Z",
+        resolutionStatus: "none",
+        offers: [],
+        claims: [],
+        latestFailedNotification: null,
+        hasRecentNoMatchAudit: false,
+      },
+      shouldInclude: [],
+      shouldExclude: ["confirm_booking", "send_offers", "retry_offers", "expire_slot", "cancel_slot"],
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    const queue = buildOperatorSlotQueueContext(scenario.detail, nowMs);
+    const actions = buildOperatorAvailableActions(scenario.detail, queue, nowMs);
+    for (const action of scenario.shouldInclude) {
+      assert.ok(actions.includes(action), `${scenario.label} should include ${action}`);
+    }
+    for (const action of scenario.shouldExclude) {
+      assert.ok(!actions.includes(action), `${scenario.label} should exclude ${action}`);
+    }
+  }
 });

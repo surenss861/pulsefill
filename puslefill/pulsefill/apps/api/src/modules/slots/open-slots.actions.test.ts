@@ -9,9 +9,12 @@ import { routeTestHeaders } from "../../test/helpers/app.js";
 import { setLoadSlotRuleContextTestDelegate } from "./load-slot-rule-context.js";
 import {
   resetOpenSlotsRouteMutationTestDelegates,
+  setCancelOpenSlotMutationTestDelegate,
   setConfirmOpenSlotMutationTestDelegate,
+  setExpireOpenSlotMutationTestDelegate,
   setSendOffersMutationTestDelegate,
 } from "./open-slots-route-test-seams.js";
+import { setNotificationEventHookTestDelegate } from "./open-slots.routes.js";
 import { toSlotRuleSignals } from "./operator-slot-rules.js";
 
 const SLOT_ID = "11111111-1111-4111-8111-111111111111";
@@ -96,6 +99,20 @@ function offeredActiveSignals() {
   });
 }
 
+function bookedSignals() {
+  return toSlotRuleSignals({
+    slotStatus: "booked",
+    createdAt: "2026-04-10T10:00:00.000Z",
+    nowMs: FIXED_NOW_MS,
+    offers: [],
+    claims: [{ status: "confirmed" }],
+    lastOfferBatchAt: "2026-04-16T11:00:00.000Z",
+    latestFailedNotification: null,
+    hasRecentNoMatchAudit: false,
+    resolutionStatus: "none",
+  });
+}
+
 let app: FastifyInstance;
 
 before(async () => {
@@ -112,6 +129,7 @@ after(async () => {
 afterEach(() => {
   setLoadSlotRuleContextTestDelegate(null);
   resetOpenSlotsRouteMutationTestDelegates();
+  setNotificationEventHookTestDelegate(null);
 });
 
 test("POST /v1/open-slots/:id/confirm returns 409 operator_action_not_allowed when rules reject confirm", async () => {
@@ -240,6 +258,14 @@ test("POST /v1/open-slots/:id/confirm returns 200 when guards pass and confirm m
   if (process.env.PULSEFILL_API_TEST !== "1") return;
 
   let calls = 0;
+  let notificationCalls = 0;
+  setNotificationEventHookTestDelegate({
+    onCustomerBookingConfirmed: async ({ claimId, businessId: bid }) => {
+      notificationCalls += 1;
+      assert.equal(claimId, CLAIM_ID);
+      assert.equal(bid, businessId());
+    },
+  });
   setConfirmOpenSlotMutationTestDelegate(async (args) => {
     calls += 1;
     assert.equal(args.openSlotId, SLOT_ID);
@@ -274,12 +300,22 @@ test("POST /v1/open-slots/:id/confirm returns 200 when guards pass and confirm m
   assert.equal(body.status, "booked");
   assert.equal(body.claim_id, CLAIM_ID);
   assert.match(body.message, /confirmed/i);
+  assert.equal(notificationCalls, 1);
 });
 
 test("POST /v1/open-slots/:id/send-offers returns 200 for first send when mutation test delegate runs", async () => {
   if (process.env.PULSEFILL_API_TEST !== "1") return;
 
   let calls = 0;
+  let notificationCalls = 0;
+  setNotificationEventHookTestDelegate({
+    onCustomerOfferSent: async ({ businessId: bid, offerId, customerId }) => {
+      notificationCalls += 1;
+      assert.equal(bid, businessId());
+      assert.equal(offerId, OFFER_ID_A);
+      assert.equal(customerId, "dddddddd-dddd-4ddd-8ddd-dddddddddddd");
+    },
+  });
   setSendOffersMutationTestDelegate(async (args) => {
     calls += 1;
     assert.equal(args.openSlotId, SLOT_ID);
@@ -288,6 +324,7 @@ test("POST /v1/open-slots/:id/send-offers returns 200 for first send when mutati
       result: "offers_sent",
       matched: 2,
       offer_ids: [OFFER_ID_A, OFFER_ID_B],
+      offer_customer_ids: [{ offer_id: OFFER_ID_A, customer_id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd" }],
       message: "Sent 2 offers.",
       notification_queue: { queued: false, count: 0 },
     };
@@ -326,6 +363,39 @@ test("POST /v1/open-slots/:id/send-offers returns 200 for first send when mutati
   assert.equal(body.matched, 2);
   assert.deepEqual(body.offer_ids, [OFFER_ID_A, OFFER_ID_B]);
   assert.equal(body.open_slot_id, SLOT_ID);
+  assert.equal(notificationCalls, 1);
+});
+
+test("POST /v1/open-slots/:id/confirm remains 200 when notification hook throws", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  setNotificationEventHookTestDelegate({
+    onCustomerBookingConfirmed: async () => {
+      throw new Error("notification failed");
+    },
+  });
+  setConfirmOpenSlotMutationTestDelegate(async () => {});
+  setLoadSlotRuleContextTestDelegate(async (_admin, params) => ({
+    slot: {
+      id: params.openSlotId,
+      status: "claimed",
+      business_id: params.businessId,
+      created_at: "2026-04-10T10:00:00.000Z",
+      last_offer_batch_at: null,
+      resolution_status: "none",
+    },
+    signals: claimedAwaitingConfirmationSignals(),
+  }));
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/confirm`,
+    headers: { ...routeTestHeaders(), "content-type": "application/json" },
+    payload: { claim_id: CLAIM_ID },
+  });
+
+  assert.equal(res.statusCode, 200);
+  assert.equal((res.json() as { result: string }).result, "confirmed");
 });
 
 test("POST /v1/open-slots/:id/send-offers returns 200 for retry path when mutation test delegate runs", async () => {
@@ -369,4 +439,252 @@ test("POST /v1/open-slots/:id/send-offers returns 200 for retry path when mutati
   assert.equal(body.ok, true);
   assert.equal(body.result, "offers_retried");
   assert.equal(body.matched, 1);
+});
+
+test("POST /v1/open-slots/:id/confirm returns 404 not_found when slot context is missing", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  setLoadSlotRuleContextTestDelegate(async () => null);
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/confirm`,
+    headers: { ...routeTestHeaders(), "content-type": "application/json" },
+    payload: { claim_id: CLAIM_ID },
+  });
+
+  assert.equal(res.statusCode, 404);
+  const body = res.json() as { error: { code: string; retryable: boolean } };
+  assert.equal(body.error.code, "not_found");
+  assert.equal(body.error.retryable, false);
+});
+
+test("POST /v1/open-slots/:id/send-offers returns 404 not_found when slot is missing or wrong-tenant", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  setLoadSlotRuleContextTestDelegate(async () => null);
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/send-offers`,
+    headers: { ...routeTestHeaders(), "content-type": "application/json" },
+    payload: {},
+  });
+
+  assert.equal(res.statusCode, 404);
+  const body = res.json() as { error: { code: string; retryable: boolean } };
+  assert.equal(body.error.code, "not_found");
+  assert.equal(body.error.retryable, false);
+});
+
+test("POST /v1/open-slots/:id/send-offers returns 409 operator_action_not_allowed for booked slots", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  setLoadSlotRuleContextTestDelegate(async () => ({
+    slot: {
+      id: SLOT_ID,
+      status: "booked",
+      business_id: businessId(),
+      created_at: "2026-04-10T10:00:00.000Z",
+      last_offer_batch_at: "2026-04-16T11:00:00.000Z",
+      resolution_status: "none",
+    },
+    signals: bookedSignals(),
+  }));
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/send-offers`,
+    headers: { ...routeTestHeaders(), "content-type": "application/json" },
+    payload: {},
+  });
+
+  assert.equal(res.statusCode, 409);
+  const body = res.json() as { error: { code: string; details?: Record<string, unknown> } };
+  assert.equal(body.error.code, "operator_action_not_allowed");
+  assert.ok(Array.isArray(body.error.details?.available_actions));
+});
+
+test("POST /v1/open-slots/:id/send-offers returns 401 without Authorization", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/send-offers`,
+    headers: { "content-type": "application/json", "x-pulsefill-route-test": "1" },
+    payload: {},
+  });
+
+  assert.equal(res.statusCode, 401);
+  const body = res.json() as { error: string };
+  assert.equal(body.error, "unauthorized");
+});
+
+test("POST /v1/open-slots/:id/expire returns 200 { ok: true } when mutation delegate succeeds", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  let calls = 0;
+  setExpireOpenSlotMutationTestDelegate(async (args) => {
+    calls += 1;
+    assert.equal(args.openSlotId, SLOT_ID);
+    assert.equal(args.businessId, businessId());
+    return { ok: true };
+  });
+
+  setLoadSlotRuleContextTestDelegate(async () => ({
+    slot: {
+      id: SLOT_ID,
+      status: "open",
+      business_id: businessId(),
+      created_at: "2026-04-10T10:00:00.000Z",
+      last_offer_batch_at: null,
+      resolution_status: "none",
+    },
+    signals: openUntouchedSignals(),
+  }));
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/expire`,
+    headers: routeTestHeaders(),
+  });
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls, 1);
+  assert.deepEqual(res.json(), {
+    ok: true,
+    result: "expired",
+    status: "expired",
+    message: "Slot expired.",
+  });
+});
+
+test("POST /v1/open-slots/:id/cancel returns 200 { ok: true } when mutation delegate succeeds", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  let calls = 0;
+  setCancelOpenSlotMutationTestDelegate(async (args) => {
+    calls += 1;
+    assert.equal(args.openSlotId, SLOT_ID);
+    assert.equal(args.businessId, businessId());
+    return { ok: true };
+  });
+
+  setLoadSlotRuleContextTestDelegate(async () => ({
+    slot: {
+      id: SLOT_ID,
+      status: "open",
+      business_id: businessId(),
+      created_at: "2026-04-10T10:00:00.000Z",
+      last_offer_batch_at: null,
+      resolution_status: "none",
+    },
+    signals: openUntouchedSignals(),
+  }));
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/cancel`,
+    headers: routeTestHeaders(),
+  });
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls, 1);
+  assert.deepEqual(res.json(), {
+    ok: true,
+    result: "cancelled",
+    status: "cancelled",
+    message: "Slot cancelled.",
+  });
+});
+
+test("POST /v1/open-slots/:id/cancel returns 409 operator_action_not_allowed with available actions details", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  setLoadSlotRuleContextTestDelegate(async () => ({
+    slot: {
+      id: SLOT_ID,
+      status: "booked",
+      business_id: businessId(),
+      created_at: "2026-04-10T10:00:00.000Z",
+      last_offer_batch_at: "2026-04-16T11:00:00.000Z",
+      resolution_status: "none",
+    },
+    signals: bookedSignals(),
+  }));
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/cancel`,
+    headers: routeTestHeaders(),
+  });
+
+  assert.equal(res.statusCode, 409);
+  const body = res.json() as { error: { code: string; details?: Record<string, unknown> } };
+  assert.equal(body.error.code, "operator_action_not_allowed");
+  assert.ok(Array.isArray(body.error.details?.available_actions));
+});
+
+test("POST /v1/open-slots/:id/expire returns 500 structured error when mutation delegate throws", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  setExpireOpenSlotMutationTestDelegate(async () => {
+    throw new Error("explode-expire");
+  });
+
+  setLoadSlotRuleContextTestDelegate(async () => ({
+    slot: {
+      id: SLOT_ID,
+      status: "open",
+      business_id: businessId(),
+      created_at: "2026-04-10T10:00:00.000Z",
+      last_offer_batch_at: null,
+      resolution_status: "none",
+    },
+    signals: openUntouchedSignals(),
+  }));
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/expire`,
+    headers: routeTestHeaders(),
+  });
+
+  assert.equal(res.statusCode, 500);
+  const body = res.json() as { error: { code: string; retryable: boolean; message: string } };
+  assert.equal(body.error.code, "expire_slot_failed");
+  assert.equal(body.error.retryable, true);
+  assert.match(body.error.message, /could not expire slot/i);
+});
+
+test("POST /v1/open-slots/:id/cancel returns 500 structured error when mutation delegate throws", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  setCancelOpenSlotMutationTestDelegate(async () => {
+    throw new Error("explode-cancel");
+  });
+
+  setLoadSlotRuleContextTestDelegate(async () => ({
+    slot: {
+      id: SLOT_ID,
+      status: "open",
+      business_id: businessId(),
+      created_at: "2026-04-10T10:00:00.000Z",
+      last_offer_batch_at: null,
+      resolution_status: "none",
+    },
+    signals: openUntouchedSignals(),
+  }));
+
+  const res = await app.inject({
+    method: "POST",
+    url: `/v1/open-slots/${SLOT_ID}/cancel`,
+    headers: routeTestHeaders(),
+  });
+
+  assert.equal(res.statusCode, 500);
+  const body = res.json() as { error: { code: string; retryable: boolean; message: string } };
+  assert.equal(body.error.code, "cancel_slot_failed");
+  assert.equal(body.error.retryable, true);
+  assert.match(body.error.message, /could not cancel slot/i);
 });

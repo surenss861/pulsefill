@@ -19,7 +19,7 @@ export function PasswordField({
 }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
   const id = useId();
-  const border = error ? "1px solid rgba(248, 113, 113, 0.55)" : "1px solid rgba(255,255,255,0.1)";
+  const border = error ? "1px solid var(--pf-danger-border)" : "1px solid rgba(255,255,255,0.1)";
   const cls = ["pf-auth-input", error ? "pf-auth-input--error" : ""].join(" ");
 
   return (

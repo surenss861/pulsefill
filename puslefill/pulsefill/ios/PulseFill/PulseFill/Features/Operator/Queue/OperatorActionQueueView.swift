@@ -36,7 +36,7 @@ struct OperatorActionQueueView: View {
                 }
             }
             .background(PFColor.background.ignoresSafeArea())
-            .navigationTitle("Action queue")
+            .navigationTitle("Recovery Queue")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -77,11 +77,17 @@ struct OperatorActionQueueView: View {
     }
 
     private var loadingView: some View {
-        VStack {
-            Spacer()
-            ProgressView()
-                .tint(PFColor.primary)
-            Spacer()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                PFPageHeader(
+                    overline: "Queue",
+                    title: "Recovery Queue",
+                    subtitle: "Triage first, then drill into slot detail to execute safely."
+                )
+                PFLoadingSkeleton(count: 4)
+            }
+            .padding(.top, 16)
+            .padding(.horizontal, 20)
         }
     }
 
@@ -107,6 +113,12 @@ struct OperatorActionQueueView: View {
     private var contentView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                PFPageHeader(
+                    overline: "Queue",
+                    title: "Recovery Queue",
+                    subtitle: "Triage first, then drill into slot detail to execute safely."
+                )
+
                 if let digest = viewModel.morningDigest {
                     OperatorMorningRecoveryDigestBlock(digest: digest, onTapSection: handleDigestSectionTap)
                 }
@@ -173,6 +185,8 @@ struct OperatorActionQueueView: View {
                         title: "Needs action now",
                         items: viewModel.filteredNeedsAction,
                         performingItemId: viewModel.performingItemId,
+                        successPulseItemId: viewModel.successPulseItemId,
+                        successPulseTick: viewModel.successPulseTick,
                         onPrimaryAction: handlePrimary,
                         onOpen: openSlot
                     )
@@ -181,6 +195,8 @@ struct OperatorActionQueueView: View {
                         title: "Watch / review",
                         items: viewModel.filteredReview,
                         performingItemId: viewModel.performingItemId,
+                        successPulseItemId: viewModel.successPulseItemId,
+                        successPulseTick: viewModel.successPulseTick,
                         onPrimaryAction: handlePrimary,
                         onOpen: openSlot
                     )
@@ -189,6 +205,8 @@ struct OperatorActionQueueView: View {
                         title: "Recently resolved",
                         items: viewModel.filteredResolved,
                         performingItemId: viewModel.performingItemId,
+                        successPulseItemId: viewModel.successPulseItemId,
+                        successPulseTick: viewModel.successPulseTick,
                         onPrimaryAction: handlePrimary,
                         onOpen: openSlot
                     )

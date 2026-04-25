@@ -92,6 +92,12 @@ struct OperatorSlotDetailView: View {
         ScrollViewReader { scroll in
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    PFPageHeader(
+                        overline: "Slot detail",
+                        title: slot.providerNameSnapshot ?? "Open slot",
+                        subtitle: "Action-first execution: confirm, retry, or resolve with full context."
+                    )
+
                     recentActivityBar(slot)
                     if viewModel.usesServerActionMatrix {
                         queueContextBanner
@@ -110,6 +116,7 @@ struct OperatorSlotDetailView: View {
                             Task { await viewModel.saveInternalNote(note: note, resolutionStatus: status) }
                         }
                     )
+                    .pfSuccessPulse(trigger: viewModel.successPulseToken)
                     .id("operatorInternalNote")
 
                     Group {
@@ -186,11 +193,12 @@ struct OperatorSlotDetailView: View {
     }
 
     private func serverActionBar(slot: StaffOpenSlotDetail, scroll: ScrollViewProxy) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("ACTIONS")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(PFColor.textSecondary)
-
+        PFSectionCard(
+            eyebrow: "Actions",
+            title: "Next best move",
+            description: "Server-authored action matrix for this slot.",
+            borderColor: PFColor.primary.opacity(0.20)
+        ) {
             if viewModel.primaryRowActions.isEmpty, viewModel.secondaryRowActions.isEmpty {
                 Text("No actions available for this opening right now.")
                     .font(.system(size: 14))
@@ -212,14 +220,7 @@ struct OperatorSlotDetailView: View {
                 }
             }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFSurface.card)
-        .overlay(
-            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .stroke(PFColor.primary.opacity(0.16), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+        .pfSuccessPulse(trigger: viewModel.successPulseToken)
     }
 
     @ViewBuilder
@@ -275,41 +276,29 @@ struct OperatorSlotDetailView: View {
     }
 
     private func legacyNextActionCard(_ slot: StaffOpenSlotDetail) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(OperatorSlotDetailPresenters.nextActionTitle(for: slot.status).uppercased())
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(PFColor.primary)
-
-            Text(OperatorSlotDetailPresenters.nextActionDescription(for: slot.status))
-                .font(.system(size: 17))
-                .foregroundStyle(PFColor.textPrimary)
-
+        PFSectionCard(
+            eyebrow: OperatorSlotDetailPresenters.nextActionTitle(for: slot.status),
+            title: "Action guidance",
+            description: OperatorSlotDetailPresenters.nextActionDescription(for: slot.status),
+            borderColor: PFColor.primary.opacity(0.20)
+        ) {
             HStack(spacing: 10) {
                 if slot.status == "claimed" {
                     Button(viewModel.isConfirming ? "Confirming…" : "Confirm booking") {
                         Task { await viewModel.confirmBooking() }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(PFColor.primaryDark)
+                    .buttonStyle(PFPrimaryButtonStyle())
                     .disabled(viewModel.isConfirming)
                 } else if slot.status == "open" || slot.status == "offered" {
                     Button(viewModel.isRetrying ? "Sending…" : (slot.status == "open" ? "Send offers" : "Retry offers")) {
                         Task { await viewModel.retryOffers() }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(PFColor.primaryDark)
+                    .buttonStyle(PFPrimaryButtonStyle())
                     .disabled(viewModel.isRetrying)
                 }
             }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFSurface.card)
-        .overlay(
-            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .stroke(PFColor.primary.opacity(0.16), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+        .pfSuccessPulse(trigger: viewModel.successPulseToken)
     }
 
     private func recentActivityBar(_ slot: StaffOpenSlotDetail) -> some View {

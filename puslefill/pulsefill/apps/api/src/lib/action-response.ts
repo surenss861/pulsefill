@@ -10,6 +10,8 @@ export type ActionErrorCode =
   | "forbidden"
   | "not_found"
   | "invalid_request"
+  | "expire_slot_failed"
+  | "cancel_slot_failed"
   | "server_error";
 
 export type ActionErrorBody = {

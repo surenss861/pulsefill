@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 const DEFAULT_TITLE = "Today's recovery";
-const DEFAULT_SUBTITLE =
+export const DEFAULT_OVERVIEW_RECOVERY_SUBTITLE =
   "Track recovered bookings, recovered revenue, and the slots that still need attention.";
 
 type Props = {
@@ -24,7 +24,7 @@ type Props = {
 export function OverviewRecoveryHeroStrip({
   children,
   title = DEFAULT_TITLE,
-  subtitle = DEFAULT_SUBTITLE,
+  subtitle = DEFAULT_OVERVIEW_RECOVERY_SUBTITLE,
   eyebrow,
   aside,
 }: Props) {

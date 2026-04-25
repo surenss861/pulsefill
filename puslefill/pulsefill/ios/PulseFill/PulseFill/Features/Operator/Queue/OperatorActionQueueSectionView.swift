@@ -4,6 +4,8 @@ struct OperatorActionQueueSectionView: View {
     let title: String
     let items: [OperatorActionQueueItem]
     let performingItemId: String?
+    let successPulseItemId: String?
+    let successPulseTick: Int
     let onPrimaryAction: (OperatorActionQueueItem) -> Void
     let onOpen: (OperatorActionQueueItem) -> Void
 
@@ -30,6 +32,7 @@ struct OperatorActionQueueSectionView: View {
                         OperatorActionQueueRow(
                             item: item,
                             isBusy: performingItemId == item.id,
+                            successPulseTrigger: (successPulseItemId == item.id) ? "\(item.id)-\(successPulseTick)" : item.id,
                             onPrimaryAction: onPrimaryAction,
                             onOpen: onOpen
                         )

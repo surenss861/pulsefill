@@ -57,6 +57,17 @@ export async function requireCustomer(req: FastifyRequest, reply: FastifyReply) 
   await requireAuth(req, reply);
   if (reply.sent) return;
 
+  const isRouteTestPrincipal = req.authUser?.email === "operator-route-test@pulsefill.invalid";
+  if (
+    process.env.PULSEFILL_API_TEST === "1" &&
+    req.headers["x-pulsefill-route-test"] === "1" &&
+    isRouteTestPrincipal &&
+    process.env.PULSEFILL_TEST_CUSTOMER_ID
+  ) {
+    req.customer = { id: process.env.PULSEFILL_TEST_CUSTOMER_ID };
+    return;
+  }
+
   const admin = createServiceSupabase(req.server.env);
   const { data, error } = await admin
     .from("customers")

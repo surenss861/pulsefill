@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { openSlotDetailPath } from "@/lib/open-slot-routes";
+import { slotsDetailPath } from "@/lib/open-slot-routes";
 import type { BulkSlotActionResponse } from "@/types/bulk-actions";
 
 type Props = {
@@ -71,9 +71,9 @@ export function OperatorBulkActionResult({ result, onDismiss }: Props) {
                   }}
                 >
                   <Link
-                    href={openSlotDetailPath(r.open_slot_id)}
+                    href={slotsDetailPath(r.open_slot_id, {})}
                     prefetch={false}
-                    style={{ color: "#7dd3fc", fontWeight: 600, textDecoration: "none" }}
+                    style={{ color: "#ffb070", fontWeight: 600, textDecoration: "none" }}
                   >
                     Open detail
                   </Link>

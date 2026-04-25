@@ -5,11 +5,11 @@ import { useState } from "react";
 
 function borderForStatus(status: string): string {
   const s = status.toLowerCase();
-  if (s === "booked") return "rgba(52, 211, 153, 0.22)";
-  if (s === "claimed") return "rgba(251, 191, 36, 0.22)";
-  if (s === "offered") return "rgba(56, 189, 248, 0.22)";
-  if (s === "expired" || s === "cancelled") return "rgba(255,255,255,0.08)";
-  return "rgba(255,255,255,0.1)";
+  if (s === "booked") return "var(--pf-success-border)";
+  if (s === "claimed") return "var(--pf-warning-border)";
+  if (s === "offered") return "var(--pf-accent-primary-border)";
+  if (s === "expired" || s === "cancelled") return "var(--pf-border-subtle)";
+  return "var(--pf-border-default)";
 }
 
 type Props = {

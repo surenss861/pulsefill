@@ -9,7 +9,7 @@ import { apiFetch } from "@/lib/api";
 import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
 import { navigateToOpenSlotDetail } from "@/lib/operator-navigation";
 import { emitOperatorRefreshEvent } from "@/lib/operator-refresh-events";
-import { openSlotDetailPath } from "@/lib/open-slot-routes";
+import { slotsDetailPath } from "@/lib/open-slot-routes";
 
 type SendOffersResponse = {
   ok?: boolean;
@@ -130,7 +130,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
           {sending ? "Sending…" : "Send offers now"}
         </button>
         <Link
-          href={openSlotDetailPath(slotId)}
+          href={slotsDetailPath(slotId, {})}
           style={{
             ...pressableSecondary,
             display: "inline-flex",

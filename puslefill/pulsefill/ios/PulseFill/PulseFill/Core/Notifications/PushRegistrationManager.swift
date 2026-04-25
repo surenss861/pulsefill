@@ -7,8 +7,33 @@ struct StandbyPushFollowUp: Equatable {
     var showOpenSettings: Bool
 }
 
+struct PushDebugSnapshot: Equatable {
+    enum AttemptState: String, Equatable {
+        case success = "Success"
+        case failed = "Failed"
+        case never = "Never"
+    }
+
+    let permission: String
+    let registrationState: AttemptState
+    let registrationAt: Date?
+    let deactivationState: AttemptState
+    let deactivationAt: Date?
+    let environment: String
+    let appBuild: String
+    let maskedToken: String?
+}
+
 @MainActor
 final class PushRegistrationManager {
+    private enum StorageKeys {
+        static let lastAPNsToken = "pf.push.lastAPNsToken"
+        static let registrationState = "pf.push.lastRegistrationState"
+        static let registrationAt = "pf.push.lastRegistrationAt"
+        static let deactivationState = "pf.push.lastDeactivationState"
+        static let deactivationAt = "pf.push.lastDeactivationAt"
+    }
+
     private let apiClient: APIClient
 
     /// Latest authorization status (refresh with `refreshAuthorizationStatus()`).
@@ -16,6 +41,43 @@ final class PushRegistrationManager {
 
     init(apiClient: APIClient) {
         self.apiClient = apiClient
+    }
+
+    private var lastRegisteredAPNsToken: String? {
+        get { UserDefaults.standard.string(forKey: StorageKeys.lastAPNsToken) }
+        set {
+            if let value = newValue, !value.isEmpty {
+                UserDefaults.standard.set(value, forKey: StorageKeys.lastAPNsToken)
+            } else {
+                UserDefaults.standard.removeObject(forKey: StorageKeys.lastAPNsToken)
+            }
+        }
+    }
+
+    private var lastRegistrationState: PushDebugSnapshot.AttemptState {
+        get {
+            let raw = UserDefaults.standard.string(forKey: StorageKeys.registrationState) ?? PushDebugSnapshot.AttemptState.never.rawValue
+            return PushDebugSnapshot.AttemptState(rawValue: raw) ?? .never
+        }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: StorageKeys.registrationState) }
+    }
+
+    private var lastDeactivationState: PushDebugSnapshot.AttemptState {
+        get {
+            let raw = UserDefaults.standard.string(forKey: StorageKeys.deactivationState) ?? PushDebugSnapshot.AttemptState.never.rawValue
+            return PushDebugSnapshot.AttemptState(rawValue: raw) ?? .never
+        }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: StorageKeys.deactivationState) }
+    }
+
+    private var lastRegistrationAt: Date? {
+        get { UserDefaults.standard.object(forKey: StorageKeys.registrationAt) as? Date }
+        set { UserDefaults.standard.set(newValue, forKey: StorageKeys.registrationAt) }
+    }
+
+    private var lastDeactivationAt: Date? {
+        get { UserDefaults.standard.object(forKey: StorageKeys.deactivationAt) as? Date }
+        set { UserDefaults.standard.set(newValue, forKey: StorageKeys.deactivationAt) }
     }
 
     func refreshAuthorizationStatus() async {
@@ -120,25 +182,109 @@ final class PushRegistrationManager {
         let body = PushDeviceRegisterBody(
             deviceToken: hex,
             platform: "ios",
+            tokenType: "apns",
             environment: environment,
-            appBuild: build
+            appBuild: build,
+            replaceExisting: true
         )
         do {
             _ = try await apiClient.post("/v1/customers/me/push-devices", body: body, as: PushRegisterResponse.self)
+            lastRegisteredAPNsToken = hex
+            lastRegistrationState = .success
+            lastRegistrationAt = Date()
         } catch {
             // Non-fatal: push can be retried on next launch.
+            lastRegistrationState = .failed
+            lastRegistrationAt = Date()
         }
+    }
+
+    /// Best effort on sign-out: deactivate the latest APNs token tied to this session.
+    func deactivateCurrentDeviceIfNeeded() async {
+        guard let token = lastRegisteredAPNsToken, !token.isEmpty else { return }
+        let body = PushDeviceDeactivateBody(
+            deviceToken: token,
+            platform: "ios",
+            tokenType: "apns"
+        )
+        do {
+            _ = try await apiClient.post(
+                "/v1/customers/me/push-devices/deactivate",
+                body: body,
+                as: PushDeactivateResponse.self
+            )
+            lastRegisteredAPNsToken = nil
+            lastDeactivationState = .success
+            lastDeactivationAt = Date()
+        } catch {
+            // Non-fatal: keep token stored and retry on a future signed-in sign-out.
+            lastDeactivationState = .failed
+            lastDeactivationAt = Date()
+        }
+    }
+
+    func debugSnapshot() -> PushDebugSnapshot {
+        let env: String = {
+            #if DEBUG
+            return "sandbox"
+            #else
+            return "production"
+            #endif
+        }()
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
+        return PushDebugSnapshot(
+            permission: permissionLabel(authorizationStatus),
+            registrationState: lastRegistrationState,
+            registrationAt: lastRegistrationAt,
+            deactivationState: lastDeactivationState,
+            deactivationAt: lastDeactivationAt,
+            environment: env,
+            appBuild: build,
+            maskedToken: maskToken(lastRegisteredAPNsToken)
+        )
+    }
+
+    private func permissionLabel(_ status: UNAuthorizationStatus) -> String {
+        switch status {
+        case .authorized, .provisional, .ephemeral:
+            return "Granted"
+        case .denied:
+            return "Denied"
+        case .notDetermined:
+            return "Not determined"
+        @unknown default:
+            return "Unknown"
+        }
+    }
+
+    private func maskToken(_ token: String?) -> String? {
+        guard let token, !token.isEmpty else { return nil }
+        if token.count <= 12 { return token }
+        return "\(token.prefix(4))…\(token.suffix(4))"
     }
 }
 
 private struct PushDeviceRegisterBody: Encodable {
     let deviceToken: String
     let platform: String
+    let tokenType: String
     let environment: String
     let appBuild: String?
+    let replaceExisting: Bool
 }
 
 private struct PushRegisterResponse: Decodable {
     let registered: Bool?
     let id: String?
+}
+
+private struct PushDeviceDeactivateBody: Encodable {
+    let deviceToken: String
+    let platform: String
+    let tokenType: String
+}
+
+private struct PushDeactivateResponse: Decodable {
+    let deactivated: Bool?
+    let deviceToken: String?
 }

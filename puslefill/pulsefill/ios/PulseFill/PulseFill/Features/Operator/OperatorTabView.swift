@@ -5,6 +5,12 @@ struct OperatorTabView: View {
 
     var body: some View {
         TabView {
+            OperatorOverviewView(api: env.apiClient)
+                .environmentObject(env)
+                .tabItem {
+                    Label("Overview", systemImage: "house")
+                }
+
             OperatorActionQueueView(api: env.apiClient)
                 .environmentObject(env)
                 .tabItem {
@@ -17,12 +23,6 @@ struct OperatorTabView: View {
                     Label("Slots", systemImage: "calendar")
                 }
 
-            OperatorClaimsView(api: env.apiClient)
-                .environmentObject(env)
-                .tabItem {
-                    Label("Claims", systemImage: "checkmark.seal")
-                }
-
             CustomerActivityFeedView(api: env.apiClient)
                 .environmentObject(env)
                 .tabItem {
@@ -32,7 +32,7 @@ struct OperatorTabView: View {
             ProfileView()
                 .environmentObject(env)
                 .tabItem {
-                    Label("Profile", systemImage: "person.crop.circle")
+                    Label("Settings", systemImage: "person.crop.circle")
                 }
         }
         .tint(PFColor.primary)

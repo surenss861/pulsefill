@@ -10,6 +10,7 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { AuthField } from "@/components/auth/auth-field";
 import { PasswordField } from "@/components/auth/password-field";
 import { SubmitButton } from "@/components/auth/submit-button";
+import { PageState } from "@/components/ui/page-state";
 
 const initial: AuthFormState = {};
 
@@ -56,38 +57,14 @@ export function SignInClient() {
         }
       >
         {resetOk ? (
-          <div
-            style={{
-              borderRadius: 16,
-              border: "1px solid rgba(52, 211, 153, 0.28)",
-              background: "rgba(16, 185, 129, 0.1)",
-              padding: "12px 14px",
-              fontSize: 13,
-              color: "rgba(167, 243, 208, 0.95)",
-            }}
-          >
-            Password updated. Sign in with your new password.
-          </div>
+          <PageState variant="success" title="Password updated" description="Sign in with your new password." />
         ) : null}
 
         <form action={signInFormAction} style={{ display: "grid", gap: 20 }}>
           <input type="hidden" name="next" value={next} />
           <AuthField label="Work email" name="email" type="email" placeholder="name@clinic.com" autoComplete="email" required />
           <PasswordField label="Password" name="password" placeholder="Enter your password" autoComplete="current-password" />
-          {signInState.error ? (
-            <div
-              style={{
-                borderRadius: 16,
-                border: "1px solid rgba(248, 113, 113, 0.28)",
-                background: "rgba(248, 113, 113, 0.08)",
-                padding: "12px 14px",
-                fontSize: 14,
-                color: "#fecaca",
-              }}
-            >
-              {signInState.error}
-            </div>
-          ) : null}
+          {signInState.error ? <PageState variant="error" title="Sign-in failed" description={signInState.error} /> : null}
           <SubmitButton pendingText="Signing in…">Sign in</SubmitButton>
         </form>
 
@@ -114,20 +91,7 @@ export function SignInClient() {
 
         <form action={magicFormAction} style={{ display: "grid", gap: 16 }}>
           <AuthField label="Work email" name="email" type="email" placeholder="name@clinic.com" autoComplete="email" required />
-          {magicState.error ? (
-            <div
-              style={{
-                borderRadius: 16,
-                border: "1px solid rgba(248, 113, 113, 0.28)",
-                background: "rgba(248, 113, 113, 0.08)",
-                padding: "12px 14px",
-                fontSize: 14,
-                color: "#fecaca",
-              }}
-            >
-              {magicState.error}
-            </div>
-          ) : null}
+          {magicState.error ? <PageState variant="error" title="Magic link failed" description={magicState.error} /> : null}
           <button
             type="submit"
             style={{

@@ -5,22 +5,25 @@ import type { OperatorSlotQueueContext, OperatorSlotQueueSeverity } from "@/type
 function severityStyles(severity: OperatorSlotQueueSeverity | null | undefined) {
   if (severity === "high") {
     return {
-      border: "1px solid rgba(248,113,113,0.35)",
-      background: "rgba(248,113,113,0.08)",
-      labelColor: "rgba(252,165,165,0.95)",
+      border: "1px solid rgba(201, 59, 47, 0.35)",
+      background: "rgba(201, 59, 47, 0.1)",
+      labelColor: "rgba(252, 165, 165, 0.96)",
+      rail: "#c93b2f",
     };
   }
   if (severity === "medium") {
     return {
-      border: "1px solid rgba(251,191,36,0.35)",
-      background: "rgba(251,191,36,0.07)",
-      labelColor: "rgba(253,224,71,0.95)",
+      border: "1px solid rgba(255, 122, 24, 0.28)",
+      background: "rgba(255, 122, 24, 0.08)",
+      labelColor: "rgba(255, 176, 112, 0.98)",
+      rail: "var(--pf-accent-primary)",
     };
   }
   return {
     border: "1px solid rgba(255,255,255,0.1)",
-    background: "rgba(255,255,255,0.04)",
-    labelColor: "var(--muted)",
+    background: "rgba(10, 15, 26, 0.55)",
+    labelColor: "rgba(245, 247, 250, 0.48)",
+    rail: "rgba(255,255,255,0.2)",
   };
 }
 
@@ -39,11 +42,13 @@ export function OperatorSlotReasonBanner({ queueContext }: Props) {
         borderRadius: 16,
         border: s.border,
         background: s.background,
-        padding: "14px 16px",
+        padding: "14px 16px 14px 18px",
+        borderLeft: `4px solid ${s.rail}`,
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
       }}
     >
-      <p style={{ margin: 0, fontSize: 11, fontWeight: 650, letterSpacing: "0.06em", color: s.labelColor }}>
-        QUEUE CONTEXT
+      <p style={{ margin: 0, fontSize: 11, fontWeight: 650, letterSpacing: "0.14em", color: s.labelColor, textTransform: "uppercase" }}>
+        Operator guidance
       </p>
       <h2 style={{ margin: "8px 0 0", fontSize: 16, fontWeight: 650, color: "var(--text)" }}>{queueContext.reason_title}</h2>
       {queueContext.reason_detail ? (

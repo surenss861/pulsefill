@@ -9,11 +9,18 @@ final class AuthManager: ObservableObject {
     private let authClient: SupabaseAuthClient
     private let sessionStore: SessionStore
     private let apiClient: APIClient
+    private let pushRegistrationManager: PushRegistrationManager
 
-    init(authClient: SupabaseAuthClient, sessionStore: SessionStore, apiClient: APIClient) {
+    init(
+        authClient: SupabaseAuthClient,
+        sessionStore: SessionStore,
+        apiClient: APIClient,
+        pushRegistrationManager: PushRegistrationManager
+    ) {
         self.authClient = authClient
         self.sessionStore = sessionStore
         self.apiClient = apiClient
+        self.pushRegistrationManager = pushRegistrationManager
     }
 
     func restoreSessionIfNeeded() async {
@@ -78,6 +85,7 @@ final class AuthManager: ObservableObject {
     }
 
     func signOut() async {
+        await pushRegistrationManager.deactivateCurrentDeviceIfNeeded()
         sessionStore.clear()
         banner = nil
     }

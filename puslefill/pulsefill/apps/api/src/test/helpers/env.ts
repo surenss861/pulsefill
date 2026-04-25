@@ -11,5 +11,11 @@ export function createTestEnv(): Env {
     REDIS_URL: undefined,
     STRIPE_SECRET_KEY: undefined,
     STRIPE_WEBHOOK_SECRET: undefined,
+    PUSH_PROVIDER: "noop",
+    APNS_TEAM_ID: undefined,
+    APNS_KEY_ID: undefined,
+    APNS_PRIVATE_KEY: undefined,
+    APNS_BUNDLE_ID: undefined,
+    APNS_ENVIRONMENT: "sandbox",
   };
 }

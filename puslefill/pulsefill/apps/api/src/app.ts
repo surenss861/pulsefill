@@ -21,6 +21,15 @@ export async function buildApp(env: Env) {
 
   app.decorate("env", env);
 
+  app.log.info(
+    {
+      push_provider: env.PUSH_PROVIDER ?? "noop",
+      apns_environment: env.APNS_ENVIRONMENT,
+      apns_configured: Boolean(env.APNS_TEAM_ID && env.APNS_KEY_ID && env.APNS_PRIVATE_KEY && env.APNS_BUNDLE_ID),
+    },
+    "Push provider configured",
+  );
+
   await app.register(errorHandler);
   await app.register(cors, { origin: true });
   await app.register(authPlugin, { env });

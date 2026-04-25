@@ -1,15 +1,19 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { actionButtonLabel, kindLabel } from "@/lib/action-queue-ui";
 import { reasonCopyForQueueKind } from "@/lib/action-queue-copy";
 import { deriveQueueInlinePrimaryAction } from "@/lib/operator-primary-action";
 import { formatSlotRange } from "@/lib/format-slot-range";
 import { formatRelativeTime } from "@/lib/format-relative-time";
-import { openSlotDetailPath } from "@/lib/open-slot-routes";
-import type { ActionQueueItem } from "@/types/action-queue";
+import { queueDetailPath, type QueueDetailSection } from "@/lib/open-slot-routes";
+import { RecordRowCard } from "@/components/ui/record-row-card";
+import { StatusPill } from "@/components/ui/status-pill";
+import type { StatusPillVariant } from "@/components/ui/status-pill";
+import type { ActionQueueItem, ActionQueueKind } from "@/types/action-queue";
 
-export type ActionQueueRowSection = "needs_action" | "review" | "resolved";
+export type ActionQueueRowSection = QueueDetailSection;
 
 function sectionChrome(section: ActionQueueRowSection | undefined): { border: string; background: string } {
   if (section === "needs_action") {
@@ -24,9 +28,51 @@ function sectionChrome(section: ActionQueueRowSection | undefined): { border: st
   return { border: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)" };
 }
 
+function queueKindPillVariant(kind: ActionQueueKind): StatusPillVariant {
+  if (kind === "delivery_failed" || kind === "expired_unfilled") return "danger";
+  if (kind === "confirmed_booking") return "resolved";
+  if (kind === "no_matches") return "default";
+  return "primary";
+}
+
+const primaryBtn: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "8px 14px",
+  borderRadius: 10,
+  background: "var(--pf-btn-primary-bg)",
+  color: "var(--pf-btn-primary-text)",
+  fontWeight: 600,
+  fontSize: 13,
+  border: "none",
+  cursor: "pointer",
+  boxShadow: "var(--pf-btn-primary-shadow)",
+};
+
+const primaryMutedBtn: CSSProperties = {
+  ...primaryBtn,
+  background: "rgba(255,255,255,0.08)",
+  color: "var(--pf-text-primary)",
+  border: "1px solid rgba(255,255,255,0.14)",
+  boxShadow: "none",
+};
+
+const secondaryLink: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "8px 14px",
+  borderRadius: 10,
+  border: "1px solid rgba(255,255,255,0.18)",
+  color: "var(--pf-text-primary)",
+  fontSize: 13,
+  textDecoration: "none",
+  fontWeight: 600,
+};
+
 type Props = {
   item: ActionQueueItem;
-  /** Drives calmer vs urgent card chrome; omit for neutral styling. */
   section?: ActionQueueRowSection;
   busy?: boolean;
   onPrimaryAction?: (item: ActionQueueItem) => void;
@@ -42,138 +88,85 @@ export function ActionQueueItemCard({ item, section, busy, onPrimaryAction }: Pr
   const [primary, secondary] = item.actions;
   const inline = deriveQueueInlinePrimaryAction(item);
   const canInline = Boolean(inline && onPrimaryAction);
-  const detailHref = openSlotDetailPath(item.open_slot_id);
+  const detailHref = queueDetailPath(item.open_slot_id, section);
   const chrome = sectionChrome(section);
 
   const primaryMuted = section === "resolved";
 
+  const linkBlock = (
+    <Link href={detailHref} prefetch={false} title="Open detail" style={{ color: "inherit", textDecoration: "none" }}>
+      <div style={{ fontWeight: 650, fontSize: 16, lineHeight: 1.35 }}>{item.headline}</div>
+      <div style={{ marginTop: 6, fontSize: 14, lineHeight: 1.45, color: "rgba(245, 247, 250, 0.72)" }}>
+        {meta}
+        {where}
+      </div>
+      <div style={{ marginTop: 10, fontSize: 14, lineHeight: 1.5, color: "rgba(245, 247, 250, 0.9)" }}>{reason}</div>
+      {item.customer_label ? (
+        <div style={{ marginTop: 10, fontSize: 12, color: "var(--pf-text-secondary)" }}>Customer: {item.customer_label}</div>
+      ) : null}
+      <div style={{ marginTop: 10, fontSize: 12, color: "var(--pf-text-secondary)", opacity: 0.95 }}>
+        {when}
+        {rel ? ` · ${rel}` : null}
+      </div>
+    </Link>
+  );
+
+  const topMeta = (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <StatusPill variant={queueKindPillVariant(item.kind)} caps>
+        {kindLabel(item.kind)}
+      </StatusPill>
+    </div>
+  );
+
+  const footer = (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
+      {canInline && inline ? (
+        <button
+          type="button"
+          onClick={() => onPrimaryAction?.(item)}
+          disabled={busy}
+          style={{
+            ...(primaryMuted ? primaryMutedBtn : primaryBtn),
+            cursor: busy ? "not-allowed" : "pointer",
+            opacity: busy ? 0.7 : 1,
+          }}
+        >
+          {busy ? "Working…" : inline.label}
+        </button>
+      ) : primary ? (
+        <Link href={detailHref} prefetch={false} style={{ ...(primaryMuted ? primaryMutedBtn : primaryBtn), textDecoration: "none" }}>
+          {actionButtonLabel(primary)}
+        </Link>
+      ) : null}
+      {secondary ? (
+        <Link href={detailHref} prefetch={false} style={{ ...secondaryLink, opacity: primaryMuted ? 0.85 : 1 }}>
+          {actionButtonLabel(secondary)}
+        </Link>
+      ) : null}
+    </div>
+  );
+
   return (
     <div
       style={{
-        borderRadius: 16,
+        borderRadius: "var(--pf-radius-md)",
         border: `1px solid ${chrome.border}`,
         background: chrome.background,
-        padding: 16,
-        display: "grid",
-        gap: 12,
+        padding: "12px 14px",
       }}
     >
-      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-        <Link
-          href={detailHref}
-          prefetch={false}
-          title="Open detail"
-          style={{
-            flex: 1,
-            minWidth: 0,
-            display: "block",
-            textDecoration: "none",
-            color: "inherit",
-            borderRadius: 10,
-            outlineOffset: 2,
-          }}
-        >
-          <div style={{ display: "flex", gap: 12, alignItems: "flex-start", justifyContent: "space-between" }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 16, lineHeight: 1.35 }}>{item.headline}</div>
-              <div style={{ marginTop: 6, fontSize: 14, lineHeight: 1.45, color: "var(--text)", opacity: 0.72 }}>
-                {meta}
-                {where}
-              </div>
-              <div style={{ marginTop: 10, fontSize: 14, lineHeight: 1.5, color: "var(--text)", opacity: 0.9 }}>
-                {reason}
-              </div>
-            </div>
-            <span
-              style={{
-                flexShrink: 0,
-                fontSize: 11,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: 0.4,
-                padding: "5px 10px",
-                borderRadius: 999,
-                border: "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(255,255,255,0.06)",
-                color: "var(--text)",
-                opacity: section === "resolved" ? 0.75 : 1,
-              }}
-            >
-              {kindLabel(item.kind)}
-            </span>
-          </div>
-          {item.customer_label ? (
-            <div style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>Customer: {item.customer_label}</div>
-          ) : null}
-          <div style={{ marginTop: 10, fontSize: 12, color: "var(--muted)", opacity: 0.9 }}>
-            {when}
-            {rel ? ` · ${rel}` : null}
-          </div>
-        </Link>
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
-        {canInline && inline ? (
-          <button
-            type="button"
-            onClick={() => onPrimaryAction?.(item)}
-            disabled={busy}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "8px 14px",
-              borderRadius: 10,
-              background: primaryMuted ? "rgba(255,255,255,0.08)" : "var(--primary, #38bdf8)",
-              color: primaryMuted ? "var(--text)" : "#0f172a",
-              fontWeight: 600,
-              fontSize: 13,
-              border: primaryMuted ? "1px solid rgba(255,255,255,0.14)" : "none",
-              cursor: busy ? "not-allowed" : "pointer",
-              opacity: busy ? 0.7 : 1,
-            }}
-          >
-            {busy ? "Working…" : inline.label}
-          </button>
-        ) : primary ? (
-          <Link
-            href={detailHref}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "8px 14px",
-              borderRadius: 10,
-              background: primaryMuted ? "rgba(255,255,255,0.08)" : "var(--primary, #38bdf8)",
-              color: primaryMuted ? "var(--text)" : "#0f172a",
-              fontWeight: 600,
-              fontSize: 13,
-              textDecoration: "none",
-              border: primaryMuted ? "1px solid rgba(255,255,255,0.14)" : "none",
-            }}
-          >
-            {actionButtonLabel(primary)}
-          </Link>
-        ) : null}
-        {secondary ? (
-          <Link
-            href={detailHref}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "8px 14px",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.18)",
-              color: "var(--text)",
-              fontSize: 13,
-              textDecoration: "none",
-              opacity: primaryMuted ? 0.85 : 1,
-            }}
-          >
-            {actionButtonLabel(secondary)}
-          </Link>
-        ) : null}
-      </div>
+      <RecordRowCard
+        disableHover
+        topMeta={topMeta}
+        title={linkBlock}
+        footer={footer}
+        style={{
+          border: "none",
+          background: "transparent",
+          padding: 0,
+        }}
+      />
     </div>
   );
 }

@@ -2,18 +2,25 @@
 
 import Link from "next/link";
 import { ActionQueueItemCard } from "@/components/action-queue/action-queue-item-card";
-import type { ActionQueueItem } from "@/types/action-queue";
+import type { ActionQueueItem, ActionQueueSummary } from "@/types/action-queue";
 
 export function ActionQueuePreviewCard({
   items,
   loading,
   error,
+  summary,
 }: {
   items: ActionQueueItem[];
   loading: boolean;
   error: string | null;
+  /** When set, shows real queue counts above the list. */
+  summary?: ActionQueueSummary | null;
 }) {
   const top = items.slice(0, 5);
+  const summaryLine =
+    summary != null
+      ? `${summary.needs_action_count} need action · ${summary.awaiting_confirmation_count} awaiting confirmation · ${summary.delivery_failed_count} delivery failed`
+      : null;
 
   return (
     <div
@@ -29,11 +36,20 @@ export function ActionQueuePreviewCard({
         <div>
           <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Needs attention now</h2>
           <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 14, maxWidth: 520 }}>
-            The highest-priority recovery items currently waiting on operator action.
+            {summaryLine ? (
+              <>
+                <span style={{ color: "rgba(245, 247, 250, 0.72)" }}>{summaryLine}</span>
+                <span style={{ display: "block", marginTop: 6 }}>
+                  Top of the Recovery Queue — highest severity first.
+                </span>
+              </>
+            ) : (
+              "The highest-priority recovery items currently waiting on operator action."
+            )}
           </p>
         </div>
         <Link
-          href="/action-queue"
+          href="/action-queue?section=needs_action"
           style={{
             padding: "8px 14px",
             borderRadius: 10,
@@ -45,7 +61,7 @@ export function ActionQueuePreviewCard({
             whiteSpace: "nowrap",
           }}
         >
-          Open Action Queue
+          Open Recovery Queue
         </Link>
       </div>
 
