@@ -1,13 +1,6 @@
 import SwiftUI
 
-struct SignUpView: View {
-    var body: some View {
-        SignupView()
-    }
-}
-import SwiftUI
-
-struct SignupView: View {
+struct SignInView: View {
     @EnvironmentObject private var env: AppEnvironment
     @State private var email = ""
     @State private var password = ""
@@ -15,8 +8,8 @@ struct SignupView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: PFSpacing.lg) {
-                PFTypography.hero("Create account")
-                PFTypography.caption("Create your PulseFill account to claim openings and track booking updates.")
+                PFTypography.hero("Welcome back")
+                PFTypography.caption("Sign in to view your available offers and booking activity.")
 
                 TextField("Email", text: $email)
                     .textFieldStyle(PFTextFieldStyle())
@@ -33,11 +26,11 @@ struct SignupView: View {
                 }
 
                 Button {
-                    Task { await env.authManager.signUp(email: email, password: password) }
+                    Task { await env.authManager.signIn(email: email, password: password) }
                 } label: {
                     HStack {
                         if env.authManager.isBusy { ProgressView().tint(.black) }
-                        Text(env.authManager.isBusy ? "Creating account…" : "Create account")
+                        Text(env.authManager.isBusy ? "Signing in…" : "Sign in")
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -47,7 +40,7 @@ struct SignupView: View {
             .padding(PFSpacing.xl)
         }
         .background(PFColor.background.ignoresSafeArea())
-        .navigationTitle("Create account")
+        .navigationTitle("Sign in")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

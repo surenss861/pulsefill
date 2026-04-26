@@ -8,7 +8,9 @@ struct MainShellView: View {
 
     var body: some View {
         Group {
-            if env.sessionStore.isSignedIn, env.sessionStore.isStaffUser, !preferCustomerTabs {
+            if !env.sessionStore.isSignedIn {
+                AuthLandingView()
+            } else if env.sessionStore.isStaffUser, !preferCustomerTabs {
                 OperatorTabView()
             } else {
                 RootTabView()

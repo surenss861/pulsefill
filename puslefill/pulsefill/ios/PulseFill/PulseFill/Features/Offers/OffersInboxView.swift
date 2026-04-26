@@ -31,7 +31,8 @@ struct OffersInboxView: View {
                         )
                     } else {
                         ScrollView {
-                            LazyVStack(spacing: 14) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                OffersFocusHeader(liveCount: offers.count)
                                 ForEach(offers) { item in
                                     NavigationLink(value: item.id) {
                                         OfferInboxRow(offer: item)
@@ -40,7 +41,7 @@ struct OffersInboxView: View {
                                 }
                             }
                             .padding(.vertical, 20)
-                            .padding(.horizontal, 4)
+                            .padding(.horizontal, 20)
                         }
                         .refreshable { await load() }
                     }
@@ -113,38 +114,134 @@ private struct OfferInboxRow: View {
     let offer: OfferInboxItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(offer.openSlot?.providerNameSnapshot ?? "Open appointment")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 21, weight: .bold, design: .rounded))
                         .foregroundStyle(PFColor.textPrimary)
                     Text(subtitle)
-                        .font(.system(size: 13))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(PFColor.textSecondary)
                 }
                 Spacer()
                 StatusChipView(status: offer.status)
             }
+
             if let cents = offer.openSlot?.estimatedValueCents {
-                Text(CurrencyFormatter.currency(cents: cents))
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(PFColor.primary)
+                HStack(spacing: 10) {
+                    Text(CurrencyFormatter.currency(cents: cents))
+                        .font(.system(size: 24, weight: .heavy, design: .rounded))
+                        .foregroundStyle(PFColor.primary)
+                    Text("estimated value")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(PFColor.textSecondary)
+                }
+            }
+
+            HStack(spacing: 8) {
+                offerPill(
+                    title: expiryLabel,
+                    tone: expiryTone
+                )
+                if offer.status.lowercased() == "sent" || offer.status.lowercased() == "delivered" {
+                    offerPill(title: "Tap to claim", tone: .ready)
+                }
             }
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFSurface.card)
+        .background(PFColor.surface1.opacity(0.94))
         .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .stroke(PFColor.divider, lineWidth: 1)
+                .stroke(PFColor.primaryBorder.opacity(0.55), lineWidth: 1)
         )
-        .padding(.horizontal, 20)
+        .shadow(color: PFColor.primary.opacity(0.12), radius: 16, y: 8)
     }
 
     private var subtitle: String {
         guard let slot = offer.openSlot else { return "Pending details" }
         return "\(DateFormatterPF.short(slot.startsAt)) • \(DateFormatterPF.time(slot.startsAt))–\(DateFormatterPF.time(slot.endsAt))"
+    }
+
+    private var expiryLabel: String {
+        guard let expiresAt = offer.expiresAt else { return "Claim soon" }
+        guard let exp = parseISO(expiresAt) else { return "Claim soon" }
+        let seconds = Int(exp.timeIntervalSinceNow)
+        if seconds <= 0 { return "Expired" }
+        let mins = max(1, seconds / 60)
+        if mins < 60 { return "Expires in \(mins)m" }
+        return "Expires in \(Int(round(Double(mins) / 60.0)))h"
+    }
+
+    private var expiryTone: OfferPillTone {
+        guard let expiresAt = offer.expiresAt, let exp = parseISO(expiresAt) else { return .neutral }
+        let seconds = exp.timeIntervalSinceNow
+        if seconds <= 0 { return .danger }
+        if seconds <= 15 * 60 { return .warn }
+        return .neutral
+    }
+
+    private func parseISO(_ value: String) -> Date? {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = f.date(from: value) { return d }
+        f.formatOptions = [.withInternetDateTime]
+        return f.date(from: value)
+    }
+
+    private func offerPill(title: String, tone: OfferPillTone) -> some View {
+        Text(title)
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(tone.fg)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(tone.bg)
+            .clipShape(Capsule())
+    }
+}
+
+private enum OfferPillTone {
+    case neutral
+    case warn
+    case danger
+    case ready
+
+    var fg: Color {
+        switch self {
+        case .neutral: return PFColor.textSecondary
+        case .warn: return PFColor.warning
+        case .danger: return PFColor.error
+        case .ready: return Color.black
+        }
+    }
+
+    var bg: Color {
+        switch self {
+        case .neutral: return PFColor.surface2
+        case .warn: return PFColor.warning.opacity(0.16)
+        case .danger: return PFColor.error.opacity(0.16)
+        case .ready: return PFColor.primary
+        }
+    }
+}
+
+private struct OffersFocusHeader: View {
+    let liveCount: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("AVAILABLE OPENINGS")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(PFColor.textSecondary)
+            Text(liveCount == 1 ? "1 live offer needs attention" : "\(liveCount) live offers need attention")
+                .font(.system(size: 28, weight: .heavy, design: .rounded))
+                .foregroundStyle(PFColor.textPrimary)
+            Text("Claim quickly to reduce the chance of missing this opening.")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(PFColor.textSecondary)
+        }
+        .padding(.bottom, 6)
     }
 }
