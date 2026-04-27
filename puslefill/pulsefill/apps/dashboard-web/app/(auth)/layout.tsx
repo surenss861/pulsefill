@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isNextRedirectError } from "@/lib/auth-action-errors";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AuthGroupLayout({ children }: { children: React.ReactNode }) {
@@ -10,8 +11,9 @@ export default async function AuthGroupLayout({ children }: { children: React.Re
     if (user) {
       redirect("/overview");
     }
-  } catch {
-    /* Missing Supabase env — still render auth routes for local UI. */
+  } catch (e) {
+    if (isNextRedirectError(e)) throw e;
+    /* Missing Supabase env or transient auth read failure — still render auth routes. */
   }
 
   return children;
