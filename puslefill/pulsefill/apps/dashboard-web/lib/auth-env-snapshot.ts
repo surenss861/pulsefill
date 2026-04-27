@@ -1,35 +1,21 @@
 import { getSiteUrl } from "@/lib/site-url";
+import { safeUrlHost, safeUrlParts } from "@/lib/supabase/project-url";
 
-/**
- * Safe URL host for server logs (Vercel). Never log secrets — hosts/presence only.
- * Hostnames without a scheme are interpreted as https.
- */
-export function safeUrlHost(value?: string | null): string | null {
-  const v = value?.trim();
-  if (!v) return null;
-  const withScheme = v.startsWith("http://") || v.startsWith("https://") ? v : `https://${v}`;
-  try {
-    return new URL(withScheme).host;
-  } catch {
-    return "INVALID_URL";
-  }
-}
-
-/** Snapshot for Vercel logs — no secrets (only hostnames / booleans). */
+/** Snapshot for Vercel logs — no secrets (only URL shape / booleans). */
 export function getAuthEnvSnapshot(extra?: Record<string, unknown>): Record<string, unknown> {
   const siteRaw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  let resolvedSiteHost: string | null = null;
+  let resolvedSiteUrlParts = safeUrlParts(null);
   try {
-    resolvedSiteHost = safeUrlHost(getSiteUrl());
+    resolvedSiteUrlParts = safeUrlParts(getSiteUrl());
   } catch {
-    resolvedSiteHost = "SITE_URL_ERROR";
+    resolvedSiteUrlParts = { host: "SITE_URL_ERROR", pathname: "SITE_URL_ERROR", valid: false };
   }
 
   return {
-    supabaseUrlHost: safeUrlHost(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    supabaseUrl: safeUrlParts(process.env.NEXT_PUBLIC_SUPABASE_URL),
     hasAnonKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()),
-    nextPublicSiteUrlHost: safeUrlHost(siteRaw),
-    resolvedGetSiteUrlHost: resolvedSiteHost,
+    nextPublicSiteUrl: safeUrlParts(siteRaw),
+    resolvedSiteUrl: resolvedSiteUrlParts,
     vercelUrl: process.env.VERCEL_URL?.trim() ?? null,
     apiHosts: {
       NEXT_PUBLIC_API_BASE_URL: safeUrlHost(process.env.NEXT_PUBLIC_API_BASE_URL),

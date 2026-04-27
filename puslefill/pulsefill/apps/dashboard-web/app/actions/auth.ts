@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth-action-errors";
 import { getAuthEnvSnapshot } from "@/lib/auth-env-snapshot";
 import { createClient } from "@/lib/supabase/server";
+import { safeUrlParts } from "@/lib/supabase/project-url";
 import { getSiteUrl } from "@/lib/site-url";
 
 export type AuthFormState = { error?: string };
@@ -45,7 +46,8 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
       console.log(
         "[sign-up env check]",
         getAuthEnvSnapshot({
-          emailRedirectPreview: emailRedirectTo.slice(0, 500),
+          emailRedirectTo: safeUrlParts(emailRedirectTo),
+          emailRedirectToRaw: emailRedirectTo.slice(0, 500),
           emailRedirectValid,
         }),
       );
@@ -73,6 +75,7 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
         status: error.status,
         emailRedirectTo,
         siteUrl: getSiteUrl(),
+        supabaseUrl: safeUrlParts(process.env.NEXT_PUBLIC_SUPABASE_URL),
       });
       return {
         error: userFacingSupabaseMessage(
