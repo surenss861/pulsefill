@@ -62,9 +62,11 @@
   --pf-card-quiet-bg: rgba(255, 255, 255, 0.03);
   --pf-card-quiet-border: rgba(255, 255, 255, 0.08);
 
-  --pf-card-hero-bg: radial-gradient(circle at top left, rgba(255, 122, 24, 0.11), transparent 40%),
-    radial-gradient(circle at top right, rgba(201, 59, 47, 0.12), transparent 34%), rgba(15, 16, 19, 0.96);
-  --pf-card-hero-border: rgba(255, 122, 24, 0.22);
+  /* Command-center intros: ember wash stays subtle; border reads as glass, not orange chrome. */
+  --pf-card-hero-bg: radial-gradient(circle at top left, rgba(255, 122, 24, 0.055), transparent 44%),
+    radial-gradient(circle at top right, rgba(201, 59, 47, 0.06), transparent 38%),
+    linear-gradient(180deg, rgba(18, 19, 24, 0.97), rgba(11, 12, 17, 0.99));
+  --pf-card-hero-border: rgba(255, 255, 255, 0.1);
 
   /* —— Queue row surfaces —— */
   --pf-row-urgent-bg: rgba(255, 255, 255, 0.06);

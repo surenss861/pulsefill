@@ -28,7 +28,7 @@ export function OutcomesHero({ windowLabel }: OutcomesHeroProps) {
 
   const actions = (
     <Link href="/action-queue?section=needs_action" style={actionLinkStyle("primary")}>
-      Open Recovery Queue
+      Open queue
     </Link>
   );
 

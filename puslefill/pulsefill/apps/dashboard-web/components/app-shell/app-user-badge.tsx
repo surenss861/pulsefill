@@ -36,8 +36,8 @@ export function AppUserBadge({ name, email, role }: AppUserBadgeProps) {
           justifyContent: "center",
           fontSize: 14,
           fontWeight: 650,
-          background: "rgba(255, 122, 24, 0.14)",
-          color: "#ffb070",
+          background: "rgba(255, 122, 24, 0.1)",
+          color: "rgba(255, 186, 120, 0.95)",
         }}
       >
         {initial}

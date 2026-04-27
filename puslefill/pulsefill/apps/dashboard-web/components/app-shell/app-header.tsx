@@ -56,9 +56,9 @@ export function AppHeader({ user, profile }: AppHeaderProps) {
               fontWeight: 600,
               letterSpacing: "0.18em",
               textTransform: "uppercase",
-              border: live ? "1px solid var(--pf-accent-primary-border)" : "1px solid rgba(255,255,255,0.1)",
-              background: live ? "rgba(255, 122, 24, 0.1)" : "rgba(255,255,255,0.03)",
-              color: live ? "#ffb070" : "rgba(245, 247, 250, 0.52)",
+              border: live ? "1px solid rgba(255, 122, 24, 0.22)" : "1px solid rgba(255,255,255,0.1)",
+              background: live ? "rgba(255, 122, 24, 0.06)" : "rgba(255,255,255,0.03)",
+              color: live ? "rgba(255, 186, 120, 0.92)" : "rgba(245, 247, 250, 0.52)",
             }}
             className="pf-app-workspace-pill"
           >

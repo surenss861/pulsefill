@@ -141,8 +141,8 @@ export function ActivityPageClient() {
                   fontWeight: 600,
                   padding: "8px 14px",
                   borderRadius: 999,
-                  border: on ? "1px solid var(--pf-accent-primary-border)" : "1px solid var(--pf-border-subtle)",
-                  background: on ? "rgba(255, 122, 24, 0.1)" : "rgba(255,255,255,0.03)",
+                  border: on ? "1px solid rgba(255, 255, 255, 0.14)" : "1px solid var(--pf-border-subtle)",
+                  background: on ? "rgba(255, 122, 24, 0.08)" : "rgba(255,255,255,0.03)",
                   color: on ? "var(--pf-text-primary)" : "rgba(245, 247, 250, 0.7)",
                   cursor: "pointer",
                 }}

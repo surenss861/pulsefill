@@ -13,8 +13,8 @@ type AppSidebarProps = {
 
 const primaryNav = [
   { href: "/overview", label: "Overview" },
-  { href: "/action-queue", label: "Recovery Queue" },
-  { href: "/open-slots", label: "Open Slots" },
+  { href: "/action-queue", label: "Queue" },
+  { href: "/open-slots", label: "Slots" },
   { href: "/outcomes", label: "Outcomes" },
   { href: "/activity", label: "Activity" },
 ] as const;
@@ -52,7 +52,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
         width: 280,
         flexShrink: 0,
         borderRight: "1px solid var(--pf-border-subtle)",
-        background: "#08090c",
+        background: "linear-gradient(180deg, #08090c 0%, #060607 100%)",
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
@@ -66,7 +66,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
               height: 10,
               borderRadius: 999,
               background: "var(--pf-accent-primary)",
-              boxShadow: "0 0 20px rgba(255, 122, 24, 0.55)",
+              boxShadow: "0 0 14px rgba(255, 122, 24, 0.28)",
             }}
           />
           <div>
@@ -157,8 +157,8 @@ export function AppSidebar({ profile }: AppSidebarProps) {
         <div
           style={{
             borderRadius: 18,
-            border: "1px solid var(--pf-border-subtle)",
-            background: "#0a0f1a",
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "linear-gradient(165deg, rgba(255,255,255,0.04), rgba(10,12,18,0.92))",
             padding: 16,
           }}
         >
@@ -178,9 +178,9 @@ export function AppSidebar({ profile }: AppSidebarProps) {
                 fontWeight: 600,
                 letterSpacing: "0.16em",
                 textTransform: "uppercase",
-                border: live ? "1px solid var(--pf-accent-primary-border)" : "1px solid rgba(255,255,255,0.1)",
-                background: live ? "rgba(255, 122, 24, 0.08)" : "rgba(255,255,255,0.03)",
-                color: live ? "#ffb070" : "rgba(245, 247, 250, 0.52)",
+                border: live ? "1px solid rgba(255, 122, 24, 0.22)" : "1px solid rgba(255,255,255,0.1)",
+                background: live ? "rgba(255, 122, 24, 0.06)" : "rgba(255,255,255,0.03)",
+                color: live ? "rgba(255, 186, 120, 0.92)" : "rgba(245, 247, 250, 0.52)",
               }}
             >
               {live ? "Live" : "Setup"}

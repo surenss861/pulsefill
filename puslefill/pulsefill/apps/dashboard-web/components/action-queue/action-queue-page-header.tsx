@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-const DEFAULT_OVERLINE = "Recovery Queue";
+const DEFAULT_OVERLINE = "Queue";
 const DEFAULT_TITLE = "What needs attention";
 const DEFAULT_SUBTITLE =
   "The live worklist for appointment recovery. Review urgent slots, follow up where needed, and clear the queue.";

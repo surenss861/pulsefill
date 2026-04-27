@@ -17,7 +17,7 @@ const toneShell: Record<PageIntroTone, CSSProperties> = {
   elevated: {
     border: "1px solid var(--pf-card-hero-border)",
     background: "var(--pf-card-hero-bg)",
-    boxShadow: "0 30px 80px rgba(0,0,0,0.38)",
+    boxShadow: "0 28px 76px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(255, 122, 24, 0.06)",
   },
 };
 

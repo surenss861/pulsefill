@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const actions = [
   {
-    title: "Open Recovery Queue",
+    title: "Open queue",
     body: "Work the hottest active recovery items first.",
     href: "/action-queue?section=needs_action",
   },

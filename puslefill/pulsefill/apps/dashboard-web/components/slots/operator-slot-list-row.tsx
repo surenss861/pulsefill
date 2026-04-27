@@ -60,8 +60,8 @@ export function OperatorSlotListRow({
 
   const selectedShell: CSSProperties | undefined = selection?.selected
     ? {
-        border: "1px solid var(--pf-accent-primary-border)",
-        background: "rgba(255, 122, 24, 0.08)",
+        border: "1px solid rgba(255, 255, 255, 0.14)",
+        background: "rgba(255, 122, 24, 0.06)",
       }
     : undefined;
 

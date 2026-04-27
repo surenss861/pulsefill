@@ -154,7 +154,7 @@ export function OpenSlotDetailPage() {
 
   const sourceChip = useMemo(() => {
     const f = searchParams.get("from");
-    if (f === "queue") return "From Recovery Queue";
+    if (f === "queue") return "From queue";
     if (f === "slots") return "From Open Slots";
     if (f === "activity") return "From Activity";
     if (f === "claims") return "From Claims";
@@ -207,9 +207,9 @@ export function OpenSlotDetailPage() {
                     fontWeight: 650,
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
-                    border: "1px solid rgba(255, 122, 24, 0.22)",
-                    background: "rgba(255, 122, 24, 0.1)",
-                    color: "#ffb070",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    background: "rgba(255, 122, 24, 0.07)",
+                    color: "rgba(255, 186, 120, 0.92)",
                   }}
                 >
                   {queueChip}

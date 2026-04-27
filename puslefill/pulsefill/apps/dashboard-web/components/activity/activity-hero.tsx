@@ -10,8 +10,8 @@ export function ActivityHero({ actions }: ActivityHeroProps) {
     <span
       style={{
         borderRadius: 999,
-        border: "1px solid var(--pf-accent-primary-border)",
-        background: "rgba(255, 122, 24, 0.08)",
+        border: "1px solid rgba(255, 122, 24, 0.2)",
+        background: "rgba(255, 122, 24, 0.06)",
         padding: "8px 14px",
         fontSize: 11,
         fontWeight: 600,

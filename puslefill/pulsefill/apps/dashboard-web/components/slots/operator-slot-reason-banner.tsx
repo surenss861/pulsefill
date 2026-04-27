@@ -13,10 +13,10 @@ function severityStyles(severity: OperatorSlotQueueSeverity | null | undefined) 
   }
   if (severity === "medium") {
     return {
-      border: "1px solid rgba(255, 122, 24, 0.28)",
-      background: "rgba(255, 122, 24, 0.08)",
-      labelColor: "rgba(255, 176, 112, 0.98)",
-      rail: "var(--pf-accent-primary)",
+      border: "1px solid rgba(255, 255, 255, 0.12)",
+      background: "rgba(255, 122, 24, 0.06)",
+      labelColor: "rgba(255, 186, 120, 0.95)",
+      rail: "rgba(255, 122, 24, 0.85)",
     };
   }
   return {

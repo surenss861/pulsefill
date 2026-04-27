@@ -190,7 +190,7 @@ function ActionQueuePageContent() {
       ) : null}
 
       {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
-      {loading && !data ? <p style={{ color: "var(--muted)" }}>Loading Recovery Queue…</p> : null}
+      {loading && !data ? <p style={{ color: "var(--muted)" }}>Loading queue…</p> : null}
 
       {data ? (
         <>

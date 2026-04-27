@@ -60,9 +60,9 @@ export function OpenSlotDetailToolbar({ refreshedAt, backHref, backLabel, source
             textTransform: "uppercase",
             borderRadius: 999,
             padding: "4px 9px",
-            border: "1px solid rgba(255, 122, 24, 0.22)",
-            background: "rgba(255, 122, 24, 0.08)",
-            color: "#ffb070",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            background: "rgba(255, 122, 24, 0.05)",
+            color: "rgba(255, 186, 120, 0.88)",
           }}
         >
           Live detail

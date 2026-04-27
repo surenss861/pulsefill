@@ -26,10 +26,11 @@ export function ActionQueuePreviewCard({
     <div
       style={{
         marginTop: 24,
-        borderRadius: 16,
+        borderRadius: 20,
         border: "1px solid rgba(255,255,255,0.1)",
-        background: "rgba(255,255,255,0.02)",
-        padding: 20,
+        background: "linear-gradient(165deg, rgba(255,255,255,0.045), rgba(10,12,18,0.88))",
+        boxShadow: "0 20px 56px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
+        padding: 22,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
@@ -40,7 +41,7 @@ export function ActionQueuePreviewCard({
               <>
                 <span style={{ color: "rgba(245, 247, 250, 0.72)" }}>{summaryLine}</span>
                 <span style={{ display: "block", marginTop: 6 }}>
-                  Top of the Recovery Queue — highest severity first.
+                  Top of the queue — highest severity first.
                 </span>
               </>
             ) : (
@@ -61,7 +62,7 @@ export function ActionQueuePreviewCard({
             whiteSpace: "nowrap",
           }}
         >
-          Open Recovery Queue
+          Open queue
         </Link>
       </div>
 

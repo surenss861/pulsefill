@@ -31,9 +31,9 @@ export function OverviewOperatorHero({
         fontWeight: 650,
         letterSpacing: "0.16em",
         textTransform: "uppercase",
-        border: onboardingCompleted ? "1px solid var(--pf-accent-primary-border)" : "1px solid rgba(255,255,255,0.1)",
-        background: onboardingCompleted ? "rgba(255, 122, 24, 0.1)" : "rgba(255,255,255,0.03)",
-        color: onboardingCompleted ? "#ffb070" : "rgba(245, 247, 250, 0.52)",
+        border: onboardingCompleted ? "1px solid rgba(255, 122, 24, 0.22)" : "1px solid rgba(255,255,255,0.1)",
+        background: onboardingCompleted ? "rgba(255, 122, 24, 0.06)" : "rgba(255,255,255,0.03)",
+        color: onboardingCompleted ? "rgba(255, 186, 120, 0.92)" : "rgba(245, 247, 250, 0.52)",
       }}
     >
       {onboardingCompleted ? "Workspace live" : "Setup pending"}
@@ -43,10 +43,10 @@ export function OverviewOperatorHero({
   const actions = (
     <>
       <Link href="/action-queue?section=needs_action" style={actionLinkStyle("primary")}>
-        Open Recovery Queue
+        Open queue
       </Link>
       <Link href="/open-slots" style={actionLinkStyle("secondary")}>
-        Open Slots
+        Browse slots
       </Link>
     </>
   );
@@ -60,8 +60,8 @@ export function OverviewOperatorHero({
       title={<>Welcome back, {greeting}.</>}
       description={
         <>
-          Signed in as {email}. Use Recovery Queue for urgent recovery work, Open Slots for inventory, and this overview for
-          daily signals.
+          Signed in as {email}. Use Queue for urgent recovery work, Slots for inventory, and this overview for daily
+          signals.
           <span style={{ display: "block", marginTop: 10, fontSize: 12, color: "rgba(245, 247, 250, 0.42)" }}>
             Role: <span style={{ color: "#ffb070", fontWeight: 600 }}>{roleLabel(role)}</span>
           </span>

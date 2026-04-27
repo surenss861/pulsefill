@@ -154,8 +154,8 @@ export function SlotDetailFactsGrid({ slot, serviceLabel, locationLabel, namesLo
           style={{
             marginTop: 14,
             borderRadius: 14,
-            border: "1px solid rgba(255, 122, 24, 0.2)",
-            background: "rgba(255, 122, 24, 0.06)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            background: "rgba(255, 122, 24, 0.05)",
             padding: "12px 14px",
             fontSize: 13,
             color: "rgba(245, 247, 250, 0.72)",

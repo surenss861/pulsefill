@@ -34,7 +34,9 @@ export function AppShell({ children, user, profile }: AppShellProps) {
             <MobileQuick href="/settings" label="Settings" />
           </div>
           <div style={{ flex: 1, overflow: "auto" }}>
-            <div style={{ maxWidth: 1120, margin: "0 auto", padding: "20px 20px 40px" }}>{children}</div>
+            <div style={{ maxWidth: 1180, margin: "0 auto", padding: "clamp(16px, 2.2vw, 24px) clamp(16px, 2.5vw, 28px) 48px" }}>
+              {children}
+            </div>
           </div>
         </div>
       </div>
