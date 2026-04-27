@@ -10,5 +10,8 @@ struct CustomerActivityFilterBar: View {
             }
         }
         .pickerStyle(.segmented)
+        .onChange(of: selected) { _, _ in
+            PFHaptics.selection()
+        }
     }
 }

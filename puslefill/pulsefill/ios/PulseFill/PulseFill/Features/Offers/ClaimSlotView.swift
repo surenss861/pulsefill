@@ -16,7 +16,7 @@ struct ClaimSlotView: View {
     var body: some View {
         VStack(spacing: PFSpacing.lg) {
             Spacer()
-            Image(systemName: "bolt.circle")
+            Image(systemName: "calendar.badge.clock")
                 .font(.system(size: 48, weight: .semibold))
                 .foregroundStyle(PFColor.primary)
             PFTypography.title("Ready to claim?")
@@ -61,7 +61,7 @@ struct ClaimSlotView: View {
     private func claim() async {
         loading = true
         errorMessage = nil
-        Haptics.selection()
+        PFHaptics.mediumImpact()
         defer { loading = false }
 
         do {
@@ -72,20 +72,20 @@ struct ClaimSlotView: View {
             )
             guard res.ok else {
                 errorMessage = "This opening could not be claimed right now."
-                Haptics.error()
+                PFHaptics.warning()
                 return
             }
             let id = res.claim?.id ?? res.claimId
             guard let id, !id.isEmpty else {
                 errorMessage = "Claim succeeded but no reference was returned."
-                Haptics.error()
+                PFHaptics.warning()
                 return
             }
             outcomeNav = ClaimOutcomeNav(id: id)
-            Haptics.success()
+            PFHaptics.success()
         } catch {
             errorMessage = APIErrorCopy.message(for: error)
-            Haptics.error()
+            PFHaptics.warning()
         }
     }
 }

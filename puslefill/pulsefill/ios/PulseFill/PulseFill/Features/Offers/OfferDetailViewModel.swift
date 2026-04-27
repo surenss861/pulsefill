@@ -52,11 +52,34 @@ final class OfferDetailViewModel {
         return t > 0 && t <= 15 * 60
     }
 
+    var displayStatus: CustomerOfferDisplayStatus {
+        guard let offer else { return .unknown }
+        return customerOfferDisplayStatus(forDetail: offer)
+    }
+
+    var primaryActionTitle: String {
+        if isClaiming { return "Claiming…" }
+        switch displayStatus {
+        case .readyToClaim, .offerAvailable, .expiresSoon:
+            return "Claim opening"
+        case .claimed:
+            return "Claim submitted"
+        case .confirmed:
+            return "Booking confirmed"
+        case .expired:
+            return "Offer expired"
+        case .unavailable:
+            return "Unavailable"
+        case .unknown:
+            return "Status pending"
+        }
+    }
+
     var canClaim: Bool {
-        guard let status = offer?.status.lowercased() else { return false }
-        guard let slotId = offer?.openSlotId, !slotId.isEmpty else { return false }
-        if isExpired { return false }
-        return status == "sent" || status == "delivered" || status == "viewed"
+        guard let offer else { return false }
+        guard let slotId = offer.openSlotId, !slotId.isEmpty else { return false }
+        if isClaiming { return false }
+        return displayStatus.isClaimable
     }
 
     private static func parseISO(_ string: String) -> Date? {

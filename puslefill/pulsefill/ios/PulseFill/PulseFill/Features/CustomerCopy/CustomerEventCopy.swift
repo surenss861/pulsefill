@@ -30,4 +30,42 @@ enum CustomerEventCopy {
         case .standbySetupSuggestion: "Improve your standby setup"
         }
     }
+
+    /// One-line title for Home “Recent activity” (plain language, no internal jargon).
+    static func homeActivityRowTitle(for item: CustomerActivityItem) -> String {
+        let trimmed = item.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let kind = CustomerEventKind(rawKind: item.kind) else {
+            return trimmed.isEmpty ? "Update" : trimmed
+        }
+
+        let service: String? = {
+            guard let raw = item.serviceName else { return nil }
+            let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            return s.isEmpty ? nil : s
+        }()
+
+        switch kind {
+        case .offerReceived:
+            if let service { return "New opening · \(service)" }
+            return "New opening for you"
+        case .offerExpiringSoon:
+            return "Opening ends soon"
+        case .offerExpired:
+            return "Opening timed out"
+        case .claimSubmitted:
+            return "You picked an earlier time"
+        case .claimPendingConfirmation:
+            return "Waiting on the clinic"
+        case .bookingConfirmed:
+            return "Appointment booked"
+        case .claimUnavailable:
+            return "That time was taken"
+        case .missedOpportunity:
+            return "Opening filled up"
+        case .standbyStatusReminder:
+            return "Standby updated"
+        case .standbySetupSuggestion:
+            return "Standby can alert you sooner"
+        }
+    }
 }

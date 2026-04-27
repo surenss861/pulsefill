@@ -26,14 +26,20 @@ struct RootTabView: View {
 
             CustomerActivityFeedView(api: env.apiClient)
                 .environmentObject(env)
-                .tabItem { Label("Activity", systemImage: "clock.fill") }
+                .tabItem { Label("Activity", systemImage: "list.bullet.rectangle") }
                 .tag(AppTab.activity)
 
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag(AppTab.profile)
         }
-        .tint(PFColor.primary)
+        .tint(PFColor.ember)
+        .toolbarBackground(PFColor.customerTabBar, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
+        .onChange(of: env.customerNavigation.selectedTab) { _, _ in
+            PFHaptics.selection()
+        }
         .task(id: env.sessionStore.userId) {
             await runStandbyOnboardingGate()
         }

@@ -463,6 +463,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
           .eq("customer_id", req.customer!.id)
           .eq("platform", body.platform)
           .eq("token_type", body.token_type)
+          .eq("environment", body.environment)
           .neq("device_token", body.device_token)
           .eq("active", true);
         if (deactivationError) {

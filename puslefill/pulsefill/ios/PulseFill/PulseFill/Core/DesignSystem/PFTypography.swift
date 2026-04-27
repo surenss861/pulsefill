@@ -47,4 +47,61 @@ enum PFTypography {
     static func caption(_ text: String) -> some View {
         Text(text).font(.system(size: 13, weight: .regular)).foregroundStyle(PFColor.textSecondary)
     }
+
+    // MARK: - Customer app (SF Pro, controlled scale)
+
+    enum Customer {
+        /// Main hero line on a screen (e.g. Home headline).
+        static func screenTitle(_ text: String) -> some View {
+            Text(text)
+                .font(.system(size: 34, weight: .bold, design: .default))
+                .foregroundStyle(PFColor.textPrimary)
+                .lineSpacing(3)
+        }
+
+        /// Greeting / secondary screen lead.
+        static func screenSubtitle(_ text: String) -> some View {
+            Text(text)
+                .font(.system(size: 16, weight: .semibold, design: .default))
+                .foregroundStyle(PFColor.textSecondary)
+        }
+
+        /// Supporting line under a screen title (Offers / Activity / Profile).
+        static func screenLead(_ text: String) -> some View {
+            Text(text)
+                .font(.system(size: 16, weight: .semibold, design: .default))
+                .foregroundStyle(PFColor.customerMutedText)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+
+        /// Primary line on a card (service name, section header).
+        static func cardTitle(_ text: String) -> some View {
+            Text(text)
+                .font(.system(size: 22, weight: .bold, design: .default))
+                .foregroundStyle(PFColor.textPrimary)
+        }
+
+        /// Secondary meta on a card (clinic, supporting line).
+        static func cardMeta(_ text: String) -> some View {
+            Text(text)
+                .font(.system(size: 16, weight: .semibold, design: .default))
+                .foregroundStyle(PFColor.textSecondary)
+        }
+
+        /// Uppercase / eyebrow labels (STANDBY, AVAILABLE OPENINGS).
+        static func label(_ text: String) -> some View {
+            Text(text)
+                .font(.system(size: 12, weight: .bold, design: .default))
+                .foregroundStyle(PFColor.textMuted)
+                .textCase(.uppercase)
+                .tracking(0.6)
+        }
+
+        /// Primary button label style (caller wraps in `Button`).
+        static func button(_ text: String) -> some View {
+            Text(text)
+                .font(.system(size: 17, weight: .bold, design: .default))
+        }
+    }
 }

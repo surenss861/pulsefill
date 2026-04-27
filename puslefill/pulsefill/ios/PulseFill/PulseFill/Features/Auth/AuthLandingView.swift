@@ -23,39 +23,40 @@ struct AuthLandingView: View {
                 .ignoresSafeArea()
 
                 VStack(alignment: .leading, spacing: 0) {
-                    Spacer(minLength: 54)
+                    Spacer(minLength: 42)
 
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text("PulseFill")
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundStyle(PFColor.textPrimary)
+                            .font(.system(size: 23, weight: .bold))
+                            .foregroundStyle(Color.white.opacity(0.92))
 
-                        Text("Earlier appointments.\nLess waiting.")
+                        Text("Sooner appointments.\nLess waiting.")
                             .font(.system(size: 36, weight: .bold))
-                            .foregroundStyle(PFColor.textPrimary)
-                            .lineSpacing(1)
+                            .foregroundStyle(Color.white.opacity(0.94))
+                            .lineSpacing(4)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.9)
+                            .allowsTightening(true)
                             .multilineTextAlignment(.leading)
+                            .padding(.top, 18)
+
+                        Text("Get notified when better times open up.\nClaim fast. Skip the back-and-forth.")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .lineSpacing(3)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 14)
                     }
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 10)
 
-                    Spacer(minLength: 32)
+                    Spacer(minLength: 22)
 
                     AuthAppointmentPassCard()
                         .opacity(appeared ? 1 : 0)
                         .offset(y: appeared ? 0 : 8)
-                        .scaleEffect(appeared ? 1 : 0.98)
-
-                    Spacer(minLength: 26)
-
-                    Text("Get notified when better times open up.\nClaim fast. Track status. Skip the back-and-forth.")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(PFColor.textSecondary)
-                        .lineSpacing(5)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .opacity(appeared ? 1 : 0)
-                        .offset(y: appeared ? 0 : 6)
+                        .scaleEffect(appeared ? 1 : 0.99)
 
                     Spacer()
 
@@ -66,12 +67,26 @@ struct AuthLandingView: View {
                             Text("Sign in")
                                 .font(.system(size: 17, weight: .semibold))
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 15)
-                                .background(PFColor.primary)
+                                .frame(minHeight: 58)
                                 .foregroundStyle(Color.black)
-                                .clipShape(RoundedRectangle(cornerRadius: PFRadius.largeControl, style: .continuous))
-                                .shadow(color: Color.black.opacity(0.42), radius: 12, y: 8)
-                                .shadow(color: PFColor.primary.opacity(0.12), radius: 8, y: 3)
+                                .background {
+                                    ZStack {
+                                        // Brighter ember for signed-out CTA (PFColor.primary reads muddy on warm scrim).
+                                        Color(red: 1.0, green: 0.42, blue: 0.05)
+                                        LinearGradient(
+                                            colors: [
+                                                Color.white.opacity(0.2),
+                                                Color.clear,
+                                            ],
+                                            startPoint: .top,
+                                            endPoint: .center
+                                        )
+                                        .blendMode(.overlay)
+                                    }
+                                }
+                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                .shadow(color: Color.black.opacity(0.22), radius: 8, y: 5)
+                                .shadow(color: Color(red: 1.0, green: 0.42, blue: 0.05).opacity(0.35), radius: 16, y: 5)
                         }
 
                         Button {
@@ -81,18 +96,20 @@ struct AuthLandingView: View {
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .foregroundStyle(Color.white.opacity(0.94))
-                                .background(Color.white.opacity(0.08))
+                                .foregroundStyle(Color.white.opacity(0.65))
+                                .background(Color.white.opacity(0.05))
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: PFRadius.largeControl, style: .continuous)
-                                        .stroke(Color.white.opacity(0.28), lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
                                 )
-                                .clipShape(RoundedRectangle(cornerRadius: PFRadius.largeControl, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                         }
 
-                        Text("For invited customers and standby users.")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(Color.white.opacity(0.48))
+                        Text("Invite required")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color.white.opacity(0.38))
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
                             .padding(.top, 4)
                     }
                     .opacity(appeared ? 1 : 0)
@@ -105,8 +122,8 @@ struct AuthLandingView: View {
                 LinearGradient(
                     colors: [
                         Color.clear,
-                        Color(red: 0.05, green: 0.03, blue: 0.025).opacity(0.45),
-                        Color(red: 0.035, green: 0.022, blue: 0.018).opacity(0.78),
+                        Color(red: 0.05, green: 0.03, blue: 0.025).opacity(0.38),
+                        Color(red: 0.035, green: 0.022, blue: 0.018).opacity(0.68),
                     ],
                     startPoint: .center,
                     endPoint: .bottom

@@ -7,56 +7,137 @@ struct OffersInboxView: View {
     @State private var errorMessage: String?
     @State private var navigationPath = NavigationPath()
 
+    private var partitioned: (active: [OfferInboxItem], past: [OfferInboxItem]) {
+        var active: [(OfferInboxItem, CustomerOfferDisplayStatus)] = []
+        var past: [(OfferInboxItem, CustomerOfferDisplayStatus)] = []
+
+        for offer in offers {
+            let st = customerOfferDisplayStatus(forInbox: offer)
+            if st.isClaimable {
+                active.append((offer, st))
+            } else {
+                past.append((offer, st))
+            }
+        }
+
+        func slotStart(_ o: OfferInboxItem) -> Date? {
+            guard let raw = o.openSlot?.startsAt else { return nil }
+            return CustomerStatusPresentersISO.parse(raw)
+        }
+
+        func sentAt(_ o: OfferInboxItem) -> Date? {
+            guard let raw = o.sentAt else { return nil }
+            return CustomerStatusPresentersISO.parse(raw)
+        }
+
+        active.sort { a, b in
+            let da = slotStart(a.0) ?? .distantFuture
+            let db = slotStart(b.0) ?? .distantFuture
+            if da != db { return da < db }
+            return (sentAt(a.0) ?? .distantPast) > (sentAt(b.0) ?? .distantPast)
+        }
+
+        past.sort { a, b in
+            (sentAt(a.0) ?? .distantPast) > (sentAt(b.0) ?? .distantPast)
+        }
+
+        return (active.map(\.0), past.map(\.0))
+    }
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            ZStack {
-                PFColor.background.ignoresSafeArea()
-                Group {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        PFTypography.Customer.screenTitle("Offers")
+                            .multilineTextAlignment(.leading)
+
+                        PFTypography.Customer.screenLead("Claim better appointment times when they become available.")
+                    }
+                    .customerAppearAnimation(staggerIndex: 0)
+
                     if loading {
-                        ProgressView("Loading offers…")
-                            .tint(PFColor.primary)
+                        ProgressView()
+                            .tint(PFColor.ember)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 12)
                     } else if let errorMessage {
-                        EmptyStateView(
-                            title: "Couldn’t load offers",
+                        CustomerEmptyStateCard(
+                            systemImage: "exclamationmark.triangle",
+                            title: "Couldn’t load openings",
                             message: errorMessage,
-                            actionTitle: "Retry",
-                            action: { Task { await load() } }
+                            footnote: nil
                         )
+
+                        CustomerPrimaryButton(title: "Try again") {
+                            Task { await load() }
+                        }
                     } else if offers.isEmpty {
-                        EmptyStateView(
-                            title: "No live offers",
-                            message: "When a slot matches your standby settings, it appears here.",
-                            actionTitle: "Refresh",
-                            action: { Task { await load() } }
+                        CustomerEmptyStateCard(
+                            systemImage: "bell.badge",
+                            title: "No openings right now.",
+                            message: "You’re still on standby for updates. We’ll notify you when a better appointment time opens up.",
+                            footnote: "Keep notifications on so you don’t miss an opening.",
+                            primaryActionTitle: "Check notification settings",
+                            primaryAction: {
+                                env.customerNavigation.open(.notificationSettings)
+                            },
+                            secondaryActionTitle: "Update standby preferences",
+                            secondaryAction: {
+                                env.customerNavigation.open(.standbyStatus)
+                            }
                         )
                     } else {
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 16) {
-                                OffersFocusHeader(liveCount: offers.count)
-                                ForEach(offers) { item in
-                                    NavigationLink(value: item.id) {
-                                        OfferInboxRow(offer: item)
+                        let parts = partitioned
+                        if !parts.active.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                PFTypography.Customer.label("Available openings")
+
+                                ForEach(Array(parts.active.enumerated()), id: \.element.id) { index, item in
+                                    let st = customerOfferDisplayStatus(forInbox: item)
+                                    CustomerOfferCard(offer: item, displayStatus: st) {
+                                        navigationPath.append(item.id)
                                     }
-                                    .buttonStyle(.plain)
+                                    .customerAppearAnimation(staggerIndex: index)
                                 }
                             }
-                            .padding(.vertical, 20)
-                            .padding(.horizontal, 20)
                         }
-                        .refreshable { await load() }
+
+                        if !parts.past.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                PFTypography.Customer.label("Past openings")
+
+                                ForEach(Array(parts.past.enumerated()), id: \.element.id) { index, item in
+                                    let st = customerOfferDisplayStatus(forInbox: item)
+                                    Button {
+                                        PFHaptics.lightImpact()
+                                        navigationPath.append(item.id)
+                                    } label: {
+                                        CustomerOfferPastCard(offer: item, displayStatus: st)
+                                    }
+                                    .buttonStyle(CustomerCardPressButtonStyle())
+                                    .customerAppearAnimation(staggerIndex: index + parts.active.count)
+                                }
+                            }
+                        }
                     }
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 36)
             }
-            .navigationTitle("Offers")
-            .toolbarBackground(PFColor.surface1, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .background(CustomerScreenBackground())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: String.self) { id in
                 OfferDetailView(api: env.apiClient, offerId: id)
+                    .environmentObject(env)
             }
             .task {
                 await load()
                 await handlePendingOfferRouting()
             }
+            .refreshable { await load() }
             .onChange(of: env.customerNavigation.pendingOfferRouting) { _, _ in
                 Task { await handlePendingOfferRouting() }
             }
@@ -66,12 +147,13 @@ struct OffersInboxView: View {
                 }
             }
         }
+        .tint(PFColor.ember)
     }
 
     private func load() async {
         guard env.sessionStore.isSignedIn else {
             offers = []
-            errorMessage = "Sign in on the Home tab to load offers."
+            errorMessage = "Sign in from Home to load openings."
             return
         }
         loading = true
@@ -107,141 +189,5 @@ struct OffersInboxView: View {
             navigationPath.append(offerId)
         }
         env.customerNavigation.clearPendingOfferRouting()
-    }
-}
-
-private struct OfferInboxRow: View {
-    let offer: OfferInboxItem
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(offer.openSlot?.providerNameSnapshot ?? "Open appointment")
-                        .font(.system(size: 21, weight: .bold, design: .rounded))
-                        .foregroundStyle(PFColor.textPrimary)
-                    Text(subtitle)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(PFColor.textSecondary)
-                }
-                Spacer()
-                StatusChipView(status: offer.status)
-            }
-
-            if let cents = offer.openSlot?.estimatedValueCents {
-                HStack(spacing: 10) {
-                    Text(CurrencyFormatter.currency(cents: cents))
-                        .font(.system(size: 24, weight: .heavy, design: .rounded))
-                        .foregroundStyle(PFColor.primary)
-                    Text("estimated value")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(PFColor.textSecondary)
-                }
-            }
-
-            HStack(spacing: 8) {
-                offerPill(
-                    title: expiryLabel,
-                    tone: expiryTone
-                )
-                if offer.status.lowercased() == "sent" || offer.status.lowercased() == "delivered" {
-                    offerPill(title: "Tap to claim", tone: .ready)
-                }
-            }
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFColor.surface1.opacity(0.94))
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .stroke(PFColor.primaryBorder.opacity(0.55), lineWidth: 1)
-        )
-        .shadow(color: PFColor.primary.opacity(0.12), radius: 16, y: 8)
-    }
-
-    private var subtitle: String {
-        guard let slot = offer.openSlot else { return "Pending details" }
-        return "\(DateFormatterPF.short(slot.startsAt)) • \(DateFormatterPF.time(slot.startsAt))–\(DateFormatterPF.time(slot.endsAt))"
-    }
-
-    private var expiryLabel: String {
-        guard let expiresAt = offer.expiresAt else { return "Claim soon" }
-        guard let exp = parseISO(expiresAt) else { return "Claim soon" }
-        let seconds = Int(exp.timeIntervalSinceNow)
-        if seconds <= 0 { return "Expired" }
-        let mins = max(1, seconds / 60)
-        if mins < 60 { return "Expires in \(mins)m" }
-        return "Expires in \(Int(round(Double(mins) / 60.0)))h"
-    }
-
-    private var expiryTone: OfferPillTone {
-        guard let expiresAt = offer.expiresAt, let exp = parseISO(expiresAt) else { return .neutral }
-        let seconds = exp.timeIntervalSinceNow
-        if seconds <= 0 { return .danger }
-        if seconds <= 15 * 60 { return .warn }
-        return .neutral
-    }
-
-    private func parseISO(_ value: String) -> Date? {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let d = f.date(from: value) { return d }
-        f.formatOptions = [.withInternetDateTime]
-        return f.date(from: value)
-    }
-
-    private func offerPill(title: String, tone: OfferPillTone) -> some View {
-        Text(title)
-            .font(.system(size: 11, weight: .bold))
-            .foregroundStyle(tone.fg)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(tone.bg)
-            .clipShape(Capsule())
-    }
-}
-
-private enum OfferPillTone {
-    case neutral
-    case warn
-    case danger
-    case ready
-
-    var fg: Color {
-        switch self {
-        case .neutral: return PFColor.textSecondary
-        case .warn: return PFColor.warning
-        case .danger: return PFColor.error
-        case .ready: return Color.black
-        }
-    }
-
-    var bg: Color {
-        switch self {
-        case .neutral: return PFColor.surface2
-        case .warn: return PFColor.warning.opacity(0.16)
-        case .danger: return PFColor.error.opacity(0.16)
-        case .ready: return PFColor.primary
-        }
-    }
-}
-
-private struct OffersFocusHeader: View {
-    let liveCount: Int
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("AVAILABLE OPENINGS")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(PFColor.textSecondary)
-            Text(liveCount == 1 ? "1 live offer needs attention" : "\(liveCount) live offers need attention")
-                .font(.system(size: 28, weight: .heavy, design: .rounded))
-                .foregroundStyle(PFColor.textPrimary)
-            Text("Claim quickly to reduce the chance of missing this opening.")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(PFColor.textSecondary)
-        }
-        .padding(.bottom, 6)
     }
 }

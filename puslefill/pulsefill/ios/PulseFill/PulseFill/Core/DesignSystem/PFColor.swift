@@ -3,12 +3,26 @@ import SwiftUI
 enum PFColor {
     /// Deepest app chrome (signed-out / dark shells).
     static let ink = Color(red: 0.03, green: 0.035, blue: 0.045)
+    /// Warm near-black (customer “appointment companion” chrome).
+    static let customerInk = Color(red: 0.035, green: 0.022, blue: 0.018)
+    static let customerInkDeep = Color(red: 0.012, green: 0.011, blue: 0.013)
+    /// Secondary dark cards (customer home / offers / activity).
+    static let customerCard = Color(red: 0.075, green: 0.07, blue: 0.075)
+    static let customerCardElevated = Color(red: 0.105, green: 0.095, blue: 0.09)
+    /// Bottom tab chrome (opaque; pairs with `.toolbarBackground`).
+    static let customerTabBar = Color(red: 0.055, green: 0.048, blue: 0.045)
+    /// Sticky footer / action bar on customer flows.
+    static let customerStickyBar = Color(red: 0.06, green: 0.052, blue: 0.05)
+
     static let background = Color(red: 0.04, green: 0.05, blue: 0.06)
     static let surface1 = Color(red: 0.075, green: 0.09, blue: 0.13)
     static let surface2 = Color(red: 0.10, green: 0.125, blue: 0.19)
     /// Slightly lifted surface for stacked cards.
     static let inkElevated = surface1
     // Ember-first accent palette aligned with web operator surfaces.
+    /// High-conversion CTA / selected chrome (slightly brighter than `primary`).
+    static let ember = Color(red: 1.0, green: 0.42, blue: 0.05)
+    static let emberText = Color(red: 0.52, green: 0.23, blue: 0.06)
     static let primary = Color(red: 1.0, green: 0.48, blue: 0.10)
     static let primaryDark = Color(red: 0.90, green: 0.36, blue: 0.07)
     static let primarySoft = Color(red: 1.0, green: 0.48, blue: 0.10).opacity(0.14)
@@ -21,6 +35,9 @@ enum PFColor {
     static let textSecondary = Color(red: 0.60, green: 0.64, blue: 0.70)
     static let textMuted = Color(red: 0.52, green: 0.56, blue: 0.62)
     static let textDim = Color(red: 0.44, green: 0.48, blue: 0.54)
+    /// Customer-facing muted / de-emphasized (slightly brighter than `textSecondary` on warm black).
+    static let customerMutedText = Color(red: 0.62, green: 0.64, blue: 0.70)
+    static let customerDimText = Color.white.opacity(0.38)
     static let divider = Color.white.opacity(0.08)
     static let hairline = Color.white.opacity(0.10)
     static let glassTint = Color.white.opacity(0.055)
@@ -47,5 +64,8 @@ enum PFColor {
     static let passChipBackground = Color(red: 0.48, green: 0.22, blue: 0.07).opacity(0.10)
     static let passCreamTop = Color(red: 1.0, green: 0.965, blue: 0.89)
     static let passCreamBottom = Color(red: 0.965, green: 0.90, blue: 0.79)
+    /// Semantic aliases for appointment-pass surfaces (same as gradient stops).
+    static let passCream = passCreamTop
+    static let passCreamDeep = passCreamBottom
     static let passAlertDot = Color(red: 0.13, green: 0.72, blue: 0.38)
 }

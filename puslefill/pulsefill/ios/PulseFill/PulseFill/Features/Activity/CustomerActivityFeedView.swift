@@ -11,76 +11,79 @@ struct CustomerActivityFeedView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            ZStack {
-                PFColor.background.ignoresSafeArea()
-                Group {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        PFTypography.Customer.screenTitle("Activity")
+                            .multilineTextAlignment(.leading)
+
+                        PFTypography.Customer.screenLead("A simple timeline of your offers and booking updates.")
+                    }
+                    .customerAppearAnimation(staggerIndex: 0)
+
+                    if env.sessionStore.isStaffUser {
+                        CustomerActivityFilterBar(selected: $viewModel.selectedFilter)
+                            .customerAppearAnimation(staggerIndex: 1)
+                    }
+
                     switch viewModel.loadState {
                     case .idle, .loading:
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 14) {
-                                PFPageHeader(
-                                    overline: "Activity",
-                                    title: "Operational record",
-                                    subtitle: "Live timeline of operator and system events."
-                                )
-                                PFLoadingSkeleton(count: 4)
-                            }
-                            .padding(.top, 16)
-                            .padding(.horizontal, 20)
-                        }
+                        ProgressView()
+                            .tint(PFColor.ember)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 12)
 
                     case let .failed(message):
-                        EmptyStateView(
+                        CustomerEmptyStateCard(
+                            systemImage: "exclamationmark.triangle",
                             title: "Couldn’t load activity",
                             message: message,
-                            actionTitle: "Retry",
-                            action: { Task { await viewModel.load() } }
+                            footnote: nil
                         )
+                        CustomerPrimaryButton(title: "Try again") {
+                            Task { await viewModel.load() }
+                        }
 
                     case .loaded:
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 16) {
-                                CustomerActivityFilterBar(selected: $viewModel.selectedFilter)
-                                    .padding(.horizontal, 20)
-
-                                if viewModel.filteredItems.isEmpty {
-                                    Text("No recent activity yet.")
-                                        .font(.system(size: 13))
-                                        .foregroundStyle(PFColor.textSecondary)
-                                        .padding(.horizontal, 20)
-                                        .padding(.top, 8)
-                                } else {
-                                    LazyVStack(spacing: 12) {
-                                        ForEach(viewModel.filteredItems) { item in
-                                            Button {
-                                                if env.sessionStore.isStaffUser, let slotId = item.openSlotId, !slotId.isEmpty {
-                                                    path.append(slotId)
-                                                } else if let dest = CustomerRouteMapper.destinationForActivityItem(item) {
-                                                    env.customerNavigation.open(dest)
-                                                }
-                                            } label: {
-                                                CustomerActivityCard(item: item)
-                                            }
-                                            .buttonStyle(.plain)
-                                        }
-                                    }
-                                    .padding(.horizontal, 20)
-                                    .padding(.bottom, 24)
+                        let groups = customerActivityTimelineGroups(from: viewModel.filteredItems)
+                        if groups.isEmpty {
+                            CustomerEmptyStateCard(
+                                systemImage: "list.bullet.rectangle",
+                                title: "No activity yet.",
+                                message: "When something changes — a new opening, a claim, or a booking update — it’ll show up here.",
+                                footnote: nil,
+                                primaryActionTitle: "Browse openings",
+                                primaryAction: {
+                                    env.customerNavigation.openOffersInbox()
+                                },
+                                secondaryActionTitle: "Update standby preferences",
+                                secondaryAction: {
+                                    env.customerNavigation.open(.standbyStatus)
                                 }
+                            )
+                            .customerAppearAnimation(staggerIndex: 2)
+                        } else {
+                            ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
+                                activitySection(group)
+                                    .customerAppearAnimation(staggerIndex: index + 2)
                             }
-                            .padding(.top, 16)
                         }
-                        .refreshable { await viewModel.refresh() }
                     }
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 36)
             }
-            .navigationTitle("Operational record")
-            .toolbarBackground(PFColor.surface1, for: .navigationBar)
+            .background(CustomerScreenBackground())
+            .navigationTitle("Activity")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(PFColor.customerTabBar, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .task {
                 await viewModel.load()
                 consumePendingRoute()
             }
+            .refreshable { await viewModel.refresh() }
             .onChange(of: env.customerNavigation.pendingCustomerDestination) { _, _ in
                 consumePendingRoute()
             }
@@ -96,6 +99,38 @@ struct CustomerActivityFeedView: View {
                 OperatorSlotDetailView(api: env.apiClient, slotId: slotId)
             }
         }
+        .tint(PFColor.ember)
+    }
+
+    @ViewBuilder
+    private func activitySection(_ group: CustomerActivityTimelineGroup) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(group.sectionTitle)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(PFColor.customerDimText)
+
+            CustomerSectionCard(padding: 14) {
+                VStack(spacing: 14) {
+                    ForEach(group.rows) { row in
+                        if let item = viewModel.filteredItems.first(where: { $0.id == row.id }) {
+                            row.rowView {
+                                handleActivityTap(item: item)
+                            }
+                        } else {
+                            CustomerActivityRow(title: row.title, relativeTime: row.relativeTime, detail: row.detail, dot: row.dot)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func handleActivityTap(item: CustomerActivityItem) {
+        if env.sessionStore.isStaffUser, let slotId = item.openSlotId, !slotId.isEmpty {
+            path.append(slotId)
+        } else if let dest = CustomerRouteMapper.destinationForActivityItem(item) {
+            env.customerNavigation.open(dest)
+        }
     }
 
     @ViewBuilder
@@ -103,6 +138,7 @@ struct CustomerActivityFeedView: View {
         switch destination {
         case let .offerDetail(offerId):
             OfferDetailView(api: env.apiClient, offerId: offerId)
+                .environmentObject(env)
 
         case let .claimOutcome(claimId):
             ClaimOutcomeView(api: env.apiClient, claimId: claimId)
@@ -141,4 +177,3 @@ struct CustomerActivityFeedView: View {
         }
     }
 }
-

@@ -18,44 +18,81 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            List {
-                if standbyJustCompleted {
-                    onboardingCompletionBanner
-                }
-
-                standbySection
-                preferencesSection
-                pushDebugSection
-
-                Section {
-                    if let uid = env.sessionStore.userId {
-                        LabeledContent("User", value: uid)
-                    } else {
-                        Text("Not signed in").foregroundStyle(PFColor.textSecondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    if standbyJustCompleted {
+                        onboardingCompletionBanner
                     }
-                    if let email = env.sessionStore.email, !email.isEmpty {
-                        LabeledContent("Email", value: email)
-                    }
-                    if env.sessionStore.isStaffUser {
-                        Toggle(
-                            "Customer mode (standby & offers)",
-                            isOn: $preferCustomerTabs
-                        )
-                        .tint(PFColor.primary)
-                    }
-                }
 
-                Section {
-                    Button("Sign out", role: .destructive) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        PFTypography.Customer.screenTitle("Profile")
+                            .multilineTextAlignment(.leading)
+                        PFTypography.Customer.screenLead("Account, alerts, and standby in one place.")
+                    }
+
+                    accountCard
+
+                    CustomerSectionCard {
+                        VStack(alignment: .leading, spacing: 0) {
+                            profileNavRow(
+                                title: "Standby status",
+                                subtitle: "See if you’re set up to receive openings",
+                                destination: .standbyStatus
+                            )
+                            Divider().background(PFColor.hairline)
+                            profileNavRow(
+                                title: "Notification settings",
+                                subtitle: "Quiet hours and how we reach you",
+                                destination: .notificationSettings
+                            )
+                            Divider().background(PFColor.hairline)
+                            profileNavRow(
+                                title: "Earlier openings you missed",
+                                subtitle: "Past times that didn’t work out",
+                                destination: .missedOpportunities
+                            )
+                        }
+                    }
+
+                    CustomerSectionCard {
+                        NavigationLink {
+                            StandbyPreferencesView(api: env.apiClient)
+                                .environmentObject(env)
+                        } label: {
+                            ProfileRow(
+                                title: "Standby preferences",
+                                subtitle: "Preferred days, times, and locations"
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    #if DEBUG
+                    pushDebugCard
+                    #endif
+
+                    Button(role: .destructive) {
                         Task { await env.authManager.signOut() }
+                    } label: {
+                        Text("Sign out")
+                            .font(.system(size: 17, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
                     }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(PFColor.error)
+                    .padding(.top, 8)
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 36)
             }
-            .scrollContentBackground(.hidden)
-            .background(PFColor.background)
-            .navigationTitle("Account & settings")
-            .toolbarBackground(PFColor.surface1, for: .navigationBar)
+            .background(CustomerScreenBackground())
+            .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(PFColor.customerTabBar, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .tint(PFColor.ember)
             .onAppear {
                 clearCompletionBannerLaterIfNeeded()
                 consumePendingRouteIfNeeded()
@@ -76,6 +113,103 @@ struct ProfileView: View {
         }
     }
 
+    private var accountCard: some View {
+        CustomerSectionCard {
+            VStack(alignment: .leading, spacing: 12) {
+                PFTypography.Customer.label("Account")
+
+                if let email = env.sessionStore.email, !email.isEmpty {
+                    Text(email)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(PFColor.textPrimary)
+                } else {
+                    Text("Not signed in")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(PFColor.textSecondary)
+                }
+
+                if let uid = env.sessionStore.userId {
+                    Text("User ID: \(uid)")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(PFColor.textMuted)
+                }
+
+                if env.sessionStore.isStaffUser {
+                    Toggle("Customer mode (standby & offers)", isOn: $preferCustomerTabs)
+                        .font(.system(size: 15, weight: .medium))
+                        .tint(PFColor.ember)
+                }
+
+                HStack {
+                    Text("Push")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(PFColor.textSecondary)
+                    Spacer()
+                    Text(notificationsSummary)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(PFColor.textPrimary)
+                }
+                .padding(.top, 4)
+            }
+        }
+    }
+
+    private var notificationsSummary: String {
+        switch pushDebug.permission.lowercased() {
+        case "authorized":
+            return "Notifications on"
+        case "denied":
+            return "Notifications off"
+        case "not_determined":
+            return "Permission needed"
+        default:
+            return pushDebug.permission
+        }
+    }
+
+    private var onboardingCompletionBanner: some View {
+        CustomerSectionCard {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Standby is active")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(PFColor.textPrimary)
+
+                Text("You’re set up to receive openings that match what you saved.")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+            }
+        }
+    }
+
+    #if DEBUG
+    private var pushDebugCard: some View {
+        CustomerSectionCard {
+            VStack(alignment: .leading, spacing: 10) {
+                PFTypography.Customer.label("Push debug")
+
+                LabeledContent("Permission", value: pushDebug.permission)
+                LabeledContent("Registration", value: attemptLabel(state: pushDebug.registrationState, at: pushDebug.registrationAt))
+                LabeledContent("Deactivation", value: attemptLabel(state: pushDebug.deactivationState, at: pushDebug.deactivationAt))
+                LabeledContent("Environment", value: pushDebug.environment)
+                LabeledContent("App build", value: pushDebug.appBuild)
+                if let token = pushDebug.maskedToken {
+                    LabeledContent("Token", value: token)
+                } else {
+                    LabeledContent("Token", value: "—")
+                }
+            }
+        }
+    }
+    #endif
+
+    private func profileNavRow(title: String, subtitle: String, destination: CustomerDestination) -> some View {
+        NavigationLink(value: destination) {
+            ProfileRow(title: title, subtitle: subtitle)
+        }
+        .buttonStyle(.plain)
+    }
+
     @ViewBuilder
     private func profileDestinationView(for destination: CustomerDestination) -> some View {
         switch destination {
@@ -90,6 +224,7 @@ struct ProfileView: View {
 
         case let .offerDetail(offerId):
             OfferDetailView(api: env.apiClient, offerId: offerId)
+                .environmentObject(env)
 
         case let .claimOutcome(claimId):
             ClaimOutcomeView(api: env.apiClient, claimId: claimId)
@@ -97,75 +232,6 @@ struct ProfileView: View {
         case .activity:
             Text("Activity")
                 .foregroundStyle(PFColor.textSecondary)
-        }
-    }
-
-    private var onboardingCompletionBanner: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Standby is active")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(PFColor.textPrimary)
-
-                Text("You’re set up to receive matching openings based on your current preferences.")
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(PFColor.textSecondary)
-            }
-            .padding(.vertical, 4)
-        }
-    }
-
-    private var standbySection: some View {
-        Section("Standby") {
-            NavigationLink(value: CustomerDestination.standbyStatus) {
-                ProfileRow(
-                    title: "Standby status",
-                    subtitle: "Check readiness, activity, and current coverage"
-                )
-            }
-
-            NavigationLink(value: CustomerDestination.notificationSettings) {
-                ProfileRow(
-                    title: "Notification settings",
-                    subtitle: "Quiet hours, cadence, and alert types"
-                )
-            }
-
-            NavigationLink(value: CustomerDestination.missedOpportunities) {
-                ProfileRow(
-                    title: "Recent missed opportunities",
-                    subtitle: "See what passed by and how to improve"
-                )
-            }
-        }
-    }
-
-    private var preferencesSection: some View {
-        Section("Preferences") {
-            NavigationLink {
-                StandbyPreferencesView(api: env.apiClient)
-                    .environmentObject(env)
-            } label: {
-                ProfileRow(
-                    title: "Standby preferences",
-                    subtitle: "Create, edit, pause, or remove standby preferences"
-                )
-            }
-        }
-    }
-
-    private var pushDebugSection: some View {
-        Section("Push notifications") {
-            LabeledContent("Permission", value: pushDebug.permission)
-            LabeledContent("Registration", value: attemptLabel(state: pushDebug.registrationState, at: pushDebug.registrationAt))
-            LabeledContent("Deactivation", value: attemptLabel(state: pushDebug.deactivationState, at: pushDebug.deactivationAt))
-            LabeledContent("Environment", value: pushDebug.environment)
-            LabeledContent("App build", value: pushDebug.appBuild)
-            if let token = pushDebug.maskedToken {
-                LabeledContent("Token", value: token)
-            } else {
-                LabeledContent("Token", value: "—")
-            }
         }
     }
 
