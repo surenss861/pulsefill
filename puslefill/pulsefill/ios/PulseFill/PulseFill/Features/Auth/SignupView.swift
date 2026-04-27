@@ -2,52 +2,13 @@ import SwiftUI
 
 struct SignUpView: View {
     var body: some View {
-        SignupView()
+        AuthFormView(initialMode: .signUp)
     }
 }
-import SwiftUI
 
+/// Legacy name used by older navigation; same surface as `SignUpView`.
 struct SignupView: View {
-    @EnvironmentObject private var env: AppEnvironment
-    @State private var email = ""
-    @State private var password = ""
-
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: PFSpacing.lg) {
-                PFTypography.hero("Create account")
-                PFTypography.caption("Create your PulseFill account to claim openings and track booking updates.")
-
-                TextField("Email", text: $email)
-                    .textFieldStyle(PFTextFieldStyle())
-                    .textInputAutocapitalization(.never)
-                    .keyboardType(.emailAddress)
-                    .autocorrectionDisabled()
-                SecureField("Password", text: $password)
-                    .textFieldStyle(PFTextFieldStyle())
-
-                if let banner = env.authManager.banner {
-                    Text(banner)
-                        .font(.footnote)
-                        .foregroundStyle(PFColor.error)
-                }
-
-                Button {
-                    Task { await env.authManager.signUp(email: email, password: password) }
-                } label: {
-                    HStack {
-                        if env.authManager.isBusy { ProgressView().tint(.black) }
-                        Text(env.authManager.isBusy ? "Creating account…" : "Create account")
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(PFPrimaryButtonStyle())
-                .disabled(env.authManager.isBusy || email.isEmpty || password.isEmpty)
-            }
-            .padding(PFSpacing.xl)
-        }
-        .background(PFColor.background.ignoresSafeArea())
-        .navigationTitle("Create account")
-        .navigationBarTitleDisplayMode(.inline)
+        AuthFormView(initialMode: .signUp)
     }
 }

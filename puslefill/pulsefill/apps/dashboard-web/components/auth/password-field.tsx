@@ -19,7 +19,7 @@ export function PasswordField({
 }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
   const id = useId();
-  const border = error ? "1px solid var(--pf-danger-border)" : "1px solid rgba(255,255,255,0.1)";
+  const border = error ? "1px solid var(--pf-danger-border)" : `1px solid var(--pf-auth-input-border)`;
   const cls = ["pf-auth-input", error ? "pf-auth-input--error" : ""].join(" ");
 
   return (
@@ -65,16 +65,17 @@ export function PasswordField({
             onClick={() => setVisible((v) => !v)}
             style={{
               position: "absolute",
-              right: 10,
+              right: 8,
               top: "50%",
               transform: "translateY(-50%)",
               border: "none",
-              borderRadius: 12,
-              padding: "8px 10px",
-              fontSize: 12,
-              fontWeight: 600,
-              color: "rgba(245,247,250,0.55)",
-              background: "rgba(255,255,255,0.04)",
+              borderRadius: 10,
+              padding: "6px 8px",
+              fontSize: 11,
+              fontWeight: 500,
+              letterSpacing: "0.04em",
+              color: "rgba(245,247,250,0.42)",
+              background: "transparent",
               cursor: "pointer",
             }}
           >

@@ -6,7 +6,7 @@ export type AuthFieldProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export function AuthField({ label, error, style, className, ...props }: AuthFieldProps) {
-  const border = error ? "1px solid var(--pf-danger-border)" : "1px solid rgba(255,255,255,0.1)";
+  const border = error ? "1px solid var(--pf-danger-border)" : `1px solid var(--pf-auth-input-border)`;
   const cls = ["pf-auth-input", error ? "pf-auth-input--error" : "", className].filter(Boolean).join(" ");
 
   return (
@@ -19,7 +19,7 @@ export function AuthField({ label, error, style, className, ...props }: AuthFiel
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: "0.2em",
-          color: "rgba(245,247,250,0.48)",
+          color: "rgba(245,247,250,0.55)",
         }}
       >
         {label}
@@ -32,13 +32,13 @@ export function AuthField({ label, error, style, className, ...props }: AuthFiel
           boxSizing: "border-box",
           borderRadius: 18,
           border,
-          background: "#0a0f1a",
+          background: "var(--pf-auth-input-bg)",
           padding: "16px 18px",
           minHeight: 56,
           fontSize: 15,
           color: "var(--text)",
           outline: "none",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.055)",
           transition: "border-color 140ms ease, box-shadow 140ms ease",
           ...style,
         }}

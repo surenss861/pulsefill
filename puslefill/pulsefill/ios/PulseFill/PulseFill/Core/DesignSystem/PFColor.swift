@@ -6,9 +6,25 @@ enum PFColor {
     /// Warm near-black (customer “appointment companion” chrome).
     static let customerInk = Color(red: 0.035, green: 0.022, blue: 0.018)
     static let customerInkDeep = Color(red: 0.012, green: 0.011, blue: 0.013)
-    /// Secondary dark cards (customer home / offers / activity).
-    static let customerCard = Color(red: 0.075, green: 0.07, blue: 0.075)
-    static let customerCardElevated = Color(red: 0.105, green: 0.095, blue: 0.09)
+    // MARK: - Customer dark glass (elevated surfaces, appointment passes)
+
+    static let customerGlass = Color(red: 0.082, green: 0.079, blue: 0.084)
+    /// Top of pass / elevated cards — slightly lifted for separation from warm near-black chrome.
+    static let customerGlassElevated = Color(red: 0.118, green: 0.108, blue: 0.104)
+    static let customerGlassDeep = Color(red: 0.048, green: 0.046, blue: 0.051)
+    static let customerHairline = Color.white.opacity(0.095)
+    static let customerHairlineStrong = Color.white.opacity(0.14)
+    static let emberGlow = Color(red: 1.0, green: 0.42, blue: 0.05).opacity(0.22)
+    /// Ember wash for chips / icon tiles on dark glass.
+    static let emberSoft = Color(red: 1.0, green: 0.42, blue: 0.05).opacity(0.13)
+    static let emberReadable = Color(red: 1.0, green: 0.64, blue: 0.34)
+    static let customerTextPrimary = Color.white.opacity(0.96)
+    static let customerTextSecondary = Color.white.opacity(0.62)
+    static let customerTextTertiary = Color.white.opacity(0.40)
+
+    /// Secondary dark cards (customer home / offers / activity) — same family as glass.
+    static let customerCard = customerGlass
+    static let customerCardElevated = customerGlassElevated
     /// Bottom tab chrome (opaque; pairs with `.toolbarBackground`).
     static let customerTabBar = Color(red: 0.055, green: 0.048, blue: 0.045)
     /// Sticky footer / action bar on customer flows.
@@ -51,20 +67,20 @@ enum PFColor {
     static let onboardingTodayPillForeground = Color(red: 0.95, green: 0.42, blue: 0.08)
     static let onboardingTodayPillBackground = Color(red: 1.0, green: 0.48, blue: 0.10).opacity(0.14)
 
-    // MARK: - Auth appointment pass (hierarchy + signifiers on cream)
+    // MARK: - Auth / customer appointment pass (dark glass + ember)
 
-    static let passBadgeFill = Color(red: 0.33, green: 0.16, blue: 0.07).opacity(0.12)
-    static let passBadgeIcon = Color(red: 0.48, green: 0.22, blue: 0.07)
-    static let passOpeningLabel = Color(red: 0.42, green: 0.28, blue: 0.18)
-    static let passTodayPillForeground = Color(red: 0.90, green: 0.35, blue: 0.04)
-    static let passTodayPillBackground = Color(red: 1.0, green: 0.50, blue: 0.12).opacity(0.14)
-    static let passTitle = Color(red: 0.07, green: 0.06, blue: 0.05)
-    static let passTimeBlock = Color(red: 0.10, green: 0.08, blue: 0.06)
-    static let passChipForeground = Color(red: 0.48, green: 0.22, blue: 0.07)
-    static let passChipBackground = Color(red: 0.48, green: 0.22, blue: 0.07).opacity(0.10)
+    static let passBadgeFill = emberSoft
+    static let passBadgeIcon = emberReadable
+    static let passOpeningLabel = customerTextSecondary
+    static let passTodayPillForeground = emberReadable
+    static let passTodayPillBackground = Color(red: 1.0, green: 0.42, blue: 0.05).opacity(0.14)
+    static let passTitle = customerTextPrimary
+    static let passTimeBlock = customerTextPrimary
+    static let passChipForeground = emberReadable
+    static let passChipBackground = emberSoft
+    /// Legacy cream stops (signed-out onboarding only); customer passes use glass gradients in views.
     static let passCreamTop = Color(red: 1.0, green: 0.965, blue: 0.89)
     static let passCreamBottom = Color(red: 0.965, green: 0.90, blue: 0.79)
-    /// Semantic aliases for appointment-pass surfaces (same as gradient stops).
     static let passCream = passCreamTop
     static let passCreamDeep = passCreamBottom
     static let passAlertDot = Color(red: 0.13, green: 0.72, blue: 0.38)

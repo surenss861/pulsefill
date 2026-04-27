@@ -76,7 +76,7 @@ enum CustomerOfferInboxCopy {
     }
 }
 
-// MARK: - Claimable (cream pass)
+// MARK: - Claimable (dark glass pass)
 
 struct CustomerOfferCard: View {
     let offer: OfferInboxItem
@@ -120,7 +120,7 @@ struct CustomerOfferCard: View {
 
                         Text(CustomerOfferInboxCopy.clinicLine(for: offer))
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(Color.black.opacity(0.52))
+                            .foregroundStyle(PFColor.customerTextSecondary)
 
                         Text(CustomerOfferInboxCopy.timeLine(for: offer))
                             .font(.system(size: 22, weight: .bold))

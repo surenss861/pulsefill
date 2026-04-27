@@ -24,7 +24,7 @@ struct CustomerOfferSpotlightCard: View {
     let displayStatus: CustomerOfferDisplayStatus
     let onPrimary: () -> Void
 
-    private var useCreamPass: Bool { displayStatus.isClaimable }
+    private var useClaimablePass: Bool { displayStatus.isClaimable }
     private var primaryTitle: String { homeSpotlightActionTitle(for: displayStatus) }
     private var primaryEnabled: Bool { homeSpotlightCanOpenOfferDetails(for: displayStatus) }
 
@@ -34,15 +34,15 @@ struct CustomerOfferSpotlightCard: View {
 
     var body: some View {
         Group {
-            if useCreamPass {
-                creamPassBody
+            if useClaimablePass {
+                claimablePassBody
             } else {
                 secondarySpotlightBody
             }
         }
     }
 
-    private var creamPassBody: some View {
+    private var claimablePassBody: some View {
         CustomerAppointmentPassCard {
             VStack(alignment: .leading, spacing: 18) {
                 HStack {
@@ -81,7 +81,7 @@ struct CustomerOfferSpotlightCard: View {
 
                     Text(clinic)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.black.opacity(0.50))
+                        .foregroundStyle(PFColor.customerTextSecondary)
                         .padding(.top, 2)
                 }
 

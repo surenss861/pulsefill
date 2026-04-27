@@ -14,8 +14,8 @@ export function AuthBrandPanel({
   showRecoveryStrip = true,
 }: AuthBrandPanelProps) {
   return (
-    <div style={{ display: "grid", gap: 40 }}>
-      <div style={{ display: "grid", gap: 32 }}>
+    <div style={{ display: "grid", gap: 32 }}>
+      <div style={{ display: "grid", gap: 28 }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
@@ -72,7 +72,7 @@ export function AuthBrandPanel({
       </div>
 
       {bullets.length > 0 ? (
-        <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "grid", gap: 10 }}>
           {bullets.map((item) => (
             <div
               key={item}
@@ -124,7 +124,21 @@ export function AuthBrandPanel({
             >
               Today&apos;s recovery
             </span>
-            <span style={{ fontSize: 11, color: "#fdba74", fontWeight: 600 }}>live</span>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.14em",
+                color: "rgba(253, 186, 116, 0.88)",
+                border: "1px solid rgba(255, 122, 24, 0.22)",
+                background: "rgba(255, 122, 24, 0.08)",
+                padding: "4px 9px",
+                borderRadius: 999,
+              }}
+            >
+              live
+            </span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
             {[

@@ -21,22 +21,25 @@ export default function SignUpPage() {
       brandPanel={
         <AuthBrandPanel
           eyebrow="Secure workspace setup"
-          title="Create your PulseFill workspace."
-          body="Set up the operating layer between cancellations and recovered bookings."
+          title="Create your recovery workspace."
+          body="Set up PulseFill for queue visibility, team access, and recovered bookings."
           bullets={["Team access", "Recovery workflow", "Revenue visibility"]}
           showRecoveryStrip={false}
         />
       }
     >
       <AuthCard
-        title="Create your account"
-        description="Set up PulseFill and start turning recovery into a system."
+        title="Create workspace"
+        description="Set up your operator account and connect your recovery workflow."
         footer={
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 14, color: "var(--muted)" }}>
-            <span>
-              Already have an account? <Link href="/sign-in">Sign in</Link>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <span style={{ fontSize: 13, color: "rgba(245,247,250,0.44)" }}>
+              Already have an account?{" "}
+              <Link href="/sign-in" style={{ color: "rgba(253, 186, 116, 0.78)", fontWeight: 600 }}>
+                Sign in
+              </Link>
             </span>
-            <span style={{ fontSize: 11, lineHeight: 1.45, color: "rgba(245,247,250,0.38)" }}>
+            <span style={{ fontSize: 10, lineHeight: 1.45, color: "rgba(245,247,250,0.32)" }}>
               By continuing, you agree to PulseFill&apos;s Terms and Privacy Policy.
             </span>
           </div>
@@ -71,7 +74,7 @@ export default function SignUpPage() {
               {state.error}
             </div>
           ) : null}
-          <SubmitButton pendingText="Creating account…">Create account</SubmitButton>
+          <SubmitButton pendingText="Creating workspace…">Create workspace</SubmitButton>
         </form>
       </AuthCard>
     </AuthShell>

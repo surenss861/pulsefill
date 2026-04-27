@@ -35,7 +35,7 @@ enum CustomerOfferDisplayStatus: Equatable {
         }
     }
 
-    /// Status chip on the **cream** appointment pass (inbox / detail header).
+    /// Status chip on the **dark glass** appointment pass (inbox / detail header).
     var pillToneOnPass: CustomerStatusPillTone {
         switch self {
         case .expiresSoon:

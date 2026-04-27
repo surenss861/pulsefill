@@ -92,9 +92,9 @@ struct CustomerScreenBackground: View {
     }
 }
 
-// MARK: - Appointment pass shell (cream)
+// MARK: - Appointment pass shell (dark glass)
 
-/// Cream “wallet pass” container — put functional content inside (customer Home / Offers / detail).
+/// Elevated dark “appointment pass” — use for claimable Home / Offers / detail summaries.
 struct CustomerAppointmentPassCard<Content: View>: View {
     @ViewBuilder private let content: () -> Content
 
@@ -109,25 +109,50 @@ struct CustomerAppointmentPassCard<Content: View>: View {
                 RoundedRectangle(cornerRadius: PFRadius.pass, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [PFColor.passCream, PFColor.passCreamDeep],
+                            colors: [
+                                PFColor.customerGlassElevated,
+                                PFColor.customerGlassDeep,
+                            ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .overlay {
                         RoundedRectangle(cornerRadius: PFRadius.pass, style: .continuous)
-                            .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(0.07), Color.white.opacity(0.0)],
+                                    startPoint: .top,
+                                    endPoint: UnitPoint(x: 0.5, y: 0.36)
+                                )
+                            )
+                            .allowsHitTesting(false)
+                    }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: PFRadius.pass, style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        PFColor.ember.opacity(0.28),
+                                        Color.white.opacity(0.12),
+                                        Color.white.opacity(0.10),
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
                     }
                     .overlay(alignment: .topLeading) {
                         Circle()
-                            .fill(Color.white.opacity(0.34))
-                            .frame(width: 140, height: 140)
-                            .blur(radius: 28)
-                            .offset(x: -56, y: -64)
+                            .fill(Color.white.opacity(0.07))
+                            .frame(width: 180, height: 180)
+                            .blur(radius: 38)
+                            .offset(x: -70, y: -90)
                     }
             }
-            .shadow(color: Color.black.opacity(0.28), radius: 20, x: 0, y: 14)
-            .shadow(color: PFColor.primary.opacity(0.12), radius: 28, x: 0, y: 14)
+            .shadow(color: Color.black.opacity(0.42), radius: 24, x: 0, y: 18)
+            .shadow(color: PFColor.ember.opacity(0.12), radius: 30, x: 0, y: 14)
     }
 }
 
@@ -227,7 +252,7 @@ struct CustomerPrimaryChromeLabel: View {
 // MARK: - Status pill
 
 enum CustomerStatusPillTone {
-    /// Brown chip on cream pass (default offer state copy).
+    /// Ember chip on dark glass pass (default claimable copy).
     case onCream
     /// Muted capsule on dark cards.
     case onDarkNeutral
@@ -249,18 +274,22 @@ struct CustomerStatusPill: View {
             .padding(.vertical, 7)
             .background(background)
             .clipShape(Capsule())
+            .overlay {
+                Capsule()
+                    .strokeBorder(strokeColor, lineWidth: 1)
+            }
     }
 
     private var foreground: Color {
         switch tone {
         case .onCream:
-            PFColor.passChipForeground
+            PFColor.emberReadable
         case .onDarkNeutral:
-            PFColor.textSecondary
+            PFColor.customerTextSecondary
         case .onDarkEmber:
             PFColor.primaryText
         case .success:
-            Color(red: 0.08, green: 0.42, blue: 0.24)
+            Color(red: 0.44, green: 0.94, blue: 0.62)
         case .warning:
             PFColor.warning
         case .danger:
@@ -271,17 +300,34 @@ struct CustomerStatusPill: View {
     private var background: Color {
         switch tone {
         case .onCream:
-            PFColor.passChipBackground
+            PFColor.emberSoft
         case .onDarkNeutral:
-            PFColor.surface2.opacity(0.55)
+            Color.white.opacity(0.065)
         case .onDarkEmber:
             PFColor.primarySoft
         case .success:
-            Color.green.opacity(0.14)
+            Color.green.opacity(0.12)
         case .warning:
             PFColor.warning.opacity(0.16)
         case .danger:
             PFColor.error.opacity(0.16)
+        }
+    }
+
+    private var strokeColor: Color {
+        switch tone {
+        case .onCream:
+            PFColor.ember.opacity(0.16)
+        case .onDarkNeutral:
+            Color.white.opacity(0.08)
+        case .onDarkEmber:
+            PFColor.primary.opacity(0.40)
+        case .success:
+            Color.green.opacity(0.16)
+        case .warning:
+            PFColor.warning.opacity(0.35)
+        case .danger:
+            PFColor.error.opacity(0.35)
         }
     }
 }
@@ -303,12 +349,15 @@ struct CustomerSectionCard<Content: View>: View {
         content()
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(elevated ? PFColor.customerCardElevated : PFColor.customerCard)
-            .clipShape(RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous))
-            .overlay(
+            .background {
                 RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous)
-                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
-            )
+                    .fill(elevated ? PFColor.customerGlassElevated : PFColor.customerGlass)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous)
+                            .stroke(PFColor.customerHairline, lineWidth: 1)
+                    }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous))
     }
 }
 

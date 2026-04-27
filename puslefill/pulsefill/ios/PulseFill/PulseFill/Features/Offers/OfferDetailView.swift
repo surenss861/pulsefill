@@ -94,7 +94,7 @@ struct OfferDetailView: View {
 
                         Text(CustomerOfferDetailCopy.clinicLine(for: offer))
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(Color.black.opacity(0.52))
+                            .foregroundStyle(PFColor.customerTextSecondary)
 
                         Text(CustomerOfferDetailCopy.timeLine(for: offer))
                             .font(.system(size: 22, weight: .bold))

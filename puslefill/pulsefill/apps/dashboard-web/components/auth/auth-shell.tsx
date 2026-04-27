@@ -57,7 +57,9 @@ export function AuthShell({
             padding: "40px 20px",
           }}
         >
-          <div style={{ width: "100%", maxWidth: 440 }}>{children}</div>
+          <div className="pf-auth-shell-enter" style={{ width: "100%", maxWidth: 440 }}>
+            {children}
+          </div>
         </div>
       </main>
     );
@@ -110,7 +112,9 @@ export function AuthShell({
                 padding: "clamp(32px, 4vw, 64px) clamp(28px, 4vw, 56px) clamp(32px, 4vw, 64px) clamp(24px, 3vw, 48px)",
               }}
             >
-              <div style={{ width: "100%", maxWidth: 540 }}>{brandPanel}</div>
+              <div className="pf-auth-shell-enter" style={{ width: "100%", maxWidth: 540 }}>
+                {brandPanel}
+              </div>
             </div>
           </section>
 
@@ -124,7 +128,9 @@ export function AuthShell({
             }}
             className="auth-form-section"
           >
-            <div style={{ width: "100%", maxWidth: 460 }}>{children}</div>
+            <div className="pf-auth-shell-enter" style={{ width: "100%", maxWidth: 460 }}>
+              {children}
+            </div>
           </section>
         </div>
       </div>

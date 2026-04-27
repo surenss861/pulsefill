@@ -10,6 +10,7 @@ struct PulseFillApp: App {
             MainShellView()
                 .environmentObject(env)
                 .environmentObject(env.sessionStore)
+                .environmentObject(env.authManager)
                 .task {
                     AppDelegate.pushCoordinator = env.pushCoordinator
                     await env.authManager.restoreSessionIfNeeded()

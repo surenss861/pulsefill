@@ -29,7 +29,7 @@ export function SignInClient() {
         <AuthBrandPanel
           eyebrow="Appointment recovery operating system"
           title="Run recovery with clarity."
-          body="Standby demand, operator action, and recovered revenue — in one controlled workflow."
+          body="Standby demand, operator action, and recovered revenue — connected in one controlled workflow."
           bullets={["Queue visibility", "Explainable actions", "Recovery signals live"]}
           showRecoveryStrip
         />
@@ -40,17 +40,34 @@ export function SignInClient() {
         title="Sign in"
         description="Access PulseFill and continue running recovery with clarity."
         footer={
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, fontSize: 14, color: "var(--muted)" }}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 20px", justifyContent: "space-between" }}>
-              <Link href="/forgot-password">Forgot password</Link>
-              <span>
-                Don&apos;t have an account? <Link href="/sign-up">Create one</Link>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "10px 18px",
+                justifyContent: "space-between",
+                fontSize: 13,
+                color: "rgba(245,247,250,0.42)",
+              }}
+            >
+              <Link href="/forgot-password" style={{ color: "rgba(245,247,250,0.48)", fontWeight: 500 }}>
+                Forgot password
+              </Link>
+              <span style={{ color: "rgba(245,247,250,0.42)" }}>
+                Don&apos;t have an account?{" "}
+                <Link href="/sign-up" style={{ color: "rgba(253, 186, 116, 0.75)", fontWeight: 600 }}>
+                  Create one
+                </Link>
               </span>
             </div>
-            <span style={{ fontSize: 12, color: "rgba(245,247,250,0.45)" }}>
-              Internal: <Link href="/staff-login">Paste access token</Link>
-            </span>
-            <span style={{ fontSize: 11, lineHeight: 1.45, color: "rgba(245,247,250,0.38)", maxWidth: 400 }}>
+            <div style={{ fontSize: 11, lineHeight: 1.4, color: "rgba(245,247,250,0.28)" }}>
+              <span style={{ color: "rgba(245,247,250,0.26)" }}>Internal — </span>
+              <Link href="/staff-login" style={{ color: "rgba(245,247,250,0.36)", fontWeight: 500 }}>
+                Paste access token
+              </Link>
+            </div>
+            <span style={{ fontSize: 11, lineHeight: 1.45, color: "rgba(245,247,250,0.34)", maxWidth: 400 }}>
               Protected operator access. Session activity may be monitored.
             </span>
           </div>
@@ -68,50 +85,52 @@ export function SignInClient() {
           <SubmitButton pendingText="Signing in…">Sign in</SubmitButton>
         </form>
 
-        <div style={{ position: "relative", marginTop: 4 }}>
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center" }}>
-            <div style={{ width: "100%", borderTop: "1px solid rgba(255,255,255,0.08)" }} />
+        <div style={{ marginTop: 10 }}>
+          <div style={{ position: "relative", marginBottom: 2 }}>
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center" }}>
+              <div style={{ width: "100%", borderTop: "1px solid rgba(255,255,255,0.05)" }} />
+            </div>
+            <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
+              <span
+                style={{
+                  padding: "0 10px",
+                  fontSize: 10,
+                  fontWeight: 650,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2em",
+                  color: "rgba(245,247,250,0.28)",
+                  background: "rgba(10,12,18,0.92)",
+                }}
+              >
+                Or
+              </span>
+            </div>
           </div>
-          <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-            <span
+
+          <form action={magicFormAction} style={{ display: "grid", gap: 10 }}>
+            <AuthField label="Work email" name="email" type="email" placeholder="name@clinic.com" autoComplete="email" required />
+            {magicState.error ? <PageState variant="error" title="Magic link failed" description={magicState.error} /> : null}
+            <button
+              type="submit"
               style={{
-                padding: "0 12px",
-                fontSize: 11,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.22em",
-                color: "rgba(245,247,250,0.35)",
-                background: "rgba(8,10,16,0.85)",
+                display: "inline-flex",
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,0.07)",
+                padding: "11px 16px",
+                fontSize: 13,
+                fontWeight: 500,
+                color: "rgba(245,247,250,0.58)",
+                background: "rgba(255,255,255,0.02)",
+                cursor: "pointer",
               }}
             >
-              Or
-            </span>
-          </div>
+              Email me a magic link
+            </button>
+          </form>
         </div>
-
-        <form action={magicFormAction} style={{ display: "grid", gap: 16 }}>
-          <AuthField label="Work email" name="email" type="email" placeholder="name@clinic.com" autoComplete="email" required />
-          {magicState.error ? <PageState variant="error" title="Magic link failed" description={magicState.error} /> : null}
-          <button
-            type="submit"
-            style={{
-              display: "inline-flex",
-              width: "100%",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 16,
-              border: "1px solid rgba(255,255,255,0.1)",
-              padding: "14px 18px",
-              fontSize: 14,
-              fontWeight: 600,
-              color: "rgba(245,247,250,0.88)",
-              background: "rgba(255,255,255,0.03)",
-              cursor: "pointer",
-            }}
-          >
-            Email me a magic link
-          </button>
-        </form>
       </AuthCard>
     </AuthShell>
   );

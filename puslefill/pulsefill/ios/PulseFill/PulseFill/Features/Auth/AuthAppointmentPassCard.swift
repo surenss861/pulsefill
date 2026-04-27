@@ -23,7 +23,7 @@ struct AuthAppointmentPassCard: View {
                     HStack(alignment: .center) {
                         HStack(spacing: 8) {
                             ZStack {
-                                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
                                     .fill(PFColor.passBadgeFill)
 
                                 Image(systemName: "calendar.badge.clock")
@@ -58,7 +58,7 @@ struct AuthAppointmentPassCard: View {
 
                         Text(current.clinic)
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(Color.black.opacity(0.50))
+                            .foregroundStyle(PFColor.customerTextSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.88)
                     }
@@ -70,7 +70,7 @@ struct AuthAppointmentPassCard: View {
                             Text(current.scheduleEyebrow)
                                 .font(.system(size: 10, weight: .bold))
                                 .tracking(1.1)
-                                .foregroundStyle(Color.black.opacity(0.38))
+                                .foregroundStyle(PFColor.customerTextTertiary)
 
                             Text(current.time)
                                 .font(.system(size: 22, weight: .bold))
@@ -100,7 +100,7 @@ struct AuthAppointmentPassCard: View {
 
                                 Text("Alerts active")
                                     .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(Color.black.opacity(0.42))
+                                    .foregroundStyle(PFColor.customerTextSecondary)
                             }
                         }
                     }
@@ -123,18 +123,57 @@ struct AuthAppointmentPassCard: View {
                 RoundedRectangle(cornerRadius: PFRadius.passCard, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [PFColor.passCreamTop, PFColor.passCreamBottom],
+                            colors: [
+                                PFColor.customerGlassElevated,
+                                PFColor.customerGlassDeep,
+                            ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .overlay {
                         RoundedRectangle(cornerRadius: PFRadius.passCard, style: .continuous)
-                            .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(0.07), Color.white.opacity(0.0)],
+                                    startPoint: .top,
+                                    endPoint: UnitPoint(x: 0.5, y: 0.36)
+                                )
+                            )
+                            .allowsHitTesting(false)
+                    }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: PFRadius.passCard, style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        PFColor.ember.opacity(0.30),
+                                        Color.white.opacity(0.13),
+                                        Color.white.opacity(0.11),
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    }
+                    .overlay(alignment: .topLeading) {
+                        Circle()
+                            .fill(Color.white.opacity(0.07))
+                            .frame(width: 190, height: 190)
+                            .blur(radius: 38)
+                            .offset(x: -76, y: -92)
+                    }
+                    .overlay(alignment: .bottomTrailing) {
+                        Circle()
+                            .fill(PFColor.ember.opacity(0.10))
+                            .frame(width: 170, height: 170)
+                            .blur(radius: 42)
+                            .offset(x: 56, y: 70)
                     }
             }
-            .shadow(color: Color.black.opacity(0.22), radius: 16, x: 0, y: 10)
-            .shadow(color: PFColor.primary.opacity(0.10), radius: 18, x: 0, y: 12)
+            .shadow(color: Color.black.opacity(0.46), radius: 28, x: 0, y: 20)
+            .shadow(color: PFColor.ember.opacity(0.14), radius: 34, x: 0, y: 18)
 
             progressDots
         }
@@ -160,7 +199,7 @@ struct AuthAppointmentPassCard: View {
                     .fill(
                         reduceMotion
                             ? Color.white.opacity(0.28)
-                            : (active ? Color(red: 1.0, green: 0.42, blue: 0.05) : Color.white.opacity(0.24))
+                            : (active ? PFColor.ember : Color.white.opacity(0.24))
                     )
                     .frame(width: reduceMotion ? 5 : (active ? 7 : 5), height: reduceMotion ? 5 : (active ? 7 : 5))
                     .animation(.easeInOut(duration: 0.22), value: selectedIndex)

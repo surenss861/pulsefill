@@ -21,10 +21,11 @@ export function AuthCard({
     <div
       style={{
         borderRadius: 30,
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "linear-gradient(180deg, rgba(15,18,28,0.92), rgba(8,10,18,0.96))",
+        border: "1px solid rgba(255,255,255,0.1)",
+        background: "linear-gradient(180deg, rgba(18,21,32,0.94), rgba(9,11,18,0.97))",
         padding: "clamp(28px, 4vw, 40px)",
-        boxShadow: "0 40px 120px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)",
+        boxShadow:
+          "0 40px 120px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 0 1px rgba(255, 122, 24, 0.1)",
         backdropFilter: "blur(20px)",
       }}
     >
