@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { CSSProperties, FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { OpenSlotCreatedSummary } from "@/components/slots/open-slot-created-summary";
 import { type CreateOpenSlotPayload, useCreateOpenSlot } from "@/hooks/useCreateOpenSlot";
 import { useSlotFormOptions } from "@/hooks/useSlotFormOptions";
@@ -77,6 +77,17 @@ export function OpenSlotForm({ onCreated }: Props) {
     }
   }, [startsLocal, endsLocal]);
 
+  useEffect(() => {
+    if (!serviceId) return;
+    const s = services.find((x) => x.id === serviceId);
+    if (!s) return;
+    if (!startsLocal?.trim()) return;
+    const start = new Date(startsLocal);
+    if (Number.isNaN(start.getTime())) return;
+    const end = new Date(start.getTime() + s.duration_minutes * 60_000);
+    setEndsLocal(toDatetimeLocalValue(end));
+  }, [serviceId, startsLocal, services]);
+
   function onProviderChange(id: string) {
     setProviderId(id);
     const p = providers.find((x) => x.id === id);
@@ -93,8 +104,16 @@ export function OpenSlotForm({ onCreated }: Props) {
       return;
     }
 
+    if (locations.length > 0 && !locationId) {
+      setFieldError("Select a location for this opening.");
+      return;
+    }
     if (providers.length > 0 && !providerId) {
       setFieldError("Select which provider this opening is for.");
+      return;
+    }
+    if (services.length > 0 && !serviceId) {
+      setFieldError("Select a service for this opening.");
       return;
     }
 
@@ -201,6 +220,27 @@ export function OpenSlotForm({ onCreated }: Props) {
 
       <label style={{ display: "grid", gap: 6 }}>
         <span style={{ fontSize: 13, fontWeight: 600 }}>
+          Location{locations.length > 0 ? " *" : ""}
+        </span>
+        <select
+          value={locationId}
+          onChange={(e) => setLocationId(e.target.value)}
+          style={inputStyle}
+          disabled={optionsLoading}
+          required={locations.length > 0}
+        >
+          <option value="">{locations.length > 0 ? "Select…" : "Not set"}</option>
+          {locations.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.name}
+            </option>
+          ))}
+        </select>
+        <span style={{ fontSize: 12, color: "var(--muted)" }}>Where this opening happens.</span>
+      </label>
+
+      <label style={{ display: "grid", gap: 6 }}>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>
           Provider{providers.length > 0 ? " *" : ""}
         </span>
         <select
@@ -235,40 +275,26 @@ export function OpenSlotForm({ onCreated }: Props) {
       </label>
 
       <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Service</span>
-        <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} style={inputStyle} disabled={optionsLoading}>
-          <option value="">Any / not set</option>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>
+          Service{services.length > 0 ? " *" : ""}
+        </span>
+        <select
+          value={serviceId}
+          onChange={(e) => setServiceId(e.target.value)}
+          style={inputStyle}
+          disabled={optionsLoading}
+          required={services.length > 0}
+        >
+          <option value="">{services.length > 0 ? "Select…" : "Not set"}</option>
           {services.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.name}
+              {s.name} ({s.duration_minutes} min)
             </option>
           ))}
         </select>
         <span style={{ fontSize: 12, color: "var(--muted)" }}>
-          Helps match the right standby customers to this opening.
+          End time updates from the service length when you change start or service (you can still edit end).
         </span>
-        {!serviceId && services.length > 0 ? (
-          <span style={{ fontSize: 12, color: "rgba(251,191,36,0.85)" }}>
-            Without a specific service, standby matching may be broader.
-          </span>
-        ) : null}
-      </label>
-
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Location</span>
-        <select value={locationId} onChange={(e) => setLocationId(e.target.value)} style={inputStyle} disabled={optionsLoading}>
-          <option value="">Not set</option>
-          {locations.map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.name}
-            </option>
-          ))}
-        </select>
-        {!locationId && locations.length > 0 ? (
-          <span style={{ fontSize: 12, color: "rgba(251,191,36,0.85)" }}>
-            Without a location, location-specific context won’t be stored on this slot.
-          </span>
-        ) : null}
       </label>
 
       <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
