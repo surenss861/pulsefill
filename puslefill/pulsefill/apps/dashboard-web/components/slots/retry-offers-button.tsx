@@ -8,6 +8,7 @@ import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/p
 
 type SendOffersResponse = {
   ok?: boolean;
+  result?: "offers_sent" | "offers_retried" | "no_matches";
   matched?: number;
   offer_ids?: string[];
   notification_queue?: { queued?: boolean; count?: number };
@@ -75,9 +76,13 @@ export function RetryOffersButton({
         message: nextMessage,
       });
 
+      const infoTone =
+        result.result === "no_matches" ||
+        nextMessage.includes("No matching") ||
+        nextMessage.includes("No new offers");
       showToast({
         title: nextMessage,
-        tone: nextMessage.includes("No matching") || nextMessage.includes("No new offers") ? "info" : "success",
+        tone: infoTone ? "info" : "success",
       });
       emitOperatorRefreshEvent("slot:updated", { slotId: openSlotId, action: refreshAction });
       onDone?.();

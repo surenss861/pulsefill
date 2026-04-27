@@ -33,7 +33,7 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
     {
       label: "Send your first offers",
       done: state.hasOffersSent,
-      href: "/open-slots",
+      href: "/open-slots?status=open",
       cta: "Send offers",
     },
     {

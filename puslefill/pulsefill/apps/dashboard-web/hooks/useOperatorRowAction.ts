@@ -20,10 +20,21 @@ export function useOperatorRowAction(onSuccess?: () => Promise<void> | void) {
 
     try {
       setBusyId(rowId);
-      const res = (await runOperatorInlineAction(rest)) as { message?: string } | undefined;
+      const res = (await runOperatorInlineAction(rest)) as {
+        message?: string;
+        result?: "offers_sent" | "offers_retried" | "no_matches";
+      } | null;
       const toastTitle =
         typeof res?.message === "string" && res.message.trim() ? res.message : successTitle;
-      showToast({ title: toastTitle, tone: "success" });
+      const sendOrRetry = rest.kind === "send_offers" || rest.kind === "retry_offers";
+      const noStandby = res?.result === "no_matches";
+      const useInfoTone = Boolean(
+        sendOrRetry &&
+          (noStandby ||
+            (typeof res?.message === "string" &&
+              (res.message.includes("No matching") || res.message.includes("No new offers")))),
+      );
+      showToast({ title: toastTitle, tone: useInfoTone ? "info" : "success" });
       emitOperatorRefreshEvent("slot:updated", { slotId: rest.openSlotId, action: rest.kind });
       await onSuccess?.();
     } catch (err) {

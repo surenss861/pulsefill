@@ -11,6 +11,7 @@ import { OperatorBulkActionResult } from "@/components/slots/operator-bulk-actio
 import { OperatorSlotListRow } from "@/components/slots/operator-slot-list-row";
 import { OperatorSlotListSummary } from "@/components/slots/operator-slot-list-summary";
 import { OperatorSlotListToolbar } from "@/components/slots/operator-slot-list-toolbar";
+import { SendOffersPrereqCallout } from "@/components/slots/send-offers-prereq-callout";
 import { ActionEmptyState } from "@/components/ui/action-empty-state";
 import { useToast } from "@/components/ui/toast-provider";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
@@ -206,6 +207,8 @@ export default function OpenSlotsPageClient() {
         Data from <code style={{ color: "var(--primary)" }}>GET /v1/open-slots/mine</code>. Use filters and bulk actions
         for high-volume recovery work.
       </p>
+
+      <SendOffersPrereqCallout />
 
       {digestBanner ? (
         <div

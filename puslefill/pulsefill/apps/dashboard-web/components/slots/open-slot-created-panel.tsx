@@ -9,10 +9,14 @@ import { apiFetch } from "@/lib/api";
 import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
 import { navigateToOpenSlotDetail } from "@/lib/operator-navigation";
 import { emitOperatorRefreshEvent } from "@/lib/operator-refresh-events";
+import { SendOffersPrereqCallout } from "@/components/slots/send-offers-prereq-callout";
 import { slotsDetailPath } from "@/lib/open-slot-routes";
 
 type SendOffersResponse = {
   ok?: boolean;
+  result?: "offers_sent" | "offers_retried" | "no_matches";
+  matched?: number;
+  offer_ids?: string[];
   message?: string;
 };
 
@@ -38,22 +42,30 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
   const { showToast } = useToast();
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [noStandbyMatch, setNoStandbyMatch] = useState(false);
 
   async function handleSendOffers() {
     try {
       setSending(true);
       setSendError(null);
+      setNoStandbyMatch(false);
       const result = await apiFetch<SendOffersResponse>(`/v1/open-slots/${slotId}/send-offers`, {
         method: "POST",
         body: JSON.stringify({}),
       });
       const msg = result.message ?? "Offers sent.";
+      const isNoMatch = result.result === "no_matches";
+      if (isNoMatch) {
+        setNoStandbyMatch(true);
+      }
       showToast({
         title: msg,
-        tone: msg.includes("No matching") ? "info" : "success",
+        tone: isNoMatch || msg.toLowerCase().includes("no matching") ? "info" : "success",
       });
       emitOperatorRefreshEvent("slot:updated", { slotId, action: "send_offers" });
-      navigateToOpenSlotDetail(router, slotId);
+      if (!isNoMatch) {
+        navigateToOpenSlotDetail(router, slotId);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to send offers";
       setSendError(message);
@@ -143,6 +155,18 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
       </div>
 
       {sendError ? <p style={{ margin: "12px 0 0", fontSize: 13, color: "#f87171" }}>{sendError}</p> : null}
+      {noStandbyMatch ? <SendOffersPrereqCallout /> : null}
+      {noStandbyMatch ? (
+        <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--muted)" }}>
+          <Link
+            href={slotsDetailPath(slotId, {})}
+            style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}
+          >
+            Open slot detail
+          </Link>{" "}
+          to retry after you have matching standby customers.
+        </p>
+      ) : null}
 
       {onCreateAnother ? (
         <p style={{ margin: "16px 0 0", fontSize: 13, color: "var(--muted)" }}>
