@@ -32,18 +32,21 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
   }
 
   try {
-    let emailRedirectPreview = "INVALID_CALLBACK_URL";
+    const emailRedirectTo = callbackUrl("/overview");
+    let emailRedirectValid = false;
     try {
-      emailRedirectPreview = callbackUrl("/overview");
-      new URL(emailRedirectPreview);
+      new URL(emailRedirectTo);
+      emailRedirectValid = true;
     } catch {
-      /* keep preview string */
+      /* invalid absolute URL — still attempt sign-up; logs will show the bad value */
     }
+
     if (process.env.AUTH_ENV_DEBUG === "1") {
       console.log(
         "[sign-up env check]",
         getAuthEnvSnapshot({
-          emailRedirectPreview: emailRedirectPreview.slice(0, 240),
+          emailRedirectPreview: emailRedirectTo.slice(0, 500),
+          emailRedirectValid,
         }),
       );
     }
@@ -54,15 +57,22 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: callbackUrl("/overview"),
+        emailRedirectTo,
       },
     });
 
     if (error) {
+      console.error("[sign-up redirect]", {
+        emailRedirectTo,
+        siteUrl: getSiteUrl(),
+        emailRedirectValid,
+      });
       console.error("[auth] sign-up failed", {
         message: error.message,
         code: error.code,
         status: error.status,
+        emailRedirectTo,
+        siteUrl: getSiteUrl(),
       });
       return {
         error: userFacingSupabaseMessage(
