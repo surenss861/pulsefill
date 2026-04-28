@@ -3,71 +3,39 @@ import { PageIntroCard } from "@/components/ui/page-intro-card";
 import { actionLinkStyle } from "@/components/ui/action-button";
 
 type OverviewOperatorHeroProps = {
-  displayName: string | null;
-  email: string;
-  role: string;
-  onboardingCompleted: boolean;
+  urgentOpeningsCount: number;
+  secondaryHref: string;
+  secondaryLabel: string;
 };
 
-function roleLabel(role: string) {
-  if (!role) return "Operator";
-  return role.charAt(0).toUpperCase() + role.slice(1);
-}
-
 export function OverviewOperatorHero({
-  displayName,
-  email,
-  role,
-  onboardingCompleted,
+  urgentOpeningsCount,
+  secondaryHref,
+  secondaryLabel,
 }: OverviewOperatorHeroProps) {
-  const greeting = displayName?.trim() || email.split("@")[0] || "Operator";
-
-  const badge = (
-    <span
-      style={{
-        borderRadius: 999,
-        padding: "8px 14px",
-        fontSize: 11,
-        fontWeight: 650,
-        letterSpacing: "0.16em",
-        textTransform: "uppercase",
-        border: onboardingCompleted ? "1px solid rgba(255, 122, 24, 0.22)" : "1px solid rgba(255,255,255,0.1)",
-        background: onboardingCompleted ? "rgba(255, 122, 24, 0.06)" : "rgba(255,255,255,0.03)",
-        color: onboardingCompleted ? "rgba(255, 186, 120, 0.92)" : "rgba(245, 247, 250, 0.52)",
-      }}
-    >
-      {onboardingCompleted ? "Workspace live" : "Setup pending"}
-    </span>
-  );
+  const hasUrgent = urgentOpeningsCount > 0;
 
   const actions = (
     <>
       <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
         Create opening
       </Link>
-      <Link href="/open-slots" style={actionLinkStyle("secondary")}>
-        View openings
+      <Link href={secondaryHref} style={actionLinkStyle("secondary")}>
+        {secondaryLabel}
       </Link>
     </>
   );
 
   return (
     <PageIntroCard
-      style={{ marginBottom: 28 }}
+      style={{ marginBottom: 18 }}
       tone="elevated"
       layout="split"
       overline="Command center"
-      title={<>Welcome back, {greeting}.</>}
+      title="Today's recovery"
       description={
-        <>
-          Signed in as {email}. Use Openings to post cancelled appointment times, Customers to invite standby
-          customers, and Activity to track what changed.
-          <span style={{ display: "block", marginTop: 10, fontSize: 12, color: "rgba(245, 247, 250, 0.42)" }}>
-            Role: <span style={{ color: "#ffb070", fontWeight: 600 }}>{roleLabel(role)}</span>
-          </span>
-        </>
+        hasUrgent ? `${urgentOpeningsCount} opening${urgentOpeningsCount === 1 ? "" : "s"} need attention.` : "No urgent openings right now."
       }
-      badge={badge}
       actions={actions}
     />
   );

@@ -41,10 +41,10 @@ export type OverviewPageContentProps = {
 };
 
 export function OverviewPageContent({
-  displayName,
-  email,
-  role,
-  onboardingCompleted,
+  displayName: _displayName,
+  email: _email,
+  role: _role,
+  onboardingCompleted: _onboardingCompleted,
 }: OverviewPageContentProps) {
   const { metrics, loading: metricsLoading, error: metricsError, reload: reloadMetrics } = useBusinessMetrics();
   const dailyOps = useDailyOpsSummary();
@@ -77,6 +77,17 @@ export function OverviewPageContent({
 
   const showGettingStarted = !setupComplete;
   const loading = setup.loading || metricsLoading;
+  const urgentOpeningsCount = actionQueue.data?.summary.needs_action_count ?? 0;
+  const secondaryAction =
+    checklist.hasOffersSent || checklist.hasOpenSlot
+      ? { href: "/open-slots", label: "View openings" }
+      : { href: "/customers", label: "Invite customers" };
+  const compactMetrics = [
+    { label: "Openings created", value: metrics?.open_slots_created ?? 0 },
+    { label: "Accepted customers", value: 0 },
+    { label: "Offers sent", value: metrics?.offers_sent ?? 0 },
+    { label: "Recovered bookings", value: metrics?.slots_booked ?? 0 },
+  ];
 
   const recoverySubtitle = useMemo(() => {
     if (!dailyOps.data) return DEFAULT_OVERVIEW_RECOVERY_SUBTITLE;
@@ -140,27 +151,21 @@ export function OverviewPageContent({
   return (
     <main style={{ padding: 0 }}>
       <OverviewOperatorHero
-        displayName={displayName}
-        email={email}
-        role={role}
-        onboardingCompleted={onboardingCompleted}
+        urgentOpeningsCount={urgentOpeningsCount}
+        secondaryHref={secondaryAction.href}
+        secondaryLabel={secondaryAction.label}
       />
 
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
           alignItems: "center",
           gap: 16,
           flexWrap: "wrap",
-          marginTop: 8,
+          marginTop: 6,
         }}
       >
-        <p style={{ margin: 0, color: "var(--muted)", maxWidth: 560, fontSize: 14 }}>
-          {showGettingStarted
-            ? "Finish setup so PulseFill can start sending earlier-opening offers to standby customers."
-            : "Same-day recovery, prioritized follow-ups, and checks for offers, confirmations, and delivery health."}
-        </p>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <RefreshIndicator updatedAt={refreshedAt} />
           <button
@@ -181,6 +186,32 @@ export function OverviewPageContent({
           </button>
         </div>
       </div>
+
+      {!loading ? (
+        <div
+          style={{
+            marginTop: 16,
+            display: "grid",
+            gap: 10,
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+          }}
+        >
+          {compactMetrics.map((m) => (
+            <div
+              key={m.label}
+              style={{
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(255,255,255,0.03)",
+                padding: "12px 14px",
+              }}
+            >
+              <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>{m.label}</p>
+              <p style={{ margin: "6px 0 0", fontSize: 20, fontWeight: 650, letterSpacing: "-0.01em" }}>{m.value}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {setup.error ? (
         <p style={{ color: "#f87171", marginTop: 16 }}>Setup data: {setup.error}</p>

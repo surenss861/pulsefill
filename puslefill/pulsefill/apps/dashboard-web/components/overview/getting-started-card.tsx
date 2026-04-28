@@ -99,20 +99,15 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
 
       <div style={styles.stagesList}>
         {staged.map((step) => (
-          <div key={step.label} style={styles.stageRow}>
-            <div style={styles.stepLeft}>
-              <div
-                style={{
-                  ...styles.statusDot,
-                  background: step.done ? "rgba(34,197,94,0.95)" : "rgba(255,255,255,0.18)",
-                }}
-              />
-              <div>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{step.label}</p>
-                <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}>{step.detail}</p>
-              </div>
-            </div>
-            <span style={step.done ? styles.doneText : styles.pendingText}>{step.done ? "Done" : "Pending"}</span>
+          <div
+            key={step.label}
+            style={{
+              ...styles.stageRow,
+              border: step.done ? "1px solid rgba(34,197,94,0.35)" : "1px solid rgba(255,255,255,0.08)",
+              background: step.done ? "rgba(16,185,129,0.08)" : "rgba(0,0,0,0.12)",
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{step.label}</p>
           </div>
         ))}
       </div>
@@ -161,16 +156,16 @@ const styles: Record<string, CSSProperties> = {
     display: "grid",
     gap: 10,
     marginTop: 18,
+    gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
   },
   stageRow: {
     display: "flex",
-    justifyContent: "space-between",
     alignItems: "center",
-    gap: 16,
+    minHeight: 44,
     border: "1px solid rgba(255,255,255,0.08)",
     background: "rgba(0,0,0,0.12)",
     borderRadius: 14,
-    padding: "12px 14px",
+    padding: "10px 12px",
   },
   stepLeft: {
     display: "flex",
@@ -186,10 +181,6 @@ const styles: Record<string, CSSProperties> = {
   doneText: {
     fontSize: 12,
     color: "rgba(34,197,94,0.95)",
-  },
-  pendingText: {
-    fontSize: 12,
-    color: "rgba(245,247,251,0.55)",
   },
   nextStepCard: {
     border: "1px solid rgba(255, 122, 24, 0.24)",
