@@ -6,12 +6,12 @@ export function OpenSlotsInventoryHero() {
   return (
     <PageIntroCard
       style={{ marginBottom: 24 }}
-      overline="Open Slots"
-      title="Recovery inventory"
-      description="Every opening, its recovery state, and where the system needs operator judgment. Filters and bulk actions continue below."
+      overline="Openings"
+      title="Appointment openings"
+      description="Every cancelled appointment window, its recovery state, and where the system needs operator judgment. Filters and bulk actions continue below."
       actions={
         <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
-          Create open slot
+          Create opening
         </Link>
       }
     />
