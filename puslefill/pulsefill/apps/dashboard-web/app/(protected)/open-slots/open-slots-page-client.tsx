@@ -131,15 +131,15 @@ export default function OpenSlotsPageClient() {
           title: digestSectionBannerTitle(digestKind),
           subtitle:
             digestFilteredSlots.length === 0
-              ? "None of these slots match your current tab/filters. Try “All” or clear filters."
-              : `Showing ${digestFilteredSlots.length} of ${digestSlotSet.size} digest slot${
+              ? "None of these openings match your current tab/filters. Try “All” or clear filters."
+              : `Showing ${digestFilteredSlots.length} of ${digestSlotSet.size} digest opening${
                   digestSlotSet.size === 1 ? "" : "s"
                 } that match this view.`,
         }
       : digestKind
         ? {
             title: digestSectionBannerTitle(digestKind),
-            subtitle: "Review the list below, or adjust filters to match digest slots.",
+            subtitle: "Review the list below, or adjust filters to match digest openings.",
           }
         : null;
 
@@ -203,10 +203,6 @@ export default function OpenSlotsPageClient() {
           {reloading ? "Refreshing…" : "Refresh"}
         </button>
       </div>
-      <p style={{ color: "var(--muted)", maxWidth: 720, marginTop: 0, fontSize: 13 }}>
-        Data from <code style={{ color: "var(--primary)" }}>GET /v1/open-slots/mine</code>. Use filters and bulk actions
-        for high-volume recovery work.
-      </p>
 
       <SendOffersPrereqCallout />
 
@@ -234,15 +230,15 @@ export default function OpenSlotsPageClient() {
         </div>
       ) : null}
 
-      {loading ? <p style={{ color: "var(--muted)" }}>Loading…</p> : null}
+      {loading ? <p style={{ color: "var(--muted)" }}>Loading openings…</p> : null}
       {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
 
       {!loading && !error && slots.length === 0 ? (
         <div style={{ marginTop: 24 }}>
           <ActionEmptyState
-            title="No open slots yet"
-            description="When a cancellation happens, create an open slot here and PulseFill can send it to matching standby customers."
-            ctaLabel="Create slot"
+            title="No openings yet"
+            description="When a cancellation happens, create an opening here and PulseFill can send it to matching standby customers."
+            ctaLabel="Create opening"
             ctaHref="/open-slots/create"
           />
         </div>
@@ -288,7 +284,7 @@ export default function OpenSlotsPageClient() {
               }}
             >
               {digestSlotSet && digestFilteredSlots.length === 0
-                ? "No digest slots in this filtered view."
+                ? "No digest openings in this filtered view."
                 : getOperatorSlotEmptyCopy(filter)}
             </div>
           ) : (
