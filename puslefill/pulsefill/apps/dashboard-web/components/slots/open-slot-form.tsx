@@ -134,7 +134,7 @@ export function OpenSlotForm({ onCreated }: Props) {
 
     const durationMs = new Date(endsIso).getTime() - new Date(startsIso).getTime();
     if (durationMs < 60 * 1000) {
-      setFieldError("Slot must be at least one minute long.");
+      setFieldError("Opening must be at least one minute long.");
       return;
     }
 
@@ -368,7 +368,7 @@ export function OpenSlotForm({ onCreated }: Props) {
         }}
         {...pressableHandlers(submitting || optionsLoading)}
       >
-        {submitting ? "Creating…" : "Create open slot"}
+        {submitting ? "Creating…" : "Create opening"}
       </button>
     </form>
   );

@@ -13,12 +13,12 @@ export function SlotAttentionCues({ slot, logs }: Props) {
 
   const offerFailed = slot.slot_offers.filter((o) => o.status.toLowerCase() === "failed").length;
   if (offerFailed > 0) {
-    cues.push(`${offerFailed} offer row${offerFailed === 1 ? "" : "s"} marked failed — review the Offers section.`);
+    cues.push(`${offerFailed} offer${offerFailed === 1 ? "" : "s"} had a delivery issue — review the Offers section.`);
   }
 
   const logFailed = logs.filter((l) => l.status.toLowerCase() === "failed").length;
   if (logFailed > 0) {
-    cues.push(`${logFailed} notification log entr${logFailed === 1 ? "y" : "ies"} failed — check delivery details below.`);
+    cues.push(`${logFailed} notification entr${logFailed === 1 ? "y" : "ies"} needs review — check message details below.`);
   }
 
   const queuedSkipped = logs.filter((l) => l.status === "skipped_no_queue").length;

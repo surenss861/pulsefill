@@ -49,7 +49,7 @@ export function OperatorBulkActionBar({ count, onRetryOffers, onExpire, onClear,
           {busy ? "Working…" : "Retry offers"}
         </button>
         <button type="button" disabled={busy} onClick={onExpire} style={{ ...btn, background: "rgba(248,113,113,0.15)", color: "#fecaca", borderColor: "rgba(248,113,113,0.35)" }}>
-          {busy ? "Working…" : "Expire slots"}
+          {busy ? "Working…" : "Expire openings"}
         </button>
         <button type="button" disabled={busy} onClick={onClear} style={{ ...btn, background: "transparent", color: "var(--muted)" }}>
           Clear

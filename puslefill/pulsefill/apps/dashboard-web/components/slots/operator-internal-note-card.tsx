@@ -80,7 +80,7 @@ export function OperatorInternalNoteCard({
     >
       <p style={{ margin: 0, fontSize: 11, color: "var(--muted)", letterSpacing: "0.04em" }}>INTERNAL NOTE</p>
       <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--muted)" }}>
-        Visible to staff only. Use for handoff and how this slot was handled.
+        Visible to staff only. Use for handoff and how this opening was handled.
       </p>
 
       <label style={{ display: "block", marginTop: 14, fontSize: 12, color: "var(--muted)" }}>Resolution</label>

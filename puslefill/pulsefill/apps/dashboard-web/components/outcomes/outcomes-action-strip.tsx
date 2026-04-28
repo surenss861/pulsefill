@@ -7,7 +7,7 @@ const actions = [
     href: "/action-queue?section=needs_action",
   },
   {
-    title: "Review Open Slots",
+    title: "Review openings",
     body: "Inspect inventory and state across all openings.",
     href: "/open-slots",
   },

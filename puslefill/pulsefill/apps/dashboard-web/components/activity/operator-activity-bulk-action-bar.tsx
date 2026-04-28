@@ -45,7 +45,7 @@ export function OperatorActivityBulkActionBar(props: {
         Retry offers
       </button>
       <button type="button" style={btn} disabled={busy} onClick={onOpenInSlots}>
-        Open in slots
+        Open in openings
       </button>
       <button type="button" style={{ ...btn, marginLeft: "auto" }} disabled={busy} onClick={onClear}>
         Clear

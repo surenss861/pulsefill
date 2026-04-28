@@ -86,7 +86,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
         color: "var(--text)",
       }}
     >
-      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 650 }}>Open slot created</h2>
+      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 650 }}>Opening created</h2>
       <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>
         The opening is ready. Send offers to matching standby customers now, or open detail to review before
         sending.
@@ -150,7 +150,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
             textDecoration: "none",
           }}
         >
-          Open detail
+          Open opening
         </Link>
       </div>
 
@@ -162,7 +162,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
             href={slotsDetailPath(slotId, {})}
             style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}
           >
-            Open slot detail
+            Open opening detail
           </Link>{" "}
           to retry after you have matching standby customers.
         </p>
@@ -183,7 +183,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
               textDecoration: "underline",
             }}
           >
-            Create another slot
+            Create another opening
           </button>
         </p>
       ) : null}

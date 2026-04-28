@@ -22,13 +22,11 @@ const box: CSSProperties = {
 export function SendOffersPrereqCallout() {
   return (
     <div style={box}>
-      <strong style={{ display: "block", marginBottom: 6 }}>Before “Send offers” can create offers</strong>
-      PulseFill matches each open slot to <strong>active standby preferences</strong> for this business. If no customer
-      has a matching preference, the API returns <em>no matches</em>, creates no <code>slot_offers</code> rows, and
-      the setup metric <strong>Offers sent</strong> stays at 0. In production, customers and preferences usually come
-      from the consumer app; for dev, use your seed script or Supabase.{" "}
+      <strong style={{ display: "block", marginBottom: 6 }}>How offers get matched</strong>
+      PulseFill sends each opening to customers with <strong>active standby preferences</strong> for this business. If
+      nobody matches yet, no offers are sent for that opening and <strong>Offers sent</strong> stays at 0.{" "}
       <Link href="/customers" style={{ color: "var(--primary)", fontWeight: 600 }}>
-        More on the Customers page
+        Invite standby customers
       </Link>
       .
     </div>

@@ -34,7 +34,7 @@ export function OperatorSlotOffersSummary({ slot }: Props) {
       }}
     >
       <p style={{ margin: 0, fontSize: 11, fontWeight: 650, letterSpacing: "0.06em", color: "var(--muted)" }}>
-        OFFERS (THIS SLOT)
+        OFFERS (THIS OPENING)
       </p>
       <div
         style={{
@@ -55,7 +55,7 @@ export function OperatorSlotOffersSummary({ slot }: Props) {
           <div style={{ fontWeight: 650, color: "var(--text)", marginTop: 4 }}>{active}</div>
         </div>
         <div>
-          <div style={{ fontSize: 11, color: "var(--muted)" }}>Failed</div>
+          <div style={{ fontSize: 11, color: "var(--muted)" }}>Delivery issues</div>
           <div style={{ fontWeight: 650, color: "var(--text)", marginTop: 4 }}>{failed}</div>
         </div>
         <div>

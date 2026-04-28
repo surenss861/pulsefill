@@ -107,6 +107,9 @@ export function SlotDetailIdentityHeader({ slot, serviceLabel, locationLabel, na
         <p style={{ margin: "8px 0 0", fontSize: 14, color: "rgba(245, 247, 250, 0.62)" }}>
           {formatDate(slot.starts_at)} → {formatDate(slot.ends_at)}
         </p>
+        <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.5, color: "rgba(245, 247, 250, 0.56)" }}>
+          Review this cancelled appointment time, send offers, and confirm the recovered booking.
+        </p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
         <StateChip status={slot.status} />
@@ -115,7 +118,7 @@ export function SlotDetailIdentityHeader({ slot, serviceLabel, locationLabel, na
   );
 }
 
-/** Dense facts for the slot record (slot context section). */
+/** Dense facts for the opening record (opening context section). */
 export function SlotDetailFactsGrid({ slot, serviceLabel, locationLabel, namesLoading }: Props) {
   const sv = namesLoading ? "…" : serviceLabel;
   const lv = namesLoading ? "…" : locationLabel;

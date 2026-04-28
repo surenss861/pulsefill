@@ -83,9 +83,9 @@ export function NotificationLogsInspector({ logs }: { logs: NotificationLogRow[]
 
   return (
     <div style={panel}>
-      <h2 style={{ margin: 0, fontSize: 18 }}>Notification logs</h2>
+      <h2 style={{ margin: 0, fontSize: 18 }}>Notification history</h2>
       <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--muted)" }}>
-        Delivery attempts for this slot. Failures and queue issues are listed first.
+        Customer message history for this opening. Items that need review are listed first.
       </p>
 
       {logs.length === 0 ? (
@@ -98,7 +98,7 @@ export function NotificationLogsInspector({ logs }: { logs: NotificationLogRow[]
             background: "rgba(0,0,0,0.15)",
           }}
         >
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>No delivery attempts logged</p>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>No notification history yet</p>
           <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
             After you send offers, the worker records attempts here. If this stays empty, check that notifications ran and
             Redis/worker are healthy.

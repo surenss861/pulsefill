@@ -24,8 +24,8 @@ const ACTION_LABELS: Record<OperatorSlotAvailableAction, string> = {
   confirm_booking: "Confirm booking",
   retry_offers: "Retry offers",
   send_offers: "Send offers",
-  expire_slot: "Expire slot",
-  cancel_slot: "Cancel slot",
+  expire_slot: "Expire opening",
+  cancel_slot: "Cancel opening",
   add_note: "Add note",
   inspect_notification_logs: "Inspect delivery logs",
 };
@@ -96,9 +96,9 @@ export function OperatorSlotActionBar({
           }),
         "expire_slot",
       );
-      showToast({ title: "Slot expired.", tone: "success" });
+      showToast({ title: "Opening expired.", tone: "success" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Could not expire slot.";
+      const msg = err instanceof Error ? err.message : "Could not expire opening.";
       showToast({ title: msg, tone: "error" });
     } finally {
       setExpireLoading(false);
@@ -117,9 +117,9 @@ export function OperatorSlotActionBar({
           }),
         "cancel_slot",
       );
-      showToast({ title: "Slot cancelled.", tone: "success" });
+      showToast({ title: "Opening cancelled.", tone: "success" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Could not cancel slot.";
+      const msg = err instanceof Error ? err.message : "Could not cancel opening.";
       showToast({ title: msg, tone: "error" });
     } finally {
       setCancelLoading(false);

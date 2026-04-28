@@ -12,7 +12,7 @@ export default async function OpenSlotsPage() {
       <Suspense
         fallback={
           <main style={{ padding: "0 0 24px" }}>
-            <p style={{ color: "var(--muted)" }}>Loading open slots…</p>
+            <p style={{ color: "var(--muted)" }}>Loading openings…</p>
           </main>
         }
       >

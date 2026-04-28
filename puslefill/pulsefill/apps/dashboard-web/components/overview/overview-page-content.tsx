@@ -158,7 +158,7 @@ export function OverviewPageContent({
       >
         <p style={{ margin: 0, color: "var(--muted)", maxWidth: 560, fontSize: 14 }}>
           {showGettingStarted
-            ? "Set up the basics so PulseFill can start helping recover cancelled appointments."
+            ? "Finish setup so PulseFill can start sending earlier-opening offers to standby customers."
             : "Same-day recovery, prioritized follow-ups, and checks for offers, confirmations, and delivery health."}
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -251,11 +251,11 @@ export function OverviewPageContent({
                   gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                 }}
               >
-                <OverviewMetricCard label="Open slots created" value={metrics.open_slots_created} />
+                <OverviewMetricCard label="Openings created" value={metrics.open_slots_created} />
                 <OverviewMetricCard label="Offers sent" value={metrics.offers_sent} />
-                <OverviewMetricCard label="Slots booked" value={metrics.slots_booked} />
+                <OverviewMetricCard label="Openings booked" value={metrics.slots_booked} />
                 <OverviewMetricCard label="Recovered revenue" value={metrics.recovered_revenue_cents} isCurrency />
-                <OverviewMetricCard label="Open slots (list)" value={setup.openSlotsCount} />
+                <OverviewMetricCard label="Openings (list)" value={setup.openSlotsCount} />
                 {liveCounts.data ? (
                   <>
                     <OverviewMetricCard label="Open / offered (live)" value={liveCounts.data.counts.open} />
@@ -299,7 +299,7 @@ export function OverviewPageContent({
               maxWidth: 640,
             }}
           >
-            When a cancellation happens, staff creates an open slot, PulseFill sends it to matching standby
+            When a cancellation happens, staff creates an opening, PulseFill sends it to matching standby
             customers, and claimed openings show up for confirmation in the dashboard.
           </p>
         </div>

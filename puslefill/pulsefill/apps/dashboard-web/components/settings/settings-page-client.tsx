@@ -60,9 +60,9 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
         <PageIntroCard
           tone="elevated"
           layout="split"
-          overline="Account & settings"
-          title="Your profile and workspace."
-          description="Operator identity comes from your PulseFill profile. Business details are loaded from the API your dashboard already trusts."
+          overline="Settings"
+          title="Account and workspace settings"
+          description="Manage your account and business details used across daily recovery workflows."
           badge={
             <span style={{ display: "inline-flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <StatusPill variant="default" caps>
@@ -87,12 +87,11 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
 
         <SectionCard
           eyebrow="Your account"
-          title="Signed-in operator"
-          description="Profile is managed in Supabase. Editable profile controls ship next; this page is the honest read-only view."
+          title="Account"
+          description="Your signed-in profile for PulseFill."
         >
           <div style={{ marginTop: 4 }}>{field("Display name", profile.full_name)}</div>
           {field("Work email", displayEmail)}
-          {field("Profile ID", profile.id)}
           {field("Last sign-in", lastIn)}
           <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
             <form action={signOutAction} style={{ display: "inline" }}>
@@ -106,8 +105,8 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
 
         <SectionCard
           eyebrow="Workspace"
-          title="Business attached to this login"
-          description="Same record the operator app uses for time windows, queues, and slot ownership."
+          title="Workspace"
+          description="Business details used for openings, offers, and customer matching."
         >
           {business.loading ? (
             <PageState variant="info" title="Loading workspace" description="Fetching business from the PulseFill API." style={{ maxWidth: "100%" }} />
@@ -123,7 +122,6 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
           ) : business.data ? (
             <div style={{ marginTop: 4 }}>
               {field("Business name", business.data.name)}
-              {field("Slug", business.data.slug)}
               {field("Category", business.data.category)}
               {field("Timezone", business.data.timezone)}
               {field("Phone", business.data.phone)}
@@ -136,14 +134,36 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
         </SectionCard>
 
         <SectionCard
-          eyebrow="Roadmap"
-          title="Team & notifications"
-          description="Alert routing, extra seats, and business profile editing will land here — same chrome as the operator app, not a separate admin skin."
+          eyebrow="Workspace setup"
+          title="Configure your workspace"
+          description="Locations, providers, services, billing, and account pages are grouped here so daily navigation stays focused."
         >
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "rgba(245, 247, 250, 0.5)" }}>
-            No additional editable controls in this build. When they ship, they will use the same cards, states, and action hierarchy as Recovery Queue and Open Slots.
-          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: 10,
+              marginTop: 4,
+            }}
+          >
+            <Link href="/locations" style={actionLinkStyle("secondary")}>
+              Locations
+            </Link>
+            <Link href="/providers" style={actionLinkStyle("secondary")}>
+              Providers
+            </Link>
+            <Link href="/services" style={actionLinkStyle("secondary")}>
+              Services
+            </Link>
+            <Link href="/billing" style={actionLinkStyle("secondary")}>
+              Billing
+            </Link>
+            <Link href="/account" style={actionLinkStyle("secondary")}>
+              Account
+            </Link>
+          </div>
         </SectionCard>
+
       </div>
     </main>
   );

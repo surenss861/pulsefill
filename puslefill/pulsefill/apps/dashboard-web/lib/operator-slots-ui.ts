@@ -48,18 +48,18 @@ export function getOperatorSlotAttentionLabel(slot: OperatorSlotsListItem) {
 export function getOperatorSlotEmptyCopy(filter: OperatorSlotsFilter) {
   switch (filter) {
     case "open":
-      return "No open slots right now.";
+      return "No openings currently open.";
     case "offered":
-      return "No offered slots right now.";
+      return "No offered openings right now.";
     case "claimed":
-      return "No claimed slots awaiting confirmation.";
+      return "No claimed openings awaiting confirmation.";
     case "booked":
-      return "No booked slots yet.";
+      return "No booked openings yet.";
     case "expired":
-      return "No expired slots yet.";
+      return "No expired openings yet.";
     case "cancelled":
-      return "No cancelled slots.";
+      return "No cancelled openings.";
     default:
-      return "No slots yet.";
+      return "No openings yet.";
   }
 }

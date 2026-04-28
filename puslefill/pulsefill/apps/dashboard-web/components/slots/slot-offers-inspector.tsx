@@ -113,7 +113,7 @@ export function SlotOffersInspector({ slot }: { slot: OpenSlotDetail }) {
     <div style={panel}>
       <h2 style={{ margin: 0, fontSize: 18 }}>Offers</h2>
       <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--muted)" }}>
-        Who was offered this opening, delivery state, and expiry. Failed or expired rows surface first.
+        Who was offered this opening, delivery status, and expiry. Rows that need review appear first.
       </p>
 
       {slot.slot_offers.length === 0 ? (
@@ -128,7 +128,7 @@ export function SlotOffersInspector({ slot }: { slot: OpenSlotDetail }) {
         >
           <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>No offers sent yet</p>
           <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
-            Use <strong style={{ color: "var(--text)" }}>Send offers</strong> in the next step when the slot is open or
+            Use <strong style={{ color: "var(--text)" }}>Send offers</strong> in the next step when the opening is open or
             offered. Matching standby customers will receive offers.
           </p>
         </div>
@@ -144,7 +144,7 @@ export function SlotOffersInspector({ slot }: { slot: OpenSlotDetail }) {
           >
             <SummaryPill label="Total" value={counts.total} />
             <SummaryPill label="Delivered" value={counts.delivered} />
-            <SummaryPill label="Failed" value={counts.failed} tone={counts.failed > 0 ? "bad" : "default"} />
+            <SummaryPill label="Delivery issues" value={counts.failed} tone={counts.failed > 0 ? "bad" : "default"} />
             <SummaryPill label="Expired" value={counts.expired} tone={counts.expired > 0 ? "warn" : "default"} />
             <SummaryPill label="Claimed" value={counts.claimed} />
           </div>
@@ -201,7 +201,7 @@ export function SlotOffersInspector({ slot }: { slot: OpenSlotDetail }) {
                   </div>
                   {isFailed ? (
                     <p style={{ margin: "12px 0 0", fontSize: 12, color: "#fecaca", lineHeight: 1.45 }}>
-                      This offer did not complete successfully. Check notification logs below for the delivery attempt.
+                      This offer needs review. Check notification history below for delivery details.
                     </p>
                   ) : null}
                 </div>

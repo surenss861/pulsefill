@@ -138,13 +138,22 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           </div>
         </div>
         {!live ? (
-          <p style={{ margin: "12px 0 0", fontSize: 12, lineHeight: 1.45, color: "rgba(245, 247, 250, 0.42)" }}>
-            Finish setup so every operator surface stays fully enabled.
-          </p>
-        ) : null}
-        <Link href="/open-slots/create" style={{ display: "block", marginTop: 12, fontSize: 12, fontWeight: 600, color: "var(--pf-accent-primary)" }}>
-          + Create opening
-        </Link>
+          <>
+            <p style={{ margin: "12px 0 0", fontSize: 11, lineHeight: 1.45, color: "rgba(245, 247, 250, 0.5)", letterSpacing: "0.14em", textTransform: "uppercase" }}>
+              Setup incomplete
+            </p>
+            <p style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.45, color: "rgba(245, 247, 250, 0.42)" }}>
+              Next: Add location
+            </p>
+            <Link href="/overview#getting-started" style={{ display: "block", marginTop: 12, fontSize: 12, fontWeight: 600, color: "var(--pf-accent-primary)" }}>
+              Continue setup
+            </Link>
+          </>
+        ) : (
+          <Link href="/open-slots/create" style={{ display: "block", marginTop: 12, fontSize: 12, fontWeight: 600, color: "var(--pf-accent-primary)" }}>
+            + Create opening
+          </Link>
+        )}
       </div>
     </aside>
   );

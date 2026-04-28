@@ -35,9 +35,9 @@ function queueCategoryChipLabel(ctx: OperatorSlotQueueContext): string | null {
   if (!c) return null;
   const map: Record<OperatorSlotQueueCategory, string> = {
     awaiting_confirmation: "Awaiting confirmation",
-    delivery_failed: "Delivery failed",
+    delivery_failed: "Delivery issue",
     retry_recommended: "Retry recommended",
-    no_matches: "No matches",
+    no_matches: "No matching standby customers",
     offered_active: "Offers active",
     expired_unfilled: "Expired unfilled",
     confirmed_booking: "Confirmed",
@@ -155,7 +155,7 @@ export function OpenSlotDetailPage() {
   const sourceChip = useMemo(() => {
     const f = searchParams.get("from");
     if (f === "queue") return "From queue";
-    if (f === "slots") return "From Open Slots";
+    if (f === "slots") return "From Openings";
     if (f === "activity") return "From Activity";
     if (f === "claims") return "From Claims";
     if (f === "outcomes") return "From Outcomes";
@@ -166,7 +166,7 @@ export function OpenSlotDetailPage() {
     <main style={{ padding: 0, maxWidth: 920 }}>
       <OpenSlotDetailToolbar refreshedAt={refreshedAt} backHref={back.href} backLabel={back.label} sourceChip={sourceChip} />
 
-      {loading ? <p style={{ color: "var(--muted)", marginTop: 16 }}>Loading slot…</p> : null}
+      {loading ? <p style={{ color: "var(--muted)", marginTop: 16 }}>Loading opening…</p> : null}
       {error ? <p style={{ color: "#f87171", marginTop: 16 }}>{error}</p> : null}
 
       {slot && !loading ? (
@@ -236,11 +236,11 @@ export function OpenSlotDetailPage() {
           {/* 3 — Attention cues */}
           <SlotAttentionCues slot={slot} logs={notificationLogs} />
 
-          {/* 4 — Slot context */}
+          {/* 4 — Opening context */}
           <OpenSlotDetailSection
             eyebrow="Record"
-            title="Slot context"
-            description="Hard facts for this opening — use before you act."
+            title="Appointment details"
+            description="The time, provider, service, and location connected to this opening."
           >
             <div
               style={{
@@ -303,8 +303,8 @@ export function OpenSlotDetailPage() {
           {/* 7 — Offers / claims */}
           <OpenSlotDetailSection
             eyebrow="Workflow"
-            title="Offers & claim state"
-            description="Where this slot sits in the recovery lifecycle."
+            title="Customer request"
+            description="Confirm once the clinic has added this appointment to the schedule."
           >
             <div style={{ display: "grid", gap: 16 }}>
               <OperatorSlotOffersSummary slot={slot} />
@@ -338,14 +338,14 @@ export function OpenSlotDetailPage() {
 
           {/* 10 — Notification attempt diagnostics */}
           <OpenSlotDetailSection
-            eyebrow="Diagnostics"
-            title="Notification attempts"
-            description="Attempt ledger for this slot: status, suppression reasons, dedupe, and provider failures."
+            eyebrow="Messages"
+            title="Notification history"
+            description="See which customer messages were sent and whether anything needs attention."
           >
             {notificationAttemptsLoading ? <p style={{ color: "var(--muted)" }}>Loading notification attempts…</p> : null}
             {notificationAttemptsError ? <p style={{ color: "#f87171" }}>{notificationAttemptsError}</p> : null}
             {!notificationAttemptsLoading && !notificationAttemptsError && notificationAttempts.length > 0 ? (
-              <OpenSlotLogsPanel summaryLabel="Notification attempt rows">
+              <OpenSlotLogsPanel summaryLabel="Message delivery records">
                 <NotificationAttemptsPanel attempts={notificationAttempts} />
               </OpenSlotLogsPanel>
             ) : null}
@@ -359,14 +359,14 @@ export function OpenSlotDetailPage() {
           {/* 11 — Raw logs */}
           <div id="operator-slot-notification-logs">
             <OpenSlotDetailSection
-              eyebrow="Diagnostics"
-              title="Delivery logs"
-              description="Expand for full notification attempts, payloads, and worker outcomes."
+              eyebrow="Messages"
+              title="Detailed notification history"
+              description="Expand for message status details and provider outcomes."
             >
               {notificationLogsLoading ? <p style={{ color: "var(--muted)" }}>Loading notification logs…</p> : null}
               {notificationLogsError ? <p style={{ color: "#f87171" }}>{notificationLogsError}</p> : null}
               {!notificationLogsLoading && !notificationLogsError && notificationLogs.length > 0 ? (
-                <OpenSlotLogsPanel summaryLabel="Notification logs & raw delivery diagnostics">
+                <OpenSlotLogsPanel summaryLabel="Notification history details">
                   <NotificationLogsInspector logs={notificationLogs} />
                 </OpenSlotLogsPanel>
               ) : null}

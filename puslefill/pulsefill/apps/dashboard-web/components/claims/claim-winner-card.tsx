@@ -71,7 +71,7 @@ export function ClaimWinnerCard({
             COMPLETE
           </p>
           <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--muted)", lineHeight: 1.45 }}>
-            This recovery is confirmed. No further staff action required on this slot.
+            This recovery is confirmed. No further staff action required on this opening.
           </p>
         </div>
       ) : null}
@@ -87,7 +87,7 @@ export function ClaimWinnerCard({
               color: "var(--muted)",
             }}
           >
-            RECOVERY SLOT
+            RECOVERY OPENING
           </p>
           <p style={{ margin: "6px 0 0", fontSize: 22, fontWeight: 650, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
             {claim.provider_name_snapshot ?? "Open appointment"}
@@ -134,7 +134,7 @@ export function ClaimWinnerCard({
           gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
         }}
       >
-        <Metric label="Slot value" value={dollars(claim.estimated_value_cents)} />
+        <Metric label="Opening value" value={dollars(claim.estimated_value_cents)} />
         <Metric
           label="Claimed at"
           value={claim.winning_claim?.claimed_at ? formatDate(claim.winning_claim.claimed_at) : "—"}
@@ -161,7 +161,7 @@ export function ClaimWinnerCard({
         {needsConfirmation && claimId ? (
           <ConfirmBookingButton openSlotId={claim.open_slot_id} claimId={claimId} onConfirmed={onConfirmed} />
         ) : needsConfirmation ? (
-          <p style={{ margin: 0, fontSize: 14, color: "var(--muted)" }}>No winning claim id on this slot yet.</p>
+          <p style={{ margin: 0, fontSize: 14, color: "var(--muted)" }}>No winning claim id on this opening yet.</p>
         ) : isBooked ? null : (
           <p style={{ margin: 0, fontSize: 14, color: "var(--muted)" }}>No action available for this row.</p>
         )}

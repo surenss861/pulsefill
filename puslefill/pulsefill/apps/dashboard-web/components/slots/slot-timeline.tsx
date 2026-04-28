@@ -41,7 +41,7 @@ export function SlotTimeline({ events }: { events: SlotTimelineEvent[] }) {
     <div style={panel}>
       <h2 style={{ margin: 0, fontSize: 18 }}>Timeline</h2>
       <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--muted)" }}>
-        What changed on this slot, newest first. Major milestones are emphasized; routine notifications are de-emphasized.
+        What changed on this opening, newest first. Major milestones are emphasized; routine notifications are de-emphasized.
       </p>
 
       {events.length === 0 ? (
@@ -56,7 +56,7 @@ export function SlotTimeline({ events }: { events: SlotTimelineEvent[] }) {
         >
           <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>No audit events yet</p>
           <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
-            Events appear when the slot is created, offers go out, claims resolve, or status changes.
+            Events appear when the opening is created, offers go out, claims resolve, or status changes.
           </p>
         </div>
       ) : (

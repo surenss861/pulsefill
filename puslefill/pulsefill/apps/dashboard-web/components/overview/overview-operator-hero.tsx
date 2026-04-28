@@ -42,11 +42,11 @@ export function OverviewOperatorHero({
 
   const actions = (
     <>
-      <Link href="/action-queue?section=needs_action" style={actionLinkStyle("primary")}>
-        Open queue
+      <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
+        Create opening
       </Link>
       <Link href="/open-slots" style={actionLinkStyle("secondary")}>
-        Browse slots
+        View openings
       </Link>
     </>
   );
@@ -56,12 +56,12 @@ export function OverviewOperatorHero({
       style={{ marginBottom: 28 }}
       tone="elevated"
       layout="split"
-      overline="Recovery overview"
+      overline="Command center"
       title={<>Welcome back, {greeting}.</>}
       description={
         <>
-          Signed in as {email}. Use Queue for urgent recovery work, Slots for inventory, and this overview for daily
-          signals.
+          Signed in as {email}. Use Openings to post cancelled appointment times, Customers to invite standby
+          customers, and Activity to track what changed.
           <span style={{ display: "block", marginTop: 10, fontSize: 12, color: "rgba(245, 247, 250, 0.42)" }}>
             Role: <span style={{ color: "#ffb070", fontWeight: 600 }}>{roleLabel(role)}</span>
           </span>
