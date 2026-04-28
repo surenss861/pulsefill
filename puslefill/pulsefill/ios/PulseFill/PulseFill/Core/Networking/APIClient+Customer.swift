@@ -1,6 +1,14 @@
 import Foundation
 
 extension APIClient {
+    func acceptCustomerInvite(token: String) async throws -> AcceptInviteResponse {
+        try await post(
+            "/v1/customers/invites/accept",
+            body: AcceptInviteRequest(token: token),
+            as: AcceptInviteResponse.self
+        )
+    }
+
     func getOfferDetail(offerId: String) async throws -> CustomerOfferDetailResponse {
         try await get("/v1/customers/me/offers/\(offerId)", as: CustomerOfferDetailResponse.self)
     }

@@ -31,21 +31,44 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
       cta: "Create opening",
     },
     {
-      label: "Send your first offers",
+      label: "Invite standby customers",
       done: state.hasOffersSent,
-      href: "/open-slots?status=open",
-      cta: "Send offers",
+      href: "/customers",
+      cta: "Invite customer",
     },
     {
       label: "Confirm your first recovered booking",
       done: state.hasConfirmedBooking,
       href: "/claims",
-      cta: "View claims",
+      cta: "Review claim",
     },
   ];
 
   const completed = steps.filter((step) => step.done).length;
   const firstIncomplete = steps.find((step) => !step.done);
+
+  const nextStepBody = (() => {
+    if (!firstIncomplete) return null;
+    if (firstIncomplete.href === "/locations") {
+      return "Tell PulseFill where openings happen before creating your first opening.";
+    }
+    if (firstIncomplete.href === "/providers") {
+      return "Add who openings belong to so PulseFill can label recovery correctly.";
+    }
+    if (firstIncomplete.href === "/services") {
+      return "Define appointment types so times and standby matches stay accurate.";
+    }
+    if (firstIncomplete.href === "/open-slots/create") {
+      return "Create your first opening when a cancellation appears.";
+    }
+    if (firstIncomplete.href === "/customers") {
+      return "Openings need active standby customers before offers can be sent.";
+    }
+    if (firstIncomplete.href === "/claims") {
+      return "When a customer books from an offer, confirm the appointment here.";
+    }
+    return "Complete this step so the rest of the recovery workflow can move forward.";
+  })();
 
   const staged = [
     {
@@ -74,8 +97,8 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
     <div id="getting-started" style={styles.card}>
       <div style={styles.headerRow}>
         <div>
-          <h2 style={styles.title}>Guided activation</h2>
-          <p style={styles.subtitle}>Finish the next action to move from setup to first recovered booking.</p>
+          <h2 style={styles.title}>Workspace setup</h2>
+          <p style={styles.subtitle}>Complete the basics so PulseFill can send openings to the right standby customers.</p>
         </div>
         <div style={styles.progressPill}>
           {completed}/{steps.length} complete
@@ -86,16 +109,16 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
         <div style={styles.nextStepCard}>
           <p style={styles.nextStepEyebrow}>Next best action</p>
           <h3 style={styles.nextStepTitle}>{firstIncomplete.label}</h3>
-          <p style={styles.nextStepCopy}>
-            {firstIncomplete.href === "/locations"
-              ? "Tell PulseFill where openings happen."
-              : "Complete this step first so the rest of the recovery workflow can progress."}
-          </p>
+          <p style={styles.nextStepCopy}>{nextStepBody}</p>
           <Link href={firstIncomplete.href} style={styles.nextStepCta}>
             {firstIncomplete.cta}
           </Link>
         </div>
       ) : null}
+
+      <p style={styles.progressLine}>
+        Location → Provider → Service → Opening → Customers → Recovered booking
+      </p>
 
       <div style={styles.stagesList}>
         {staged.map((step) => (
@@ -209,6 +232,13 @@ const styles: Record<string, CSSProperties> = {
     margin: 0,
     color: "var(--muted)",
     fontSize: 13,
+  },
+  progressLine: {
+    margin: "16px 0 0",
+    fontSize: 11,
+    letterSpacing: "0.06em",
+    color: "rgba(245, 247, 250, 0.42)",
+    lineHeight: 1.5,
   },
   nextStepCta: {
     alignSelf: "flex-start",

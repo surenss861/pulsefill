@@ -133,19 +133,16 @@ export function AppSidebar({ profile }: AppSidebarProps) {
                 color: live ? "rgba(255, 186, 120, 0.92)" : "rgba(245, 247, 250, 0.52)",
               }}
             >
-              {live ? "Live" : "Setup"}
+              {live ? "Live" : "Setup incomplete"}
             </span>
           </div>
         </div>
         {!live ? (
           <>
             <p style={{ margin: "12px 0 0", fontSize: 11, lineHeight: 1.45, color: "rgba(245, 247, 250, 0.5)", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-              Setup incomplete
+              Next action
             </p>
-            <p style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.45, color: "rgba(245, 247, 250, 0.42)" }}>
-              Next: Add location
-            </p>
-            <Link href="/overview#getting-started" style={{ display: "block", marginTop: 12, fontSize: 12, fontWeight: 600, color: "var(--pf-accent-primary)" }}>
+            <Link href="/overview#getting-started" style={{ display: "block", marginTop: 8, fontSize: 12, fontWeight: 600, color: "var(--pf-accent-primary)" }}>
               Continue setup
             </Link>
           </>

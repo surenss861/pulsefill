@@ -3,6 +3,8 @@ import { registerAuthRoutes } from "../modules/auth/auth.routes.js";
 import { registerBillingRoutes } from "../modules/billing/billing.routes.js";
 import { registerBusinessRoutes } from "../modules/businesses/businesses.routes.js";
 import { registerCustomerRoutes } from "../modules/customers/customers.routes.js";
+import { registerCustomerInviteAcceptRoute } from "../modules/customers/customer-invite-accept.routes.js";
+import { registerStaffCustomerInviteRoutes } from "../modules/customers/staff-customer-invites.routes.js";
 import { registerLocationRoutes } from "../modules/locations/locations.routes.js";
 import { registerMaintenanceRoutes } from "../modules/maintenance/maintenance.routes.js";
 import { registerOpenSlotRoutes } from "../modules/slots/open-slots.routes.js";
@@ -19,6 +21,8 @@ export async function registerRoutes(app: FastifyInstance) {
   await registerProviderRoutes(app);
   await registerServiceRoutes(app);
   await registerCustomerRoutes(app);
+  await registerCustomerInviteAcceptRoute(app);
+  await registerStaffCustomerInviteRoutes(app);
   await registerOpenSlotRoutes(app);
   await registerMaintenanceRoutes(app);
   await registerBillingRoutes(app);

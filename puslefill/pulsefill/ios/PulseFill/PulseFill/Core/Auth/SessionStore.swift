@@ -8,6 +8,7 @@ final class SessionStore: ObservableObject {
         static let refresh = "pf.refreshToken"
         static let userId = "pf.userId"
         static let email = "pf.email"
+        static let pendingInviteToken = "pf.pendingInviteToken"
     }
 
     @Published var accessToken: String? {
@@ -28,6 +29,23 @@ final class SessionStore: ObservableObject {
 
     /// Set after `GET /v1/businesses/mine` succeeds (staff JWT) or fails (customer-only).
     @Published var isStaffUser: Bool = false
+
+    /// Shown after a successful `POST /v1/customers/invites/accept` (cleared in UI when dismissed or after a delay).
+    @Published var inviteSuccessBanner: String?
+
+    /// Incremented so `RootTabView` can re-run the standby onboarding gate after invite accept.
+    @Published var standbyOnboardingRecheck: Int = 0
+
+    var pendingInviteToken: String? {
+        get { UserDefaults.standard.string(forKey: Keys.pendingInviteToken) }
+        set {
+            if let v = newValue, !v.isEmpty {
+                UserDefaults.standard.set(v, forKey: Keys.pendingInviteToken)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Keys.pendingInviteToken)
+            }
+        }
+    }
 
     var isSignedIn: Bool {
         guard let accessToken, !accessToken.isEmpty else { return false }
@@ -54,5 +72,7 @@ final class SessionStore: ObservableObject {
         userId = nil
         email = nil
         isStaffUser = false
+        inviteSuccessBanner = nil
+        pendingInviteToken = nil
     }
 }

@@ -95,9 +95,6 @@ struct CustomerActivityFeedView: View {
             .navigationDestination(for: CustomerDestination.self) { destination in
                 destinationView(for: destination)
             }
-            .navigationDestination(for: String.self) { slotId in
-                OperatorSlotDetailView(api: env.apiClient, slotId: slotId)
-            }
         }
         .tint(PFColor.ember)
     }
@@ -126,9 +123,7 @@ struct CustomerActivityFeedView: View {
     }
 
     private func handleActivityTap(item: CustomerActivityItem) {
-        if env.sessionStore.isStaffUser, let slotId = item.openSlotId, !slotId.isEmpty {
-            path.append(slotId)
-        } else if let dest = CustomerRouteMapper.destinationForActivityItem(item) {
+        if let dest = CustomerRouteMapper.destinationForActivityItem(item) {
             env.customerNavigation.open(dest)
         }
     }
@@ -153,8 +148,7 @@ struct CustomerActivityFeedView: View {
             NotificationPreferencesView(api: env.apiClient)
 
         case .activity:
-            Text("Activity")
-                .foregroundStyle(PFColor.textSecondary)
+            EmptyView()
         }
     }
 

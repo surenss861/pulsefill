@@ -11,6 +11,13 @@ struct PulseFillApp: App {
                 .environmentObject(env)
                 .environmentObject(env.sessionStore)
                 .environmentObject(env.authManager)
+                .onOpenURL { url in
+                    let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
+                    if let token = items?.first(where: { $0.name == "token" })?.value, !token.isEmpty {
+                        env.sessionStore.pendingInviteToken = token
+                        Task { await env.authManager.processPendingInviteTokenIfNeeded() }
+                    }
+                }
                 .task {
                     AppDelegate.pushCoordinator = env.pushCoordinator
                     await env.authManager.restoreSessionIfNeeded()

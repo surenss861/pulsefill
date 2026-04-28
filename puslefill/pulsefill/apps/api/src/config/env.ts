@@ -17,6 +17,11 @@ const schema = z.object({
   APNS_PRIVATE_KEY: z.string().optional(),
   APNS_BUNDLE_ID: z.string().optional(),
   APNS_ENVIRONMENT: z.enum(["sandbox", "production"]).default("sandbox"),
+  /** Optional; used to build `invite_url` for POST /v1/customers/invites (e.g. https://customer.pulsefill.app) */
+  CUSTOMER_APP_BASE_URL: z
+    .union([z.string().url(), z.literal("")])
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : undefined)),
 });
 
 export type Env = z.infer<typeof schema>;

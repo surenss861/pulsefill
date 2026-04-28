@@ -10,33 +10,46 @@ struct RootTabView: View {
     @State private var showStandbyOnboarding = false
 
     var body: some View {
-        TabView(
-            selection: Binding(
-                get: { env.customerNavigation.selectedTab },
-                set: { env.customerNavigation.selectedTab = $0 }
-            )
-        ) {
-            HomeView()
-                .tabItem { Label("Home", systemImage: "house.fill") }
-                .tag(AppTab.home)
+        ZStack(alignment: .top) {
+            TabView(
+                selection: Binding(
+                    get: { env.customerNavigation.selectedTab },
+                    set: { env.customerNavigation.selectedTab = $0 }
+                )
+            ) {
+                HomeView()
+                    .tabItem { Label("Home", systemImage: "house.fill") }
+                    .tag(AppTab.home)
 
-            OffersInboxView()
-                .tabItem { Label("Offers", systemImage: "bell.badge.fill") }
-                .tag(AppTab.offers)
+                OffersInboxView()
+                    .tabItem { Label("Offers", systemImage: "bell.badge.fill") }
+                    .tag(AppTab.offers)
 
-            CustomerActivityFeedView(api: env.apiClient)
-                .environmentObject(env)
-                .tabItem { Label("Activity", systemImage: "list.bullet.rectangle") }
-                .tag(AppTab.activity)
+                CustomerActivityFeedView(api: env.apiClient)
+                    .environmentObject(env)
+                    .tabItem { Label("Activity", systemImage: "list.bullet.rectangle") }
+                    .tag(AppTab.activity)
 
-            ProfileView()
-                .tabItem { Label("Profile", systemImage: "person.crop.circle") }
-                .tag(AppTab.profile)
+                ProfileView()
+                    .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                    .tag(AppTab.profile)
+            }
+            .tint(PFColor.ember)
+            .toolbarBackground(PFColor.customerTabBar, for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
+            .toolbarColorScheme(.dark, for: .tabBar)
+
+            if let msg = env.sessionStore.inviteSuccessBanner {
+                inviteSuccessBannerView(message: msg) {
+                    env.sessionStore.inviteSuccessBanner = nil
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+            }
         }
-        .tint(PFColor.ember)
-        .toolbarBackground(PFColor.customerTabBar, for: .tabBar)
-        .toolbarBackground(.visible, for: .tabBar)
-        .toolbarColorScheme(.dark, for: .tabBar)
+        .onChange(of: env.sessionStore.standbyOnboardingRecheck) { _, _ in
+            Task { await runStandbyOnboardingGate() }
+        }
         .onChange(of: env.customerNavigation.selectedTab) { _, _ in
             PFHaptics.selection()
         }
@@ -52,6 +65,34 @@ struct RootTabView: View {
             )
             .environmentObject(env)
         }
+    }
+
+    private func inviteSuccessBannerView(message: String, onDismiss: @escaping () -> Void) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(message)
+                .font(.system(size: 14, weight: .medium))
+                .lineSpacing(3)
+                .foregroundStyle(PFColor.textPrimary)
+            Spacer(minLength: 0)
+            Button {
+                onDismiss()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(PFColor.textMuted)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(PFColor.customerCardElevated)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(PFColor.hairline, lineWidth: 1)
+        )
     }
 
     @MainActor

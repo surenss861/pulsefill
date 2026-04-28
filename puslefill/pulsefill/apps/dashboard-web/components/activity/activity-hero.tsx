@@ -28,7 +28,7 @@ export function ActivityHero({ actions }: ActivityHeroProps) {
     <PageIntroCard
       overline="Activity"
       title="Activity"
-      description="Track opening, offer, claim, and notification events across the recovery workflow."
+      description="Track openings, offers, customer requests, and notification events across your recovery workflow."
       badge={badge}
       actions={actions}
     />

@@ -61,6 +61,13 @@ struct OffersInboxView: View {
                             .tint(PFColor.ember)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 12)
+                    } else if !env.sessionStore.isSignedIn {
+                        CustomerEmptyStateCard(
+                            systemImage: "person.crop.circle.badge.questionmark",
+                            title: "Sign in to see openings",
+                            message: "Appointment openings from your clinic will appear here after you sign in.",
+                            footnote: nil
+                        )
                     } else if let errorMessage {
                         CustomerEmptyStateCard(
                             systemImage: "exclamationmark.triangle",
@@ -153,7 +160,7 @@ struct OffersInboxView: View {
     private func load() async {
         guard env.sessionStore.isSignedIn else {
             offers = []
-            errorMessage = "Sign in from Home to load openings."
+            errorMessage = nil
             return
         }
         loading = true

@@ -5,6 +5,9 @@ struct ProfileView: View {
     @AppStorage("pf.preferCustomerTabs") private var preferCustomerTabs = false
     @AppStorage("pf.onboarding.standby.justCompleted") private var standbyJustCompleted = false
     @State private var path = NavigationPath()
+    @State private var businessInviteToken = ""
+    @State private var inviteInlineError: String?
+    @State private var inviteInlineSuccess: String?
     @State private var pushDebug = PushDebugSnapshot(
         permission: "Unknown",
         registrationState: .never,
@@ -31,6 +34,8 @@ struct ProfileView: View {
                     }
 
                     accountCard
+
+                    businessInviteCard
 
                     CustomerSectionCard {
                         VStack(alignment: .leading, spacing: 0) {
@@ -113,6 +118,57 @@ struct ProfileView: View {
         }
     }
 
+    private var businessInviteCard: some View {
+        CustomerSectionCard {
+            VStack(alignment: .leading, spacing: 10) {
+                PFTypography.Customer.label("Business invite")
+                Text("Your clinic sent you an invite link or code. Paste the code here so we can show you earlier appointment openings from that clinic.")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+                TextField("Invite code", text: $businessInviteToken)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 15, weight: .medium))
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(PFColor.customerCard)
+                    )
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                if let success = inviteInlineSuccess {
+                    Text(success)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(PFColor.success)
+                        .lineSpacing(2)
+                }
+                if let err = inviteInlineError {
+                    Text(err)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(PFColor.error)
+                        .lineSpacing(2)
+                }
+                Button {
+                    Task { await acceptInvite() }
+                } label: {
+                    HStack(spacing: 8) {
+                        if env.authManager.isBusy {
+                            ProgressView()
+                                .tint(.black)
+                        }
+                        Text(env.authManager.isBusy ? "Accepting…" : "Accept invite")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(PFColor.ember)
+                .disabled(businessInviteToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || env.authManager.isBusy)
+            }
+        }
+    }
+
     private var accountCard: some View {
         CustomerSectionCard {
             VStack(alignment: .leading, spacing: 12) {
@@ -128,11 +184,14 @@ struct ProfileView: View {
                         .foregroundStyle(PFColor.textSecondary)
                 }
 
+                #if DEBUG
                 if let uid = env.sessionStore.userId {
                     Text("User ID: \(uid)")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(PFColor.textMuted)
+                        .font(.caption)
+                        .foregroundStyle(PFColor.customerTextTertiary)
+                        .textSelection(.enabled)
                 }
+                #endif
 
                 if env.sessionStore.isStaffUser {
                     Toggle("Customer mode (standby & offers)", isOn: $preferCustomerTabs)
@@ -230,8 +289,26 @@ struct ProfileView: View {
             ClaimOutcomeView(api: env.apiClient, claimId: claimId)
 
         case .activity:
-            Text("Activity")
-                .foregroundStyle(PFColor.textSecondary)
+            EmptyView()
+        }
+    }
+
+    private func acceptInvite() async {
+        inviteInlineError = nil
+        inviteInlineSuccess = nil
+        let token = businessInviteToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !token.isEmpty else {
+            inviteInlineError = "Enter the invite code from your clinic."
+            return
+        }
+
+        let result = await env.authManager.acceptInviteTokenNow(token)
+        switch result {
+        case .success:
+            inviteInlineSuccess = "Invite accepted. Set your standby preferences to get earlier appointment openings."
+            businessInviteToken = ""
+        case let .failure(message):
+            inviteInlineError = message
         }
     }
 

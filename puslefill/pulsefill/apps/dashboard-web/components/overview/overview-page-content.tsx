@@ -31,6 +31,7 @@ import { useOpsBreakdown } from "@/hooks/useOpsBreakdown";
 import { useSetupChecklistState } from "@/hooks/useSetupChecklistState";
 import { useSetupOverviewData } from "@/hooks/useSetupOverviewData";
 import { OperatorMorningRecoveryDigestPanel } from "@/components/workflow/operator-morning-recovery-digest-panel";
+import { CommandCenterRecentActivity } from "@/components/overview/command-center-recent-activity";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
 
 export type OverviewPageContentProps = {
@@ -82,12 +83,28 @@ export function OverviewPageContent({
     checklist.hasOffersSent || checklist.hasOpenSlot
       ? { href: "/open-slots", label: "View openings" }
       : { href: "/customers", label: "Invite customers" };
-  const compactMetrics = [
-    { label: "Openings created", value: metrics?.open_slots_created ?? 0 },
-    { label: "Accepted customers", value: 0 },
-    { label: "Offers sent", value: metrics?.offers_sent ?? 0 },
-    { label: "Recovered bookings", value: metrics?.slots_booked ?? 0 },
-  ];
+  const awaitingConfirmationCount = actionQueue.data?.summary.awaiting_confirmation_count ?? 0;
+  const compactMetrics = useMemo(
+    () => [
+      {
+        label: "Active openings",
+        value: liveCounts.data?.counts.open ?? 0,
+      },
+      {
+        label: "Offers sent",
+        value: metrics?.offers_sent ?? 0,
+      },
+      {
+        label: "Claims waiting",
+        value: awaitingConfirmationCount,
+      },
+      {
+        label: "Recovered bookings",
+        value: metrics?.slots_booked ?? 0,
+      },
+    ],
+    [liveCounts.data?.counts.open, metrics?.offers_sent, metrics?.slots_booked, awaitingConfirmationCount],
+  );
 
   const recoverySubtitle = useMemo(() => {
     if (!dailyOps.data) return DEFAULT_OVERVIEW_RECOVERY_SUBTITLE;
@@ -152,6 +169,7 @@ export function OverviewPageContent({
     <main style={{ padding: 0 }}>
       <OverviewOperatorHero
         urgentOpeningsCount={urgentOpeningsCount}
+        awaitingConfirmationCount={awaitingConfirmationCount}
         secondaryHref={secondaryAction.href}
         secondaryLabel={secondaryAction.label}
       />
@@ -228,6 +246,18 @@ export function OverviewPageContent({
 
       {showGettingStarted && !loading ? <GettingStartedCard state={checklist} /> : null}
 
+      {showGettingStarted && !loading ? (
+        <>
+          <ActionQueuePreviewCard
+            items={actionQueue.data?.sections.needs_action ?? []}
+            loading={actionQueue.loading}
+            error={actionQueue.error}
+            summary={actionQueue.data?.summary}
+          />
+          <CommandCenterRecentActivity />
+        </>
+      ) : null}
+
       {!showGettingStarted && !loading ? (
         <>
           {dailyOps.loading ? (
@@ -270,6 +300,8 @@ export function OverviewPageContent({
             summary={actionQueue.data?.summary}
           />
 
+          <CommandCenterRecentActivity />
+
           <OverviewDeliveryReliabilityBlock data={deliveryReliability.data} loading={deliveryReliability.loading} />
           <OverviewOpsBreakdownBlock data={opsBreakdown.data} loading={opsBreakdown.loading} />
 
@@ -297,15 +329,6 @@ export function OverviewPageContent({
             </OverviewLongRangeRecoveryBlock>
           ) : null}
         </>
-      ) : null}
-
-      {showGettingStarted && !loading ? (
-        <ActionQueuePreviewCard
-          items={actionQueue.data?.sections.needs_action ?? []}
-          loading={actionQueue.loading}
-          error={actionQueue.error}
-          summary={actionQueue.data?.summary}
-        />
       ) : null}
 
       {showGettingStarted && !loading ? (

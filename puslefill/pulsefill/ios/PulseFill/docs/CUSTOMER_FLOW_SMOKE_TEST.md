@@ -1,87 +1,45 @@
-# PulseFill Customer Flow Smoke Test
+# Customer flow smoke test
 
-End-to-end verification of the customer product loop (offer → open app → claim → status → activity).
+Use this to prove the end-to-end operator and customer path with real data.
 
-## Setup
+## Invite → standby → offer smoke
 
-- [ ] Customer account exists
-- [ ] Customer has active APNs token in backend
-- [ ] Customer notification permission is granted
-- [ ] Business has a future open slot
-- [ ] Customer is eligible for an offer
-- [ ] API is running with expected `PUSH_PROVIDER` value
-
-## Optional local seed
-
-From `apps/api`:
-
-```bash
-pnpm seed:customer-flow
-pnpm seed:customer-flow -- --claim --push --attempt
-```
-
-Use the generated email/password to sign into the iOS app.
-
-Notes:
-
-* Requires local Supabase running.
-* Refuses non-local Supabase unless `PULSEFILL_ALLOW_CUSTOMER_FLOW_SEED=1` is set.
-* `--claim` creates a claimed state.
-* `--push` creates an active fake APNs token.
-* `--attempt` creates a notification attempt row for diagnostics.
-
-For a **noop** smoke pass (active offer on Home/Offers, push row + attempt for API/diagnostics), prefer:
-
-```bash
-pnpm seed:customer-flow -- --push --attempt
-```
-
-Then sign in with the printed credentials and run the checklist sections below.
-
-## Offer delivery
-
-- [ ] Operator sends offers
-- [ ] Customer offer row is created
-- [ ] Notification attempt row is created
-- [ ] Attempt status is sent/suppressed/failed with readable reason
-- [ ] Slot Detail diagnostics shows notification attempt (operator)
-
-## Customer app
-
-- [ ] Home shows active offer spotlight (cream when claimable)
-- [ ] Offers tab shows claimable offers first
-- [ ] Offer detail opens cleanly
-- [ ] Claim CTA is reachable and correct
-- [ ] Expired/unavailable state does not allow claim
-
-## Claim
-
-- [ ] Claim succeeds
-- [ ] Button enters busy state (if wired)
-- [ ] Duplicate taps are blocked where implemented
-- [ ] UI changes to Claim submitted / awaiting confirmation as appropriate
-- [ ] Activity shows claim-related update
-- [ ] Operator queue/detail reflects pending confirmation
-
-## Confirmation
-
+- [ ] Apply `0018_customer_invites.sql`
+- [ ] Apply `0019_customer_invites_accepted_by.sql`
+- [ ] Operator creates invite from /customers
+- [ ] Customer signs in with the invited email
+- [ ] Customer accepts invite token
+- [ ] Invite status changes to accepted
+- [ ] customers row exists for the business/customer
+- [ ] App shows standby setup needed
+- [ ] Customer completes standby preferences
+- [ ] Operator sends offers for a matching open slot
+- [ ] slot_offers row is created
+- [ ] Customer sees offer
+- [ ] Customer claims offer
 - [ ] Operator confirms booking
-- [ ] Customer status updates to Booking confirmed (presenter labels)
-- [ ] Activity shows booking confirmed
-- [ ] Notification attempt is recorded for confirmation push (if applicable)
-- [ ] Offer no longer appears as claimable on Home/Offers
+- [ ] Overview checklist reaches 6/6
 
-## Sign out / push token
+## How to run the loop (manually)
 
-- [ ] Sign out deactivates APNs token (when implemented)
-- [ ] Re-sign-in registers/reuses active token
+1. **Migrations** — In Supabase SQL Editor (or your migration tool), run `0018` then `0019` in order. From the repo root, if you have `psql` and a `DATABASE_URL` (Supabase **Project Settings → Database** connection string, usually with `sslmode=require`), you can run `./scripts/apply-customer-invite-migrations.sh`.
 
-## Provider modes
+   **Verify columns** (SQL Editor is fine):
 
-### Noop / test first
+   ```sql
+   select column_name
+   from information_schema.columns
+   where table_schema = 'public' and table_name = 'customer_invites'
+   order by ordinal_position;
+   ```
 
-- [ ] Run with `PUSH_PROVIDER=noop` (or equivalent) and confirm offer + claim flow without requiring real APNs delivery
+   You should see `accepted_by_customer_id` after `0019`.
+2. **Operator (dashboard web)** — Create location, provider, service, and an open slot. On `/customers`, create a customer invite and copy the one-time token or `invite_url` (API must have `CUSTOMER_APP_BASE_URL` set for a full https URL; otherwise copy the token).
+3. **Customer (iOS)** — Sign up or sign in with **the same email** as the invite. Accept via Profile → Business invite, or open `pulsefill://invite?token=<PASTE_TOKEN>`.
+4. **Verify** — Invite shows `accepted` in the operator list, API returns `needs_standby_setup: true` until preferences exist, then complete standby in the app.
+5. **Offers** — On web, open the open slot, **Send offers**. Confirm a `slot_offers` row (and that overview advances as expected for your product metrics).
+6. **Claim & confirm** — Customer sees the offer, claims, operator confirms booking, overview at 6/6 for your setup checklist if that is how the product counts completion.
 
-### APNs sandbox (after noop passes)
+**Email rule:** the signed-in user’s email must match the invited address. The API returns a plain-language message; the iOS app shows that message, not a raw error code. If the wrong account is used, sign out and use the invited email, or ask the operator for a new invite.
 
-- [ ] Run with `PUSH_PROVIDER=apns` and `APNS_ENVIRONMENT=sandbox` on a physical device with a valid token
+**Deep link:** the app registers the `pulsefill` URL scheme for `pulsefill://invite?token=...`.
