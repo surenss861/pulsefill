@@ -11,7 +11,7 @@ const primaryLinkStyle: CSSProperties = {
   borderRadius: 12,
   border: "1px solid rgba(255, 122, 24, 0.45)",
   background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
-  color: "#08090c",
+  color: "var(--pf-btn-primary-text)",
   fontSize: 14,
   fontWeight: 700,
   textDecoration: "none",
