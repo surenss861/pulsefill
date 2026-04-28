@@ -4,7 +4,6 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import type { ProfileRow } from "@/lib/get-current-user";
 import { useLiveCounts } from "@/hooks/useLiveCounts";
-import { useNeedsAttentionCount } from "@/hooks/useNeedsAttentionCount";
 import { AppNavItem } from "./app-nav-item";
 
 type AppSidebarProps = {
@@ -12,23 +11,11 @@ type AppSidebarProps = {
 };
 
 const primaryNav = [
-  { href: "/overview", label: "Overview" },
-  { href: "/action-queue", label: "Queue" },
-  { href: "/open-slots", label: "Slots" },
-  { href: "/outcomes", label: "Outcomes" },
-  { href: "/activity", label: "Activity" },
-] as const;
-
-const secondaryLinks = [
-  { href: "/offers", label: "Offers" },
-  { href: "/claims", label: "Claims" },
+  { href: "/overview", label: "Command Center" },
+  { href: "/open-slots", label: "Openings" },
   { href: "/customers", label: "Customers" },
-  { href: "/providers", label: "Providers" },
-  { href: "/services", label: "Services" },
-  { href: "/locations", label: "Locations" },
-  { href: "/analytics", label: "Analytics" },
-  { href: "/billing", label: "Billing" },
-  { href: "/settings", label: "Account & settings" },
+  { href: "/activity", label: "Activity" },
+  { href: "/settings", label: "Settings" },
 ] as const;
 
 const badgeBase: CSSProperties = {
@@ -42,7 +29,6 @@ const badgeBase: CSSProperties = {
 
 export function AppSidebar({ profile }: AppSidebarProps) {
   const counts = useLiveCounts();
-  const needsAttention = useNeedsAttentionCount();
   const live = profile.onboarding_completed;
 
   return (
@@ -87,19 +73,6 @@ export function AppSidebar({ profile }: AppSidebarProps) {
             <div style={{ flex: 1, minWidth: 0 }}>
               <AppNavItem href={item.href} label={item.label} />
             </div>
-            {item.href === "/action-queue" && needsAttention > 0 ? (
-              <span
-                style={{
-                  ...badgeBase,
-                  flexShrink: 0,
-                  background: "rgba(245, 158, 11, 0.12)",
-                  borderColor: "rgba(251, 191, 36, 0.25)",
-                  color: "#fcd34d",
-                }}
-              >
-                {needsAttention}
-              </span>
-            ) : null}
             {item.href === "/open-slots" && counts.open > 0 ? (
               <span
                 style={{
@@ -113,44 +86,21 @@ export function AppSidebar({ profile }: AppSidebarProps) {
                 {counts.open}
               </span>
             ) : null}
+            {item.href === "/open-slots" && counts.claimed > 0 ? (
+              <span
+                style={{
+                  ...badgeBase,
+                  flexShrink: 0,
+                  background: "rgba(245, 158, 11, 0.1)",
+                  borderColor: "rgba(251, 191, 36, 0.22)",
+                  color: "#fcd34d",
+                }}
+              >
+                {counts.claimed}
+              </span>
+            ) : null}
           </div>
         ))}
-
-        <p style={{ margin: "20px 8px 8px", fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", color: "rgba(245, 247, 250, 0.32)", textTransform: "uppercase" }}>
-          Workspace
-        </p>
-        <div style={{ display: "grid", gap: 4 }}>
-          {secondaryLinks.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              style={{
-                fontSize: 13,
-                padding: "8px 12px",
-                borderRadius: 12,
-                color: "rgba(245, 247, 250, 0.55)",
-                textDecoration: "none",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                {l.label}
-                {l.href === "/claims" && counts.claimed > 0 ? (
-                  <span
-                    style={{
-                      ...badgeBase,
-                      marginLeft: 0,
-                      background: "rgba(245, 158, 11, 0.1)",
-                      borderColor: "rgba(251, 191, 36, 0.22)",
-                      color: "#fcd34d",
-                    }}
-                  >
-                    {counts.claimed}
-                  </span>
-                ) : null}
-              </span>
-            </Link>
-          ))}
-        </div>
       </nav>
 
       <div style={{ borderTop: "1px solid var(--pf-border-subtle)", padding: 16 }}>
@@ -193,7 +143,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           </p>
         ) : null}
         <Link href="/open-slots/create" style={{ display: "block", marginTop: 12, fontSize: 12, fontWeight: 600, color: "var(--pf-accent-primary)" }}>
-          + Create open slot
+          + Create opening
         </Link>
       </div>
     </aside>
