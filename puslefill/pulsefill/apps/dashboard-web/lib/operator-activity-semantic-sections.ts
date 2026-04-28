@@ -35,8 +35,8 @@ export function buildOperatorActivitySemanticSections(items: OperatorActivityIte
     {
       key: "needs_review",
       label: "Needs review",
-      title: "Events that may require operator follow-up",
-      body: "Recent changes that are unresolved, failed, or still waiting on action.",
+      title: "Items that may need follow-up",
+      body: "Recent changes that are unresolved, have delivery issues, or still need action.",
       items: needs,
     },
     {
@@ -48,9 +48,9 @@ export function buildOperatorActivitySemanticSections(items: OperatorActivityIte
     },
     {
       key: "system_updates",
-      label: "System / operator updates",
+      label: "Notes and updates",
       title: "Notes, retries, and workflow changes",
-      body: "Supporting activity that helps explain how a slot moved through recovery.",
+      body: "Supporting activity that helps explain how an opening moved through recovery.",
       items: system,
     },
   ];

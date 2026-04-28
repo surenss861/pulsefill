@@ -49,22 +49,22 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
 
   const staged = [
     {
-      label: "Step 1: Set up your workspace",
+      label: "1. Workspace basics",
       done: state.hasLocation && state.hasProvider && state.hasService,
       detail: "Locations, providers, and services",
     },
     {
-      label: "Step 2: Create your first opening",
+      label: "2. First opening",
       done: state.hasOpenSlot,
       detail: "Service, provider, and time window",
     },
     {
-      label: "Step 3: Invite standby customers",
+      label: "3. Standby customers",
       done: state.hasOffersSent,
       detail: "Customer accepts invite and enables standby",
     },
     {
-      label: "Step 4: Recover a booking",
+      label: "4. Recovered booking",
       done: state.hasConfirmedBooking,
       detail: "Send offer, customer claims, confirm booking",
     },
@@ -75,9 +75,7 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
       <div style={styles.headerRow}>
         <div>
           <h2 style={styles.title}>Guided activation</h2>
-          <p style={styles.subtitle}>
-            Follow the next action below to move from setup to first recovered booking.
-          </p>
+          <p style={styles.subtitle}>Finish the next action to move from setup to first recovered booking.</p>
         </div>
         <div style={styles.progressPill}>
           {completed}/{steps.length} complete
@@ -115,30 +113,6 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
               </div>
             </div>
             <span style={step.done ? styles.doneText : styles.pendingText}>{step.done ? "Done" : "Pending"}</span>
-          </div>
-        ))}
-      </div>
-
-      <div style={styles.stepsList}>
-        {steps.map((step) => (
-          <div key={step.label} style={styles.stepRow}>
-            <div style={styles.stepLeft}>
-              <div
-                style={{
-                  ...styles.statusDot,
-                  background: step.done ? "rgba(34,197,94,0.95)" : "rgba(255,255,255,0.18)",
-                }}
-              />
-              <span style={{ ...styles.stepLabel, opacity: step.done ? 0.65 : 1 }}>{step.label}</span>
-            </div>
-
-            {!step.done ? (
-              <Link href={step.href} style={styles.stepLink}>
-                {step.cta}
-              </Link>
-            ) : (
-              <span style={styles.doneText}>Done</span>
-            )}
           </div>
         ))}
       </div>
@@ -183,12 +157,6 @@ const styles: Record<string, CSSProperties> = {
     color: "rgba(245,247,251,0.78)",
     whiteSpace: "nowrap",
   },
-  stepsList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-    marginTop: 18,
-  },
   stagesList: {
     display: "grid",
     gap: 10,
@@ -204,16 +172,6 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 14,
     padding: "12px 14px",
   },
-  stepRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 16,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(0,0,0,0.16)",
-    borderRadius: 18,
-    padding: "14px 16px",
-  },
   stepLeft: {
     display: "flex",
     alignItems: "center",
@@ -224,19 +182,6 @@ const styles: Record<string, CSSProperties> = {
     height: 10,
     borderRadius: 999,
     flexShrink: 0,
-  },
-  stepLabel: {
-    fontSize: 14,
-    color: "var(--text)",
-  },
-  stepLink: {
-    fontSize: 13,
-    color: "var(--text)",
-    textDecoration: "none",
-    border: "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(255,255,255,0.06)",
-    borderRadius: 12,
-    padding: "8px 12px",
   },
   doneText: {
     fontSize: 12,

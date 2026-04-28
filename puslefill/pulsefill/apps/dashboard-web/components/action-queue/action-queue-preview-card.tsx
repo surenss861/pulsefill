@@ -17,9 +17,13 @@ export function ActionQueuePreviewCard({
   summary?: ActionQueueSummary | null;
 }) {
   const top = items.slice(0, 5);
+  const totalIssues =
+    (summary?.needs_action_count ?? 0) +
+    (summary?.awaiting_confirmation_count ?? 0) +
+    (summary?.delivery_failed_count ?? 0);
   const summaryLine =
-    summary != null
-      ? `${summary.needs_action_count} need action · ${summary.awaiting_confirmation_count} awaiting confirmation · ${summary.delivery_failed_count} delivery failed`
+    summary != null && totalIssues > 0
+      ? `${summary.needs_action_count} need action · ${summary.awaiting_confirmation_count} awaiting confirmation · ${summary.delivery_failed_count} delivery issues`
       : null;
 
   return (
@@ -35,7 +39,7 @@ export function ActionQueuePreviewCard({
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Needs attention now</h2>
+          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Needs attention</h2>
           <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 14, maxWidth: 520 }}>
             {summaryLine ? (
               <>
@@ -45,7 +49,7 @@ export function ActionQueuePreviewCard({
                 </span>
               </>
             ) : (
-              "The highest-priority recovery items currently waiting on operator action."
+              "No urgent items right now."
             )}
           </p>
         </div>
@@ -71,7 +75,7 @@ export function ActionQueuePreviewCard({
 
       {!loading && !error && top.length === 0 ? (
         <p style={{ color: "var(--muted)", marginTop: 16, marginBottom: 0 }}>
-          No urgent recovery work right now. Review open slots or check delivery health below.
+          No urgent items right now.
         </p>
       ) : null}
 

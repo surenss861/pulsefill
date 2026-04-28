@@ -69,7 +69,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
                 {roleLabel(profile.role)}
               </StatusPill>
               <StatusPill variant={profile.onboarding_completed ? "primary" : "default"} caps>
-                {profile.onboarding_completed ? "Workspace live" : "Setup pending"}
+                {profile.onboarding_completed ? "Ready" : "Setup in progress"}
               </StatusPill>
             </span>
           }
@@ -123,7 +123,6 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
             <div style={{ marginTop: 4 }}>
               {field("Business name", business.data.name)}
               {field("Category", business.data.category)}
-              {field("Timezone", business.data.timezone)}
               {field("Phone", business.data.phone)}
               {field("Business email", business.data.email)}
               {field("Website", formatWebsiteDisplay(business.data.website))}
@@ -135,8 +134,8 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
 
         <SectionCard
           eyebrow="Workspace setup"
-          title="Configure your workspace"
-          description="Locations, providers, services, billing, and account pages are grouped here so daily navigation stays focused."
+          title="Setup"
+          description="Manage locations, providers, services, billing, and account settings."
         >
           <div
             style={{

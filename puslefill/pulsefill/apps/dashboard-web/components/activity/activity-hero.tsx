@@ -27,8 +27,8 @@ export function ActivityHero({ actions }: ActivityHeroProps) {
   return (
     <PageIntroCard
       overline="Activity"
-      title="Operational record."
-      description="Track what changed across recovery, what failed, what resolved, and where the system still needs attention."
+      title="Activity"
+      description="Track openings, offers, customer requests, and booking updates in one timeline."
       badge={badge}
       actions={actions}
     />

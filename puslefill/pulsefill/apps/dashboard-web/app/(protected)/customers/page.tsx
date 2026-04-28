@@ -27,6 +27,14 @@ async function copyToClipboard(value: string): Promise<void> {
 }
 
 export default function CustomersPage() {
+  function toCustomerInviteError(err: unknown, fallback: string): string {
+    if (!(err instanceof Error)) return fallback;
+    const msg = err.message.trim();
+    const lower = msg.toLowerCase();
+    if (lower.includes("not found")) return "Customer invites are not available yet.";
+    return msg.length > 0 ? msg : fallback;
+  }
+
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -43,7 +51,7 @@ export default function CustomersPage() {
       const data = await apiFetch<{ invites: CustomerInviteRow[] }>("/v1/customers/invites");
       setInvites(Array.isArray(data.invites) ? data.invites : []);
     } catch (err) {
-      setListError(err instanceof Error ? err.message : "Failed to load invites");
+      setListError(toCustomerInviteError(err, "Couldn’t load invites. Please try again."));
       setInvites([]);
     } finally {
       setLoading(false);
@@ -73,7 +81,7 @@ export default function CustomersPage() {
       setEmail("");
       await load();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to create invite");
+      setFormError(toCustomerInviteError(err, "Couldn’t create invite. Please try again."));
     } finally {
       setSaving(false);
     }
@@ -89,7 +97,7 @@ export default function CustomersPage() {
 
       <p style={{ marginTop: 16 }}>
         <Link href="/open-slots?status=open" style={{ color: "var(--primary)", fontWeight: 600 }}>
-          Open slots
+          Openings
         </Link>{" "}
         ·{" "}
         <Link href="/overview#getting-started" style={{ color: "var(--primary)", fontWeight: 600 }}>
@@ -113,7 +121,7 @@ export default function CustomersPage() {
       >
         <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Invite customer</h2>
         <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
-          Email is not sent from this app yet. One pending invite per email per business. Expires in 7 days.
+          Create an invite code for a customer. Share it with them so they can join your standby list.
         </p>
         <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
           <span style={{ color: "var(--muted)" }}>Email *</span>
@@ -148,7 +156,7 @@ export default function CustomersPage() {
             alignSelf: "flex-start",
           }}
         >
-          {saving ? "Creating…" : "Create invite"}
+          {saving ? "Creating…" : "Create invite code"}
         </button>
       </form>
 

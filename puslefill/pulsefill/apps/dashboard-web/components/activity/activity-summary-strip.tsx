@@ -8,9 +8,9 @@ type ActivitySummaryStripProps = {
 export function ActivitySummaryStrip({ summary }: ActivitySummaryStripProps) {
   const cards = [
     { label: "Recovered", value: summary.recovered, emphasis: "primary" as const },
-    { label: "Delivery failures", value: summary.deliveryFailures, emphasis: "danger" as const },
+    { label: "Delivery issues", value: summary.deliveryFailures, emphasis: "danger" as const },
     { label: "Note updates", value: summary.noteUpdates, emphasis: "default" as const },
-    { label: "Pending confirmations", value: summary.pendingConfirmations, emphasis: "primary" as const },
+    { label: "Waiting", value: summary.pendingConfirmations, emphasis: "primary" as const },
     { label: "Expired", value: summary.expired, emphasis: "danger" as const },
   ];
 

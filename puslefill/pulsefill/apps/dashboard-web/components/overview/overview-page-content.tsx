@@ -96,8 +96,8 @@ export function OverviewPageContent({
     lines.push({ label: "Today · delivery failures", value: m.delivery_failures_today });
     lines.push({ label: "Today · no matches", value: m.no_matches_today });
     if (live) {
-      lines.push({ label: "Slots · open / offered", value: live.open });
-      lines.push({ label: "Slots · claimed", value: live.claimed });
+      lines.push({ label: "Openings · open / offered", value: live.open });
+      lines.push({ label: "Openings · claimed", value: live.claimed });
     }
     if (metrics && metrics.open_slots_created > 0) {
       const rate = Math.min(100, Math.round((metrics.slots_booked / metrics.open_slots_created) * 100));
