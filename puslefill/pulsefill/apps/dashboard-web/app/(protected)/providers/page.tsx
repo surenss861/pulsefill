@@ -83,64 +83,82 @@ export default function ProvidersPage() {
   const listError = error || locError;
 
   return (
-    <main style={{ padding: 24 }}>
+    <main style={{ padding: 0, maxWidth: 980 }}>
       <h1 style={{ marginTop: 0 }}>Providers</h1>
       <p style={{ color: "var(--muted)", maxWidth: 640 }}>
-        Providers from <code style={{ color: "var(--primary)" }}>GET /v1/providers</code>. Create with{" "}
-        <code style={{ color: "var(--primary)" }}>POST /v1/providers</code>.
+        Add the people or calendars that openings belong to.
       </p>
 
-      <form onSubmit={onSubmit} style={formBox}>
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Add provider</h2>
-        <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-          <span style={{ color: "var(--muted)" }}>Name *</span>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Dr. Lee"
-            required
-            style={inputStyle}
-          />
-        </label>
-        {locations.length > 0 ? (
+      <div style={{ marginTop: 24, display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
+        <form onSubmit={onSubmit} style={formBox}>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Add provider</h2>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-            <span style={{ color: "var(--muted)" }}>Location (optional)</span>
-            <select
-              value={locationId}
-              onChange={(e) => setLocationId(e.target.value)}
-              style={{ ...inputStyle, cursor: "pointer" }}
-            >
-              <option value="">— None —</option>
-              {locations.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.name}
-                </option>
-              ))}
-            </select>
+            <span style={{ color: "var(--muted)" }}>Name *</span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Dr. Lee"
+              required
+              style={inputStyle}
+            />
           </label>
-        ) : (
-          <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
-            Add a location under <Link href="/locations">Locations</Link> to attach a provider to a site (optional).
-          </p>
-        )}
-        {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(255,255,255,0.1)",
-            color: "var(--text)",
-            padding: "10px 14px",
-            fontSize: 14,
-            cursor: saving ? "wait" : "pointer",
-            alignSelf: "flex-start",
-          }}
-        >
-          {saving ? "Saving…" : "Save provider"}
-        </button>
-      </form>
+          {locations.length > 0 ? (
+            <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+              <span style={{ color: "var(--muted)" }}>Location (optional)</span>
+              <select
+                value={locationId}
+                onChange={(e) => setLocationId(e.target.value)}
+                style={{ ...inputStyle, cursor: "pointer" }}
+              >
+                <option value="">— None —</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+              Add a location first so providers can be linked to a clinic site.
+            </p>
+          )}
+          {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.18)",
+              background: "rgba(255,255,255,0.1)",
+              color: "var(--text)",
+              padding: "10px 14px",
+              fontSize: 14,
+              cursor: saving ? "wait" : "pointer",
+              alignSelf: "flex-start",
+            }}
+          >
+            {saving ? "Saving…" : "Save provider"}
+          </button>
+        </form>
+
+        <div style={formBox}>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Setup guidance</h2>
+          {locations.length === 0 ? (
+            <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>
+              Finish location setup first, then add providers so openings can be assigned correctly.
+              <br />
+              <Link href="/locations" style={{ color: "var(--primary)", fontWeight: 600 }}>
+                Add location
+              </Link>
+            </p>
+          ) : (
+            <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>
+              Providers can optionally be linked to a default location for cleaner routing.
+            </p>
+          )}
+        </div>
+      </div>
 
       {listLoading ? <p style={{ color: "var(--muted)", marginTop: 24 }}>Loading…</p> : null}
       {listError ? <p style={{ color: "#f87171", marginTop: 16 }}>{listError}</p> : null}
@@ -157,17 +175,46 @@ export default function ProvidersPage() {
       ) : null}
 
       {!listLoading && providers.length > 0 ? (
-        <ul style={{ marginTop: 24, paddingLeft: 20, color: "var(--muted)" }}>
-          {providers.map((p) => (
-            <li key={p.id} style={{ marginBottom: 8 }}>
-              <strong style={{ color: "var(--text)" }}>{p.name}</strong>
-              {p.location_id
-                ? ` — ${locationNameById.get(p.location_id) ?? p.location_id}`
-                : " — (no default location)"}
-            </li>
-          ))}
-        </ul>
+        <div
+          style={{
+            marginTop: 24,
+            borderRadius: 12,
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                <th style={thStyle}>Provider</th>
+                <th style={thStyle}>Default location</th>
+              </tr>
+            </thead>
+            <tbody>
+              {providers.map((p) => (
+                <tr key={p.id}>
+                  <td style={tdStyle}>{p.name}</td>
+                  <td style={tdStyle}>{p.location_id ? locationNameById.get(p.location_id) ?? "Unlinked" : "Unlinked"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : null}
     </main>
   );
 }
+
+const thStyle: CSSProperties = {
+  textAlign: "left",
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(255,255,255,0.1)",
+  color: "var(--muted)",
+  fontWeight: 600,
+};
+
+const tdStyle: CSSProperties = {
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(255,255,255,0.06)",
+};

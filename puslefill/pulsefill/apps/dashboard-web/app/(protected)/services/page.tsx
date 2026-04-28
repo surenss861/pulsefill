@@ -81,53 +81,62 @@ export default function ServicesPage() {
   }
 
   return (
-    <main style={{ padding: 24 }}>
+    <main style={{ padding: 0, maxWidth: 980 }}>
       <h1 style={{ marginTop: 0 }}>Services</h1>
       <p style={{ color: "var(--muted)", maxWidth: 640 }}>
-        Services from <code style={{ color: "var(--primary)" }}>GET /v1/services</code>. Create with{" "}
-        <code style={{ color: "var(--primary)" }}>POST /v1/services</code>.
+        Define appointment types so opening times and standby matches stay accurate.
       </p>
 
-      <form onSubmit={onSubmit} style={formBox}>
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Add service</h2>
-        <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-          <span style={{ color: "var(--muted)" }}>Name *</span>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Dental cleaning"
-            required
-            style={inputStyle}
-          />
-        </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-          <span style={{ color: "var(--muted)" }}>Duration (minutes, optional)</span>
-          <input
-            value={durationMinutes}
-            onChange={(e) => setDurationMinutes(e.target.value)}
-            placeholder="60"
-            inputMode="numeric"
-            style={inputStyle}
-          />
-        </label>
-        {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(255,255,255,0.1)",
-            color: "var(--text)",
-            padding: "10px 14px",
-            fontSize: 14,
-            cursor: saving ? "wait" : "pointer",
-            alignSelf: "flex-start",
-          }}
-        >
-          {saving ? "Saving…" : "Save service"}
-        </button>
-      </form>
+      <div style={{ marginTop: 24, display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
+        <form onSubmit={onSubmit} style={formBox}>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Add service</h2>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+            <span style={{ color: "var(--muted)" }}>Name *</span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Dental cleaning"
+              required
+              style={inputStyle}
+            />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+            <span style={{ color: "var(--muted)" }}>Duration (minutes, optional)</span>
+            <input
+              value={durationMinutes}
+              onChange={(e) => setDurationMinutes(e.target.value)}
+              placeholder="60"
+              inputMode="numeric"
+              style={inputStyle}
+            />
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>Used to estimate the opening end time.</span>
+          </label>
+          {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.18)",
+              background: "rgba(255,255,255,0.1)",
+              color: "var(--text)",
+              padding: "10px 14px",
+              fontSize: 14,
+              cursor: saving ? "wait" : "pointer",
+              alignSelf: "flex-start",
+            }}
+          >
+            {saving ? "Saving…" : "Save service"}
+          </button>
+        </form>
+
+        <div style={formBox}>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Setup guidance</h2>
+          <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>
+            Services help keep opening duration, matching rules, and customer expectations aligned.
+          </p>
+        </div>
+      </div>
 
       {loading ? <p style={{ color: "var(--muted)", marginTop: 24 }}>Loading…</p> : null}
       {error ? <p style={{ color: "#f87171", marginTop: 16 }}>{error}</p> : null}
@@ -144,15 +153,46 @@ export default function ServicesPage() {
       ) : null}
 
       {!loading && services.length > 0 ? (
-        <ul style={{ marginTop: 24, paddingLeft: 20, color: "var(--muted)" }}>
-          {services.map((s) => (
-            <li key={s.id} style={{ marginBottom: 8 }}>
-              <strong style={{ color: "var(--text)" }}>{s.name}</strong>
-              {typeof s.duration_minutes === "number" ? ` — ${s.duration_minutes} min` : null}
-            </li>
-          ))}
-        </ul>
+        <div
+          style={{
+            marginTop: 24,
+            borderRadius: 12,
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                <th style={thStyle}>Service</th>
+                <th style={thStyle}>Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              {services.map((s) => (
+                <tr key={s.id}>
+                  <td style={tdStyle}>{s.name}</td>
+                  <td style={tdStyle}>{typeof s.duration_minutes === "number" ? `${s.duration_minutes} min` : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : null}
     </main>
   );
 }
+
+const thStyle: CSSProperties = {
+  textAlign: "left",
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(255,255,255,0.1)",
+  color: "var(--muted)",
+  fontWeight: 600,
+};
+
+const tdStyle: CSSProperties = {
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(255,255,255,0.06)",
+};

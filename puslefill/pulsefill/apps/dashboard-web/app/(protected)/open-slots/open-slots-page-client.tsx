@@ -204,8 +204,6 @@ export default function OpenSlotsPageClient() {
         </button>
       </div>
 
-      <SendOffersPrereqCallout />
-
       {digestBanner ? (
         <div
           style={{
@@ -237,15 +235,34 @@ export default function OpenSlotsPageClient() {
         <div style={{ marginTop: 24 }}>
           <ActionEmptyState
             title="No openings yet"
-            description="When a cancellation happens, create an opening here and PulseFill can send it to matching standby customers."
+            description="Create an appointment opening when a cancellation appears. PulseFill will help match it to standby customers."
             ctaLabel="Create opening"
             ctaHref="/open-slots/create"
           />
+          <div
+            style={{
+              marginTop: 14,
+              borderRadius: 14,
+              border: "1px solid rgba(255,255,255,0.1)",
+              background: "rgba(255,255,255,0.03)",
+              padding: 14,
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>How matching works</p>
+            <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+              PulseFill sends openings to customers with active standby preferences. If nobody matches yet, invite
+              standby customers first.
+            </p>
+            <Link href="/customers" style={{ display: "inline-block", marginTop: 8, color: "var(--primary)", fontWeight: 600 }}>
+              Invite standby customers
+            </Link>
+          </div>
         </div>
       ) : null}
 
       {!loading && !error && slots.length > 0 ? (
         <div style={{ marginTop: 20, display: "grid", gap: 18 }}>
+          <SendOffersPrereqCallout />
           <OperatorSlotListSummary counts={counts} />
           <OperatorSlotListToolbar selectedFilter={filter} onChange={commitListFilter} counts={counts} />
 

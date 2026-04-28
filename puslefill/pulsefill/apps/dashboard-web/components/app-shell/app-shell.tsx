@@ -33,13 +33,27 @@ export function AppShell({ children, user, profile }: AppShellProps) {
             <MobileQuick href="/settings" label="Settings" />
           </div>
           <div style={{ flex: 1, overflow: "auto" }}>
-            <div style={{ maxWidth: 1180, margin: "0 auto", padding: "clamp(16px, 2.2vw, 24px) clamp(16px, 2.5vw, 28px) 48px" }}>
+            <div
+              style={{
+                maxWidth: 1180,
+                margin: "0 auto",
+                padding: "clamp(14px, 2vw, 20px) clamp(16px, 2.5vw, 28px) 48px",
+                animation: "pf-page-enter 180ms ease-out",
+              }}
+            >
               {children}
             </div>
           </div>
         </div>
       </div>
       <style>{`
+        @keyframes pf-page-enter {
+          from { opacity: 0; transform: translateY(3px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .pf-app-shell-row * { animation: none !important; transition: none !important; }
+        }
         @media (max-width: 1023px) {
           .pf-app-sidebar { display: none !important; }
           .pf-app-mobile-quick { display: flex !important; }

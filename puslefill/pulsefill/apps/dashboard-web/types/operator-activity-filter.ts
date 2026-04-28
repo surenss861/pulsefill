@@ -10,7 +10,7 @@ export type OperatorActivityFilter =
 
 export const operatorActivityFilterOptions: Array<{ value: OperatorActivityFilter; label: string }> = [
   { value: "all", label: "All" },
-  { value: "delivery", label: "Delivery" },
+  { value: "delivery", label: "Notifications" },
   { value: "claims", label: "Claims" },
   { value: "bookings", label: "Bookings" },
   { value: "coverage", label: "Coverage" },

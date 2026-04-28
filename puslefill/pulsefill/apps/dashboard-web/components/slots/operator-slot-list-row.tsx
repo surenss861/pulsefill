@@ -56,7 +56,7 @@ export function OperatorSlotListRow({
   const scanLine = [slot.provider_name_snapshot?.trim(), slot.location_name?.trim(), range !== "—" ? range : null]
     .filter(Boolean)
     .join(" · ");
-  const rowTitle = scanLine || "Open slot";
+  const rowTitle = scanLine || "Open opening";
 
   const selectedShell: CSSProperties | undefined = selection?.selected
     ? {

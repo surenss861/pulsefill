@@ -88,7 +88,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
         <SectionCard
           eyebrow="Your account"
           title="Account"
-          description="Your signed-in profile for PulseFill."
+          description="Your name, email, role, and sign-in session."
         >
           <div style={{ marginTop: 4 }}>{field("Display name", profile.full_name)}</div>
           {field("Work email", displayEmail)}
@@ -106,7 +106,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
         <SectionCard
           eyebrow="Workspace"
           title="Workspace"
-          description="Business details used for openings, offers, and customer matching."
+          description="Business details used across openings and customer invites."
         >
           {business.loading ? (
             <PageState variant="info" title="Loading workspace" description="Fetching business from the PulseFill API." style={{ maxWidth: "100%" }} />
@@ -122,6 +122,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
           ) : business.data ? (
             <div style={{ marginTop: 4 }}>
               {field("Business name", business.data.name)}
+              {field("Timezone", business.data.timezone)}
               {field("Category", business.data.category)}
               {field("Phone", business.data.phone)}
               {field("Business email", business.data.email)}
@@ -160,6 +161,23 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
             <Link href="/account" style={actionLinkStyle("secondary")}>
               Account
             </Link>
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          eyebrow="Security"
+          title="Security"
+          description="Manage sign-in and session controls."
+        >
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            <Link href="/forgot-password" style={actionLinkStyle("secondary")}>
+              Reset password
+            </Link>
+            <form action={signOutAction} style={{ display: "inline" }}>
+              <ActionButton variant="secondary" type="submit">
+                Sign out
+              </ActionButton>
+            </form>
           </div>
         </SectionCard>
 

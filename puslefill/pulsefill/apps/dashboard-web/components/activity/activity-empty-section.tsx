@@ -9,16 +9,16 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
     return (
       <PageState
         variant="empty"
-        title="Nothing here"
-        description="Try another filter, or refresh if you expect new events."
+        title="No activity for this filter"
+        description="Try another filter or refresh to check for new workflow events."
       />
     );
   }
   return (
     <PageState
       variant="empty"
-      title="No activity"
-      description="There are no recent events in this section for the current filter."
+      title="No activity yet"
+      description="Activity appears after you create openings, send offers, or confirm bookings."
     />
   );
 }

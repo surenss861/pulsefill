@@ -43,6 +43,12 @@ export default function CustomersPage() {
   const [listError, setListError] = useState<string | null>(null);
   const [lastCreated, setLastCreated] = useState<CreateInviteResponse | null>(null);
   const [copyState, setCopyState] = useState<string | null>(null);
+  const pendingInvites = invites.filter((i) => i.status === "pending").length;
+  const acceptedInvites = invites.filter((i) => i.status === "accepted").length;
+  const matchCoverage =
+    acceptedInvites > 0
+      ? "Customers are connected; ask them to enable standby preferences."
+      : "Invite customers first to build standby coverage.";
 
   const load = useCallback(async () => {
     try {
@@ -88,77 +94,108 @@ export default function CustomersPage() {
   }
 
   return (
-    <main style={{ padding: 24, maxWidth: 800 }}>
+    <main style={{ padding: 0, maxWidth: 980 }}>
       <h1 style={{ marginTop: 0 }}>Customers & standby</h1>
       <p style={{ color: "var(--muted)", lineHeight: 1.6, marginTop: 8 }}>
-        Invite customers to join your standby list. Once they set preferred times, PulseFill can match them to new
-        openings automatically.
+        Invite customers to join standby so PulseFill can match them to new openings.
       </p>
 
-      <p style={{ marginTop: 16 }}>
-        <Link href="/open-slots?status=open" style={{ color: "var(--primary)", fontWeight: 600 }}>
-          Openings
-        </Link>{" "}
-        ·{" "}
-        <Link href="/overview#getting-started" style={{ color: "var(--primary)", fontWeight: 600 }}>
-          Setup checklist
-        </Link>
-      </p>
-
-      <form
-        onSubmit={onSubmit}
+      <div
         style={{
-          marginTop: 24,
-          maxWidth: 480,
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-          padding: 20,
-          borderRadius: 16,
-          border: "1px solid rgba(255,255,255,0.1)",
-          background: "rgba(255,255,255,0.04)",
+          marginTop: 16,
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: 10,
         }}
       >
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Invite customer</h2>
-        <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
-          Create an invite code for a customer. Share it with them so they can join your standby list.
-        </p>
-        <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-          <span style={{ color: "var(--muted)" }}>Email *</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="patients@example.com"
-            required
-            style={{
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.14)",
-              background: "rgba(0,0,0,0.2)",
-              color: "var(--text)",
-              padding: "10px 12px",
-              fontSize: 14,
-            }}
-          />
-        </label>
-        {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-        <button
-          type="submit"
-          disabled={saving}
+        <SummaryCard label="Pending invites" value={pendingInvites} helper="Customers waiting to accept your invite." />
+        <SummaryCard label="Active standby" value={acceptedInvites} helper="Customers connected to this clinic." />
+        <SummaryCard label="Match coverage" value={acceptedInvites > 0 ? "Improving" : "Low"} helper={matchCoverage} />
+      </div>
+
+      <div
+        style={{
+          marginTop: 24,
+          display: "grid",
+          gridTemplateColumns: "1.1fr 1fr",
+          gap: 14,
+        }}
+      >
+        <form
+          onSubmit={onSubmit}
           style={{
-            borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(255,255,255,0.1)",
-            color: "var(--text)",
-            padding: "10px 14px",
-            fontSize: 14,
-            cursor: saving ? "wait" : "pointer",
-            alignSelf: "flex-start",
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+            padding: 16,
+            borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.04)",
           }}
         >
-          {saving ? "Creating…" : "Create invite code"}
-        </button>
-      </form>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Invite customer</h2>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
+            Create an invite code and share it with the customer so they can join your standby list.
+          </p>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+            <span style={{ color: "var(--muted)" }}>Email *</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="patients@example.com"
+              required
+              style={{
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(0,0,0,0.2)",
+                color: "var(--text)",
+                padding: "10px 12px",
+                fontSize: 14,
+              }}
+            />
+          </label>
+          {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.18)",
+              background: "rgba(255,255,255,0.1)",
+              color: "var(--text)",
+              padding: "10px 14px",
+              fontSize: 14,
+              cursor: saving ? "wait" : "pointer",
+              alignSelf: "flex-start",
+            }}
+          >
+            {saving ? "Creating…" : "Create invite code"}
+          </button>
+        </form>
+
+        <div
+          style={{
+            borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.03)",
+            padding: 16,
+          }}
+        >
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Standby coverage</h2>
+          <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 13, lineHeight: 1.6 }}>
+            Customers receive offers after accepting an invite and enabling standby preferences.
+          </p>
+          <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 13, lineHeight: 1.6 }}>
+            If <strong>Send offers</strong> finds no matches, invite more customers or ask connected customers to finish standby setup.
+          </p>
+          <p style={{ margin: "10px 0 0", fontSize: 13 }}>
+            <Link href="/open-slots?status=open" style={{ color: "var(--primary)", fontWeight: 600 }}>
+              Review openings
+            </Link>
+          </p>
+        </div>
+      </div>
 
       {lastCreated ? (
         <div
@@ -180,8 +217,7 @@ export default function CustomersPage() {
             </p>
           ) : (
             <p style={{ margin: "0 0 8px", color: "var(--muted)" }}>
-              Set <code>CUSTOMER_APP_BASE_URL</code> on the API to build a full <code>invite_url</code>. You can still
-              copy the one-time token below.
+              Invite link unavailable in this environment. You can still copy and share the invite code below.
             </p>
           )}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
@@ -239,51 +275,40 @@ export default function CustomersPage() {
         </div>
       ) : null}
 
-      {!loading && !listError && invites.length > 0 ? (
-        <div style={{ marginTop: 24 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 650, marginBottom: 8 }}>Pending invites</h2>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            {invites.map((r) => (
-              <li
-                key={r.id}
-                style={{
-                  marginBottom: 10,
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  background: "rgba(0,0,0,0.2)",
-                }}
-              >
-                <div style={{ fontWeight: 600 }}>{r.email}</div>
-                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>
-                  {r.status}
-                  {r.status === "pending" ? ` · expires ${new Date(r.expires_at).toLocaleString()}` : null}
-                  {r.accepted_at ? ` · accepted ${new Date(r.accepted_at).toLocaleString()}` : null}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                  Created {new Date(r.created_at).toLocaleString()}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      <div
-        style={{
-          marginTop: 24,
-          borderRadius: 14,
-          border: "1px solid rgba(255,255,255,0.1)",
-          background: "rgba(0,0,0,0.2)",
-          padding: 14,
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Standby coverage</h2>
-        <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 13, lineHeight: 1.6 }}>
-          Customers receive offers only after accepting an invite and setting active standby preferences. If{" "}
-          <strong>Send offers</strong> returns <em>no matches</em>, invite more customers or ask accepted customers to
-          complete standby setup.
-        </p>
+      <div style={{ marginTop: 24 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 650, marginBottom: 8 }}>Pending invites</h2>
+        {!loading && !listError && invites.length > 0 ? (
+          <div
+            style={{
+              borderRadius: 12,
+              overflow: "hidden",
+              border: "1px solid rgba(255,255,255,0.1)",
+              background: "rgba(0,0,0,0.2)",
+            }}
+          >
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                  <th style={thStyle}>Email</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invites.map((r) => (
+                  <tr key={r.id}>
+                    <td style={tdStyle}>{r.email}</td>
+                    <td style={tdStyle}>
+                      {r.status}
+                      {r.status === "pending" ? ` · expires ${new Date(r.expires_at).toLocaleDateString()}` : null}
+                    </td>
+                    <td style={tdStyle}>{new Date(r.created_at).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </div>
     </main>
   );
@@ -297,4 +322,34 @@ const copyButton: CSSProperties = {
   padding: "8px 12px",
   fontSize: 12,
   cursor: "pointer",
+};
+
+function SummaryCard({ label, value, helper }: { label: string; value: string | number; helper: string }) {
+  return (
+    <div
+      style={{
+        borderRadius: 12,
+        border: "1px solid rgba(255,255,255,0.1)",
+        background: "rgba(255,255,255,0.03)",
+        padding: 12,
+      }}
+    >
+      <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>{label}</p>
+      <p style={{ margin: "6px 0 0", fontSize: 20, fontWeight: 650 }}>{value}</p>
+      <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--muted)", lineHeight: 1.4 }}>{helper}</p>
+    </div>
+  );
+}
+
+const thStyle: CSSProperties = {
+  textAlign: "left",
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(255,255,255,0.1)",
+  color: "var(--muted)",
+  fontWeight: 600,
+};
+
+const tdStyle: CSSProperties = {
+  padding: "10px 12px",
+  borderBottom: "1px solid rgba(255,255,255,0.06)",
 };

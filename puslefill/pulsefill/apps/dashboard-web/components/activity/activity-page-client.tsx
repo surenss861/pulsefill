@@ -145,6 +145,7 @@ export function ActivityPageClient() {
                   background: on ? "rgba(255, 122, 24, 0.08)" : "rgba(255,255,255,0.03)",
                   color: on ? "var(--pf-text-primary)" : "rgba(245, 247, 250, 0.7)",
                   cursor: "pointer",
+                  transition: "background 150ms ease, border-color 150ms ease, transform 120ms ease",
                 }}
               >
                 {opt.label}
@@ -171,8 +172,12 @@ export function ActivityPageClient() {
           </button>
         </div>
 
-        {error ? <PageState variant="error" title="Could not load activity" description={error} /> : loading && items.length === 0 ? (
+        {error ? (
+          <PageState variant="error" title="Could not load activity" description={error} />
+        ) : loading && items.length === 0 ? (
           <p style={{ color: "rgba(245, 247, 250, 0.45)", margin: 0, fontSize: 14 }}>Loading activity…</p>
+        ) : items.length === 0 ? (
+          <ActivityEmptySection />
         ) : filteredItems.length === 0 ? (
           <ActivityEmptySection variant="filtered" />
         ) : (

@@ -15,9 +15,15 @@ export function ActivitySummaryStrip({ summary }: ActivitySummaryStripProps) {
   ];
 
   return (
-    <section style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+    <section style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
       {cards.map((c) => (
-        <MetricCard key={c.label} label={c.label} value={c.value} emphasis={c.emphasis} style={{ flex: "1 1 120px", minWidth: 110 }} />
+        <MetricCard
+          key={c.label}
+          label={c.label}
+          value={c.value}
+          emphasis={c.emphasis}
+          style={{ flex: "1 1 110px", minWidth: 100, padding: "12px 14px" }}
+        />
       ))}
     </section>
   );

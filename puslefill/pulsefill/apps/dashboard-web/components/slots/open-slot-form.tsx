@@ -30,6 +30,13 @@ function localInputToIso(value: string): string {
   return d.toISOString();
 }
 
+function minutesBetween(startLocal: string, endLocal: string): number | null {
+  const a = new Date(startLocal).getTime();
+  const b = new Date(endLocal).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b) || b <= a) return null;
+  return Math.round((b - a) / 60000);
+}
+
 const inputStyle: CSSProperties = {
   borderRadius: 12,
   border: "1px solid rgba(255,255,255,0.12)",
@@ -76,6 +83,10 @@ export function OpenSlotForm({ onCreated }: Props) {
       return null;
     }
   }, [startsLocal, endsLocal]);
+  const durationMinutes = useMemo(() => minutesBetween(startsLocal, endsLocal), [startsLocal, endsLocal]);
+  const providerLabel = providerId ? providers.find((p) => p.id === providerId)?.name ?? "Not selected" : "Not selected";
+  const serviceLabel = serviceId ? services.find((s) => s.id === serviceId)?.name ?? "Not selected" : "Not selected";
+  const locationLabel = locationId ? locations.find((l) => l.id === locationId)?.name ?? "Not selected" : "Not selected";
 
   useEffect(() => {
     if (!serviceId) return;
@@ -201,175 +212,252 @@ export function OpenSlotForm({ onCreated }: Props) {
         <div
           style={{
             borderRadius: 16,
-            border: "1px solid rgba(251,191,36,0.35)",
-            background: "rgba(251,191,36,0.08)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.03)",
             padding: 14,
             fontSize: 13,
             lineHeight: 1.5,
             color: "var(--text)",
           }}
         >
-          <strong style={{ display: "block", marginBottom: 6 }}>Finish business setup first</strong>
-          PulseFill works best with at least one location, provider, and service.{" "}
-          <Link href="/overview#getting-started" style={{ color: "var(--primary)" }}>
-            Open the setup checklist
-          </Link>
-          .
+          <strong style={{ display: "block", marginBottom: 6 }}>Finish setup before creating openings</strong>
+          <span style={{ color: "var(--muted)" }}>
+            Add at least one location, provider, and service to post openings.
+          </span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+            <Link href="/locations" style={{ color: "var(--primary)", fontWeight: 600 }}>
+              Add location
+            </Link>
+            <span style={{ color: "var(--muted)" }}>·</span>
+            <Link href="/providers" style={{ color: "var(--primary)", fontWeight: 600 }}>
+              Add provider
+            </Link>
+            <span style={{ color: "var(--muted)" }}>·</span>
+            <Link href="/services" style={{ color: "var(--primary)", fontWeight: 600 }}>
+              Add service
+            </Link>
+          </div>
         </div>
       ) : null}
 
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>
-          Location{locations.length > 0 ? " *" : ""}
-        </span>
-        <select
-          value={locationId}
-          onChange={(e) => setLocationId(e.target.value)}
-          style={inputStyle}
-          disabled={optionsLoading}
-          required={locations.length > 0}
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "2fr 1fr", alignItems: "start" }}>
+        <div style={{ display: "grid", gap: 16 }}>
+          <section style={sectionStyle}>
+            <h2 style={sectionTitle}>1. Appointment details</h2>
+            <div style={{ display: "grid", gap: 14 }}>
+              <label style={{ display: "grid", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>
+                  Location{locations.length > 0 ? " *" : ""}
+                </span>
+                <select
+                  value={locationId}
+                  onChange={(e) => setLocationId(e.target.value)}
+                  style={inputStyle}
+                  disabled={optionsLoading}
+                  required={locations.length > 0}
+                >
+                  <option value="">{locations.length > 0 ? "Select…" : "Not set"}</option>
+                  {locations.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label style={{ display: "grid", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>
+                  Provider{providers.length > 0 ? " *" : ""}
+                </span>
+                <select
+                  value={providerId}
+                  onChange={(e) => onProviderChange(e.target.value)}
+                  style={inputStyle}
+                  disabled={optionsLoading}
+                  required={providers.length > 0}
+                >
+                  <option value="">{providers.length > 0 ? "Select…" : "None loaded"}</option>
+                  {providers.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label style={{ display: "grid", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>
+                  Service{services.length > 0 ? " *" : ""}
+                </span>
+                <select
+                  value={serviceId}
+                  onChange={(e) => setServiceId(e.target.value)}
+                  style={inputStyle}
+                  disabled={optionsLoading}
+                  required={services.length > 0}
+                >
+                  <option value="">{services.length > 0 ? "Select…" : "Not set"}</option>
+                  {services.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.duration_minutes} min)
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <details>
+                <summary style={{ cursor: "pointer", color: "var(--muted)", fontSize: 13 }}>Advanced</summary>
+                <label style={{ display: "grid", gap: 6, marginTop: 10 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>Offer label (optional)</span>
+                  <input
+                    type="text"
+                    value={providerNameSnapshot}
+                    onChange={(e) => setProviderNameSnapshot(e.target.value)}
+                    placeholder="Customer-facing name for this opening"
+                    style={inputStyle}
+                  />
+                </label>
+              </details>
+            </div>
+          </section>
+
+          <section style={sectionStyle}>
+            <h2 style={sectionTitle}>2. Time window</h2>
+            <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+              <label style={{ display: "grid", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Starts *</span>
+                <input
+                  type="datetime-local"
+                  value={startsLocal}
+                  onChange={(e) => setStartsLocal(e.target.value)}
+                  required
+                  style={{ ...inputStyle, fontSize: 15, padding: "12px 12px" }}
+                />
+              </label>
+              <label style={{ display: "grid", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Ends *</span>
+                <input
+                  type="datetime-local"
+                  value={endsLocal}
+                  onChange={(e) => setEndsLocal(e.target.value)}
+                  required
+                  style={{ ...inputStyle, fontSize: 15, padding: "12px 12px" }}
+                />
+              </label>
+            </div>
+            <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--muted)" }}>
+              {durationMinutes ? `${durationMinutes} minute opening` : "Set both start and end time to preview duration."}
+            </p>
+            {durationHint === "short" ? (
+              <p style={{ margin: "6px 0 0", fontSize: 12, color: "rgba(251,191,36,0.9)" }}>
+                Short window - double-check before sending offers.
+              </p>
+            ) : null}
+            {durationHint === "long" ? (
+              <p style={{ margin: "6px 0 0", fontSize: 12, color: "rgba(251,191,36,0.9)" }}>
+                Long window - confirm that this is intentional.
+              </p>
+            ) : null}
+          </section>
+
+          <section style={sectionStyle}>
+            <h2 style={sectionTitle}>3. Offer details</h2>
+            <div style={{ display: "grid", gap: 14 }}>
+              <label style={{ display: "grid", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Estimated value (optional)</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={estimatedDollars}
+                  onChange={(e) => setEstimatedDollars(e.target.value)}
+                  placeholder="0.00"
+                  style={inputStyle}
+                />
+              </label>
+
+              <label style={{ display: "grid", gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Internal note (optional)</span>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  style={{ ...inputStyle, resize: "vertical", minHeight: 72 }}
+                />
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <aside
+          style={{
+            borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.03)",
+            padding: 14,
+            position: "sticky",
+            top: 16,
+          }}
         >
-          <option value="">{locations.length > 0 ? "Select…" : "Not set"}</option>
-          {locations.map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.name}
-            </option>
-          ))}
-        </select>
-        <span style={{ fontSize: 12, color: "var(--muted)" }}>Where this opening happens.</span>
-      </label>
-
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>
-          Provider{providers.length > 0 ? " *" : ""}
-        </span>
-        <select
-          value={providerId}
-          onChange={(e) => onProviderChange(e.target.value)}
-          style={inputStyle}
-          disabled={optionsLoading}
-          required={providers.length > 0}
-        >
-          <option value="">{providers.length > 0 ? "Select…" : "None loaded"}</option>
-          {providers.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <span style={{ fontSize: 12, color: "var(--muted)" }}>Who can take this opening.</span>
-      </label>
-
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Display name (optional)</span>
-        <input
-          type="text"
-          value={providerNameSnapshot}
-          onChange={(e) => setProviderNameSnapshot(e.target.value)}
-          placeholder="Shown on offers and staff views"
-          style={inputStyle}
-        />
-        <span style={{ fontSize: 12, color: "var(--muted)" }}>
-          Prefilled when you pick a provider; override if needed.
-        </span>
-      </label>
-
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>
-          Service{services.length > 0 ? " *" : ""}
-        </span>
-        <select
-          value={serviceId}
-          onChange={(e) => setServiceId(e.target.value)}
-          style={inputStyle}
-          disabled={optionsLoading}
-          required={services.length > 0}
-        >
-          <option value="">{services.length > 0 ? "Select…" : "Not set"}</option>
-          {services.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name} ({s.duration_minutes} min)
-            </option>
-          ))}
-        </select>
-        <span style={{ fontSize: 12, color: "var(--muted)" }}>
-          End time updates from the service length when you change start or service (you can still edit end).
-        </span>
-      </label>
-
-      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Starts *</span>
-          <input
-            type="datetime-local"
-            value={startsLocal}
-            onChange={(e) => setStartsLocal(e.target.value)}
-            required
-            style={inputStyle}
-          />
-        </label>
-        <label style={{ display: "grid", gap: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Ends *</span>
-          <input
-            type="datetime-local"
-            value={endsLocal}
-            onChange={(e) => setEndsLocal(e.target.value)}
-            required
-            style={inputStyle}
-          />
-        </label>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            Opening summary
+          </p>
+          <div style={{ marginTop: 10, display: "grid", gap: 8, fontSize: 13 }}>
+            <p style={{ margin: 0 }}><span style={{ color: "var(--muted)" }}>Location · </span>{locationLabel}</p>
+            <p style={{ margin: 0 }}><span style={{ color: "var(--muted)" }}>Provider · </span>{providerLabel}</p>
+            <p style={{ margin: 0 }}><span style={{ color: "var(--muted)" }}>Service · </span>{serviceLabel}</p>
+            <p style={{ margin: 0 }}><span style={{ color: "var(--muted)" }}>Duration · </span>{durationMinutes ? `${durationMinutes} min` : "—"}</p>
+          </div>
+        </aside>
       </div>
-      <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>The actual appointment window that just opened up.</p>
-      {durationHint === "short" ? (
-        <p style={{ margin: 0, fontSize: 12, color: "rgba(251,191,36,0.9)" }}>
-          Short window—double-check the times before sending offers.
-        </p>
-      ) : null}
-      {durationHint === "long" ? (
-        <p style={{ margin: 0, fontSize: 12, color: "rgba(251,191,36,0.9)" }}>
-          Long window—confirm that’s intentional for this opening.
-        </p>
-      ) : null}
-
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Estimated value (optional)</span>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={estimatedDollars}
-          onChange={(e) => setEstimatedDollars(e.target.value)}
-          placeholder="0.00"
-          style={inputStyle}
-        />
-        <span style={{ fontSize: 12, color: "var(--muted)" }}>CAD; useful for tracking recovered revenue.</span>
-      </label>
-
-      <label style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Notes (optional)</span>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          style={{ ...inputStyle, resize: "vertical", minHeight: 72 }}
-        />
-      </label>
 
       {fieldError ? <p style={{ margin: 0, fontSize: 13, color: "#f87171" }}>{fieldError}</p> : null}
       {createError ? <p style={{ margin: 0, fontSize: 13, color: "#f87171" }}>{createError}</p> : null}
 
-      <button
-        type="submit"
-        disabled={submitting || optionsLoading}
+      <div
         style={{
-          ...pressablePrimary,
-          justifySelf: "start",
-          opacity: submitting || optionsLoading ? 0.65 : 1,
-          cursor: submitting || optionsLoading ? "not-allowed" : "pointer",
+          position: "sticky",
+          bottom: 0,
+          zIndex: 20,
+          borderRadius: 14,
+          border: "1px solid rgba(255,255,255,0.12)",
+          background: "rgba(5,6,8,0.92)",
+          padding: 12,
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
         }}
-        {...pressableHandlers(submitting || optionsLoading)}
       >
-        {submitting ? "Creating…" : "Create opening"}
-      </button>
+        <Link href="/open-slots" style={{ color: "var(--muted)", fontSize: 13 }}>
+          Back to openings
+        </Link>
+        <button
+          type="submit"
+          disabled={submitting || optionsLoading}
+          style={{
+            ...pressablePrimary,
+            opacity: submitting || optionsLoading ? 0.65 : 1,
+            cursor: submitting || optionsLoading ? "not-allowed" : "pointer",
+          }}
+          {...pressableHandlers(submitting || optionsLoading)}
+        >
+          {submitting ? "Creating…" : "Create opening"}
+        </button>
+      </div>
     </form>
   );
 }
+
+const sectionStyle: CSSProperties = {
+  borderRadius: 16,
+  border: "1px solid rgba(255,255,255,0.1)",
+  background: "rgba(255,255,255,0.03)",
+  padding: 16,
+};
+
+const sectionTitle: CSSProperties = {
+  margin: "0 0 12px",
+  fontSize: 15,
+  fontWeight: 650,
+};

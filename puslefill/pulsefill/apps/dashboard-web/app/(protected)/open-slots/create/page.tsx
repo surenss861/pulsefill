@@ -10,7 +10,7 @@ export default function CreateOpenSlotPage() {
   const [created, setCreated] = useState<OpenSlotCreatedSummary | null>(null);
 
   return (
-    <main style={{ padding: 24, maxWidth: 640 }}>
+    <main style={{ padding: 24, maxWidth: 1100 }}>
       <p style={{ marginTop: 0 }}>
         <Link href="/open-slots" style={{ fontSize: 14, color: "var(--primary)" }}>
           ← Openings
@@ -19,8 +19,7 @@ export default function CreateOpenSlotPage() {
 
       <h1 style={{ margin: "16px 0 0", fontSize: 28, fontWeight: 650 }}>Create opening</h1>
       <p style={{ color: "var(--muted)", marginTop: 8, lineHeight: 1.5, maxWidth: 560 }}>
-        When a cancellation happens, add the opening here. Then send offers to standby customers from the next screen
-        or the opening detail page.
+        Post a cancelled appointment time and send it to matching standby customers.
       </p>
 
       {created ? (

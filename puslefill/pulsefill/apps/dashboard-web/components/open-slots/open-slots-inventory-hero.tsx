@@ -21,10 +21,10 @@ const primaryLinkStyle: CSSProperties = {
 export function OpenSlotsInventoryHero() {
   return (
     <PageIntroCard
-      style={{ marginBottom: 24 }}
+      style={{ marginBottom: 16 }}
       overline="Openings"
-      title="Appointment openings"
-      description="Cancelled appointment times your team can recover. Send offers to matching standby customers, track claims, and confirm recovered bookings."
+      title="Openings"
+      description="Post cancelled appointment times, send offers to matching standby customers, and confirm recovered bookings."
       actions={
         <Link href="/open-slots/create" style={primaryLinkStyle}>
           Create opening
