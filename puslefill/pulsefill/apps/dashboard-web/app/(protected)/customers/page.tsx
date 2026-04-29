@@ -99,6 +99,12 @@ export default function CustomersPage() {
       <p style={{ color: "var(--muted)", lineHeight: 1.6, marginTop: 8 }}>
         Invite customers to join standby so PulseFill can match them to new openings.
       </p>
+      <p style={{ marginTop: 10, fontSize: 14 }}>
+        <Link href="/customers/standby-requests" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
+          Standby requests
+        </Link>
+        <span style={{ color: "var(--muted)" }}> — review customers who asked to join when you use request-to-join access.</span>
+      </p>
 
       <div
         style={{

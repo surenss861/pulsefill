@@ -30,7 +30,7 @@ struct AuthLandingView: View {
                             .font(.system(size: 23, weight: .bold))
                             .foregroundStyle(Color.white.opacity(0.92))
 
-                        Text("Sooner appointments.\nLess waiting.")
+                        Text("Get earlier appointments.")
                             .font(.system(size: 36, weight: .bold))
                             .foregroundStyle(Color.white.opacity(0.94))
                             .lineSpacing(4)
@@ -40,7 +40,7 @@ struct AuthLandingView: View {
                             .multilineTextAlignment(.leading)
                             .padding(.top, 18)
 
-                        Text("Get notified when better times open up.\nClaim fast. Skip the back-and-forth.")
+                        Text("Create an account to receive openings from businesses you’re connected with.")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(PFColor.textSecondary)
                             .lineSpacing(3)
@@ -62,9 +62,9 @@ struct AuthLandingView: View {
 
                     VStack(spacing: 12) {
                         Button {
-                            path.append(AuthDestination.signIn)
+                            path.append(AuthDestination.signUp)
                         } label: {
-                            Text("Sign in")
+                            Text("Create account")
                                 .font(.system(size: 17, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .frame(minHeight: 58)
@@ -90,12 +90,28 @@ struct AuthLandingView: View {
                         }
 
                         Button {
-                            path.append(AuthDestination.signUp)
+                            path.append(AuthDestination.signIn)
                         } label: {
-                            Text("I have an invite")
+                            Text("Sign in")
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
+                                .foregroundStyle(Color.white.opacity(0.92))
+                                .background(Color.white.opacity(0.08))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .stroke(Color.white.opacity(0.14), lineWidth: 1)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        }
+
+                        Button {
+                            path.append(AuthDestination.signUp)
+                        } label: {
+                            Text("I have an invite code")
+                                .font(.system(size: 15, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
                                 .foregroundStyle(Color.white.opacity(0.65))
                                 .background(Color.white.opacity(0.05))
                                 .overlay(
@@ -104,13 +120,6 @@ struct AuthLandingView: View {
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                         }
-
-                        Text("Invite required")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(Color.white.opacity(0.38))
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 4)
                     }
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 12)

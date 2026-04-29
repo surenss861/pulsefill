@@ -51,6 +51,8 @@ const patchBody = z
     phone: z.string().max(40).optional(),
     email: z.string().email().optional(),
     website: z.string().max(512).optional(),
+    standby_access_mode: z.enum(["private", "request_to_join", "public"]).optional(),
+    customer_discovery_enabled: z.boolean().optional(),
   })
   .strict();
 

@@ -9,4 +9,8 @@ export type BusinessMineResponse = {
   email: string | null;
   website: string | null;
   created_at: string;
+  /** How customers may join standby (directory + intent APIs). */
+  standby_access_mode?: "private" | "request_to_join" | "public";
+  /** When true, business is listed in customer directory APIs. */
+  customer_discovery_enabled?: boolean;
 };

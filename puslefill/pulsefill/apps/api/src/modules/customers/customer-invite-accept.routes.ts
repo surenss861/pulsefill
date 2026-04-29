@@ -4,6 +4,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createServiceSupabase } from "../../config/supabase.js";
 import { requireAuth } from "../../plugins/guards.js";
 import { hashInviteToken, normalizeEmailForInvite } from "./invite-token.js";
+import { upsertActiveCustomerMembership } from "./membership.js";
 
 const acceptBody = z.object({ token: z.string().min(20) }).strict();
 
@@ -135,6 +136,12 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
       if (row.status === "accepted") {
         if (row.accepted_by_customer_id === customer.id) {
           try {
+            await upsertActiveCustomerMembership(admin, customer.id, row.business_id, "invite");
+          } catch (e) {
+            req.log.error({ e }, "membership upsert after idempotent accept");
+            return reply.status(500).send({ error: "membership_sync_failed" });
+          }
+          try {
             await ensureDefaultNotificationPreferences(admin, customer.id);
           } catch (e) {
             req.log.warn({ e }, "notification preferences after idempotent accept");
@@ -195,6 +202,13 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
         return reply
           .status(409)
           .send(errPayload("invite_already_used", "This invite was just accepted. Try again if it was you."));
+      }
+
+      try {
+        await upsertActiveCustomerMembership(admin, customer.id, row.business_id, "invite");
+      } catch (e) {
+        req.log.error({ e }, "membership upsert on accept");
+        return reply.status(500).send({ error: "membership_sync_failed" });
       }
 
       try {

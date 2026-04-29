@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { signOutAction } from "@/app/actions/auth";
 import { ActionButton, actionLinkStyle } from "@/components/ui/action-button";
 import { PageIntroCard } from "@/components/ui/page-intro-card";
@@ -8,7 +9,9 @@ import { PageState } from "@/components/ui/page-state";
 import { SectionCard } from "@/components/ui/section-card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { useBusinessMine } from "@/hooks/useBusinessMine";
+import { apiFetch } from "@/lib/api";
 import type { ProfileRow } from "@/lib/get-current-user";
+import type { BusinessMineResponse } from "@/types/business-mine";
 
 function formatWebsiteDisplay(website: string | null | undefined): string | null {
   const w = website?.trim();
@@ -48,6 +51,17 @@ export type SettingsPageClientProps = {
 
 export function SettingsPageClient({ authEmail, profile, lastSignInAt }: SettingsPageClientProps) {
   const business = useBusinessMine();
+  const [accessMode, setAccessMode] = useState<BusinessMineResponse["standby_access_mode"]>("private");
+  const [discovery, setDiscovery] = useState(false);
+  const [accessSaving, setAccessSaving] = useState(false);
+  const [accessError, setAccessError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!business.data) return;
+    setAccessMode(business.data.standby_access_mode ?? "private");
+    setDiscovery(Boolean(business.data.customer_discovery_enabled));
+  }, [business.data?.id, business.data?.standby_access_mode, business.data?.customer_discovery_enabled]);
+
   const displayEmail = authEmail?.trim() || profile.email?.trim() || "—";
   const lastIn =
     lastSignInAt != null && lastSignInAt.length > 0
@@ -130,6 +144,84 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
             </div>
           ) : (
             <PageState variant="empty" title="No workspace data" description="Try refreshing the page." style={{ maxWidth: "100%" }} />
+          )}
+        </SectionCard>
+
+        <SectionCard
+          eyebrow="Customers"
+          title="Standby access"
+          description="Control how new customers can join your standby pool. Invite-only stays the default until you turn on discovery."
+        >
+          {business.loading ? (
+            <PageState variant="info" title="Loading" description="Fetching workspace settings…" style={{ maxWidth: "100%" }} />
+          ) : business.error ? (
+            <PageState variant="error" title="Could not load" description={business.error} style={{ maxWidth: "100%" }} />
+          ) : business.data ? (
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 16 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: "rgba(245,247,250,0.55)" }}>
+                Access mode
+                <select
+                  value={accessMode ?? "private"}
+                  onChange={(e) => setAccessMode(e.target.value as BusinessMineResponse["standby_access_mode"])}
+                  style={{
+                    maxWidth: 360,
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: "1px solid var(--pf-border-subtle)",
+                    background: "rgba(0,0,0,0.35)",
+                    color: "var(--text)",
+                    fontSize: 14,
+                  }}
+                >
+                  <option value="private">Private — invite only</option>
+                  <option value="request_to_join">Request to join — customers apply, you approve</option>
+                  <option value="public">Public — customers can join standby when listed</option>
+                </select>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "rgba(245,247,250,0.82)" }}>
+                <input
+                  type="checkbox"
+                  checked={discovery}
+                  onChange={(e) => setDiscovery(e.target.checked)}
+                  style={{ width: 18, height: 18 }}
+                />
+                List this business in the customer “Find businesses” directory
+              </label>
+              <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", maxWidth: 560, lineHeight: 1.5 }}>
+                Directory listing is off by default. When on, customers who are signed in can see your profile and request access or join
+                (depending on access mode). Your current pilot flows and invites keep working.
+              </p>
+              {accessError ? <p style={{ margin: 0, color: "#f87171", fontSize: 14 }}>{accessError}</p> : null}
+              <ActionButton
+                variant="primary"
+                disabled={accessSaving}
+                onClick={() => {
+                  void (async () => {
+                    setAccessError(null);
+                    setAccessSaving(true);
+                    try {
+                      await apiFetch<BusinessMineResponse>("/v1/businesses/mine", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          standby_access_mode: accessMode,
+                          customer_discovery_enabled: discovery,
+                        }),
+                      });
+                      await business.reload({ silent: true });
+                    } catch (e) {
+                      setAccessError(e instanceof Error ? e.message : "Save failed");
+                    } finally {
+                      setAccessSaving(false);
+                    }
+                  })();
+                }}
+              >
+                {accessSaving ? "Saving…" : "Save customer access"}
+              </ActionButton>
+            </div>
+          ) : (
+            <PageState variant="empty" title="No workspace" description="Try refreshing." style={{ maxWidth: "100%" }} />
           )}
         </SectionCard>
 

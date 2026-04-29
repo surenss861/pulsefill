@@ -19,6 +19,8 @@ fi
 
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "${MIG}/0018_customer_invites.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "${MIG}/0019_customer_invites_accepted_by.sql"
+# Optional marketplace foundation (business access mode, memberships, standby requests):
+# psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "${MIG}/0020_marketplace_foundation.sql"
 
 echo ""
 echo "=== public.customer_invites columns ==="
