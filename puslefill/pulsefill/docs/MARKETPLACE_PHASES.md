@@ -1,5 +1,7 @@
 # PulseFill marketplace phases (product + engineering)
 
+**QA checklist (foundation):** see [`MARKETPLACE_FOUNDATION_QA.md`](./MARKETPLACE_FOUNDATION_QA.md).
+
 **Product statement:** PulseFill helps customers get earlier appointments and helps businesses recover cancelled booking revenue.
 
 **Rule:** Customer accounts can be open; **business standby access is controlled** (`private` → `request_to_join` → `public`); discovery is **opt-in** per business.
