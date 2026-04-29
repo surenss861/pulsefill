@@ -1,7 +1,13 @@
 import type { Env } from "../../config/env.js";
 import type { createServiceSupabase } from "../../config/supabase.js";
 import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
-import { filterMatchingPreferences, type OpenSlotRow, type StandbyPreferenceRow } from "../../lib/standby-matcher.js";
+import { computeStandbyMatchesForOpenSlot } from "../../lib/open-slot-send-offers-match.js";
+import {
+  noMatchesReasonFromSummary,
+  type OpenSlotRow,
+  type StandbyMatchPack,
+  type StandbyPreferenceRow,
+} from "../../lib/standby-matcher.js";
 import { canPerformAction } from "./operator-slot-rules.js";
 import { loadSlotRuleContext } from "./load-slot-rule-context.js";
 import { mergeMetadata, touchOpenSlotByStaff } from "./staff-attribution.js";
@@ -96,28 +102,25 @@ async function retryOffersOne(
     return withId(slotId, fail("business_load_failed", "Could not load business for this slot."));
   }
 
-  const { data: prefs, error: prefErr } = await admin
-    .from("standby_preferences")
-    .select("*")
-    .eq("business_id", businessIdRow)
-    .eq("active", true);
-  if (prefErr) {
-    return withId(slotId, fail("prefs_load_failed", "Could not load standby preferences."));
-  }
-
   const slotRow = slot as OpenSlotRow;
-  const prefRows = (prefs ?? []) as StandbyPreferenceRow[];
-  const matches = filterMatchingPreferences(slotRow, { timezone: (business as { timezone: string }).timezone }, prefRows);
-
-  const uniqueByCustomer = new Map<string, StandbyPreferenceRow>();
-  for (const m of matches) {
-    uniqueByCustomer.set(m.customer_id, m);
+  let uniqueMatches: StandbyPreferenceRow[];
+  let matchPack: StandbyMatchPack;
+  try {
+    const computed = await computeStandbyMatchesForOpenSlot(admin, {
+      openSlotId: slotId,
+      slot: slotRow,
+      businessTimezone: String((business as { timezone: string }).timezone),
+    });
+    uniqueMatches = computed.uniqueMatches;
+    matchPack = computed.matchPack;
+  } catch {
+    return withId(slotId, fail("prefs_load_failed", "Could not load standby preferences or memberships."));
   }
-  const uniqueMatches = [...uniqueByCustomer.values()];
 
   const bulkExtra = { source: "bulk_action" as const, bulk_action: "retry_offers" as const };
 
   if (uniqueMatches.length === 0) {
+    const noReason = noMatchesReasonFromSummary(matchPack.summary);
     await admin.from("audit_events").insert({
       business_id: businessId,
       actor_type: "staff",
@@ -125,7 +128,16 @@ async function retryOffersOne(
       event_type: "offers_no_match",
       entity_type: "open_slot",
       entity_id: slotId,
-      metadata: mergeMetadata({ matched: 0, ...bulkExtra }, authUserId),
+      metadata: mergeMetadata(
+        {
+          matched: 0,
+          no_matches_reason: noReason,
+          match_summary: matchPack.summary,
+          match_diagnostics: matchPack.diagnostics.slice(0, 60),
+          ...bulkExtra,
+        },
+        authUserId,
+      ),
     });
     await touchOpenSlotByStaff(admin, slotId, staffId);
     return okProcessed(slotId);
@@ -186,7 +198,7 @@ async function retryOffersOne(
     entity_type: "open_slot",
     entity_id: slotId,
     metadata: mergeMetadata(
-      { count: offerRowsForQueue.length, queued: queued.queued, ...bulkExtra },
+      { count: offerRowsForQueue.length, queued: queued.queued, match_summary: matchPack.summary, ...bulkExtra },
       authUserId,
     ),
   });

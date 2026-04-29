@@ -23,8 +23,10 @@ export function SendOffersPrereqCallout() {
   return (
     <div style={box}>
       <strong style={{ display: "block", marginBottom: 6 }}>How offers get matched</strong>
-      PulseFill sends each opening to customers with <strong>active standby preferences</strong> for this business. If
-      nobody matches yet, no offers are sent for that opening and <strong>Offers sent</strong> stays at 0.{" "}
+      PulseFill sends each opening to customers who have an <strong>active membership</strong> with this clinic and{" "}
+      <strong>active standby preferences</strong> that fit the opening (service, location, time window, and notice
+      rules). Invite-only and directory customers are treated the same once they are connected. If nobody matches yet,
+      no offers are sent and <strong>Offers sent</strong> stays at 0.{" "}
       <Link href="/customers" style={{ color: "var(--primary)", fontWeight: 600 }}>
         Invite standby customers
       </Link>

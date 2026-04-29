@@ -3,7 +3,13 @@ import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
 import { sendActionError, sendConfirmSuccess, sendSendOffersSuccess } from "../../lib/action-replies.js";
 import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
-import { filterMatchingPreferences, type OpenSlotRow, type StandbyPreferenceRow } from "../../lib/standby-matcher.js";
+import { computeStandbyMatchesForOpenSlot } from "../../lib/open-slot-send-offers-match.js";
+import {
+  noMatchesReasonFromSummary,
+  type OpenSlotRow,
+  type StandbyMatchPack,
+  type StandbyPreferenceRow,
+} from "../../lib/standby-matcher.js";
 import {
   handleCustomerBookingConfirmedNotificationEvent,
   handleCustomerOfferSentNotificationEvent,
@@ -531,6 +537,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         return sendSendOffersSuccess(reply, {
           ok: true,
           open_slot_id: id,
+          offers_created: out.offer_ids?.length ?? out.matched ?? 0,
           ...out,
         });
       }
@@ -542,24 +549,32 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         .single();
       if (bizErr || !business) return reply.status(500).send({ error: "business_load_failed" });
 
-      const { data: prefs, error: prefErr } = await admin
-        .from("standby_preferences")
-        .select("*")
-        .eq("business_id", slot.business_id)
-        .eq("active", true);
-      if (prefErr) return reply.status(500).send({ error: "prefs_load_failed" });
-
       const slotRow = slot as OpenSlotRow;
-      const prefRows = (prefs ?? []) as StandbyPreferenceRow[];
-      const matches = filterMatchingPreferences(slotRow, { timezone: business.timezone }, prefRows);
-
-      const uniqueByCustomer = new Map<string, StandbyPreferenceRow>();
-      for (const m of matches) {
-        uniqueByCustomer.set(m.customer_id, m);
+      let uniqueMatches: StandbyPreferenceRow[];
+      let matchPack: StandbyMatchPack;
+      try {
+        const computed = await computeStandbyMatchesForOpenSlot(admin, {
+          openSlotId: id,
+          slot: slotRow,
+          businessTimezone: String((business as { timezone: string }).timezone),
+        });
+        uniqueMatches = computed.uniqueMatches;
+        matchPack = computed.matchPack;
+      } catch (e) {
+        const code = e instanceof Error ? e.message : "";
+        if (code === "prefs_load_failed") return reply.status(500).send({ error: "prefs_load_failed" });
+        if (code === "memberships_load_failed") return reply.status(500).send({ error: "memberships_load_failed" });
+        if (code === "offers_load_failed") return reply.status(500).send({ error: "offers_load_failed" });
+        throw e;
       }
-      const uniqueMatches = [...uniqueByCustomer.values()];
 
       if (uniqueMatches.length === 0) {
+        const noReason = noMatchesReasonFromSummary(matchPack.summary);
+        const operatorMessage =
+          noReason === "no_active_preferences"
+            ? "No active standby preferences found for this business yet. Invite customers or ask them to finish standby setup."
+            : "No matching standby customers yet. Try widening the opening details, checking service/location fit, or inviting more customers to standby.";
+
         await admin.from("audit_events").insert({
           business_id: req.staff!.business_id,
           actor_type: "staff",
@@ -567,7 +582,15 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           event_type: "offers_no_match",
           entity_type: "open_slot",
           entity_id: id,
-          metadata: mergeMetadata({ matched: 0 }, req.authUser!.id),
+          metadata: mergeMetadata(
+            {
+              matched: 0,
+              no_matches_reason: noReason,
+              match_summary: matchPack.summary,
+              match_diagnostics: matchPack.diagnostics.slice(0, 60),
+            },
+            req.authUser!.id,
+          ),
         });
 
         await touchOpenSlotByStaff(admin, id, req.staff!.id);
@@ -576,9 +599,12 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           ok: true,
           result: "no_matches",
           open_slot_id: id,
+          offers_created: 0,
           matched: 0,
           offer_ids: [],
-          message: "No matching standby customers were found.",
+          message: operatorMessage,
+          no_matches_reason: noReason,
+          match_summary: matchPack.summary,
         });
       }
 
@@ -636,7 +662,10 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         event_type: "offers_sent",
         entity_type: "open_slot",
         entity_id: id,
-        metadata: mergeMetadata({ count: offerIds.length, queued: queued.queued }, req.authUser!.id),
+        metadata: mergeMetadata(
+          { count: offerIds.length, queued: queued.queued, match_summary: matchPack.summary },
+          req.authUser!.id,
+        ),
       });
 
       await touchOpenSlotByStaff(admin, id, req.staff!.id);
@@ -668,9 +697,11 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         ok: true,
         result: resultKind,
         open_slot_id: id,
+        offers_created: count,
         matched: count,
         offer_ids: offerIds,
         message,
+        match_summary: matchPack.summary,
         notification_queue: { queued: queued.queued, count: queued.count },
       });
     },

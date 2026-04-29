@@ -12,12 +12,21 @@ import { emitOperatorRefreshEvent } from "@/lib/operator-refresh-events";
 import { SendOffersPrereqCallout } from "@/components/slots/send-offers-prereq-callout";
 import { slotsDetailPath } from "@/lib/open-slot-routes";
 
+type SendOffersMatchSummary = {
+  total_preferences_checked?: number;
+  matched?: number;
+  rejected?: Record<string, number>;
+};
+
 type SendOffersResponse = {
   ok?: boolean;
   result?: "offers_sent" | "offers_retried" | "no_matches";
   matched?: number;
+  offers_created?: number;
   offer_ids?: string[];
   message?: string;
+  no_matches_reason?: string;
+  match_summary?: SendOffersMatchSummary;
 };
 
 function formatRange(isoStart: string, isoEnd: string) {
@@ -43,12 +52,14 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [noStandbyMatch, setNoStandbyMatch] = useState(false);
+  const [lastMatchSummary, setLastMatchSummary] = useState<SendOffersMatchSummary | null>(null);
 
   async function handleSendOffers() {
     try {
       setSending(true);
       setSendError(null);
       setNoStandbyMatch(false);
+      setLastMatchSummary(null);
       const result = await apiFetch<SendOffersResponse>(`/v1/open-slots/${slotId}/send-offers`, {
         method: "POST",
         body: JSON.stringify({}),
@@ -57,6 +68,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
       const isNoMatch = result.result === "no_matches";
       if (isNoMatch) {
         setNoStandbyMatch(true);
+        setLastMatchSummary(result.match_summary ?? null);
       }
       showToast({
         title: msg,
@@ -156,6 +168,14 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
 
       {sendError ? <p style={{ margin: "12px 0 0", fontSize: 13, color: "#f87171" }}>{sendError}</p> : null}
       {noStandbyMatch ? <SendOffersPrereqCallout /> : null}
+      {noStandbyMatch && lastMatchSummary && typeof lastMatchSummary.total_preferences_checked === "number" ? (
+        <p style={{ margin: "10px 0 0", fontSize: 12, color: "rgba(245,247,250,0.55)", lineHeight: 1.5 }}>
+          Match engine checked{" "}
+          <strong style={{ color: "var(--text)" }}>{lastMatchSummary.total_preferences_checked}</strong> active standby
+          preference
+          {lastMatchSummary.total_preferences_checked === 1 ? "" : "s"} for this business.
+        </p>
+      ) : null}
       {noStandbyMatch ? (
         <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--muted)" }}>
           <Link

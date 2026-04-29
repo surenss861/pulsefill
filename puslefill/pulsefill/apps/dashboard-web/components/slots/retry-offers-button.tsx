@@ -6,13 +6,22 @@ import { emitOperatorRefreshEvent, type OperatorRefreshAction } from "@/lib/oper
 import { useToast } from "@/components/ui/toast-provider";
 import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
 
+type SendOffersMatchSummary = {
+  total_preferences_checked?: number;
+  matched?: number;
+  rejected?: Record<string, number>;
+};
+
 type SendOffersResponse = {
   ok?: boolean;
   result?: "offers_sent" | "offers_retried" | "no_matches";
   matched?: number;
+  offers_created?: number;
   offer_ids?: string[];
   notification_queue?: { queued?: boolean; count?: number };
   message?: string;
+  no_matches_reason?: string;
+  match_summary?: SendOffersMatchSummary;
 };
 
 export type LastSendOffersResult = {
@@ -21,6 +30,9 @@ export type LastSendOffersResult = {
   queued: boolean | null;
   queueCount: number | null;
   message: string;
+  isNoMatches: boolean;
+  matchSummary: SendOffersMatchSummary | null;
+  noMatchesReason: string | null;
 };
 
 type Props = {
@@ -62,24 +74,31 @@ export function RetryOffersButton({
       });
 
       const matched = result.matched ?? 0;
-      const offersCreated = Array.isArray(result.offer_ids) ? result.offer_ids.length : 0;
+      const offersCreated =
+        typeof result.offers_created === "number"
+          ? result.offers_created
+          : Array.isArray(result.offer_ids)
+            ? result.offer_ids.length
+            : matched;
       const q = result.notification_queue;
       const queued = q == null ? null : (q.queued ?? null);
       const queueCount = q && typeof q.count === "number" ? q.count : null;
 
       const nextMessage = result.message ?? "Offers updated.";
+      const isNoMatches = result.result === "no_matches";
       setLastResult({
         matched,
         offersCreated,
         queued,
         queueCount,
         message: nextMessage,
+        isNoMatches,
+        matchSummary: result.match_summary ?? null,
+        noMatchesReason: result.no_matches_reason ?? null,
       });
 
       const infoTone =
-        result.result === "no_matches" ||
-        nextMessage.includes("No matching") ||
-        nextMessage.includes("No new offers");
+        isNoMatches || nextMessage.includes("No matching") || nextMessage.includes("No new offers");
       showToast({
         title: nextMessage,
         tone: infoTone ? "info" : "success",
@@ -106,7 +125,8 @@ export function RetryOffersButton({
 
   const isInfoResult =
     lastResult &&
-    (lastResult.message.includes("No matching") ||
+    (lastResult.isNoMatches ||
+      lastResult.message.includes("No matching") ||
       lastResult.message.includes("No new offers") ||
       lastResult.matched === 0);
 
@@ -145,6 +165,14 @@ export function RetryOffersButton({
             <li>
               Standby matches considered: <strong style={{ color: "var(--text)" }}>{lastResult.matched}</strong>
             </li>
+            {lastResult.isNoMatches &&
+            lastResult.matchSummary &&
+            typeof lastResult.matchSummary.total_preferences_checked === "number" ? (
+              <li>
+                Preferences evaluated:{" "}
+                <strong style={{ color: "var(--text)" }}>{lastResult.matchSummary.total_preferences_checked}</strong>
+              </li>
+            ) : null}
             <li>
               Offers created this run: <strong style={{ color: "var(--text)" }}>{lastResult.offersCreated}</strong>
             </li>

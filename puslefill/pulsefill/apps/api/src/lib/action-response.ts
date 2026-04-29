@@ -32,13 +32,24 @@ export type ConfirmSuccessResponse = {
   message: string;
 };
 
+export type SendOffersMatchSummary = {
+  total_preferences_checked: number;
+  matched: number;
+  rejected: Partial<Record<string, number>>;
+};
+
 export type SendOffersSuccessResponse = {
   ok: true;
   result: "offers_sent" | "offers_retried" | "no_matches";
   open_slot_id: string;
+  /** Number of offers created this run (same as `matched` today; kept for clarity). */
+  offers_created: number;
   matched: number;
   offer_ids: string[];
   message: string;
+  /** Coarse reason when `result === "no_matches"` (operator-safe code). */
+  no_matches_reason?: string;
+  match_summary?: SendOffersMatchSummary;
   /** Present when offers were created (not for no_matches). */
   notification_queue?: { queued: boolean; count: number };
 };
