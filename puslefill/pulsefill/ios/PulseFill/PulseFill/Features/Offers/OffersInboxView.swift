@@ -7,16 +7,19 @@ struct OffersInboxView: View {
     @State private var errorMessage: String?
     @State private var navigationPath = NavigationPath()
 
-    private var partitioned: (active: [OfferInboxItem], past: [OfferInboxItem]) {
-        var active: [(OfferInboxItem, CustomerOfferDisplayStatus)] = []
-        var past: [(OfferInboxItem, CustomerOfferDisplayStatus)] = []
+    private var partitioned: (available: [OfferInboxItem], waiting: [OfferInboxItem], history: [OfferInboxItem]) {
+        var available: [(OfferInboxItem, CustomerOfferDisplayStatus)] = []
+        var waiting: [(OfferInboxItem, CustomerOfferDisplayStatus)] = []
+        var history: [(OfferInboxItem, CustomerOfferDisplayStatus)] = []
 
         for offer in offers {
             let st = customerOfferDisplayStatus(forInbox: offer)
             if st.isClaimable {
-                active.append((offer, st))
+                available.append((offer, st))
+            } else if st == .claimed {
+                waiting.append((offer, st))
             } else {
-                past.append((offer, st))
+                history.append((offer, st))
             }
         }
 
@@ -30,18 +33,22 @@ struct OffersInboxView: View {
             return CustomerStatusPresentersISO.parse(raw)
         }
 
-        active.sort { a, b in
+        available.sort { a, b in
             let da = slotStart(a.0) ?? .distantFuture
             let db = slotStart(b.0) ?? .distantFuture
             if da != db { return da < db }
             return (sentAt(a.0) ?? .distantPast) > (sentAt(b.0) ?? .distantPast)
         }
 
-        past.sort { a, b in
+        waiting.sort { a, b in
             (sentAt(a.0) ?? .distantPast) > (sentAt(b.0) ?? .distantPast)
         }
 
-        return (active.map(\.0), past.map(\.0))
+        history.sort { a, b in
+            (sentAt(a.0) ?? .distantPast) > (sentAt(b.0) ?? .distantPast)
+        }
+
+        return (available.map(\.0), waiting.map(\.0), history.map(\.0))
     }
 
     var body: some View {
@@ -52,7 +59,9 @@ struct OffersInboxView: View {
                         PFTypography.Customer.screenTitle("Offers")
                             .multilineTextAlignment(.leading)
 
-                        PFTypography.Customer.screenLead("Claim better appointment times when they become available.")
+                        PFTypography.Customer.screenLead(
+                            "Openings from businesses you’ve connected with show up here when they match your standby preferences."
+                        )
                     }
                     .customerAppearAnimation(staggerIndex: 0)
 
@@ -65,7 +74,7 @@ struct OffersInboxView: View {
                         CustomerEmptyStateCard(
                             systemImage: "person.crop.circle.badge.questionmark",
                             title: "Sign in to see openings",
-                            message: "Appointment openings from your clinic will appear here after you sign in.",
+                            message: "Openings from businesses you connect with will appear here after you sign in.",
                             footnote: nil
                         )
                     } else if let errorMessage {
@@ -82,9 +91,10 @@ struct OffersInboxView: View {
                     } else if offers.isEmpty {
                         CustomerEmptyStateCard(
                             systemImage: "bell.badge",
-                            title: "No openings right now.",
-                            message: "You’re still on standby for updates. We’ll notify you when a better appointment time opens up.",
-                            footnote: "Keep notifications on so you don’t miss an opening.",
+                            title: "No openings yet",
+                            message:
+                                "When a business you’ve joined sends an opening that fits your standby setup, it will show up here. Keep notifications on so you don’t miss one.",
+                            footnote: nil,
                             primaryActionTitle: "Check notification settings",
                             primaryAction: {
                                 env.customerNavigation.open(.notificationSettings)
@@ -96,11 +106,14 @@ struct OffersInboxView: View {
                         )
                     } else {
                         let parts = partitioned
-                        if !parts.active.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                PFTypography.Customer.label("Available openings")
+                        let waitingStaggerBase = parts.available.count
+                        let historyStaggerBase = parts.available.count + parts.waiting.count
 
-                                ForEach(Array(parts.active.enumerated()), id: \.element.id) { index, item in
+                        if !parts.available.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                PFTypography.Customer.label("Available")
+
+                                ForEach(Array(parts.available.enumerated()), id: \.element.id) { index, item in
                                     let st = customerOfferDisplayStatus(forInbox: item)
                                     CustomerOfferCard(offer: item, displayStatus: st) {
                                         navigationPath.append(item.id)
@@ -110,11 +123,30 @@ struct OffersInboxView: View {
                             }
                         }
 
-                        if !parts.past.isEmpty {
+                        if !parts.waiting.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
-                                PFTypography.Customer.label("Past openings")
+                                PFTypography.Customer.label("Waiting")
 
-                                ForEach(Array(parts.past.enumerated()), id: \.element.id) { index, item in
+                                ForEach(Array(parts.waiting.enumerated()), id: \.element.id) { index, item in
+                                    let st = customerOfferDisplayStatus(forInbox: item)
+                                    CustomerOfferCard(
+                                        offer: item,
+                                        displayStatus: st,
+                                        chromeActionTitle: "View status",
+                                        openingLabel: "Waiting for confirmation",
+                                    ) {
+                                        navigationPath.append(item.id)
+                                    }
+                                    .customerAppearAnimation(staggerIndex: waitingStaggerBase + index)
+                                }
+                            }
+                        }
+
+                        if !parts.history.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                PFTypography.Customer.label("History")
+
+                                ForEach(Array(parts.history.enumerated()), id: \.element.id) { index, item in
                                     let st = customerOfferDisplayStatus(forInbox: item)
                                     Button {
                                         PFHaptics.lightImpact()
@@ -123,7 +155,7 @@ struct OffersInboxView: View {
                                         CustomerOfferPastCard(offer: item, displayStatus: st)
                                     }
                                     .buttonStyle(CustomerCardPressButtonStyle())
-                                    .customerAppearAnimation(staggerIndex: index + parts.active.count)
+                                    .customerAppearAnimation(staggerIndex: historyStaggerBase + index)
                                 }
                             }
                         }

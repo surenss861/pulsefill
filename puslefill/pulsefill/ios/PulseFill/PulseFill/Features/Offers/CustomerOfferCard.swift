@@ -81,6 +81,10 @@ enum CustomerOfferInboxCopy {
 struct CustomerOfferCard: View {
     let offer: OfferInboxItem
     let displayStatus: CustomerOfferDisplayStatus
+    /// Shown on the pass chrome (e.g. "View opening", "View status").
+    var chromeActionTitle: String = "View opening"
+    /// Small label above the service line (patient-safe).
+    var openingLabel: String = "Opening available"
     let onView: () -> Void
 
     var body: some View {
@@ -101,7 +105,7 @@ struct CustomerOfferCard: View {
                             }
                             .frame(width: 34, height: 34)
 
-                            Text("Opening available")
+                            Text(openingLabel)
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(PFColor.passOpeningLabel)
                         }
@@ -128,7 +132,7 @@ struct CustomerOfferCard: View {
                             .padding(.top, 8)
                     }
 
-                    CustomerPrimaryChromeLabel(title: "View offer")
+                    CustomerPrimaryChromeLabel(title: chromeActionTitle)
                 }
             }
         }
