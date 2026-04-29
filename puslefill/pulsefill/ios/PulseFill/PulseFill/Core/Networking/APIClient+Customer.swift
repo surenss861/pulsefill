@@ -48,4 +48,26 @@ extension APIClient {
             as: NotificationPreferencesResponse.self
         )
     }
+
+    // MARK: - Directory (discoverable businesses)
+
+    func getCustomerDirectoryBusinesses() async throws -> CustomerDirectoryListResponse {
+        try await get("/v1/customers/directory/businesses", as: CustomerDirectoryListResponse.self)
+    }
+
+    func getCustomerDirectoryBusinessDetail(businessId: String) async throws -> CustomerDirectoryBusinessDetailResponse {
+        try await get(
+            "/v1/customers/directory/businesses/\(businessId)",
+            as: CustomerDirectoryBusinessDetailResponse.self
+        )
+    }
+
+    func postCustomerStandbyIntent(businessId: String, message: String?) async throws -> StandbyIntentResponse {
+        try await post(
+            "/v1/customers/directory/businesses/\(businessId)/standby-intent",
+            body: StandbyIntentRequest(message: message),
+            as: StandbyIntentResponse.self
+        )
+    }
 }
+

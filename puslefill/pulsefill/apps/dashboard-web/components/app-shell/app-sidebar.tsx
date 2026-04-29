@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import type { ProfileRow } from "@/lib/get-current-user";
 import { useLiveCounts } from "@/hooks/useLiveCounts";
+import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { AppNavItem } from "./app-nav-item";
 
 type AppSidebarProps = {
@@ -29,6 +30,7 @@ const badgeBase: CSSProperties = {
 
 export function AppSidebar({ profile }: AppSidebarProps) {
   const counts = useLiveCounts();
+  const standbyPending = usePendingStandbyRequests(60_000);
   const live = profile.onboarding_completed;
 
   return (
@@ -97,6 +99,19 @@ export function AppSidebar({ profile }: AppSidebarProps) {
                 }}
               >
                 {counts.claimed}
+              </span>
+            ) : null}
+            {item.href === "/customers" && standbyPending.count > 0 ? (
+              <span
+                style={{
+                  ...badgeBase,
+                  flexShrink: 0,
+                  background: "rgba(245, 158, 11, 0.12)",
+                  borderColor: "rgba(251, 191, 36, 0.28)",
+                  color: "#fcd34d",
+                }}
+              >
+                {standbyPending.count}
               </span>
             ) : null}
           </div>

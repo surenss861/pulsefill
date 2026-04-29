@@ -21,6 +21,13 @@ struct RootTabView: View {
                     .tabItem { Label("Home", systemImage: "house.fill") }
                     .tag(AppTab.home)
 
+                NavigationStack {
+                    BusinessPickerView()
+                        .environmentObject(env)
+                }
+                .tabItem { Label("Find", systemImage: "magnifyingglass") }
+                .tag(AppTab.find)
+
                 OffersInboxView()
                     .tabItem { Label("Offers", systemImage: "bell.badge.fill") }
                     .tag(AppTab.offers)

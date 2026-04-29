@@ -17,8 +17,8 @@
   - **Staff:**  
     `GET /v1/businesses/mine/customer-standby-requests?status=pending`  
     `POST /v1/businesses/mine/customer-standby-requests/:id/review` — `{ "decision": "approve" | "decline" }`.
-- **Dashboard:** Settings → **Standby access**; Customers → link to **Standby requests** page.
-- **iOS:** Signed-out copy nudged toward self-serve + invite (full “Find businesses” UI still to wire).
+- **Dashboard:** Settings → **Standby access**; Customers → **Standby requests** page; **Command Center** + **sidebar** show pending request counts with links.
+- **iOS:** **Find** tab + Profile **Open directory** — list discoverable businesses, business detail, **request to join** / **join standby** (patient-facing copy). Signed-out landing favors self-serve + invite.
 
 ## Not built yet (by design)
 

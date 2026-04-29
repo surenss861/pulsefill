@@ -43,11 +43,9 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .topTrailing) {
-                ScrollView {
+            ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
                         CustomerHomeHeader(greeting: greetingLine)
-                            .padding(.trailing, 44)
                             .customerAppearAnimation(staggerIndex: 0)
 
                         if loading {
@@ -96,21 +94,6 @@ struct HomeView: View {
                     .padding(.bottom, 32)
                 }
                 .background(CustomerScreenBackground())
-
-                NavigationLink {
-                    BusinessPickerView()
-                } label: {
-                    Image(systemName: "building.2")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(PFColor.textMuted)
-                        .frame(width: 40, height: 40)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .padding(.trailing, 8)
-                .padding(.top, 8)
-                .accessibilityLabel("Choose business")
-            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
         }

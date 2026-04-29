@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionQueuePreviewCard } from "@/components/action-queue/action-queue-preview-card";
 import { GettingStartedCard } from "@/components/overview/getting-started-card";
@@ -32,6 +33,7 @@ import { useSetupChecklistState } from "@/hooks/useSetupChecklistState";
 import { useSetupOverviewData } from "@/hooks/useSetupOverviewData";
 import { OperatorMorningRecoveryDigestPanel } from "@/components/workflow/operator-morning-recovery-digest-panel";
 import { CommandCenterRecentActivity } from "@/components/overview/command-center-recent-activity";
+import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
 
 export type OverviewPageContentProps = {
@@ -53,6 +55,7 @@ export function OverviewPageContent({
   const deliveryReliability = useDeliveryReliability();
   const actionQueue = useActionQueue(30_000);
   const liveCounts = useLiveCounts(30_000);
+  const standbyRequests = usePendingStandbyRequests(60_000);
   const setup = useSetupOverviewData();
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
 
@@ -143,6 +146,7 @@ export function OverviewPageContent({
       dailyOps.reload(),
       opsBreakdown.reload({ silent: true }),
       deliveryReliability.reload({ silent: true }),
+      standbyRequests.reload({ silent: true }),
     ]);
     setRefreshedAt(new Date());
   }, [
@@ -153,6 +157,7 @@ export function OverviewPageContent({
     dailyOps.reload,
     opsBreakdown.reload,
     deliveryReliability.reload,
+    standbyRequests.reload,
   ]);
 
   useOperatorRefreshSubscription({
@@ -173,6 +178,42 @@ export function OverviewPageContent({
         secondaryHref={secondaryAction.href}
         secondaryLabel={secondaryAction.label}
       />
+
+      {!standbyRequests.loading && standbyRequests.count > 0 ? (
+        <div
+          style={{
+            marginTop: 14,
+            borderRadius: 16,
+            border: "1px solid rgba(251, 191, 36, 0.28)",
+            background: "rgba(245, 158, 11, 0.08)",
+            padding: "14px 16px",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 650, color: "rgba(253, 224, 171, 0.95)" }}>Standby requests</p>
+            <p style={{ margin: "6px 0 0", fontSize: 14, color: "rgba(245, 247, 250, 0.78)", maxWidth: 520 }}>
+              {standbyRequests.count} customer{standbyRequests.count === 1 ? "" : "s"} asked to join standby. Review them when you can.
+            </p>
+          </div>
+          <Link
+            href="/customers/standby-requests"
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "var(--pf-accent-primary)",
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Review requests
+          </Link>
+        </div>
+      ) : null}
 
       <div
         style={{

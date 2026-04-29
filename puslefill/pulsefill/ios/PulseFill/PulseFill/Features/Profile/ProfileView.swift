@@ -37,6 +37,8 @@ struct ProfileView: View {
 
                     businessInviteCard
 
+                    findBusinessesCard
+
                     CustomerSectionCard {
                         VStack(alignment: .leading, spacing: 0) {
                             profileNavRow(
@@ -114,6 +116,29 @@ struct ProfileView: View {
             }
             .navigationDestination(for: CustomerDestination.self) { destination in
                 profileDestinationView(for: destination)
+            }
+        }
+    }
+
+    private var findBusinessesCard: some View {
+        CustomerSectionCard {
+            VStack(alignment: .leading, spacing: 10) {
+                PFTypography.Customer.label("Find businesses")
+                Text("Browse clinics that listed themselves in PulseFill, or connect with an invite from your clinic.")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+                Button {
+                    PFHaptics.lightImpact()
+                    env.customerNavigation.selectedTab = .find
+                } label: {
+                    Text("Open directory")
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+                .buttonStyle(.bordered)
+                .tint(PFColor.ember)
             }
         }
     }
