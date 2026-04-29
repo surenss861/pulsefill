@@ -11,17 +11,37 @@ struct StandbyPreferencesView: View {
     /// Called after a successful **create** (not edit). Used by first-run onboarding to advance the flow.
     private let onSaved: (() -> Void)?
     private let navigationTitleOverride: String?
+    private let initialBusinessId: String?
+    private let initialBusinessDisplayName: String?
+    private let initialServiceId: String?
+    private let lockBusinessSelection: Bool
 
     init(
         api: APIClient,
         onboardingMode: Bool = false,
         onSaved: (() -> Void)? = nil,
-        navigationTitleOverride: String? = nil
+        navigationTitleOverride: String? = nil,
+        initialBusinessId: String? = nil,
+        initialBusinessDisplayName: String? = nil,
+        initialServiceId: String? = nil,
+        lockBusinessSelection: Bool = false
     ) {
         self.onboardingMode = onboardingMode
         self.onSaved = onSaved
         self.navigationTitleOverride = navigationTitleOverride
-        _viewModel = StateObject(wrappedValue: StandbyPreferencesViewModel(api: api))
+        self.initialBusinessId = initialBusinessId
+        self.initialBusinessDisplayName = initialBusinessDisplayName
+        self.initialServiceId = initialServiceId
+        self.lockBusinessSelection = lockBusinessSelection
+        _viewModel = StateObject(
+            wrappedValue: StandbyPreferencesViewModel(
+                api: api,
+                initialBusinessId: initialBusinessId,
+                initialBusinessDisplayName: initialBusinessDisplayName,
+                initialServiceId: initialServiceId,
+                lockBusinessSelection: lockBusinessSelection
+            )
+        )
     }
 
     var body: some View {

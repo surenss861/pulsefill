@@ -34,14 +34,36 @@ final class StandbyPreferencesViewModel: ObservableObject {
 
     @Published var actionError: String?
 
+    /// When set, the business UUID field is fixed (directory / deep link) and shown as a clinic name.
+    var businessSelectionLocked: Bool = false
+    var lockedBusinessDisplayName: String?
+
     private let api: APIClient
     /// Tracks the last business ID we loaded services for; used to clear `serviceId` when the business changes.
     private var lastServicesBusinessId: String?
     /// `active` flag on the row being edited (not editable in the form; preserved on save).
     private var editingActiveSnapshot: Bool = true
 
-    init(api: APIClient) {
+    init(
+        api: APIClient,
+        initialBusinessId: String? = nil,
+        initialBusinessDisplayName: String? = nil,
+        initialServiceId: String? = nil,
+        lockBusinessSelection: Bool = false
+    ) {
         self.api = api
+        if let bid = initialBusinessId?.trimmingCharacters(in: .whitespacesAndNewlines), !bid.isEmpty {
+            draft.businessId = bid
+        }
+        if let sid = initialServiceId?.trimmingCharacters(in: .whitespacesAndNewlines), !sid.isEmpty {
+            draft.serviceId = sid
+        }
+        businessSelectionLocked = lockBusinessSelection && draft.isBusinessIdValid
+        let trimmedName = initialBusinessDisplayName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        lockedBusinessDisplayName = (trimmedName?.isEmpty == false) ? trimmedName : nil
+        if businessSelectionLocked {
+            lastServicesBusinessId = draft.trimmedBusinessId
+        }
     }
 
     var isEditingExistingPreference: Bool {
@@ -49,6 +71,8 @@ final class StandbyPreferencesViewModel: ObservableObject {
     }
 
     func beginEditing(_ preference: StandbyPreference) {
+        businessSelectionLocked = false
+        lockedBusinessDisplayName = nil
         editingPreferenceId = preference.id
         editingActiveSnapshot = preference.active
         lastServicesBusinessId = preference.businessId

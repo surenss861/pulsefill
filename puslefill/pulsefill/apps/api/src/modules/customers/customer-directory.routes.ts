@@ -4,6 +4,10 @@ import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
 import { requireAuth } from "../../plugins/guards.js";
 import { normalizeEmailForInvite } from "./invite-token.js";
+import {
+  getCustomerBusinessRelationship,
+  standbyIntentPayload,
+} from "./customer-business-relationship.js";
 import { upsertActiveCustomerMembership } from "./membership.js";
 
 async function ensureCustomerRow(admin: SupabaseClient, u: User): Promise<{ id: string }> {
@@ -66,15 +70,24 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
         return reply.status(404).send({ error: "not_found" });
       }
 
-      const [{ data: locations }, { data: services }] = await Promise.all([
+      let customerId: string;
+      try {
+        customerId = (await ensureCustomerRow(admin, req.authUser!)).id;
+      } catch {
+        return reply.status(500).send({ error: "customer_sync_failed" });
+      }
+
+      const [{ data: locations }, { data: services }, customer_relationship] = await Promise.all([
         admin.from("locations").select("id, name, city, region").eq("business_id", businessId).order("name"),
         admin.from("services").select("id, name, duration_minutes, active").eq("business_id", businessId).eq("active", true).order("name"),
+        getCustomerBusinessRelationship(admin, customerId, businessId),
       ]);
 
       return reply.send({
         business: b,
         locations: locations ?? [],
         services: services ?? [],
+        customer_relationship,
       });
     },
   );
@@ -117,16 +130,20 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
         .maybeSingle();
 
       if (existing && (existing as { status: string }).status === "active") {
-        return reply.send({ outcome: "already_connected" });
+        const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
+        return reply.send({
+          ...standbyIntentPayload(rel, "joined", "already_connected"),
+          request: null,
+        });
       }
 
       if (row.standby_access_mode === "private") {
-        return reply
-          .status(403)
-          .send({
-            error: "private_business",
-            message: "This business only connects customers through an invite from the clinic.",
-          });
+        const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
+        return reply.status(403).send({
+          error: "private_business",
+          message: "This business only connects customers through an invite from the clinic.",
+          ...standbyIntentPayload(rel, "invite_required", "invite_required"),
+        });
       }
 
       if (row.standby_access_mode === "public") {
@@ -136,7 +153,11 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
           req.log.error({ e }, "public membership upsert");
           return reply.status(500).send({ error: "membership_failed" });
         }
-        return reply.status(201).send({ outcome: "joined_standby" });
+        const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
+        return reply.status(201).send({
+          ...standbyIntentPayload(rel, "joined", "joined_standby"),
+          request: null,
+        });
       }
 
       // request_to_join
@@ -154,14 +175,19 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
       if (insErr) {
         const code = String((insErr as { code?: string }).code ?? "");
         if (code === "23505") {
-          return reply.send({ outcome: "request_pending" });
+          const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
+          return reply.send({
+            ...standbyIntentPayload(rel, "request_pending", "request_pending"),
+            request: null,
+          });
         }
         req.log.error({ error: insErr }, "standby request insert");
         return reply.status(500).send({ error: "request_failed" });
       }
 
+      const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
       return reply.status(201).send({
-        outcome: "request_submitted",
+        ...standbyIntentPayload(rel, "request_pending", "request_submitted"),
         request: inserted,
       });
     },

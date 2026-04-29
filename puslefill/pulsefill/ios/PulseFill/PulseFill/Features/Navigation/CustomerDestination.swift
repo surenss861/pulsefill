@@ -9,4 +9,6 @@ enum CustomerDestination: Hashable {
     case notificationSettings
     /// Deep-link to the activity tab root (no pushed detail).
     case activity
+    /// Pre-filled standby preferences for one business (e.g. push / coordinator).
+    case standbySetup(businessId: String, serviceId: String?, businessName: String?)
 }

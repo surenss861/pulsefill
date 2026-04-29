@@ -24,7 +24,7 @@ final class CustomerNavigationCoordinator: ObservableObject {
             selectedTab = .activity
             pendingCustomerDestination = destination
 
-        case .missedOpportunities, .standbyStatus, .notificationSettings:
+        case .missedOpportunities, .standbyStatus, .notificationSettings, .standbySetup:
             selectedTab = .profile
             pendingCustomerDestination = destination
         }

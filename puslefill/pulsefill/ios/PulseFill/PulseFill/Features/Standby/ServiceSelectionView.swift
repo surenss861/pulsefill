@@ -27,20 +27,35 @@ struct ServiceSelectionView: View {
             )
 
             VStack(alignment: .leading, spacing: 10) {
-                TextField("Business ID (required, UUID)", text: $viewModel.draft.businessId)
-                    .textContentType(.none)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .disabled(viewModel.isEditingExistingPreference)
+                if viewModel.businessSelectionLocked, viewModel.draft.isBusinessIdValid {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(viewModel.lockedBusinessDisplayName ?? "Your clinic")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(PFColor.textPrimary)
+                        Text("Clinic is set from your directory selection.")
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(PFColor.textSecondary)
+                    }
                     .padding(PFSpacing.md)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(PFSurface.card)
                     .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+                } else {
+                    TextField("Business ID (required, UUID)", text: $viewModel.draft.businessId)
+                        .textContentType(.none)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .disabled(viewModel.isEditingExistingPreference)
+                        .padding(PFSpacing.md)
+                        .background(PFSurface.card)
+                        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+                }
 
                 if viewModel.isEditingExistingPreference {
                     Text("Business can’t be changed while editing. Cancel and create a new preference to use a different clinic.")
                         .font(.system(size: 13, weight: .regular))
                         .foregroundStyle(PFColor.textSecondary)
-                } else if !viewModel.draft.businessId.isEmpty, !viewModel.draft.isBusinessIdValid {
+                } else if !viewModel.businessSelectionLocked, !viewModel.draft.businessId.isEmpty, !viewModel.draft.isBusinessIdValid {
                     Text("Enter a valid business UUID from your clinic.")
                         .font(.system(size: 13, weight: .regular))
                         .foregroundStyle(PFColor.error)

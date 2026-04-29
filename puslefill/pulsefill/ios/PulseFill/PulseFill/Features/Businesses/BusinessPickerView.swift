@@ -165,6 +165,10 @@ struct CustomerBusinessDetailView: View {
 
                         accessCallout(for: detail.business)
 
+                        if let rel = detail.customerRelationship {
+                            relationshipStatusCard(detail: detail, rel: rel)
+                        }
+
                         if let actionMessage {
                             Text(actionMessage)
                                 .font(.system(size: 14, weight: .medium))
@@ -177,7 +181,11 @@ struct CustomerBusinessDetailView: View {
                                 .foregroundStyle(PFColor.error)
                         }
 
-                        ctaSection(for: detail.business)
+                        if detail.customerRelationship == nil {
+                            ctaSection(for: detail.business)
+                        } else {
+                            marketplaceCTAWithRelationship(detail: detail)
+                        }
                     }
                     .padding(20)
                 }
@@ -222,10 +230,38 @@ struct CustomerBusinessDetailView: View {
         let mode = business.standbyAccessMode ?? "private"
         switch mode {
         case "public":
+            publicJoinButton
+        case "request_to_join":
+            requestToJoinForm
+        default:
+            EmptyView()
+        }
+    }
+
+    private var publicJoinButton: some View {
+        Button {
+            Task { await runIntent(message: nil) }
+        } label: {
+            Text(acting ? "Working…" : "Join standby list")
+                .font(.system(size: 17, weight: .semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(PFColor.ember)
+        .disabled(acting)
+    }
+
+    private var requestToJoinForm: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            TextField("Optional note to the clinic", text: $requestNote, axis: .vertical)
+                .lineLimit(3 ... 6)
+                .textFieldStyle(.roundedBorder)
             Button {
-                Task { await runIntent(message: nil) }
+                let trimmed = requestNote.trimmingCharacters(in: .whitespacesAndNewlines)
+                Task { await runIntent(message: trimmed.isEmpty ? nil : trimmed) }
             } label: {
-                Text(acting ? "Working…" : "Join standby list")
+                Text(acting ? "Sending…" : "Request to join")
                     .font(.system(size: 17, weight: .semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -233,28 +269,125 @@ struct CustomerBusinessDetailView: View {
             .buttonStyle(.borderedProminent)
             .tint(PFColor.ember)
             .disabled(acting)
+        }
+    }
 
-        case "request_to_join":
-            VStack(alignment: .leading, spacing: 10) {
-                TextField("Optional note to the clinic", text: $requestNote, axis: .vertical)
-                    .lineLimit(3 ... 6)
-                    .textFieldStyle(.roundedBorder)
-                Button {
-                    let trimmed = requestNote.trimmingCharacters(in: .whitespacesAndNewlines)
-                    Task { await runIntent(message: trimmed.isEmpty ? nil : trimmed) }
-                } label: {
-                    Text(acting ? "Sending…" : "Request to join")
-                        .font(.system(size: 17, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(PFColor.ember)
-                .disabled(acting)
-            }
-
-        default:
+    @ViewBuilder
+    private func relationshipStatusCard(detail: CustomerDirectoryBusinessDetailResponse, rel: CustomerRelationshipState) -> some View {
+        let mode = detail.business.standbyAccessMode ?? "private"
+        if mode == "private" {
             EmptyView()
+        } else if rel.requestStatus == "pending" {
+            directoryStateCard(
+                title: "Request sent",
+                body: "This business will review your request. You’ll be able to set up standby once you’re approved."
+            )
+        } else if rel.requestStatus == "declined", rel.membershipStatus != "active" {
+            directoryStateCard(
+                title: "Request not approved",
+                body: "You can send another request below, or ask the clinic for an invite."
+            )
+        } else if rel.membershipStatus == "active", rel.standbyStatus == "not_set_up" {
+            VStack(alignment: .leading, spacing: 14) {
+                directoryStateCard(
+                    title: "You’re connected",
+                    body: "Choose the services and times that work for you so PulseFill can send you openings from \(detail.business.name)."
+                )
+                directoryStandbyNavigationLink(
+                    title: "Set up standby",
+                    detail: detail,
+                    isProminent: true
+                )
+            }
+        } else if rel.membershipStatus == "active", rel.standbyStatus == "active" {
+            VStack(alignment: .leading, spacing: 14) {
+                directoryStateCard(
+                    title: "Standby active",
+                    body: "You’re set up to receive openings from \(detail.business.name) when they match your preferences."
+                )
+                directoryStandbyNavigationLink(
+                    title: "Edit preferences",
+                    detail: detail,
+                    isProminent: false
+                )
+            }
+        } else {
+            EmptyView()
+        }
+    }
+
+    private func directoryStateCard(title: String, body: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(PFColor.textPrimary)
+            Text(body)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(PFColor.textSecondary)
+                .lineSpacing(3)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PFColor.customerCard)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    @ViewBuilder
+    private func directoryStandbyNavigationLink(
+        title: String,
+        detail: CustomerDirectoryBusinessDetailResponse,
+        isProminent: Bool
+    ) -> some View {
+        let destination = StandbyPreferencesView(
+            api: env.apiClient,
+            navigationTitleOverride: "Standby preferences",
+            initialBusinessId: businessId,
+            initialBusinessDisplayName: detail.business.name,
+            initialServiceId: nil,
+            lockBusinessSelection: true
+        )
+        .environmentObject(env)
+
+        if isProminent {
+            NavigationLink {
+                destination
+            } label: {
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(PFColor.ember)
+        } else {
+            NavigationLink {
+                destination
+            } label: {
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .buttonStyle(.bordered)
+            .tint(PFColor.ember)
+        }
+    }
+
+    @ViewBuilder
+    private func marketplaceCTAWithRelationship(detail: CustomerDirectoryBusinessDetailResponse) -> some View {
+        let mode = detail.business.standbyAccessMode ?? "private"
+        if let rel = detail.customerRelationship {
+            if mode == "public" {
+                if rel.membershipStatus != "active", rel.requestStatus != "pending" {
+                    publicJoinButton
+                }
+            } else if mode == "request_to_join" {
+                if rel.membershipStatus != "active", rel.requestStatus != "pending" {
+                    requestToJoinForm
+                }
+            }
+        } else {
+            ctaSection(for: detail.business)
         }
     }
 
@@ -287,17 +420,11 @@ struct CustomerBusinessDetailView: View {
         defer { acting = false }
         do {
             let res = try await env.apiClient.postCustomerStandbyIntent(businessId: businessId, message: message)
-            switch res.outcome {
-            case "joined_standby":
-                actionMessage = "You’re on the list. Open Profile → Standby preferences when you’re ready."
-            case "request_submitted":
-                actionMessage = "Request sent. The clinic will review it."
-            case "request_pending":
+            await loadDetail()
+            if res.outcome == "request_pending", res.result == "request_pending" {
                 actionMessage = "You already have a request waiting."
-            case "already_connected":
-                actionMessage = "You’re already connected with this clinic."
-            default:
-                actionMessage = "Done."
+            } else {
+                actionMessage = nil
             }
         } catch {
             actionError = error.localizedDescription

@@ -315,6 +315,17 @@ struct ProfileView: View {
 
         case .activity:
             EmptyView()
+
+        case let .standbySetup(businessId, serviceId, businessName):
+            StandbyPreferencesView(
+                api: env.apiClient,
+                navigationTitleOverride: "Standby preferences",
+                initialBusinessId: businessId,
+                initialBusinessDisplayName: businessName,
+                initialServiceId: serviceId,
+                lockBusinessSelection: true
+            )
+            .environmentObject(env)
         }
     }
 
@@ -341,7 +352,7 @@ struct ProfileView: View {
         guard env.customerNavigation.selectedTab == .profile else { return }
         if let destination = env.customerNavigation.takePendingDestination(matching: {
             switch $0 {
-            case .standbyStatus, .notificationSettings, .missedOpportunities:
+            case .standbyStatus, .notificationSettings, .missedOpportunities, .standbySetup:
                 return true
             default:
                 return false
