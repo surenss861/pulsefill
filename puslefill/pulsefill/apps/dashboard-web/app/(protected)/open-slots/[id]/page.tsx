@@ -5,8 +5,8 @@ export default function OpenSlotDetailRoutePage() {
   return (
     <Suspense
       fallback={
-        <main style={{ padding: 24, maxWidth: 920 }}>
-          <p style={{ color: "var(--muted)" }}>Loading opening…</p>
+        <main className="pf-page-slot-detail" style={{ padding: 24 }}>
+          <p className="pf-muted-copy">Loading opening…</p>
         </main>
       }
     >

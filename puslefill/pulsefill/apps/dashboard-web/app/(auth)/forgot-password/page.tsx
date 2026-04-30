@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { forgotPasswordAction, type AuthFormState } from "@/app/actions/auth";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthField } from "@/components/auth/auth-field";
 import { SubmitButton } from "@/components/auth/submit-button";
@@ -14,7 +15,19 @@ export default function ForgotPasswordPage() {
   const [state, formAction] = useActionState(forgotPasswordAction, initial);
 
   return (
-    <AuthShell variant="center">
+    <AuthShell
+      variant="split"
+      brandPanel={
+        <AuthBrandPanel
+          eyebrow="Operator access"
+          title="Recover your password."
+          body="We will email a secure reset link. Same recovery infrastructure — identity stays locked down."
+          bullets={[]}
+          recoveryActiveStep="opening"
+          showRecoveryPipeline
+        />
+      }
+    >
       <AuthCard
         title="Forgot password"
         description="Enter your email and we’ll send a secure reset link."

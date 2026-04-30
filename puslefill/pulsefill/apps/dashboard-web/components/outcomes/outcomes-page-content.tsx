@@ -13,7 +13,7 @@ export type OutcomesPageContentProps = {
 
 export function OutcomesPageContent({ data }: OutcomesPageContentProps) {
   return (
-    <main style={{ padding: 0, maxWidth: 1080 }}>
+    <main className="pf-page-outcomes" style={{ padding: 0 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <OutcomesHero windowLabel={data.windowLabel} />
         <OutcomesScorecardRow scorecards={data.scorecards} />

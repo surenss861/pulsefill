@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { ActionButton, actionLinkStyle } from "@/components/ui/action-button";
-import { PageIntroCard } from "@/components/ui/page-intro-card";
+import { ActionButton } from "@/components/ui/action-button";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
+import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
 import { PageState } from "@/components/ui/page-state";
 import { apiFetch } from "@/lib/api";
+import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 type StandbyRequestRow = {
   id: string;
@@ -60,52 +63,59 @@ export default function StandbyRequestsPage() {
   }
 
   return (
-    <main style={{ padding: 0, maxWidth: 880 }}>
-      <PageIntroCard
-        tone="elevated"
-        layout="split"
-        overline="Customers"
+    <main className="pf-page-standby-requests" style={{ padding: 0 }}>
+      <PageCommandHeader
+        animate={false}
+        tone="default"
+        eyebrow="Customers"
         title="Standby requests"
         description="Review customers who asked to join your standby pool. Approve when you are ready for them to set preferences and receive openings."
-        actions={
+        secondaryAction={
           <Link href="/customers" style={actionLinkStyle("secondary")}>
             Back to customers
           </Link>
         }
+        style={{ marginBottom: 16 }}
       />
 
-      {error ? (
-        <p style={{ color: "#f87171", marginTop: 16 }}>{error}</p>
-      ) : null}
+      {error ? <p style={{ color: "#f87171", marginTop: 12 }}>{error}</p> : null}
 
       {loading ? (
-        <PageState variant="info" title="Loading" description="Fetching pending requests…" style={{ marginTop: 20 }} />
+        <PageState variant="info" title="Loading" description="Fetching pending requests…" style={{ marginTop: 16 }} />
       ) : requests.length === 0 ? (
-        <PageState
-          variant="empty"
-          title="No pending requests"
-          description="When access mode is “request to join” and your business is listed, new requests appear here."
-          style={{ marginTop: 20 }}
-        />
+        <div style={{ marginTop: 16 }}>
+          <OperatorEmptyState
+            title="No pending requests"
+            description='When access mode is "request to join" and your business is listed, new requests appear here.'
+            primaryAction={
+              <Link href="/settings" style={actionLinkStyle("primary")}>
+                Open settings
+              </Link>
+            }
+            secondaryContent={
+              <Link href="/customers" style={{ ...actionLinkStyle("secondary"), display: "inline-block" }}>
+                Back to customers
+              </Link>
+            }
+          />
+        </div>
       ) : (
-        <ul style={{ listStyle: "none", margin: "24px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+        <ul style={{ listStyle: "none", margin: "18px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
           {requests.map((r) => (
             <li
               key={r.id}
               style={{
-                borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(255,255,255,0.04)",
                 padding: 16,
+                ...operatorSurfaceShell("operational"),
               }}
             >
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 650 }}>{r.customer_label ?? r.customer_id}</p>
-              <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
+              <p className="pf-section-title" style={{ fontSize: 15 }}>
+                {r.customer_label ?? r.customer_id}
+              </p>
+              <p className="pf-meta-row" style={{ margin: "6px 0 0" }}>
                 Requested {new Date(r.requested_at).toLocaleString()}
               </p>
-              {r.message ? (
-                <p style={{ margin: "10px 0 0", fontSize: 14, color: "rgba(245,247,250,0.78)" }}>{r.message}</p>
-              ) : null}
+              {r.message ? <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 14 }}>{r.message}</p> : null}
               <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 10 }}>
                 <ActionButton variant="primary" disabled={acting === r.id} onClick={() => void review(r.id, "approve")}>
                   Approve

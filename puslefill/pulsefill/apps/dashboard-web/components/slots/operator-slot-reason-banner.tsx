@@ -21,7 +21,7 @@ function severityStyles(severity: OperatorSlotQueueSeverity | null | undefined) 
   }
   return {
     border: "1px solid rgba(255,255,255,0.1)",
-    background: "rgba(10, 15, 26, 0.55)",
+    background: "linear-gradient(165deg, rgba(18,16,14,0.9), rgba(8,7,6,0.94))",
     labelColor: "rgba(245, 247, 250, 0.48)",
     rail: "rgba(255,255,255,0.2)",
   };

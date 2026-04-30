@@ -4,8 +4,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ActionQueueEmptyState } from "@/components/action-queue/action-queue-empty-state";
 import { ActionQueueItemCard } from "@/components/action-queue/action-queue-item-card";
-import { ActionQueuePageHeader } from "@/components/action-queue/action-queue-page-header";
 import { ActionQueueSection } from "@/components/action-queue/action-queue-section";
+import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { ActionQueueSummaryBar } from "@/components/action-queue/action-queue-summary-bar";
 import { OperatorFilterBar } from "@/components/operator/operator-filter-bar";
 import { OperatorSavedViews } from "@/components/operator/operator-saved-views";
@@ -113,34 +113,42 @@ function ActionQueuePageContent() {
   }, [data, filter]);
 
   return (
-    <main style={{ padding: 0, maxWidth: 900 }}>
-      <ActionQueuePageHeader>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <RefreshIndicator updatedAt={refreshedAt} />
-          <button
-            type="button"
-            onClick={() => {
-              void (async () => {
-                await reload();
-                setRefreshedAt(new Date());
-              })();
-            }}
-            style={{
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.18)",
-              background: "rgba(255,255,255,0.06)",
-              color: "var(--text)",
-              padding: "8px 14px",
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
-            Refresh
-          </button>
-        </div>
-      </ActionQueuePageHeader>
+    <main className="pf-page-action-queue" style={{ padding: 0 }}>
+      <PageCommandHeader
+        animate={false}
+        tone="default"
+        eyebrow="Recovery"
+        title="Action queue"
+        description="Worklist for appointment recovery — needs action, review, and resolved slots in one place."
+        meta={
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <RefreshIndicator updatedAt={refreshedAt} />
+            <button
+              type="button"
+              onClick={() => {
+                void (async () => {
+                  await reload();
+                  setRefreshedAt(new Date());
+                })();
+              }}
+              style={{
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.18)",
+                background: "rgba(255,255,255,0.06)",
+                color: "var(--text)",
+                padding: "8px 14px",
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              Refresh
+            </button>
+          </div>
+        }
+        style={{ marginBottom: 14 }}
+      />
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+      <div className="pf-filter-rail" style={{ marginBottom: 16 }}>
         {filterTabs.map((t) => (
           <button
             key={t.id}
@@ -184,13 +192,15 @@ function ActionQueuePageContent() {
               />
             </>
           ) : (
-            <p style={{ color: "var(--muted)", fontSize: 13 }}>Loading filter options…</p>
+            <p className="pf-muted-copy" style={{ fontSize: 13 }}>
+              Loading filter options…
+            </p>
           )}
         </div>
       ) : null}
 
       {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
-      {loading && !data ? <p style={{ color: "var(--muted)" }}>Loading queue…</p> : null}
+      {loading && !data ? <p className="pf-muted-copy">Loading queue…</p> : null}
 
       {data ? (
         <>
@@ -268,8 +278,8 @@ export default function ActionQueuePage() {
   return (
     <Suspense
       fallback={
-        <main style={{ padding: 24, maxWidth: 900 }}>
-          <p style={{ color: "var(--muted)" }}>Loading queue…</p>
+        <main className="pf-page-action-queue" style={{ padding: 24 }}>
+          <p className="pf-muted-copy">Loading queue…</p>
         </main>
       }
     >

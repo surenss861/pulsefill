@@ -1,21 +1,30 @@
+"use client";
+
+import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
+import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
+
 type AuthBrandPanelProps = {
   eyebrow?: string;
   title: string;
   body: string;
   bullets?: string[];
-  showRecoveryStrip?: boolean;
+  /** When true, shows the product RecoveryPipeline (replaces legacy fake metrics strip). */
+  showRecoveryPipeline?: boolean;
+  /** Highlighted step for the story panel. Omit for an idle (all-pending) pipeline — useful on error screens. */
+  recoveryActiveStep?: RecoveryPipelineStepId;
 };
 
 export function AuthBrandPanel({
-  eyebrow = "Appointment recovery operating system",
+  eyebrow = "Cancellation recovery infrastructure",
   title,
   body,
   bullets = ["Queue visibility", "Explainable actions", "Recovery signals live"],
-  showRecoveryStrip = true,
+  showRecoveryPipeline = true,
+  recoveryActiveStep,
 }: AuthBrandPanelProps) {
   return (
-    <div style={{ display: "grid", gap: 32 }}>
-      <div style={{ display: "grid", gap: 28 }}>
+    <div style={{ display: "grid", gap: 28 }}>
+      <div style={{ display: "grid", gap: 24 }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
@@ -31,41 +40,24 @@ export function AuthBrandPanel({
           </span>
         </div>
 
-        <div style={{ display: "grid", gap: 16 }}>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 11,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.24em",
-              color: "rgba(245,242,237,0.46)",
-            }}
-          >
+        <div style={{ display: "grid", gap: 14 }}>
+          <p className="pf-kicker" style={{ margin: 0, color: "rgba(245,242,237,0.48)" }}>
             {eyebrow}
           </p>
           <h1
             style={{
               margin: 0,
-              maxWidth: "12ch",
-              fontSize: "clamp(40px, 4.2vw, 72px)",
+              maxWidth: "14ch",
+              fontSize: "clamp(36px, 3.8vw, 64px)",
               fontWeight: 620,
-              lineHeight: 0.92,
-              letterSpacing: "-0.055em",
+              lineHeight: 0.95,
+              letterSpacing: "-0.05em",
               color: "var(--text)",
             }}
           >
             {title}
           </h1>
-          <p
-            style={{
-              margin: 0,
-              maxWidth: "32rem",
-              fontSize: 16,
-              lineHeight: 1.65,
-              color: "rgba(169,162,154,0.95)",
-            }}
-          >
+          <p className="pf-muted-copy" style={{ margin: 0, maxWidth: "34rem", fontSize: 16, lineHeight: 1.65 }}>
             {body}
           </p>
         </div>
@@ -80,11 +72,9 @@ export function AuthBrandPanel({
                 display: "flex",
                 alignItems: "center",
                 gap: 12,
-                borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(255,255,255,0.02)",
-                padding: "14px 16px",
-                backdropFilter: "blur(8px)",
+                padding: "12px 14px",
+                borderRadius: 14,
+                ...operatorSurfaceShell("quiet"),
               }}
             >
               <div
@@ -94,81 +84,27 @@ export function AuthBrandPanel({
                   borderRadius: 999,
                   background: "var(--pf-accent-primary)",
                   flexShrink: 0,
+                  boxShadow: "0 0 10px rgba(255,122,24,0.35)",
                 }}
               />
-              <span style={{ fontSize: 14, color: "rgba(245,242,237,0.82)" }}>{item}</span>
+              <span style={{ fontSize: 14, color: "rgba(245,242,237,0.84)" }}>{item}</span>
             </div>
           ))}
         </div>
       ) : null}
 
-      {showRecoveryStrip ? (
-        <div
-          style={{
-            borderRadius: 28,
-            border: "1px solid rgba(255, 122, 24, 0.2)",
-            background: "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015))",
-            padding: 20,
-            boxShadow: "0 30px 80px rgba(0,0,0,0.45)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.2em",
-                color: "rgba(245,242,237,0.42)",
-              }}
-            >
-              Today&apos;s recovery
-            </span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.14em",
-                color: "rgba(253, 186, 116, 0.88)",
-                border: "1px solid rgba(255, 122, 24, 0.22)",
-                background: "rgba(255, 122, 24, 0.08)",
-                padding: "4px 9px",
-                borderRadius: 999,
-              }}
-            >
-              live
-            </span>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-            {[
-              ["Recovered", "12"],
-              ["Revenue", "$1.8K"],
-              ["Awaiting", "4"],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                style={{
-                  borderRadius: 16,
-                  border: "1px solid rgba(255, 122, 24, 0.18)",
-                  background: "#12110f",
-                  padding: 14,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.16em",
-                    color: "rgba(169,162,154,0.85)",
-                  }}
-                >
-                  {label}
-                </div>
-                <div style={{ marginTop: 10, fontSize: 28, fontWeight: 620, letterSpacing: "-0.04em" }}>{value}</div>
-              </div>
-            ))}
-          </div>
+      {showRecoveryPipeline ? (
+        <div style={{ padding: "16px 14px", ...operatorSurfaceShell("operational") }}>
+          <p className="pf-kicker" style={{ margin: "0 0 10px" }}>
+            Recovery path
+          </p>
+          <RecoveryPipeline
+            activeStep={recoveryActiveStep}
+            compact
+            animated
+            showFlowLabel={false}
+            style={{ margin: 0, padding: "10px 8px", boxShadow: "none", border: "none", background: "transparent" }}
+          />
         </div>
       ) : null}
     </div>

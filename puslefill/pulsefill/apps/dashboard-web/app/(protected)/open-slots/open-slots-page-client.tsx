@@ -23,7 +23,7 @@ import { runOperatorBulkAction } from "@/lib/operator-bulk-actions";
 import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
 import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
 import { RecoveryPipeline } from "@/components/operator/recovery-pipeline";
-import { actionLinkStyle } from "@/components/ui/action-button";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
@@ -188,7 +188,7 @@ export default function OpenSlotsPageClient() {
   }
 
   return (
-    <main style={{ padding: "0 0 24px", paddingBottom: selectedIds.length > 0 ? 120 : 24 }}>
+    <main className="pf-page-openings" style={{ padding: "0 0 24px", paddingBottom: selectedIds.length > 0 ? 120 : 24 }}>
       <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
         <button
           type="button"
@@ -248,6 +248,20 @@ export default function OpenSlotsPageClient() {
             <OperatorEmptyState
               title="No openings yet"
               description="Create an appointment opening when a cancellation appears. PulseFill will help match it to standby customers."
+              visual={
+                <div
+                  aria-hidden
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 14,
+                    border: "1px solid rgba(255, 122, 24, 0.28)",
+                    background:
+                      "radial-gradient(circle at 32% 28%, rgba(255, 200, 150, 0.35), rgba(255, 122, 24, 0.1) 45%, rgba(8, 7, 6, 0.85))",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.35)",
+                  }}
+                />
+              }
               primaryAction={
                 <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
                   Create opening

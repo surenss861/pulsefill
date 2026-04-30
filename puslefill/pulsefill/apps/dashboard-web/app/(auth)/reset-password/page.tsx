@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { resetPasswordAction, type AuthFormState } from "@/app/actions/auth";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
 import { AuthCard } from "@/components/auth/auth-card";
 import { PasswordField } from "@/components/auth/password-field";
 import { SubmitButton } from "@/components/auth/submit-button";
@@ -14,7 +15,19 @@ export default function ResetPasswordPage() {
   const [state, formAction] = useActionState(resetPasswordAction, initial);
 
   return (
-    <AuthShell variant="center">
+    <AuthShell
+      variant="split"
+      brandPanel={
+        <AuthBrandPanel
+          eyebrow="Secure session"
+          title="Set a new password."
+          body="Use the link from your email so this session stays valid — then you are back on the recovery path."
+          bullets={[]}
+          recoveryActiveStep="claim"
+          showRecoveryPipeline
+        />
+      }
+    >
       <AuthCard
         title="Reset password"
         description="Set a new password to regain access to PulseFill. Use the link from your email so this session stays valid."

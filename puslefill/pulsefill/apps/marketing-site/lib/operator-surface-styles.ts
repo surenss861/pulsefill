@@ -1,6 +1,5 @@
 import type { CSSProperties } from "react";
 
-/** Shared operator UI shells — hierarchy without one generic card style everywhere. */
 export type OperatorSurfaceVariant =
   | "hero"
   | "command"
@@ -11,22 +10,21 @@ export type OperatorSurfaceVariant =
   | "emptyState";
 
 export function operatorSurfaceShell(variant: OperatorSurfaceVariant): CSSProperties {
-  const xl = "var(--pf-radius-xl)";
-  const lg = "var(--pf-radius-lg)";
+  const xl = "22px";
+  const lg = "16px";
 
   switch (variant) {
     case "hero":
     case "command":
       return {
         borderRadius: xl,
-        border: "1px solid var(--pf-accent-primary-border)",
+        border: "1px solid rgba(255, 122, 24, 0.28)",
         background:
-          "radial-gradient(ellipse 90% 80% at 0% 0%, rgba(255, 122, 24, 0.11), transparent 55%), radial-gradient(ellipse 70% 50% at 100% 0%, rgba(201, 59, 47, 0.06), transparent 50%), var(--pf-card-hero-bg)",
+          "radial-gradient(ellipse 90% 80% at 0% 0%, rgba(255, 122, 24, 0.11), transparent 55%), radial-gradient(ellipse 70% 50% at 100% 0%, rgba(201, 59, 47, 0.06), transparent 50%), rgba(12,10,9,0.96)",
         boxShadow:
           "0 28px 76px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255, 122, 24, 0.04), 0 0 0 1px rgba(255, 122, 24, 0.05)",
       };
     case "nextBestAction":
-      /* Base layer; `NextBestActionCard` merges priority-specific border/shadow/background. */
       return {
         borderRadius: xl,
         border: "1px solid rgba(255,255,255,0.1)",
@@ -53,7 +51,7 @@ export function operatorSurfaceShell(variant: OperatorSurfaceVariant): CSSProper
       };
     case "metric":
       return {
-        borderRadius: "var(--pf-radius-md)",
+        borderRadius: "12px",
         border: "1px solid rgba(255,255,255,0.085)",
         background:
           "linear-gradient(180deg, rgba(255,255,255,0.042), rgba(255,122,24,0.02)), linear-gradient(180deg, #0c0b09, #070605)",
@@ -68,14 +66,4 @@ export function operatorSurfaceShell(variant: OperatorSurfaceVariant): CSSProper
         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.045), 0 14px 44px rgba(0,0,0,0.28)",
       };
   }
-}
-
-/** Compact header strip when command hero chrome is too heavy. */
-export function operatorPageHeaderDefaultShell(): CSSProperties {
-  return {
-    borderRadius: 22,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.18)), #090807",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.045), 0 8px 28px rgba(0,0,0,0.22)",
-  };
 }

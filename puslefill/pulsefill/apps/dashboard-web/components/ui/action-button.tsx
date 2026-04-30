@@ -1,6 +1,7 @@
 "use client";
 
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
+import { actionLinkStyle as actionLinkStyleBase } from "@/lib/operator-action-link-styles";
 
 export type ActionButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
@@ -75,15 +76,11 @@ export function ActionButton({ variant = "primary", children, style, disabled, .
 
 /** Link styled as a primary/secondary action (e.g. hero CTAs). */
 export function actionLinkStyle(variant: ActionButtonVariant = "primary"): CSSProperties {
-  if (variant === "primary") {
-    return {
-      ...variants.primary,
-      border: "none",
-      display: "inline-flex",
-    };
+  if (variant === "danger") {
+    return { ...variants.danger, display: "inline-flex", textDecoration: "none" };
   }
-  if (variant === "secondary") {
-    return { ...variants.secondary, display: "inline-flex", textDecoration: "none" };
+  if (variant === "primary" || variant === "secondary" || variant === "ghost") {
+    return actionLinkStyleBase(variant);
   }
-  return { ...variants.ghost, color: "var(--pf-btn-link-text)", display: "inline-flex", textDecoration: "none" };
+  return actionLinkStyleBase("primary");
 }

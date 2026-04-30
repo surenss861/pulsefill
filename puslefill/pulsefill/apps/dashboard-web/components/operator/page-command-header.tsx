@@ -2,7 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { FadeUp } from "@/components/motion/operator-motion";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
+import { operatorPageHeaderDefaultShell, operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 export type PageCommandHeaderTone = "default" | "strong";
 
@@ -20,13 +20,6 @@ type PageCommandHeaderProps = {
   style?: CSSProperties;
 };
 
-const defaultShell: CSSProperties = {
-  borderRadius: 24,
-  border: "1px solid var(--pf-border-subtle)",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,122,24,0.012)), rgba(8,8,7,0.65)",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-};
-
 export function PageCommandHeader({
   eyebrow,
   title,
@@ -38,13 +31,15 @@ export function PageCommandHeader({
   animate = true,
   style,
 }: PageCommandHeaderProps) {
-  const shell = tone === "strong" ? operatorSurfaceShell("command") : defaultShell;
+  const shell = tone === "strong" ? operatorSurfaceShell("command") : operatorPageHeaderDefaultShell();
+  const padding =
+    tone === "strong" ? "clamp(12px, 2vw, 16px) clamp(14px, 2.2vw, 20px)" : "10px 16px";
 
   const inner = (
     <section
       style={{
         marginBottom: 0,
-        padding: "clamp(12px, 2vw, 18px) clamp(14px, 2.2vw, 22px)",
+        padding,
         ...shell,
         ...style,
       }}
@@ -53,52 +48,40 @@ export function PageCommandHeader({
         style={{
           display: "flex",
           flexWrap: "wrap",
-          gap: 16,
+          gap: 12,
           justifyContent: "space-between",
           alignItems: "flex-end",
         }}
       >
-        <div style={{ flex: "1 1 240px", minWidth: 0 }}>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "rgba(245, 247, 250, 0.38)",
-            }}
-          >
-            {eyebrow}
-          </p>
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: "clamp(1.25rem, 2.8vw, 1.65rem)",
-              fontWeight: 650,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.15,
-              color: "var(--pf-text-primary)",
-            }}
-          >
+        <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+          <p className="pf-kicker">{eyebrow}</p>
+          <div className="pf-page-title" style={{ marginTop: 6 }}>
             {title}
           </div>
           {description ? (
-            <div
-              style={{
-                marginTop: 8,
-                maxWidth: 560,
-                fontSize: 14,
-                lineHeight: 1.5,
-                color: "rgba(245, 247, 250, 0.58)",
-              }}
-            >
+            <div className="pf-muted-copy" style={{ marginTop: 8, maxWidth: 560 }}>
               {description}
             </div>
           ) : null}
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, justifyContent: "flex-end" }}>
-          {meta}
+          {meta ? (
+            <div
+              style={{
+                display: "inline-flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 8,
+                padding: "5px 10px",
+                borderRadius: 12,
+                background: "rgba(0,0,0,0.28)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
+              }}
+            >
+              {meta}
+            </div>
+          ) : null}
           {secondaryAction}
           {primaryAction}
         </div>

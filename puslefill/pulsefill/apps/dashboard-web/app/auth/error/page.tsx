@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
+import { AuthCard } from "@/components/auth/auth-card";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 
 type Props = {
   searchParams: Promise<{ reason?: string }>;
@@ -8,66 +12,54 @@ export default async function AuthErrorPage({ searchParams }: Props) {
   const { reason } = await searchParams;
   const profileMissing = reason === "profile";
 
+  const title = profileMissing ? "Your account profile is not ready yet." : "This link is invalid or expired.";
+  const description = profileMissing
+    ? "You are signed in, but we could not load your PulseFill profile. Try signing out and back in, or contact support if this persists."
+    : "Request a fresh sign-in or reset link and try again.";
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-        background: "var(--pf-bg-app)",
-        color: "var(--text)",
-      }}
+    <AuthShell
+      variant="split"
+      brandPanel={
+        <AuthBrandPanel
+          eyebrow="Secure access"
+          title="Recovery pauses when trust breaks."
+          body="Expired magic links, missing configuration, or incomplete profiles all stop here — so your operator workspace stays gated."
+          bullets={[]}
+          showRecoveryPipeline
+        />
+      }
     >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 480,
-          borderRadius: 24,
-          border: "1px solid rgba(255,255,255,0.1)",
-          background: "rgba(255,255,255,0.03)",
-          padding: 32,
-        }}
+      <AuthCard
+        overtitle="Auth error"
+        title={title}
+        description={description}
+        footer={
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <Link href="/sign-in" style={actionLinkStyle("primary")}>
+              Back to sign in
+            </Link>
+            <Link href="/forgot-password" style={{ ...actionLinkStyle("secondary"), fontSize: 13 }}>
+              Forgot password
+            </Link>
+          </div>
+        }
       >
-        <p
+        <div
           style={{
-            margin: 0,
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            color: "var(--muted)",
+            borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.07)",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.18))",
+            padding: "14px 16px",
+            fontSize: 13,
+            lineHeight: 1.55,
+            color: "rgba(245,242,237,0.55)",
           }}
         >
-          Auth error
-        </p>
-        <h1 style={{ margin: "16px 0 0", fontSize: 32, fontWeight: 620, letterSpacing: "-0.04em", lineHeight: 1.1 }}>
-          {profileMissing ? "Your account profile is not ready yet." : "This link is invalid or expired."}
-        </h1>
-        <p style={{ margin: "16px 0 0", color: "var(--muted)", lineHeight: 1.55, fontSize: 14 }}>
-          {profileMissing
-            ? "You are signed in, but we could not load your PulseFill profile. Try signing out and back in, or contact support if this persists."
-            : "Request a fresh sign-in or reset link and try again."}
-        </p>
-        <div style={{ marginTop: 28 }}>
-          <Link
-            href="/sign-in"
-            style={{
-              display: "inline-flex",
-              borderRadius: 16,
-              padding: "12px 20px",
-              fontSize: 14,
-              fontWeight: 650,
-              background: "var(--pf-accent-primary)",
-              color: "var(--pf-btn-primary-text)",
-              boxShadow: "var(--pf-btn-primary-shadow)",
-            }}
-          >
-            Back to sign in
-          </Link>
+          If you followed a link from email, request a new one from the sign-in page. For profile issues, try signing out
+          completely, then sign in again.
         </div>
-      </div>
-    </main>
+      </AuthCard>
+    </AuthShell>
   );
 }

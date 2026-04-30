@@ -23,11 +23,12 @@ function Metric({ label, value }: { label: string; value: string }) {
       style={{
         borderRadius: 16,
         border: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(10, 15, 26, 0.65)",
+        background: "linear-gradient(165deg, rgba(20,18,16,0.92), rgba(8,7,6,0.96))",
         padding: 14,
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
       }}
     >
-      <p style={{ margin: 0, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(245,247,250,0.42)" }}>
+      <p className="pf-kicker" style={{ letterSpacing: "0.14em", fontSize: 10 }}>
         {label}
       </p>
       <p style={{ margin: "8px 0 0", fontSize: 15, fontWeight: 600, color: "var(--pf-text-primary)" }}>{value}</p>

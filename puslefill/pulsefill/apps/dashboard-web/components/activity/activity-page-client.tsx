@@ -117,7 +117,7 @@ export function ActivityPageClient() {
   );
 
   return (
-    <main style={{ padding: 0, maxWidth: 1080 }}>
+    <main className="pf-page-activity" style={{ padding: 0 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <FadeUp>
           <ActivityHero actions={heroActions} />

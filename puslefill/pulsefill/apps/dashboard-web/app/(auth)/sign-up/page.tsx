@@ -24,7 +24,8 @@ export default function SignUpPage() {
           title="Create your recovery workspace."
           body="Set up PulseFill for queue visibility, team access, and recovered bookings."
           bullets={["Team access", "Recovery workflow", "Revenue visibility"]}
-          showRecoveryStrip={false}
+          recoveryActiveStep="opening"
+          showRecoveryPipeline
         />
       }
     >

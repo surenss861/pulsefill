@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
-import { actionLinkStyle } from "@/components/ui/action-button";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 
 export function OpenSlotsInventoryHero() {
   return (

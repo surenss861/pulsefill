@@ -14,6 +14,7 @@ type AppShellProps = {
 export function AppShell({ children, user, profile }: AppShellProps) {
   return (
     <div
+      className="pf-app-root"
       style={{
         minHeight: "100vh",
         background: "var(--pf-bg-app)",

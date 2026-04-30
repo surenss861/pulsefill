@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { OperatorMetricStrip } from "@/components/operator/operator-metric-strip";
-import { actionLinkStyle } from "@/components/ui/action-button";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { apiFetch } from "@/lib/api";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
@@ -102,7 +102,7 @@ export default function CustomersPage() {
   }
 
   return (
-    <main style={{ padding: 0, maxWidth: 1024 }}>
+    <main className="pf-page-customers" style={{ padding: 0 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <PageCommandHeader
           tone="default"
@@ -156,13 +156,21 @@ export default function CustomersPage() {
 
         <OperatorMetricStrip
           items={[
-            { label: "Pending invites", value: pendingInvites },
-            { label: "Active standby", value: acceptedInvites, emphasis: "primary" },
-            { label: "Match coverage", value: acceptedInvites > 0 ? "Improving" : "Low" },
+            { label: "Pending invites", value: pendingInvites, hint: "Awaiting acceptance" },
+            { label: "Active standby", value: acceptedInvites, emphasis: "primary", hint: "Ready for offers" },
+            {
+              label: "Match coverage",
+              value: acceptedInvites > 0 ? "Improving" : "Low",
+              signal: acceptedInvites > 0 ? "live" : "idle",
+              emphasis: acceptedInvites > 0 ? "primary" : "default",
+              hint: acceptedInvites > 0 ? "Standby pool in play" : "Invite more standby customers",
+            },
           ]}
           compact
         />
-        <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", lineHeight: 1.45 }}>{matchCoverage}</p>
+        <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
+          {matchCoverage}
+        </p>
 
         <div className="pf-customers-split" style={{ marginTop: 4 }}>
         <form
@@ -176,8 +184,10 @@ export default function CustomersPage() {
             ...operatorSurfaceShell("operational"),
           }}
         >
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Invite customer</h2>
-          <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
+          <h2 className="pf-section-title" style={{ fontSize: 16 }}>
+            Invite customer
+          </h2>
+          <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
             Create an invite code and share it with the customer so they can join your standby list.
           </p>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>

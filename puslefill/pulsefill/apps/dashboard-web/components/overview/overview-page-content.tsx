@@ -36,8 +36,21 @@ import { CommandCenterRecentActivity } from "@/components/overview/command-cente
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { FadeUp } from "@/components/motion/operator-motion";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
+import { NextBestActionCard } from "@/components/operator/next-best-action-card";
 import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
+import type { SetupChecklistState } from "@/hooks/useSetupChecklistState";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
+
+function nextSetupHref(state: SetupChecklistState): string {
+  if (!state.hasLocation) return "/locations";
+  if (!state.hasProvider) return "/providers";
+  if (!state.hasService) return "/services";
+  if (!state.hasOpenSlot) return "/open-slots/create";
+  if (!state.hasOffersSent) return "/customers";
+  if (!state.hasConfirmedBooking) return "/claims";
+  return "/locations";
+}
 
 export type OverviewPageContentProps = {
   displayName: string | null;
@@ -85,32 +98,132 @@ export function OverviewPageContent({
   const showGettingStarted = !setupComplete;
   const loading = setup.loading || metricsLoading;
   const urgentOpeningsCount = actionQueue.data?.summary.needs_action_count ?? 0;
-  const secondaryAction =
-    checklist.hasOffersSent || checklist.hasOpenSlot
-      ? { href: "/open-slots", label: "View openings" }
-      : { href: "/customers", label: "Invite customers" };
   const awaitingConfirmationCount = actionQueue.data?.summary.awaiting_confirmation_count ?? 0;
-  const compactMetrics = useMemo(
-    () => [
-      {
-        label: "Active openings",
-        value: liveCounts.data?.counts.open ?? 0,
-      },
-      {
-        label: "Offers sent",
-        value: metrics?.offers_sent ?? 0,
-      },
+
+  const nextBest = useMemo(() => {
+    if (loading) return null;
+
+    const liveOpen = liveCounts.data?.counts.open ?? 0;
+    const offersSent = metrics?.offers_sent ?? 0;
+    const slotsBooked = metrics?.slots_booked ?? 0;
+    const setupStepsDone = [
+      checklist.hasLocation,
+      checklist.hasProvider,
+      checklist.hasService,
+      checklist.hasOpenSlot,
+      checklist.hasOffersSent,
+      checklist.hasConfirmedBooking,
+    ].filter(Boolean).length;
+
+    const baseStats = [
       {
         label: "Claims waiting",
         value: awaitingConfirmationCount,
+        tone: awaitingConfirmationCount > 0 ? ("attention" as const) : ("idle" as const),
       },
-      {
-        label: "Recovered bookings",
-        value: metrics?.slots_booked ?? 0,
-      },
-    ],
-    [liveCounts.data?.counts.open, metrics?.offers_sent, metrics?.slots_booked, awaitingConfirmationCount],
-  );
+      { label: "Active openings", value: liveOpen, tone: liveOpen > 0 ? ("live" as const) : ("idle" as const) },
+      { label: "Offers sent", value: offersSent, tone: offersSent > 0 ? ("live" as const) : ("idle" as const) },
+      { label: "Recovered", value: slotsBooked, tone: slotsBooked > 0 ? ("live" as const) : ("idle" as const) },
+    ];
+
+    if (awaitingConfirmationCount > 0) {
+      return {
+        actionKey: `claim-${awaitingConfirmationCount}`,
+        priority: "critical" as const,
+        title: "Claim waiting for confirmation",
+        description: "A customer wants this opening. Confirm the booking or release the spot.",
+        pipelineStep: "claim" as const,
+        supportingStats: baseStats,
+        primaryAction: <Link href="/claims" style={actionLinkStyle("primary")}>Review claim</Link>,
+      };
+    }
+    if (!standbyRequests.loading && standbyRequests.count > 0) {
+      return {
+        actionKey: `standby-${standbyRequests.count}`,
+        priority: "attention" as const,
+        title: "Standby requests waiting",
+        description:
+          "Customers are asking to join your standby pool. Review them so they can receive openings.",
+        pipelineStep: "matched" as const,
+        supportingStats: baseStats,
+        secondaryMeta: `${standbyRequests.count} pending request${standbyRequests.count === 1 ? "" : "s"}`,
+        primaryAction: (
+          <Link href="/customers/standby-requests" style={actionLinkStyle("primary")}>
+            Review requests
+          </Link>
+        ),
+      };
+    }
+    if (!setupComplete) {
+      return {
+        actionKey: `setup-${setupStepsDone}`,
+        priority: "setup" as const,
+        title: "Finish workspace setup",
+        description:
+          "Complete your services, providers, and locations so openings can be matched correctly.",
+        pipelineStep: "opening" as const,
+        supportingStats: [
+          { label: "Workspace steps", value: `${setupStepsDone}/6`, tone: "live" as const },
+          {
+            label: "Claims waiting",
+            value: awaitingConfirmationCount,
+            tone: awaitingConfirmationCount > 0 ? ("attention" as const) : ("idle" as const),
+          },
+          { label: "Active openings", value: liveOpen, tone: liveOpen > 0 ? ("live" as const) : ("idle" as const) },
+          { label: "Openings (saved)", value: setup.openSlotsCount, tone: setup.openSlotsCount > 0 ? ("live" as const) : ("idle" as const) },
+        ],
+        primaryAction: (
+          <Link href={nextSetupHref(checklist)} style={actionLinkStyle("primary")}>
+            Continue setup
+          </Link>
+        ),
+      };
+    }
+    if (urgentOpeningsCount > 0) {
+      return {
+        actionKey: `offers-${urgentOpeningsCount}`,
+        priority: "attention" as const,
+        title: "Openings ready for offers",
+        description: "Send matched offers so standby customers can claim available times.",
+        pipelineStep: "offers" as const,
+        supportingStats: baseStats,
+        secondaryMeta: `${urgentOpeningsCount} opening${urgentOpeningsCount === 1 ? "" : "s"} need attention`,
+        primaryAction: <Link href="/open-slots" style={actionLinkStyle("primary")}>Review openings</Link>,
+      };
+    }
+    if (setup.openSlotsCount === 0) {
+      return {
+        actionKey: "ready-open",
+        priority: "ready" as const,
+        title: "Ready for the next cancellation",
+        description: "Create an opening when a customer cancels and PulseFill will guide the recovery flow.",
+        pipelineStep: "opening" as const,
+        supportingStats: baseStats,
+        primaryAction: <Link href="/open-slots/create" style={actionLinkStyle("primary")}>Create opening</Link>,
+      };
+    }
+    return {
+      actionKey: "clear",
+      priority: "clear" as const,
+      title: "Recovery system is clear",
+      description: "No urgent actions right now. PulseFill will surface the next recovery move here.",
+      pipelineStep: "confirmed" as const,
+      supportingStats: baseStats,
+      primaryAction: <Link href="/activity" style={actionLinkStyle("secondary")}>View activity</Link>,
+    };
+  }, [
+    loading,
+    awaitingConfirmationCount,
+    liveCounts.data?.counts.open,
+    metrics?.offers_sent,
+    metrics?.slots_booked,
+    checklist,
+    setupComplete,
+    standbyRequests.loading,
+    standbyRequests.count,
+    urgentOpeningsCount,
+    setup.openSlotsCount,
+  ]);
 
   const recoverySubtitle = useMemo(() => {
     if (!dailyOps.data) return DEFAULT_OVERVIEW_RECOVERY_SUBTITLE;
@@ -124,6 +237,8 @@ export function OverviewPageContent({
     if (metrics && metrics.offers_sent > 0) return "offers";
     return "opening";
   }, [awaitingConfirmationCount, urgentOpeningsCount, metrics?.slots_booked, metrics?.offers_sent]);
+
+  const pipelineForRail = nextBest?.pipelineStep ?? recoveryPipelineStep;
 
   const recoveryPipelineCounts = useMemo((): Partial<Record<RecoveryPipelineStepId, number>> | undefined => {
     if (!metrics) return undefined;
@@ -192,54 +307,32 @@ export function OverviewPageContent({
   }, [loading, metrics]);
 
   return (
-    <main style={{ padding: 0 }}>
+    <main className="pf-page-overview" style={{ padding: 0 }}>
       <FadeUp>
-        <OverviewOperatorHero
-          urgentOpeningsCount={urgentOpeningsCount}
-          awaitingConfirmationCount={awaitingConfirmationCount}
-          secondaryHref={secondaryAction.href}
-          secondaryLabel={secondaryAction.label}
-        />
+        <OverviewOperatorHero />
       </FadeUp>
+
+      {nextBest ? (
+        <FadeUp delay={0.05}>
+          <div style={{ marginTop: 16 }}>
+            <NextBestActionCard
+              actionKey={nextBest.actionKey}
+              title={nextBest.title}
+              description={nextBest.description}
+              priority={nextBest.priority}
+              primaryAction={nextBest.primaryAction}
+              secondaryMeta={nextBest.secondaryMeta}
+              pipelineStep={nextBest.pipelineStep}
+              supportingStats={nextBest.supportingStats}
+              showPipeline={false}
+              updatedAt={refreshedAt}
+            />
+          </div>
+        </FadeUp>
+      ) : null}
 
       <FadeUp delay={0.06}>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
-      {!standbyRequests.loading && standbyRequests.count > 0 ? (
-        <div
-          style={{
-            marginTop: 14,
-            borderRadius: 16,
-            border: "1px solid rgba(251, 191, 36, 0.28)",
-            background: "rgba(245, 158, 11, 0.08)",
-            padding: "14px 16px",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          <div>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 650, color: "rgba(253, 224, 171, 0.95)" }}>Standby requests</p>
-            <p style={{ margin: "6px 0 0", fontSize: 14, color: "rgba(245, 247, 250, 0.78)", maxWidth: 520 }}>
-              {standbyRequests.count} customer{standbyRequests.count === 1 ? "" : "s"} asked to join standby. Review them when you can.
-            </p>
-          </div>
-          <Link
-            href="/customers/standby-requests"
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: "var(--pf-accent-primary)",
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Review requests
-          </Link>
-        </div>
-      ) : null}
-
       <div
         style={{
           display: "flex",
@@ -271,32 +364,6 @@ export function OverviewPageContent({
         </div>
       </div>
 
-      {!loading ? (
-        <div
-          style={{
-            marginTop: 16,
-            display: "grid",
-            gap: 10,
-            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-          }}
-        >
-          {compactMetrics.map((m) => (
-            <div
-              key={m.label}
-              style={{
-                borderRadius: 14,
-                border: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(255,255,255,0.03)",
-                padding: "12px 14px",
-              }}
-            >
-              <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>{m.label}</p>
-              <p style={{ margin: "6px 0 0", fontSize: 20, fontWeight: 650, letterSpacing: "-0.01em" }}>{m.value}</p>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
       {setup.error ? (
         <p style={{ color: "#f87171", marginTop: 16 }}>Setup data: {setup.error}</p>
       ) : null}
@@ -311,7 +378,7 @@ export function OverviewPageContent({
       {loading ? <p style={{ color: "var(--muted)", marginTop: 20 }}>Loading overview…</p> : null}
 
       {showGettingStarted && !loading ? (
-        <div className="pf-command-cockpit">
+        <div className="pf-command-cockpit pf-command-cockpit--after-nba">
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
             <GettingStartedCard state={checklist} />
             <ActionQueuePreviewCard
@@ -323,10 +390,11 @@ export function OverviewPageContent({
           </div>
           <aside className="pf-command-cockpit-rail">
             <RecoveryPipeline
-              activeStep={recoveryPipelineStep}
+              activeStep={pipelineForRail}
               counts={recoveryPipelineCounts}
               compact
               animated
+              featured
             />
           </aside>
           <div className="pf-command-cockpit-footer">
@@ -370,7 +438,7 @@ export function OverviewPageContent({
             }}
           />
 
-          <div className="pf-command-cockpit">
+          <div className="pf-command-cockpit pf-command-cockpit--after-nba">
             <div style={{ minWidth: 0 }}>
               <ActionQueuePreviewCard
                 items={actionQueue.data?.sections.needs_action ?? []}
@@ -381,10 +449,11 @@ export function OverviewPageContent({
             </div>
             <aside className="pf-command-cockpit-rail">
               <RecoveryPipeline
-                activeStep={recoveryPipelineStep}
+                activeStep={pipelineForRail}
                 counts={recoveryPipelineCounts}
                 compact
                 animated
+                featured
               />
             </aside>
             <div className="pf-command-cockpit-footer">

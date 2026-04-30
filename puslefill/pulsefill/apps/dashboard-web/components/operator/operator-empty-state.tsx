@@ -4,25 +4,61 @@ import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 type OperatorEmptyStateProps = {
   title: string;
   description: ReactNode;
+  /** Optional mark, icon, or small illustration above the title. */
+  visual?: ReactNode;
   primaryAction?: ReactNode;
   secondaryContent?: ReactNode;
   style?: CSSProperties;
 };
 
 /** Next-action empty state — not a blank “no data” box. */
-export function OperatorEmptyState({ title, description, primaryAction, secondaryContent, style }: OperatorEmptyStateProps) {
+export function OperatorEmptyState({
+  title,
+  description,
+  visual,
+  primaryAction,
+  secondaryContent,
+  style,
+}: OperatorEmptyStateProps) {
   return (
     <div
       style={{
-        padding: 20,
+        padding: "22px 22px 20px",
         ...operatorSurfaceShell("emptyState"),
         ...style,
       }}
     >
-      <p style={{ margin: 0, fontSize: 17, fontWeight: 650, letterSpacing: "-0.02em", color: "var(--pf-text-primary)" }}>{title}</p>
-      <div style={{ marginTop: 10, fontSize: 14, lineHeight: 1.55, color: "var(--muted)", maxWidth: 520 }}>{description}</div>
-      {primaryAction ? <div style={{ marginTop: 16 }}>{primaryAction}</div> : null}
-      {secondaryContent ? <div style={{ marginTop: 18 }}>{secondaryContent}</div> : null}
+      {visual ? (
+        <div style={{ marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "flex-start" }}>{visual}</div>
+      ) : null}
+      <p className="pf-section-title" style={{ fontSize: 17, letterSpacing: "-0.02em" }}>
+        {title}
+      </p>
+      <div className="pf-muted-copy" style={{ marginTop: 12, fontSize: 14, maxWidth: 560 }}>
+        {description}
+      </div>
+      {primaryAction ? <div style={{ marginTop: 20 }}>{primaryAction}</div> : null}
+      {secondaryContent ? (
+        <div
+          style={{
+            marginTop: 22,
+            paddingTop: 18,
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div
+            style={{
+              borderRadius: "var(--pf-radius-lg)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.2))",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+              padding: "14px 16px",
+            }}
+          >
+            {secondaryContent}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

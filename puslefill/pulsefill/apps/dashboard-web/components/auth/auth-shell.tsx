@@ -5,9 +5,9 @@ const ambient = {
   inset: 0,
   pointerEvents: "none" as const,
   background: `
-    radial-gradient(circle at 72% 14%, rgba(255, 122, 24, 0.12), transparent 32%),
-    radial-gradient(circle at 8% 92%, rgba(158, 42, 31, 0.1), transparent 26%),
-    linear-gradient(180deg, #030303 0%, #050505 48%, #030303 100%)
+    radial-gradient(circle at 72% 12%, rgba(255, 122, 24, 0.14), transparent 34%),
+    radial-gradient(circle at 10% 88%, rgba(201, 59, 47, 0.08), transparent 28%),
+    linear-gradient(180deg, #040302 0%, #0a0908 45%, #060504 100%)
   `,
 };
 
@@ -99,8 +99,10 @@ export function AuthShell({
           <section
             style={{
               display: "none",
-              borderRight: "1px solid rgba(255,255,255,0.06)",
+              borderRight: "1px solid rgba(255,255,255,0.07)",
               alignItems: "stretch",
+              background:
+                "linear-gradient(165deg, rgba(255,122,24,0.05), transparent 42%), linear-gradient(180deg, rgba(12,10,9,0.65), rgba(4,3,2,0.92))",
             }}
             className="auth-brand-section"
           >

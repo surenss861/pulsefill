@@ -32,7 +32,7 @@ export function AuthField({ label, error, style, className, ...props }: AuthFiel
           boxSizing: "border-box",
           borderRadius: 18,
           border,
-          background: "var(--pf-auth-input-bg)",
+          background: "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(0,0,0,0.2)), var(--pf-auth-input-bg)",
           padding: "16px 18px",
           minHeight: 56,
           fontSize: 15,

@@ -3,7 +3,7 @@
 import { Fragment } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
+import { operatorSurfaceShell } from "../lib/operator-surface-styles";
 
 export type RecoveryPipelineStepId = "opening" | "matched" | "offers" | "claim" | "confirmed";
 
@@ -44,9 +44,7 @@ type RecoveryPipelineProps = {
   counts?: Partial<Record<RecoveryPipelineStepId, number>>;
   compact?: boolean;
   animated?: boolean;
-  /** Command Center rail: stronger framing. */
   featured?: boolean;
-  /** When false, hides the “Recovery flow” kicker (parent supplies its own title). */
   showFlowLabel?: boolean;
   style?: CSSProperties;
 };
@@ -91,7 +89,13 @@ function StepGlyph({ id, phase }: { id: RecoveryPipelineStepId; phase: StepPhase
       <svg viewBox="0 0 24 24" fill="none" style={common} aria-hidden>
         <circle cx="12" cy="12" r="8" stroke={stroke} strokeWidth="1.4" />
         {phase === "completed" || phase === "active" ? (
-          <path d="M8 12l2.5 2.5L16 9" stroke={phase === "completed" ? "rgba(251,191,168,0.9)" : "#fdba74"} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M8 12l2.5 2.5L16 9"
+            stroke={phase === "completed" ? "rgba(251,191,168,0.9)" : "#fdba74"}
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         ) : null}
       </svg>
     ),
@@ -121,7 +125,7 @@ export function RecoveryPipeline({
       }
     : {
         padding: compact ? "12px 14px" : "14px 16px",
-        borderRadius: "var(--pf-radius-lg)",
+        borderRadius: "16px",
         border: "1px solid rgba(255,255,255,0.1)",
         background:
           "linear-gradient(165deg, rgba(22,19,17,0.98), rgba(8,7,6,0.96)), radial-gradient(ellipse 100% 80% at 50% 0%, rgba(255,122,24,0.06), transparent 55%)",
@@ -196,7 +200,9 @@ export function RecoveryPipeline({
                 <span style={{ marginTop: 4, fontSize: 10, lineHeight: 1.3, color: "rgba(245,247,250,0.38)" }}>{micro(id)}</span>
               )}
               {count != null && count > 0 ? (
-                <span style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: "rgba(255,186,120,0.95)", letterSpacing: "-0.02em" }}>{count}</span>
+                <span style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: "rgba(255,186,120,0.95)", letterSpacing: "-0.02em" }}>
+                  {count}
+                </span>
               ) : null}
             </div>
           );
@@ -225,12 +231,7 @@ export function RecoveryPipeline({
 
           const hotConnector = activeIdx >= 0 && i < activeIdx;
           const sweep = hotConnector && runMotion && animated;
-          const desktopConnClass = [
-            "pf-rp-conn",
-            "pf-rp-conn--desktop",
-            hotConnector ? "pf-rp-conn--hot" : "",
-            sweep ? "pf-rp-conn--animate" : "",
-          ]
+          const desktopConnClass = ["pf-rp-conn", "pf-rp-conn--desktop", hotConnector ? "pf-rp-conn--hot" : "", sweep ? "pf-rp-conn--animate" : ""]
             .filter(Boolean)
             .join(" ");
 

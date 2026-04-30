@@ -27,11 +27,12 @@ export function SignInClient() {
       variant="split"
       brandPanel={
         <AuthBrandPanel
-          eyebrow="Appointment recovery operating system"
-          title="Run recovery with clarity."
+          eyebrow="Cancellation recovery infrastructure"
+          title="Enter the Operator OS."
           body="Standby demand, operator action, and recovered revenue — connected in one controlled workflow."
           bullets={["Queue visibility", "Explainable actions", "Recovery signals live"]}
-          showRecoveryStrip
+          recoveryActiveStep="offers"
+          showRecoveryPipeline
         />
       }
     >

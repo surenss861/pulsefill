@@ -8,11 +8,26 @@ type ActivitySummaryStripProps = {
 
 export function ActivitySummaryStrip({ summary }: ActivitySummaryStripProps) {
   const cards = [
-    { label: "Recovered", value: summary.recovered, emphasis: "primary" as const },
-    { label: "Delivery issues", value: summary.deliveryFailures, emphasis: "danger" as const },
-    { label: "Note updates", value: summary.noteUpdates, emphasis: "default" as const },
-    { label: "Waiting", value: summary.pendingConfirmations, emphasis: "primary" as const },
-    { label: "Expired", value: summary.expired, emphasis: "danger" as const },
+    {
+      label: "Recovered",
+      value: summary.recovered,
+      emphasis: "primary" as const,
+      hint: "Bookings confirmed from offers",
+    },
+    {
+      label: "Delivery issues",
+      value: summary.deliveryFailures,
+      emphasis: "danger" as const,
+      hint: "Push or email failures",
+    },
+    { label: "Note updates", value: summary.noteUpdates, emphasis: "default" as const, hint: "Staff notes on offers" },
+    {
+      label: "Waiting",
+      value: summary.pendingConfirmations,
+      emphasis: "primary" as const,
+      hint: "Claims needing confirmation",
+    },
+    { label: "Expired", value: summary.expired, emphasis: "danger" as const, hint: "Offers that timed out" },
   ];
 
   const allZero = cards.every((c) => c.value === 0);

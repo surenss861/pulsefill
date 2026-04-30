@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
 import { PageState } from "@/components/ui/page-state";
-import { actionLinkStyle } from "@/components/ui/action-button";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 
 type ActivityEmptySectionProps = {
   variant?: "section" | "filtered";

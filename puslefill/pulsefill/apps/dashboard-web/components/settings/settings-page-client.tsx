@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { signOutAction } from "@/app/actions/auth";
-import { ActionButton, actionLinkStyle } from "@/components/ui/action-button";
+import { ActionButton } from "@/components/ui/action-button";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { PageState } from "@/components/ui/page-state";
 import { SectionCard } from "@/components/ui/section-card";
@@ -32,7 +33,9 @@ function field(label: string, value: string | null | undefined) {
         fontSize: 14,
       }}
     >
-      <span style={{ color: "rgba(245, 247, 250, 0.45)", fontWeight: 600 }}>{label}</span>
+      <span className="pf-meta-row" style={{ fontWeight: 600, textTransform: "none", letterSpacing: "0.02em" }}>
+        {label}
+      </span>
       <span style={{ color: "rgba(245, 247, 250, 0.88)", wordBreak: "break-word" }}>{v && v.length > 0 ? v : "—"}</span>
     </div>
   );
@@ -80,7 +83,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
       : null;
 
   return (
-    <main style={{ padding: 0, maxWidth: 1024 }}>
+    <main className="pf-page-settings" style={{ padding: 0 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <PageCommandHeader
           animate={false}

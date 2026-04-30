@@ -1,8 +1,8 @@
 :root {
   color-scheme: dark;
   --bg: #050505;
-  --surface: rgba(18, 19, 23, 0.86);
-  --surface-strong: rgba(24, 25, 30, 0.95);
+  --surface-solid: rgba(18, 16, 14, 0.94);
+  --surface-strong: rgba(22, 19, 17, 0.97);
   --text: #f7f3ed;
   --muted: #b7afa5;
   --subtle: #7f7972;
@@ -10,7 +10,7 @@
   --line-strong: rgba(255, 122, 24, 0.36);
   --ember: #ff7a18;
   --ember-soft: rgba(255, 122, 24, 0.14);
-  --green: #38d87f;
+  --green: #5ad18a;
   --max: 1180px;
 }
 
@@ -26,9 +26,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 18% 8%, rgba(255, 122, 24, 0.16), transparent 30rem),
-    radial-gradient(circle at 84% 22%, rgba(56, 216, 127, 0.08), transparent 24rem),
-    linear-gradient(180deg, #050505 0%, #0b0b0c 48%, #111111 100%);
+    radial-gradient(circle at 18% 8%, rgba(255, 122, 24, 0.14), transparent 30rem),
+    radial-gradient(circle at 82% 18%, rgba(201, 59, 47, 0.06), transparent 22rem),
+    linear-gradient(180deg, #040302 0%, #0a0908 48%, #0c0b09 100%);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -195,9 +195,11 @@ h2 {
 
 .dashboard-frame,
 .phone-frame {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  box-shadow: 0 44px 120px rgba(0, 0, 0, 0.62);
+  border: 1px solid rgba(255, 122, 24, 0.12);
+  background: var(--surface-solid);
+  box-shadow:
+    0 44px 120px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(18px);
 }
 
@@ -272,9 +274,9 @@ h2 {
 
 .metrics article,
 .workflow {
-  border: 1px solid var(--line);
-  background: var(--surface-strong);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: linear-gradient(165deg, rgba(28, 25, 22, 0.95), rgba(11, 10, 8, 0.98));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .metrics article {
@@ -351,6 +353,10 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .ms-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
   .hero-grid {
     gap: 34px;
     padding-top: 48px;
@@ -362,6 +368,14 @@ h2 {
 
   .dashboard-frame {
     width: 94%;
+  }
+
+  .ms-operator-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ms-standby-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -399,3 +413,223 @@ h2 {
     padding: 24px 18px;
   }
 }
+
+/* --- Operator OS alignment: typography + recovery track --- */
+.pf-kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(245, 242, 237, 0.42);
+}
+
+.ms-hero-grid {
+  align-items: start;
+}
+
+.hero-visual-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.ms-hero-pipeline {
+  padding: 16px 14px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 122, 24, 0.14);
+  background: linear-gradient(165deg, rgba(28, 25, 22, 0.92), rgba(10, 9, 8, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 48px rgba(0, 0, 0, 0.35);
+}
+
+.ms-section {
+  padding: 56px max(22px, calc((100vw - var(--max)) / 2));
+}
+
+.ms-section-inner {
+  max-width: var(--max);
+  margin: 0 auto;
+}
+
+.ms-section-head {
+  max-width: 640px;
+  margin-bottom: 28px;
+}
+
+.ms-lede {
+  margin: 16px 0 0;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.ms-section--path {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, transparent, rgba(255, 122, 24, 0.03));
+}
+
+.ms-section--operator {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ms-operator-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.ms-operator-card {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 22px 20px;
+  background: linear-gradient(165deg, rgba(26, 22, 19, 0.95), rgba(10, 9, 8, 0.98));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 40px rgba(0, 0, 0, 0.28);
+}
+
+.ms-operator-card h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ms-operator-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.ms-section--standby {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ms-standby-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 36px;
+  align-items: start;
+}
+
+.ms-standby-panel {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 22px 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.2));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ms-standby-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 600;
+}
+
+.ms-section--pilot {
+  padding-bottom: 72px;
+}
+
+.ms-pilot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 32px 28px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 122, 24, 0.22);
+  background: linear-gradient(165deg, rgba(255, 122, 24, 0.1), rgba(12, 10, 9, 0.96));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.ms-pilot h2 {
+  max-width: 520px;
+}
+
+.ms-pilot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ms-not-found {
+  min-height: 70vh;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 48px 22px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ms-not-found-copy {
+  margin: 16px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Recovery pipeline layout (matches dashboard track) */
+.pf-rp-track {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.pf-rp-conn--desktop {
+  display: none;
+}
+
+.pf-rp-conn--mobile {
+  display: block;
+}
+
+@media (min-width: 720px) {
+  .pf-rp-track {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0;
+  }
+
+  .pf-rp-conn--desktop {
+    display: block;
+  }
+
+  .pf-rp-conn--mobile {
+    display: none;
+  }
+}
+
+@keyframes pf-rp-ember-sweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pf-rp-conn.pf-rp-conn--hot.pf-rp-conn--animate {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 122, 24, 0.08),
+      rgba(255, 186, 120, 0.65),
+      rgba(255, 122, 24, 0.12),
+      rgba(255, 122, 24, 0.45)
+    ) !important;
+    background-size: 220% 100% !important;
+    animation: pf-rp-ember-sweep 2.6s linear infinite;
+    box-shadow: 0 0 14px rgba(255, 122, 24, 0.18);
+  }
+}
+

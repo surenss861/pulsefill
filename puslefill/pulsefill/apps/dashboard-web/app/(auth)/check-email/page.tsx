@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
 import { AuthCard } from "@/components/auth/auth-card";
 import { CheckEmailResend } from "@/components/auth/check-email-resend";
 
@@ -14,7 +15,19 @@ export default async function CheckEmailPage({
   const displayEmail = email || "your inbox";
 
   return (
-    <AuthShell variant="center">
+    <AuthShell
+      variant="split"
+      brandPanel={
+        <AuthBrandPanel
+          eyebrow="Verify identity"
+          title="Check your inbox."
+          body="PulseFill keeps operator workspaces gated. Email verification is the handshake before your team enters the OS."
+          bullets={[]}
+          recoveryActiveStep="matched"
+          showRecoveryPipeline
+        />
+      }
+    >
       <AuthCard
         title="Check your email"
         description={`We sent a secure link to ${displayEmail}. Open the message and follow the instructions.`}

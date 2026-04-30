@@ -1,10 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscription";
 import { ClaimWinnerCard } from "@/components/claims/claim-winner-card";
-import { ActionEmptyState } from "@/components/ui/action-empty-state";
+import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
+import { OperatorMetricStrip } from "@/components/operator/operator-metric-strip";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { useClaims } from "@/hooks/useClaims";
 import { useClaimsRealtime } from "@/hooks/useClaimsRealtime";
 import { usePollingEffect } from "@/hooks/usePollingEffect";
@@ -44,47 +48,56 @@ export default function ClaimsPage() {
     return { need, done };
   }, [claims]);
 
-  return (
-    <main style={{ padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
-        <div>
-          <h1 style={{ marginTop: 0 }}>Claims</h1>
-          <p style={{ color: "var(--muted)", maxWidth: 560, marginBottom: 0 }}>
-            Claimed slots for your business. Confirm the booking once the winner is locked in.
-          </p>
-        </div>
-        <RefreshIndicator updatedAt={refreshedAt} />
-      </div>
+  const metricItems = useMemo(
+    () => [
+      {
+        label: "Awaiting confirmation",
+        value: claimSummary.need,
+        emphasis: "primary" as const,
+        signal: claimSummary.need > 0 ? ("live" as const) : ("idle" as const),
+      },
+      { label: "Confirmed", value: claimSummary.done, signal: "idle" as const },
+      { label: "Total in list", value: claims.length, signal: "idle" as const },
+    ],
+    [claimSummary.need, claimSummary.done, claims.length],
+  );
 
-      {loading ? <p style={{ color: "var(--muted)" }}>Loading claims…</p> : null}
+  return (
+    <main className="pf-page-claims" style={{ padding: "clamp(16px, 3vw, 24px) 0 32px" }}>
+      <PageCommandHeader
+        animate={false}
+        tone="default"
+        eyebrow="Decision queue"
+        title="Claims"
+        description="Review customers who claimed openings and confirm recoverable bookings."
+        meta={<RefreshIndicator updatedAt={refreshedAt} />}
+        style={{ marginBottom: 18 }}
+      />
+
+      {loading ? <p className="pf-muted-copy">Loading claims…</p> : null}
       {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
 
       {!loading && claims.length > 0 ? (
-        <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
-          {claimSummary.need > 0 ? (
-            <span style={{ color: "#fcd34d", fontWeight: 600 }}>{claimSummary.need} need confirmation</span>
-          ) : (
-            <span>No confirmations pending</span>
-          )}
-          <span style={{ color: "var(--muted)" }}> · </span>
-          <span>{claimSummary.done} confirmed</span>
-          <span style={{ color: "var(--muted)" }}> · </span>
-          <span>{claims.length} total</span>
-        </p>
+        <div className="pf-filter-rail" style={{ marginTop: 4, marginBottom: 16 }}>
+          <OperatorMetricStrip items={metricItems} compact />
+        </div>
       ) : null}
 
       {!loading && claims.length === 0 ? (
-        <div style={{ marginTop: 24 }}>
-          <ActionEmptyState
-            title="No claimed slots yet"
-            description="When a customer accepts an earlier opening, it will appear here so staff can confirm the booking."
-            ctaLabel="Go to open slots"
-            ctaHref="/open-slots"
+        <div style={{ marginTop: 8 }}>
+          <OperatorEmptyState
+            title="No claims waiting"
+            description="When customers claim openings, they'll appear here for confirmation."
+            primaryAction={
+              <Link href="/open-slots" style={actionLinkStyle("primary")}>
+                View openings
+              </Link>
+            }
           />
         </div>
       ) : null}
 
-      <div style={{ marginTop: 24, display: "grid", gap: 16 }}>
+      <div style={{ marginTop: 8, display: "grid", gap: 14 }}>
         {claims.map((c) => (
           <ClaimWinnerCard key={c.open_slot_id} claim={c} />
         ))}

@@ -1,9 +1,14 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import type { FormEvent } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInStaff } from "@/lib/auth";
 import { setStaffAccessToken } from "@/lib/api";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
+import { AuthCard } from "@/components/auth/auth-card";
+import { AuthField } from "@/components/auth/auth-field";
 
 export function LoginForm() {
   const router = useRouter();
@@ -34,147 +39,148 @@ export function LoginForm() {
   }
 
   return (
-    <main style={{ padding: 40, maxWidth: 480, margin: "0 auto" }}>
-      <h1 style={{ marginTop: 0 }}>Staff sign in</h1>
-      <p style={{ color: "var(--muted)", marginBottom: 24 }}>
-        Sign in with the same Supabase account your API accepts as staff (bearer JWT).
-      </p>
-
-      <p style={{ marginBottom: 16 }}>
-        <button
-          type="button"
-          onClick={() => {
-            setLegacyMode(!legacyMode);
-            setError(null);
-            setTokenSaved(false);
-          }}
-          style={{
-            background: "none",
-            border: "none",
-            color: "var(--primary)",
-            cursor: "pointer",
-            textDecoration: "underline",
-            fontSize: 13,
-            padding: 0,
-          }}
-        >
-          {legacyMode ? "Use email & password" : "Internal: paste JWT instead"}
-        </button>
-      </p>
-
-      {legacyMode ? (
-        <div style={{ display: "grid", gap: 12, marginBottom: 24 }}>
-          {tokenSaved ? (
-            <p style={{ margin: 0, fontSize: 13, color: "rgba(167, 243, 208, 0.95)" }}>
-              Token saved for this browser. Use email and password to open the dashboard.
-            </p>
-          ) : null}
-          <textarea
-            value={legacyToken}
-            onChange={(e) => setLegacyToken(e.target.value)}
-            placeholder="Bearer JWT…"
-            rows={4}
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.15)",
-              background: "var(--surface)",
-              color: "var(--text)",
-              fontFamily: "ui-monospace, monospace",
-              fontSize: 12,
-            }}
-          />
+    <AuthShell
+      variant="split"
+      brandPanel={
+        <AuthBrandPanel
+          eyebrow="Staff & developer access"
+          title="Sign in for API tooling."
+          body="Use the same Supabase account your API accepts as staff. Optional: paste a JWT for local client-side API calls."
+          bullets={["Supabase session to open the app", "Bearer JWT optional for dev"]}
+          recoveryActiveStep="confirmed"
+          showRecoveryPipeline
+        />
+      }
+    >
+      <AuthCard
+        overtitle="Staff"
+        title="Staff sign in"
+        description="Sign in with the same Supabase account your API accepts as staff (bearer JWT)."
+        footer={
+          <p style={{ margin: 0, fontSize: 12, color: "rgba(111,104,97,0.95)", lineHeight: 1.5 }}>
+            Prefer the operator sign-in experience? <a href="/sign-in">Open /sign-in</a>. Configure{" "}
+            <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in <code>.env.local</code>. Pasted
+            JWTs are for local API tooling only; the dashboard requires a Supabase session.
+          </p>
+        }
+      >
+        <p style={{ margin: "0 0 8px" }}>
           <button
             type="button"
             onClick={() => {
-              setStaffAccessToken(legacyToken.trim() || null);
+              setLegacyMode(!legacyMode);
               setError(null);
-              setTokenSaved(true);
+              setTokenSaved(false);
             }}
             style={{
-              padding: "12px 16px",
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.2)",
-              background: "rgba(255,255,255,0.06)",
-              color: "var(--text)",
+              background: "none",
+              border: "none",
+              color: "var(--primary)",
               cursor: "pointer",
+              textDecoration: "underline",
+              fontSize: 13,
+              padding: 0,
             }}
           >
-            Save token for API requests
+            {legacyMode ? "Use email & password" : "Internal: paste JWT instead"}
           </button>
-        </div>
-      ) : null}
+        </p>
 
-      <form onSubmit={(e) => void onSubmit(e)} style={{ display: "grid", gap: 16 }}>
-        <label style={{ display: "grid", gap: 8 }}>
-          <span style={{ fontSize: 13, color: "var(--muted)" }}>Email</span>
-          <input
+        {legacyMode ? (
+          <div style={{ display: "grid", gap: 12, marginBottom: 8 }}>
+            {tokenSaved ? (
+              <p style={{ margin: 0, fontSize: 13, color: "rgba(254, 215, 170, 0.92)" }}>
+                Token saved for this browser. Use email and password to open the dashboard.
+              </p>
+            ) : null}
+            <textarea
+              value={legacyToken}
+              onChange={(e) => setLegacyToken(e.target.value)}
+              placeholder="Bearer JWT…"
+              rows={4}
+              style={{
+                padding: 12,
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.2)), #12110f",
+                color: "var(--text)",
+                fontFamily: "ui-monospace, monospace",
+                fontSize: 12,
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setStaffAccessToken(legacyToken.trim() || null);
+                setError(null);
+                setTokenSaved(true);
+              }}
+              style={{
+                padding: "12px 16px",
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.04)",
+                color: "var(--text)",
+                cursor: "pointer",
+              }}
+            >
+              Save token for API requests
+            </button>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>
+              Token is stored in this browser for client-side API calls. To open the app shell, use email and password above (same
+              Supabase account), then go to <a href="/overview">/overview</a>.
+            </p>
+          </div>
+        ) : null}
+
+        <form onSubmit={(e) => void onSubmit(e)} style={{ display: "grid", gap: 16 }}>
+          <AuthField
+            label="Email"
+            name="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            style={{
-              padding: "12px 14px",
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.15)",
-              background: "var(--surface)",
-              color: "var(--text)",
-            }}
           />
-        </label>
-        <label style={{ display: "grid", gap: 8 }}>
-          <span style={{ fontSize: 13, color: "var(--muted)" }}>Password</span>
-          <input
+          <AuthField
+            label="Password"
+            name="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
-            style={{
-              padding: "12px 14px",
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.15)",
-              background: "var(--surface)",
-              color: "var(--text)",
-            }}
           />
-        </label>
 
-        {error ? (
-          <p style={{ margin: 0, fontSize: 14, color: "#f87171" }}>{error}</p>
-        ) : null}
+          {error ? <p style={{ margin: 0, fontSize: 14, color: "#f87171" }}>{error}</p> : null}
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: "14px 20px",
-            borderRadius: 14,
-            border: "none",
-            background: "var(--primary)",
-            color: "var(--pf-text-inverse)",
-            fontWeight: 600,
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1,
-          }}
-        >
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
-
-      {!legacyMode ? (
-        <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>
-          Prefer the operator sign-in experience? <a href="/sign-in">Open /sign-in</a>. Configure{" "}
-          <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in <code>.env.local</code>. Pasted
-          JWTs are for local API tooling only; the dashboard requires a Supabase session.
-        </p>
-      ) : (
-        <p style={{ marginTop: 16, fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>
-          Token is stored in this browser for client-side API calls. To open the app shell, use email and password above (same
-          Supabase account), then go to <a href="/overview">/overview</a>.
-        </p>
-      )}
-    </main>
+          <button
+            type="submit"
+            disabled={loading || legacyMode}
+            style={{
+              display: "inline-flex",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 16,
+              border: "none",
+              padding: "16px 20px",
+              minHeight: 52,
+              fontSize: 14,
+              fontWeight: 650,
+              color: "var(--pf-btn-primary-text)",
+              background: "var(--pf-btn-primary-bg)",
+              boxShadow: "var(--pf-btn-primary-shadow)",
+              cursor: loading || legacyMode ? "not-allowed" : "pointer",
+              opacity: loading || legacyMode ? 0.65 : 1,
+            }}
+          >
+            {loading ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+      </AuthCard>
+    </AuthShell>
   );
 }

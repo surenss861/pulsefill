@@ -10,7 +10,7 @@ export function OutcomesPageClient() {
 
   if (error) {
     return (
-      <main style={{ padding: 0, maxWidth: 1080 }}>
+      <main className="pf-page-outcomes" style={{ padding: 0 }}>
         <PageState
           variant="error"
           title="Could not load outcomes"
@@ -28,7 +28,7 @@ export function OutcomesPageClient() {
 
   if (loading || !data) {
     return (
-      <main style={{ padding: 0, maxWidth: 1080 }}>
+      <main className="pf-page-outcomes" style={{ padding: 0 }}>
         <PageState variant="info" title="Loading outcomes" description="Pulling recovery proof from your workspace." />
       </main>
     );

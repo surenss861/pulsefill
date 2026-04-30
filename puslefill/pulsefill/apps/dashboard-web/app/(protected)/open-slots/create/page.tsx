@@ -5,22 +5,27 @@ import { useState } from "react";
 import type { OpenSlotCreatedSummary } from "@/components/slots/open-slot-created-summary";
 import { OpenSlotCreatedPanel } from "@/components/slots/open-slot-created-panel";
 import { OpenSlotForm } from "@/components/slots/open-slot-form";
+import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 
 export default function CreateOpenSlotPage() {
   const [created, setCreated] = useState<OpenSlotCreatedSummary | null>(null);
 
   return (
-    <main style={{ padding: 24, maxWidth: 1100 }}>
-      <p style={{ marginTop: 0 }}>
-        <Link href="/open-slots" style={{ fontSize: 14, color: "var(--primary)" }}>
-          ← Openings
-        </Link>
-      </p>
-
-      <h1 style={{ margin: "16px 0 0", fontSize: 28, fontWeight: 650 }}>Create opening</h1>
-      <p style={{ color: "var(--muted)", marginTop: 8, lineHeight: 1.5, maxWidth: 560 }}>
-        Post a cancelled appointment time and send it to matching standby customers.
-      </p>
+    <main className="pf-page-open-slot-create" style={{ padding: "clamp(16px, 3vw, 24px) 0 32px" }}>
+      <PageCommandHeader
+        animate={false}
+        tone="default"
+        eyebrow="Opening intake"
+        title="Create opening"
+        description="Capture a cancelled appointment time so PulseFill can match standby customers."
+        secondaryAction={
+          <Link href="/open-slots" style={actionLinkStyle("secondary")}>
+            ← Openings
+          </Link>
+        }
+        style={{ marginBottom: 20 }}
+      />
 
       {created ? (
         <OpenSlotCreatedPanel summary={created} onCreateAnother={() => setCreated(null)} />

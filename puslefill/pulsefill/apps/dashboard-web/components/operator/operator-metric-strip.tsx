@@ -5,6 +5,9 @@ export type OperatorMetricStripItem = {
   label: string;
   value: number | string;
   emphasis?: MetricCardEmphasis;
+  /** Muted when zero / idle unless overridden. */
+  signal?: "idle" | "live";
+  hint?: string;
 };
 
 type OperatorMetricStripProps = {
@@ -14,6 +17,12 @@ type OperatorMetricStripProps = {
   style?: CSSProperties;
 };
 
+function defaultSignal(item: OperatorMetricStripItem): "idle" | "live" {
+  if (item.signal) return item.signal;
+  if (typeof item.value === "number") return item.value === 0 ? "idle" : "live";
+  return "live";
+}
+
 export function OperatorMetricStrip({ items, compact = false, style }: OperatorMetricStripProps) {
   return (
     <div
@@ -21,20 +30,26 @@ export function OperatorMetricStrip({ items, compact = false, style }: OperatorM
         display: "flex",
         flexWrap: "wrap",
         gap: compact ? 8 : 10,
-        opacity: compact ? 0.82 : 1,
+        alignItems: "stretch",
         ...style,
       }}
     >
-      {items.map((item) => (
-        <MetricCard
-          key={item.label}
-          label={item.label}
-          value={item.value}
-          emphasis={item.emphasis ?? "default"}
-          size={compact ? "compact" : "default"}
-          style={{ flex: "1 1 100px", minWidth: compact ? 88 : 100 }}
-        />
-      ))}
+      {items.map((item) => {
+        const sig = defaultSignal(item);
+        const emphasis = sig === "live" ? (item.emphasis ?? "default") : "default";
+        return (
+          <MetricCard
+            key={item.label}
+            label={item.label}
+            value={item.value}
+            emphasis={emphasis}
+            signal={sig}
+            hint={item.hint}
+            size={compact ? "compact" : "default"}
+            style={{ flex: "1 1 100px", minWidth: compact ? 88 : 100 }}
+          />
+        );
+      })}
     </div>
   );
 }
