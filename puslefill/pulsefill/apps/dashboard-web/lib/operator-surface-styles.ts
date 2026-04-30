@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 /** Shared operator UI shells — hierarchy without one generic card style everywhere. */
-export type OperatorSurfaceVariant = "hero" | "operational" | "quiet" | "metric" | "emptyState";
+export type OperatorSurfaceVariant = "hero" | "command" | "operational" | "quiet" | "metric" | "emptyState";
 
 export function operatorSurfaceShell(variant: OperatorSurfaceVariant): CSSProperties {
   const xl = "var(--pf-radius-xl)";
@@ -9,6 +9,7 @@ export function operatorSurfaceShell(variant: OperatorSurfaceVariant): CSSProper
 
   switch (variant) {
     case "hero":
+    case "command":
       return {
         borderRadius: xl,
         border: "1px solid var(--pf-accent-primary-border)",

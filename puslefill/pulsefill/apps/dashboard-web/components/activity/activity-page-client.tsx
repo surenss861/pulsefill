@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { FadeUp } from "@/components/motion/operator-motion";
 import { ActivityEmptySection } from "@/components/activity/activity-empty-section";
 import { ActivityHero } from "@/components/activity/activity-hero";
 import { ActivitySummaryStrip } from "@/components/activity/activity-summary-strip";
@@ -118,8 +119,12 @@ export function ActivityPageClient() {
   return (
     <main style={{ padding: 0, maxWidth: 1080 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <ActivityHero actions={heroActions} />
-        <ActivitySummaryStrip summary={summary} />
+        <FadeUp>
+          <ActivityHero actions={heroActions} />
+        </FadeUp>
+        <FadeUp delay={0.05}>
+          <ActivitySummaryStrip summary={summary} />
+        </FadeUp>
 
         <div className="pf-filter-rail">
           {operatorActivityFilterOptions.map((opt) => {

@@ -35,12 +35,11 @@ export function AppSidebar({ profile }: AppSidebarProps) {
 
   return (
     <aside
-      className="pf-app-sidebar"
+      className="pf-app-sidebar pf-dock-rail"
       style={{
         width: 280,
         flexShrink: 0,
         borderRight: "1px solid var(--pf-border-subtle)",
-        background: "linear-gradient(180deg, #08090c 0%, #060607 100%)",
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
@@ -80,9 +79,9 @@ export function AppSidebar({ profile }: AppSidebarProps) {
                 style={{
                   ...badgeBase,
                   flexShrink: 0,
-                  background: "rgba(14, 165, 233, 0.1)",
-                  borderColor: "rgba(56, 189, 248, 0.22)",
-                  color: "#7dd3fc",
+                  background: "rgba(255, 122, 24, 0.1)",
+                  borderColor: "rgba(255, 122, 24, 0.26)",
+                  color: "#fdba74",
                 }}
               >
                 {counts.open}

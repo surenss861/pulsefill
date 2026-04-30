@@ -22,6 +22,7 @@ import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscr
 import { useOperatorSlotsList } from "@/hooks/useOperatorSlotsList";
 import { runOperatorBulkAction } from "@/lib/operator-bulk-actions";
 import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
+import { WorkflowSteps } from "@/components/motion/operator-motion";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
@@ -262,22 +263,13 @@ export default function OpenSlotsPageClient() {
               >
                 How matching works
               </p>
-              <ol
-                style={{
-                  margin: "10px 0 0",
-                  paddingLeft: 18,
-                  color: "var(--muted)",
-                  fontSize: 13,
-                  lineHeight: 1.55,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                <li>Create an opening when a cancellation appears.</li>
-                <li>PulseFill sends it to customers with active standby preferences.</li>
-                <li>If nobody matches yet, invite standby customers first.</li>
-              </ol>
+              <WorkflowSteps
+                steps={[
+                  "Create an opening when a cancellation appears.",
+                  "PulseFill sends it to customers with active standby preferences.",
+                  "If nobody matches yet, invite standby customers first.",
+                ]}
+              />
               <Link href="/customers" style={{ display: "inline-block", marginTop: 12, color: "var(--primary)", fontWeight: 600 }}>
                 Invite standby customers
               </Link>

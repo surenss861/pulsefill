@@ -34,6 +34,7 @@ import { useSetupOverviewData } from "@/hooks/useSetupOverviewData";
 import { OperatorMorningRecoveryDigestPanel } from "@/components/workflow/operator-morning-recovery-digest-panel";
 import { CommandCenterRecentActivity } from "@/components/overview/command-center-recent-activity";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
+import { FadeUp } from "@/components/motion/operator-motion";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
@@ -173,13 +174,17 @@ export function OverviewPageContent({
 
   return (
     <main style={{ padding: 0 }}>
-      <OverviewOperatorHero
-        urgentOpeningsCount={urgentOpeningsCount}
-        awaitingConfirmationCount={awaitingConfirmationCount}
-        secondaryHref={secondaryAction.href}
-        secondaryLabel={secondaryAction.label}
-      />
+      <FadeUp>
+        <OverviewOperatorHero
+          urgentOpeningsCount={urgentOpeningsCount}
+          awaitingConfirmationCount={awaitingConfirmationCount}
+          secondaryHref={secondaryAction.href}
+          secondaryLabel={secondaryAction.label}
+        />
+      </FadeUp>
 
+      <FadeUp delay={0.06}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
       {!standbyRequests.loading && standbyRequests.count > 0 ? (
         <div
           style={{
@@ -399,6 +404,8 @@ export function OverviewPageContent({
           </p>
         </div>
       ) : null}
+        </div>
+      </FadeUp>
     </main>
   );
 }

@@ -32,15 +32,8 @@ export function AppShell({ children, user, profile }: AppShellProps) {
             <MobileQuick href="/activity" label="Activity" />
             <MobileQuick href="/settings" label="Settings" />
           </div>
-          <div style={{ flex: 1, overflow: "auto" }}>
-            <div
-              style={{
-                maxWidth: 1180,
-                margin: "0 auto",
-                padding: "clamp(14px, 2vw, 20px) clamp(16px, 2.5vw, 28px) 48px",
-                animation: "pf-page-enter 180ms ease-out",
-              }}
-            >
+          <div className="pf-workspace-field">
+            <div className="pf-workspace-inner" style={{ animation: "pf-page-enter 180ms ease-out" }}>
               {children}
             </div>
           </div>

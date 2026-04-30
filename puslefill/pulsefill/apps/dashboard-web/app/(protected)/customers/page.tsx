@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { actionLinkStyle } from "@/components/ui/action-button";
 import { PageIntroCard } from "@/components/ui/page-intro-card";
+import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { apiFetch } from "@/lib/api";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
@@ -46,6 +48,8 @@ export default function CustomersPage() {
   const [listError, setListError] = useState<string | null>(null);
   const [lastCreated, setLastCreated] = useState<CreateInviteResponse | null>(null);
   const [copyState, setCopyState] = useState<string | null>(null);
+  const standbyPending = usePendingStandbyRequests(60_000);
+  const reduceMotion = useReducedMotion();
   const pendingInvites = invites.filter((i) => i.status === "pending").length;
   const acceptedInvites = invites.filter((i) => i.status === "accepted").length;
   const matchCoverage =
@@ -107,9 +111,27 @@ export default function CustomersPage() {
           title="Customers & standby"
           description="Invite customers to join standby so PulseFill can match them to new openings."
           actions={
-            <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
-              Standby requests
-            </Link>
+            standbyPending.count > 0 ? (
+              reduceMotion ? (
+                <Link href="/customers/standby-requests" style={actionLinkStyle("primary")}>
+                  Standby requests
+                </Link>
+              ) : (
+                <motion.span
+                  animate={{ opacity: [1, 0.88, 1] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ display: "inline-block" }}
+                >
+                  <Link href="/customers/standby-requests" style={actionLinkStyle("primary")}>
+                    Standby requests
+                  </Link>
+                </motion.span>
+              )
+            ) : (
+              <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
+                Standby requests
+              </Link>
+            )
           }
         />
 
