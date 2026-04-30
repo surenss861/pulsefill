@@ -29,10 +29,10 @@ enum PulseFillBuildConfiguration {
     private enum Defaults {
         /// Replace with your Railway **staging** API public URL (no trailing slash).
         static let stagingAPI = "https://YOUR_STAGING_API.up.railway.app"
-        /// Replace with your production API host when ready.
-        static let productionAPI = "https://api.pulsefill.app"
-        /// Project ref `tlowrfeburobfgpaeinsm` → default Supabase API URL.
-        static let supabaseProject = "https://tlowrfeburobfgpaeinsm.supabase.co"
+        /// Production Fastify API on Railway (no trailing slash). Not the dashboard / marketing host.
+        static let productionAPI = "https://pulsefill-production.up.railway.app"
+        /// Default Supabase API URL (project ref). Override with `PULSEFILL_SUPABASE_URL` in scheme if needed.
+        static let supabaseProject = "https://tlowrfeburobfgpaeins.supabase.co"
         /// Replace with your **publishable** key from Supabase Dashboard → Project Settings → API (legacy “anon” JWT or `sb_publishable_…`).
         /// Do **not** paste `sb_secret__…` here — that key is for servers only.
         static let supabaseAnonPlaceholder = "YOUR_PUBLISHABLE_OR_ANON_KEY"
@@ -43,7 +43,8 @@ enum PulseFillBuildConfiguration {
         return (v?.isEmpty == false) ? v : nil
     }
 
-    /// Active tier: explicit `PULSEFILL_TIER`, else Debug → local, Release → production.
+    /// Active tier: explicit `PULSEFILL_TIER`, else Debug → **simulator** uses local API, **device** uses production (Railway).
+    /// Release builds always use production unless `PULSEFILL_TIER` / `PULSEFILL_API_BASE_URL` overrides.
     static var deploymentTier: PulseFillDeploymentTier {
         if let raw = env("PULSEFILL_TIER")?.lowercased(),
            let tier = PulseFillDeploymentTier(rawValue: raw)
@@ -51,7 +52,12 @@ enum PulseFillBuildConfiguration {
             return tier
         }
         #if DEBUG
+        #if targetEnvironment(simulator)
         return .local
+        #else
+        // Physical iPhone: `127.0.0.1` is the phone itself — use deployed API unless scheme sets `PULSEFILL_TIER=local`.
+        return .production
+        #endif
         #else
         return .production
         #endif
