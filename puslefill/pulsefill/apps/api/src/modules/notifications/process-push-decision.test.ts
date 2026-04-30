@@ -72,7 +72,7 @@ function fakeSupabase(input?: {
                 if (input?.insertErrorCode) {
                   return { data: null, error: { code: input.insertErrorCode, message: "insert failed" } };
                 }
-                return { data: { id: "attempt_1", dedupe_key: "customer_offer_sent:offer_1" }, error: null };
+                return { data: { id: "attempt_1", dedupe_key: "offer_received:offer_1" }, error: null };
               },
             }),
           };
@@ -106,7 +106,7 @@ test("processPushDecision handles send success end-to-end", async () => {
   const provider = {
     async send(args: { dedupe_key: string }) {
       providerCalls += 1;
-      assert.equal(args.dedupe_key, "customer_offer_sent:offer_1");
+      assert.equal(args.dedupe_key, "offer_received:offer_1");
       return {
         ok: true as const,
         provider: "test" as const,

@@ -89,7 +89,7 @@ test("queueCustomerOfferSentNotification eligible flow inserts queued and update
     async send(args: { payload: { deep_link: string }; dedupe_key: string }) {
       providerCalls += 1;
       assert.equal(args.payload.deep_link, "/customer/offers/offer_1");
-      assert.equal(args.dedupe_key, "customer_offer_sent:offer_1");
+      assert.equal(args.dedupe_key, "offer_received:offer_1");
       return {
         ok: true as const,
         provider: "test" as const,
@@ -113,7 +113,7 @@ test("queueCustomerOfferSentNotification eligible flow inserts queued and update
   assert.equal(providerCalls, 1);
   assert.equal(state.insertedRow?.decision, "send");
   assert.equal(state.insertedRow?.status, "queued");
-  assert.equal(state.insertedRow?.dedupe_key, "customer_offer_sent:offer_1");
+  assert.equal(state.insertedRow?.dedupe_key, "offer_received:offer_1");
   const payload = state.insertedRow?.payload as { deep_link: string };
   assert.equal(payload.deep_link, "/customer/offers/offer_1");
 });
@@ -149,7 +149,7 @@ test("queueCustomerOfferSentNotification suppressed flow records suppressed and 
   assert.equal(state.insertedRow?.decision, "suppress");
   assert.equal(state.insertedRow?.status, "suppressed");
   assert.equal(state.insertedRow?.suppression_reason, "push_permission_denied");
-  assert.equal(state.insertedRow?.dedupe_key, "customer_offer_sent:offer_1");
+  assert.equal(state.insertedRow?.dedupe_key, "offer_received:offer_1");
 });
 
 test("queueCustomerOfferSentNotification duplicate skips provider and update", async () => {
@@ -218,7 +218,7 @@ test("queueCustomerBookingConfirmedNotification uses claim deep link and dedupe"
   });
 
   assert.equal(out.status, "sent");
-  assert.equal(state.insertedRow?.dedupe_key, "customer_booking_confirmed:claim_1");
+  assert.equal(state.insertedRow?.dedupe_key, "booking_confirmed:claim_1");
   const payload = state.insertedRow?.payload as { deep_link: string };
   assert.equal(payload.deep_link, "/customer/claims/claim_1");
 });

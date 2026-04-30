@@ -16,8 +16,8 @@ const inputStyle: CSSProperties = {
 };
 
 const formBox: CSSProperties = {
-  marginTop: 24,
-  maxWidth: 420,
+  width: "100%",
+  boxSizing: "border-box",
   display: "flex",
   flexDirection: "column",
   gap: 12,
@@ -87,7 +87,14 @@ export default function ServicesPage() {
         Define appointment types so opening times and standby matches stay accurate.
       </p>
 
-      <div style={{ marginTop: 24, display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
+      <div
+        style={{
+          marginTop: 24,
+          display: "grid",
+          gap: 14,
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+        }}
+      >
         <form onSubmit={onSubmit} style={formBox}>
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Add service</h2>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
@@ -157,7 +164,7 @@ export default function ServicesPage() {
           style={{
             marginTop: 24,
             borderRadius: 12,
-            overflow: "hidden",
+            overflowX: "auto",
             border: "1px solid rgba(255,255,255,0.1)",
             background: "rgba(0,0,0,0.2)",
           }}

@@ -64,7 +64,7 @@ test("recordNotificationAttempt inserts queued send attempt", async () => {
   let captured: Record<string, unknown> | null = null;
   const out = await recordNotificationAttempt({
     supabase: fakeSupabase({
-      data: { id: "attempt_1", dedupe_key: "customer_offer_sent:offer_1" },
+      data: { id: "attempt_1", dedupe_key: "offer_received:offer_1" },
       error: null,
       capture: (row) => {
         captured = row as Record<string, unknown>;
@@ -76,7 +76,7 @@ test("recordNotificationAttempt inserts queued send attempt", async () => {
   assert.deepEqual(out, {
     recorded: true,
     attempt_id: "attempt_1",
-    dedupe_key: "customer_offer_sent:offer_1",
+    dedupe_key: "offer_received:offer_1",
   });
   assert.ok(captured);
   assert.equal(captured["decision"], "send");
@@ -118,7 +118,7 @@ test("recordNotificationAttempt inserts suppressed attempt", async () => {
   let captured: Record<string, unknown> | null = null;
   const out = await recordNotificationAttempt({
     supabase: fakeSupabase({
-      data: { id: "attempt_2", dedupe_key: "customer_offer_sent:offer_1" },
+      data: { id: "attempt_2", dedupe_key: "offer_received:offer_1" },
       error: null,
       capture: (row) => {
         captured = row as Record<string, unknown>;
@@ -161,7 +161,7 @@ test("recordNotificationAttempt returns duplicate skip on dedupe conflict", asyn
   assert.deepEqual(out, {
     recorded: false,
     skipped_reason: "duplicate",
-    dedupe_key: "customer_offer_sent:offer_1",
+    dedupe_key: "offer_received:offer_1",
   });
 });
 

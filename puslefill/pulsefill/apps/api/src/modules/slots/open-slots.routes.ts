@@ -1,26 +1,12 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
-import { sendActionError, sendConfirmSuccess, sendSendOffersSuccess } from "../../lib/action-replies.js";
-import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
-import { computeStandbyMatchesForOpenSlot } from "../../lib/open-slot-send-offers-match.js";
-import {
-  noMatchesReasonFromSummary,
-  type OpenSlotRow,
-  type StandbyMatchPack,
-  type StandbyPreferenceRow,
-} from "../../lib/standby-matcher.js";
-import {
-  handleCustomerBookingConfirmedNotificationEvent,
-  handleCustomerOfferSentNotificationEvent,
-} from "../notifications/notification-events.js";
-import { createPushProviderFromEnv } from "../notifications/provider-factory.js";
+import { sendActionError, sendConfirmSuccess } from "../../lib/action-replies.js";
 import { requireCustomer, requireStaff } from "../../plugins/guards.js";
 import { executeBulkOpenSlotAction } from "./bulk-actions.js";
 import {
   buildOperatorActionRejectionDetails,
   checkOperatorActionAllowed,
-  checkSendOrRetryOffersAllowed,
 } from "./assert-operator-action-allowed.js";
 import { canPerformAction } from "./operator-slot-rules.js";
 import {
@@ -36,13 +22,16 @@ import {
   getCancelOpenSlotMutationTestDelegate,
   getConfirmOpenSlotMutationTestDelegate,
   getExpireOpenSlotMutationTestDelegate,
-  getSendOffersMutationTestDelegate,
 } from "./open-slots-route-test-seams.js";
+import { notifyCustomerBookingConfirmed } from "./notification-hooks.js";
+import { sendOpenSlotOffersRouteHandler } from "./send-offers-route.js";
 import {
   loadStaffActorLabels,
   mergeMetadata,
   touchOpenSlotByStaff,
 } from "./staff-attribution.js";
+
+export { setNotificationEventHookTestDelegate } from "./notification-hooks.js";
 
 const createSlotBody = z
   .object({
@@ -54,13 +43,6 @@ const createSlotBody = z
     ends_at: z.string().datetime(),
     estimated_value_cents: z.number().int().min(0).nullable().optional(),
     notes: z.string().max(2000).nullable().optional(),
-  })
-  .strict();
-
-const sendOffersBody = z
-  .object({
-    offer_ttl_seconds: z.number().int().min(60).max(7200).default(300),
-    channel: z.enum(["push", "sms", "email"]).default("push"),
   })
   .strict();
 
@@ -139,71 +121,6 @@ export function setOpenSlotDetailTestDelegate(
     | null,
 ) {
   openSlotDetailTestDelegate = delegate;
-}
-
-type NotificationEventHookDelegate = {
-  onCustomerOfferSent?: (input: {
-    businessId: string;
-    offerId: string;
-    customerId: string;
-  }) => Promise<void>;
-  onCustomerBookingConfirmed?: (input: {
-    businessId: string;
-    claimId: string;
-  }) => Promise<void>;
-};
-
-let notificationEventHookDelegate: NotificationEventHookDelegate | null = null;
-
-export function setNotificationEventHookTestDelegate(delegate: NotificationEventHookDelegate | null) {
-  notificationEventHookDelegate = delegate;
-}
-
-async function notifyCustomerOfferSent(params: {
-  env: FastifyInstance["env"];
-  supabase: ReturnType<typeof createServiceSupabase>;
-  businessId: string;
-  offerId: string;
-  customerId: string;
-}) {
-  if (notificationEventHookDelegate?.onCustomerOfferSent) {
-    await notificationEventHookDelegate.onCustomerOfferSent({
-      businessId: params.businessId,
-      offerId: params.offerId,
-      customerId: params.customerId,
-    });
-    return;
-  }
-  await handleCustomerOfferSentNotificationEvent({
-    supabase: params.supabase as any,
-    provider: createPushProviderFromEnv(params.env),
-    nowIso: new Date().toISOString(),
-    businessId: params.businessId,
-    offerId: params.offerId,
-    customerId: params.customerId,
-  });
-}
-
-async function notifyCustomerBookingConfirmed(params: {
-  env: FastifyInstance["env"];
-  supabase: ReturnType<typeof createServiceSupabase>;
-  businessId: string;
-  claimId: string;
-}) {
-  if (notificationEventHookDelegate?.onCustomerBookingConfirmed) {
-    await notificationEventHookDelegate.onCustomerBookingConfirmed({
-      businessId: params.businessId,
-      claimId: params.claimId,
-    });
-    return;
-  }
-  await handleCustomerBookingConfirmedNotificationEvent({
-    supabase: params.supabase as any,
-    provider: createPushProviderFromEnv(params.env),
-    nowIso: new Date().toISOString(),
-    businessId: params.businessId,
-    claimId: params.claimId,
-  });
 }
 
 async function loadOpenSlotDetailRoutePayload(
@@ -483,228 +400,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
   app.post(
     "/v1/open-slots/:id/send-offers",
     { preHandler: requireStaff },
-    async (req, reply) => {
-      const admin = createServiceSupabase(req.server.env);
-      const id = z.string().uuid().parse((req.params as { id?: string }).id);
-      const opts = sendOffersBody.parse(req.body ?? {});
-
-      const sendGuard = await checkSendOrRetryOffersAllowed(admin, {
-        openSlotId: id,
-        businessId: req.staff!.business_id,
-      });
-      if (!sendGuard.ok) {
-        if (sendGuard.status === 404) {
-          return sendActionError(reply, 404, "not_found", "This opening no longer exists.", false);
-        }
-        return sendActionError(
-          reply,
-          409,
-          "operator_action_not_allowed",
-          "Send or retry offers is not allowed for this slot in its current state.",
-          false,
-          sendGuard.details as Record<string, unknown>,
-        );
-      }
-
-      const slot = sendGuard.loaded.slot;
-      const status = String(slot.status ?? "");
-      const previousStatus = status;
-
-      const sendOffersTestMutation = getSendOffersMutationTestDelegate();
-      if (sendOffersTestMutation) {
-        const out = await sendOffersTestMutation({
-          openSlotId: id,
-          businessId: req.staff!.business_id,
-          staffId: req.staff!.id,
-          authUserId: req.authUser!.id,
-          previousStatus,
-        });
-        if (out.offer_customer_ids?.length) {
-          for (const pair of out.offer_customer_ids) {
-            try {
-              await notifyCustomerOfferSent({
-                env: req.server.env,
-                supabase: admin,
-                businessId: req.staff!.business_id,
-                offerId: pair.offer_id,
-                customerId: pair.customer_id,
-              });
-            } catch (e) {
-              req.log.warn({ e, pair }, "customer_offer_sent_notification_failed");
-            }
-          }
-        }
-        return sendSendOffersSuccess(reply, {
-          ok: true,
-          open_slot_id: id,
-          offers_created: out.offer_ids?.length ?? out.matched ?? 0,
-          ...out,
-        });
-      }
-
-      const { data: business, error: bizErr } = await admin
-        .from("businesses")
-        .select("*")
-        .eq("id", slot.business_id)
-        .single();
-      if (bizErr || !business) return reply.status(500).send({ error: "business_load_failed" });
-
-      const slotRow = slot as OpenSlotRow;
-      let uniqueMatches: StandbyPreferenceRow[];
-      let matchPack: StandbyMatchPack;
-      try {
-        const computed = await computeStandbyMatchesForOpenSlot(admin, {
-          openSlotId: id,
-          slot: slotRow,
-          businessTimezone: String((business as { timezone: string }).timezone),
-        });
-        uniqueMatches = computed.uniqueMatches;
-        matchPack = computed.matchPack;
-      } catch (e) {
-        const code = e instanceof Error ? e.message : "";
-        if (code === "prefs_load_failed") return reply.status(500).send({ error: "prefs_load_failed" });
-        if (code === "memberships_load_failed") return reply.status(500).send({ error: "memberships_load_failed" });
-        if (code === "offers_load_failed") return reply.status(500).send({ error: "offers_load_failed" });
-        throw e;
-      }
-
-      if (uniqueMatches.length === 0) {
-        const noReason = noMatchesReasonFromSummary(matchPack.summary);
-        const operatorMessage =
-          noReason === "no_active_preferences"
-            ? "No active standby preferences found for this business yet. Invite customers or ask them to finish standby setup."
-            : "No matching standby customers yet. Try widening the opening details, checking service/location fit, or inviting more customers to standby.";
-
-        await admin.from("audit_events").insert({
-          business_id: req.staff!.business_id,
-          actor_type: "staff",
-          actor_id: req.staff!.id,
-          event_type: "offers_no_match",
-          entity_type: "open_slot",
-          entity_id: id,
-          metadata: mergeMetadata(
-            {
-              matched: 0,
-              no_matches_reason: noReason,
-              match_summary: matchPack.summary,
-              match_diagnostics: matchPack.diagnostics.slice(0, 60),
-            },
-            req.authUser!.id,
-          ),
-        });
-
-        await touchOpenSlotByStaff(admin, id, req.staff!.id);
-
-        return sendSendOffersSuccess(reply, {
-          ok: true,
-          result: "no_matches",
-          open_slot_id: id,
-          offers_created: 0,
-          matched: 0,
-          offer_ids: [],
-          message: operatorMessage,
-          no_matches_reason: noReason,
-          match_summary: matchPack.summary,
-        });
-      }
-
-      const expiresAt = new Date(Date.now() + opts.offer_ttl_seconds * 1000).toISOString();
-      const offerRows = uniqueMatches.map((m) => ({
-        open_slot_id: id,
-        customer_id: m.customer_id,
-        channel: opts.channel,
-        expires_at: expiresAt,
-        status: "sent" as const,
-      }));
-
-      const { data: inserted, error: insErr } = await admin
-        .from("slot_offers")
-        .upsert(offerRows, { onConflict: "open_slot_id,customer_id" })
-        .select("id, customer_id, channel");
-
-      if (insErr) {
-        req.log.error({ insErr }, "offer upsert failed");
-        return reply.status(500).send({ error: "offer_create_failed" });
-      }
-
-      const { error: slotUpdErr } = await admin
-        .from("open_slots")
-        .update({ status: "offered", last_offer_batch_at: new Date().toISOString() })
-        .eq("id", id);
-      if (slotUpdErr) return reply.status(500).send({ error: "slot_update_failed" });
-
-      const offerRowsForQueue = inserted ?? [];
-      const offerIds = offerRowsForQueue.map((o) => o.id);
-      const queuePayloads = offerRowsForQueue.map((o) => ({
-        offerId: o.id,
-        openSlotId: id,
-        customerId: o.customer_id,
-        channel: o.channel as "push" | "sms" | "email",
-      }));
-      const queued = await enqueueSendOfferNotificationJobs(req.server.env, queuePayloads);
-
-      for (const row of offerRowsForQueue) {
-        await admin.from("notification_logs").insert({
-          open_slot_id: id,
-          slot_offer_id: row.id,
-          customer_id: row.customer_id,
-          channel: row.channel,
-          status: queued.queued ? "queued" : "skipped_no_queue",
-          error: null,
-          metadata: {},
-        });
-      }
-
-      await admin.from("audit_events").insert({
-        business_id: req.staff!.business_id,
-        actor_type: "staff",
-        actor_id: req.staff!.id,
-        event_type: "offers_sent",
-        entity_type: "open_slot",
-        entity_id: id,
-        metadata: mergeMetadata(
-          { count: offerIds.length, queued: queued.queued, match_summary: matchPack.summary },
-          req.authUser!.id,
-        ),
-      });
-
-      await touchOpenSlotByStaff(admin, id, req.staff!.id);
-
-      for (const row of offerRowsForQueue) {
-        try {
-          await notifyCustomerOfferSent({
-            env: req.server.env,
-            supabase: admin,
-            businessId: req.staff!.business_id,
-            offerId: row.id,
-            customerId: row.customer_id,
-          });
-        } catch (e) {
-          req.log.warn({ e, offerId: row.id, customerId: row.customer_id }, "customer_offer_sent_notification_failed");
-        }
-      }
-
-      const count = offerIds.length;
-      const resultKind = previousStatus === "open" ? "offers_sent" : "offers_retried";
-      const message =
-        count === 0
-          ? "No new offers created (all customers may already have an offer for this slot)."
-          : resultKind === "offers_sent"
-            ? `Sent ${count} offer${count === 1 ? "" : "s"}.`
-            : `Retried ${count} offer${count === 1 ? "" : "s"}.`;
-
-      return sendSendOffersSuccess(reply, {
-        ok: true,
-        result: resultKind,
-        open_slot_id: id,
-        offers_created: count,
-        matched: count,
-        offer_ids: offerIds,
-        message,
-        match_summary: matchPack.summary,
-        notification_queue: { queued: queued.queued, count: queued.count },
-      });
-    },
+    sendOpenSlotOffersRouteHandler,
   );
 
   app.post(

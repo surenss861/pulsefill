@@ -236,13 +236,13 @@ async function main() {
   }
 
   if (wantAttempt) {
-    const dedupeKey = `customer_offer_sent:${offerId}`;
+    const dedupeKey = `offer_received:${offerId}`;
     const { error: attErr } = await admin.from("notification_delivery_attempts").insert({
       business_id: businessId,
       customer_id: customerId,
       open_slot_id: openSlotId,
       claim_id: claimId ?? null,
-      type: "customer_offer_sent",
+      type: "offer_received",
       channel: "push",
       decision: "send",
       status: "sent",

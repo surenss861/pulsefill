@@ -5,6 +5,14 @@ import errorHandler from "./plugins/error-handler.js";
 import authPlugin from "./plugins/auth.js";
 import { registerRoutes } from "./routes/index.js";
 
+function corsOriginForEnv(env: Env): boolean | string[] {
+  if (env.API_CORS_ORIGINS?.length) {
+    return env.API_CORS_ORIGINS;
+  }
+
+  return env.NODE_ENV === "production" ? false : true;
+}
+
 export async function buildApp(env: Env) {
   const app = Fastify({
     logger:
@@ -31,10 +39,9 @@ export async function buildApp(env: Env) {
   );
 
   await app.register(errorHandler);
-  await app.register(cors, { origin: true });
+  await app.register(cors, { origin: corsOriginForEnv(env) });
   await app.register(authPlugin, { env });
   await registerRoutes(app);
 
   return app;
 }
-

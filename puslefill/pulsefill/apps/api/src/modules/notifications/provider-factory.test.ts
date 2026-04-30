@@ -11,8 +11,11 @@ function baseEnv(overrides?: Partial<Env>): Env {
     SUPABASE_SERVICE_ROLE_KEY: "x",
     LOG_LEVEL: "silent",
     REDIS_URL: undefined,
+    API_CORS_ORIGINS: undefined,
     STRIPE_SECRET_KEY: undefined,
     STRIPE_WEBHOOK_SECRET: undefined,
+    ENABLE_BILLING_ROUTES: false,
+    ENABLE_STRIPE_WEBHOOK_ROUTES: false,
     PUSH_PROVIDER: "noop",
     APNS_TEAM_ID: undefined,
     APNS_KEY_ID: undefined,
@@ -27,7 +30,7 @@ test("createPushProviderFromEnv defaults to noop provider", async () => {
   const provider = createPushProviderFromEnv(baseEnv());
   const out = await provider.send({
     payload: {
-      type: "customer_standby_status_reminder",
+      type: "standby_status_reminder",
       title: "x",
       body: "x",
       deep_link: "/x",
@@ -46,7 +49,7 @@ test("createPushProviderFromEnv returns noop for explicit noop", async () => {
   const provider = createPushProviderFromEnv(baseEnv({ PUSH_PROVIDER: "noop" }));
   const out = await provider.send({
     payload: {
-      type: "customer_standby_status_reminder",
+      type: "standby_status_reminder",
       title: "x",
       body: "x",
       deep_link: "/x",
@@ -97,7 +100,7 @@ test("createPushProviderFromEnv returns apns provider when configured", async ()
 
   const out = await provider.send({
     payload: {
-      type: "customer_standby_status_reminder",
+      type: "standby_status_reminder",
       title: "x",
       body: "x",
       deep_link: "/x",
@@ -143,7 +146,7 @@ test("createPushProviderFromEnv falls back to noop for unknown provider value", 
   });
   const out = await provider.send({
     payload: {
-      type: "customer_standby_status_reminder",
+      type: "standby_status_reminder",
       title: "x",
       body: "x",
       deep_link: "/x",

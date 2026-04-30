@@ -55,7 +55,7 @@ export default function LocationsPage() {
           marginTop: 24,
           display: "grid",
           gap: 14,
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
         }}
       >
         <form
@@ -118,7 +118,7 @@ export default function LocationsPage() {
           style={{
             marginTop: 24,
             borderRadius: 12,
-            overflow: "hidden",
+            overflowX: "auto",
             border: "1px solid rgba(255,255,255,0.1)",
             background: "rgba(0,0,0,0.2)",
           }}

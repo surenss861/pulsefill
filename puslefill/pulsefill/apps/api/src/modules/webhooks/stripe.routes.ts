@@ -6,7 +6,10 @@ export async function registerStripeWebhookRoutes(app: FastifyInstance) {
       return reply.status(501).send({ error: "stripe_webhook_not_configured" });
     }
 
-    req.log.info({ hasBody: Boolean(req.body) }, "stripe webhook received (signature verification TODO)");
-    return reply.send({ received: true });
+    req.log.warn(
+      { hasSignature: Boolean(req.headers["stripe-signature"]) },
+      "stripe webhook disabled until signed raw-body verification is wired",
+    );
+    return reply.status(501).send({ error: "stripe_webhook_not_enabled" });
   });
 }

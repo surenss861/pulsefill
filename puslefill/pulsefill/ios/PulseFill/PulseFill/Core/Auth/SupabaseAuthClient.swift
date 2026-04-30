@@ -81,6 +81,46 @@ struct SupabaseAuthClient {
         return AuthSessionBundle(accessToken: accessToken, refreshToken: nil, userId: user.id, email: user.email)
     }
 
+    func refreshSession(refreshToken: String) async throws -> AuthSessionBundle {
+        guard var components = URLComponents(
+            url: URL(string: "auth/v1/token", relativeTo: supabaseURL)?.absoluteURL ?? supabaseURL,
+            resolvingAgainstBaseURL: false
+        ) else { throw APIError.invalidURL }
+        components.queryItems = [URLQueryItem(name: "grant_type", value: "refresh_token")]
+        guard let url = components.url else { throw APIError.invalidURL }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(anonKey, forHTTPHeaderField: "apikey")
+        let body = ["refresh_token": refreshToken]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.status(code: -1, body: nil) }
+        guard (200 ..< 300).contains(http.statusCode) else {
+            throw APIError.status(code: http.statusCode, body: String(data: data, encoding: .utf8))
+        }
+
+        struct TokenEnvelope: Decodable {
+            let accessToken: String
+            let refreshToken: String?
+            let user: UserEnvelope
+        }
+        struct UserEnvelope: Decodable {
+            let id: String
+            let email: String?
+        }
+
+        let decoded = try jsonDecoder.decode(TokenEnvelope.self, from: data)
+        return AuthSessionBundle(
+            accessToken: decoded.accessToken,
+            refreshToken: decoded.refreshToken,
+            userId: decoded.user.id,
+            email: decoded.user.email
+        )
+    }
+
     private func passwordGrant(email: String, password: String) async throws -> AuthSessionBundle {
         guard var components = URLComponents(
             url: URL(string: "auth/v1/token", relativeTo: supabaseURL)?.absoluteURL ?? supabaseURL,

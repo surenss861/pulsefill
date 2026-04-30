@@ -89,15 +89,23 @@ export function evaluatePushEligibility(input: PushEligibilityInput): PushEligib
 export function hasRequiredTarget(input: PushEligibilityInput): boolean {
   const target = input.requiredTarget ?? {};
   switch (input.type) {
+    case "offer_received":
+    case "offer_expiring_soon":
     case "customer_offer_sent":
     case "customer_offer_expiring_soon":
     case "operator_delivery_failure":
       return Boolean(target.openSlotId);
+    case "booking_confirmed":
     case "customer_booking_confirmed":
     case "operator_claim_needs_confirmation":
       return Boolean(target.openSlotId && target.claimId);
+    case "claim_unavailable":
+      return Boolean(target.claimId);
+    case "missed_opportunity":
     case "customer_lost_opportunity":
       return Boolean(target.customerId && target.openSlotId);
+    case "standby_setup_suggestion":
+    case "standby_status_reminder":
     case "customer_standby_setup_suggestion":
     case "customer_standby_status_reminder":
       return Boolean(target.customerId);

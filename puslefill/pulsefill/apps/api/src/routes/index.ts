@@ -29,6 +29,10 @@ export async function registerRoutes(app: FastifyInstance) {
   await registerStaffCustomerStandbyRequestsRoutes(app);
   await registerOpenSlotRoutes(app);
   await registerMaintenanceRoutes(app);
-  await registerBillingRoutes(app);
-  await registerStripeWebhookRoutes(app);
+  if (app.env.ENABLE_BILLING_ROUTES) {
+    await registerBillingRoutes(app);
+  }
+  if (app.env.ENABLE_STRIPE_WEBHOOK_ROUTES) {
+    await registerStripeWebhookRoutes(app);
+  }
 }

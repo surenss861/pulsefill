@@ -43,7 +43,7 @@ test("mapPushDecisionToDeliveryAttempt maps eligible decision to queued send row
   assert.ok(attempt);
   assert.equal(attempt?.decision, "send");
   assert.equal(attempt?.status, "queued");
-  assert.equal(attempt?.dedupe_key, "customer_offer_sent:offer_1");
+  assert.equal(attempt?.dedupe_key, "offer_received:offer_1");
   assert.equal(attempt?.business_id, "11111111-1111-4111-8111-111111111111");
   assert.equal(attempt?.customer_id, "22222222-2222-4222-8222-222222222222");
   assert.equal(attempt?.open_slot_id, "33333333-3333-4333-8333-333333333333");
@@ -53,7 +53,7 @@ test("mapPushDecisionToDeliveryAttempt maps eligible decision to queued send row
   assert.equal(attempt?.provider_message_id, null);
   assert.equal(attempt?.error_code, null);
   assert.equal(attempt?.error_message, null);
-  assert.equal(attempt?.payload.type, "customer_offer_sent");
+  assert.equal(attempt?.payload.type, "offer_received");
 });
 
 test("mapPushDecisionToDeliveryAttempt maps suppressed decision with reason and retryability", () => {
@@ -75,8 +75,8 @@ test("mapPushDecisionToDeliveryAttempt maps suppressed decision with reason and 
   assert.equal(attempt?.status, "suppressed");
   assert.equal(attempt?.suppression_reason, "push_permission_denied");
   assert.equal(attempt?.retryable, false);
-  assert.equal(attempt?.dedupe_key, "customer_offer_sent:offer_1");
-  assert.equal(attempt?.payload.type, "customer_offer_sent");
+  assert.equal(attempt?.dedupe_key, "offer_received:offer_1");
+  assert.equal(attempt?.payload.type, "offer_received");
   assert.equal(attempt?.provider, null);
   assert.equal(attempt?.provider_message_id, null);
 });

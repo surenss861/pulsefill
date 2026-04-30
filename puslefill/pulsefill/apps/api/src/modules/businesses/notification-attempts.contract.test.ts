@@ -38,18 +38,18 @@ test("GET /v1/businesses/mine/notification-attempts returns items list", async (
   setListNotificationAttemptsTestDelegate(async ({ businessId, filters }) => {
     assert.equal(businessId, process.env.PULSEFILL_TEST_BUSINESS_ID);
     assert.equal(filters.status, "suppressed");
-    assert.equal(filters.type, "customer_offer_sent");
+    assert.equal(filters.type, "offer_received");
     assert.equal(filters.limit, 10);
     return {
       items: [
         {
           id: "attempt_1",
-          type: "customer_offer_sent",
+          type: "offer_received",
           status: "suppressed",
           decision: "suppress",
           suppression_reason: "quiet_hours",
           retryable: true,
-          dedupe_key: "customer_offer_sent:offer_1",
+          dedupe_key: "offer_received:offer_1",
           open_slot_id: "11111111-1111-4111-8111-111111111111",
           customer_id: "22222222-2222-4222-8222-222222222222",
           claim_id: null,
@@ -65,7 +65,7 @@ test("GET /v1/businesses/mine/notification-attempts returns items list", async (
 
   const res = await app.inject({
     method: "GET",
-    url: "/v1/businesses/mine/notification-attempts?status=suppressed&type=customer_offer_sent&limit=10",
+    url: "/v1/businesses/mine/notification-attempts?status=suppressed&type=offer_received&limit=10",
     headers: routeTestHeaders(),
   });
   assert.equal(res.statusCode, 200);

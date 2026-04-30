@@ -12,11 +12,11 @@ final class SessionStore: ObservableObject {
     }
 
     @Published var accessToken: String? {
-        didSet { UserDefaults.standard.set(accessToken, forKey: Keys.access) }
+        didSet { KeychainStore.set(accessToken, for: Keys.access) }
     }
 
     @Published var refreshToken: String? {
-        didSet { UserDefaults.standard.set(refreshToken, forKey: Keys.refresh) }
+        didSet { KeychainStore.set(refreshToken, for: Keys.refresh) }
     }
 
     @Published var userId: String? {
@@ -53,10 +53,22 @@ final class SessionStore: ObservableObject {
     }
 
     init() {
-        accessToken = UserDefaults.standard.string(forKey: Keys.access)
-        refreshToken = UserDefaults.standard.string(forKey: Keys.refresh)
+        let legacyAccessToken = UserDefaults.standard.string(forKey: Keys.access)
+        let legacyRefreshToken = UserDefaults.standard.string(forKey: Keys.refresh)
+
+        accessToken = KeychainStore.string(for: Keys.access) ?? legacyAccessToken
+        refreshToken = KeychainStore.string(for: Keys.refresh) ?? legacyRefreshToken
         userId = UserDefaults.standard.string(forKey: Keys.userId)
         email = UserDefaults.standard.string(forKey: Keys.email)
+
+        if let legacyAccessToken {
+            KeychainStore.set(legacyAccessToken, for: Keys.access)
+            UserDefaults.standard.removeObject(forKey: Keys.access)
+        }
+        if let legacyRefreshToken {
+            KeychainStore.set(legacyRefreshToken, for: Keys.refresh)
+            UserDefaults.standard.removeObject(forKey: Keys.refresh)
+        }
     }
 
     func applySession(accessToken: String, refreshToken: String?, userId: String?, email: String?) {

@@ -28,15 +28,15 @@ test("buildCustomerOfferSentPush returns stable payload", () => {
     createdAt: "2026-04-25T12:00:00.000Z",
   });
 
-  assert.equal(payload.type, "customer_offer_sent");
+  assert.equal(payload.type, "offer_received");
   assert.equal(payload.title, "New opening available");
   assert.equal(payload.deep_link, "/customer/offers/offer_1");
-  assert.equal(payload.dedupe_key, "customer_offer_sent:offer_1");
+  assert.equal(payload.dedupe_key, "offer_received:offer_1");
   assert.equal(payload.created_at, "2026-04-25T12:00:00.000Z");
   assert.equal(payload.business_id, "business_1");
   assert.equal(payload.customer_id, "customer_1");
   assert.equal(payload.open_slot_id, "slot_1");
-  assert.equal(payload.data.type, "customer_offer_sent");
+  assert.equal(payload.data.type, "offer_received");
   assert.equal(payload.data.offer_id, "offer_1");
   assert.match(payload.body, /Dental cleaning/);
 });
@@ -52,10 +52,10 @@ test("buildCustomerBookingConfirmedPush returns stable payload", () => {
     createdAt: "2026-04-25T12:00:00.000Z",
   });
 
-  assert.equal(payload.type, "customer_booking_confirmed");
+  assert.equal(payload.type, "booking_confirmed");
   assert.equal(payload.title, "Booking confirmed");
   assert.equal(payload.deep_link, "/customer/claims/claim_1");
-  assert.equal(payload.dedupe_key, "customer_booking_confirmed:claim_1");
+  assert.equal(payload.dedupe_key, "booking_confirmed:claim_1");
   assert.equal(payload.claim_id, "claim_1");
   assert.equal(payload.actor, "operator");
   assert.equal(payload.data.claim_id, "claim_1");
@@ -91,9 +91,9 @@ test("buildCustomerLostOpportunityPush uses claim link and dedupe when claim exi
     createdAt: "2026-04-25T12:00:00.000Z",
   });
 
-  assert.equal(payload.type, "customer_lost_opportunity");
+  assert.equal(payload.type, "claim_unavailable");
   assert.equal(payload.deep_link, "/customer/claims/claim_1");
-  assert.equal(payload.dedupe_key, "customer_lost_opportunity:claim_1");
+  assert.equal(payload.dedupe_key, "claim_unavailable:claim_1");
   assert.equal(payload.data.claim_id, "claim_1");
 });
 
@@ -108,7 +108,8 @@ test("buildCustomerLostOpportunityPush falls back when claim is missing", () => 
   });
 
   assert.equal(payload.deep_link, "/customer/standby");
-  assert.equal(payload.dedupe_key, "customer_lost_opportunity:slot_1:customer_1");
+  assert.equal(payload.type, "missed_opportunity");
+  assert.equal(payload.dedupe_key, "missed_opportunity:slot_1:customer_1");
   assert.equal(payload.claim_id, undefined);
   assert.match(payload.body, /That opening/);
 });
@@ -120,9 +121,9 @@ test("buildCustomerStandbySetupSuggestionPush uses day-based dedupe", () => {
     createdAt: "2026-04-25T12:00:00.000Z",
   });
 
-  assert.equal(payload.type, "customer_standby_setup_suggestion");
+  assert.equal(payload.type, "standby_setup_suggestion");
   assert.equal(payload.deep_link, "/customer/standby");
-  assert.equal(payload.dedupe_key, "customer_standby_setup_suggestion:business_1:customer_1:2026-04-25");
+  assert.equal(payload.dedupe_key, "standby_setup_suggestion:business_1:customer_1:2026-04-25");
 });
 
 test("buildCustomerStandbyStatusReminderPush uses day-based dedupe", () => {
@@ -132,9 +133,9 @@ test("buildCustomerStandbyStatusReminderPush uses day-based dedupe", () => {
     createdAt: "2026-04-25T23:59:59.000Z",
   });
 
-  assert.equal(payload.type, "customer_standby_status_reminder");
+  assert.equal(payload.type, "standby_status_reminder");
   assert.equal(payload.deep_link, "/customer/standby");
-  assert.equal(payload.dedupe_key, "customer_standby_status_reminder:business_1:customer_1:2026-04-25");
+  assert.equal(payload.dedupe_key, "standby_status_reminder:business_1:customer_1:2026-04-25");
 });
 
 test("buildCustomerOfferExpiringSoonPush includes optional claim id", () => {
@@ -148,9 +149,9 @@ test("buildCustomerOfferExpiringSoonPush includes optional claim id", () => {
     createdAt: "2026-04-25T12:00:00.000Z",
   });
 
-  assert.equal(payload.type, "customer_offer_expiring_soon");
+  assert.equal(payload.type, "offer_expiring_soon");
   assert.equal(payload.deep_link, "/customer/offers/offer_1");
-  assert.equal(payload.dedupe_key, "customer_offer_expiring_soon:offer_1");
+  assert.equal(payload.dedupe_key, "offer_expiring_soon:offer_1");
   assert.equal(payload.claim_id, "claim_1");
   assert.equal(payload.data.claim_id, "claim_1");
 });

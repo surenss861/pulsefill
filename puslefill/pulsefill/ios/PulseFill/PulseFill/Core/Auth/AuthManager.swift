@@ -29,14 +29,16 @@ final class AuthManager: ObservableObject {
     }
 
     func restoreSessionIfNeeded() async {
-        guard let token = sessionStore.accessToken, !token.isEmpty else { return }
+        let accessToken = sessionStore.accessToken?.nilIfEmpty
+        let refreshToken = sessionStore.refreshToken?.nilIfEmpty
+        guard accessToken != nil || refreshToken != nil else { return }
         isBusy = true
         defer { isBusy = false }
         do {
-            let bundle = try await authClient.fetchUserIfSessionValid(accessToken: token)
+            let bundle = try await restoreSessionBundle(accessToken: accessToken, refreshToken: refreshToken)
             sessionStore.applySession(
                 accessToken: bundle.accessToken,
-                refreshToken: sessionStore.refreshToken ?? bundle.refreshToken,
+                refreshToken: bundle.refreshToken ?? refreshToken,
                 userId: bundle.userId,
                 email: bundle.email
             )
@@ -46,6 +48,20 @@ final class AuthManager: ObservableObject {
             sessionStore.clear()
             banner = nil
         }
+    }
+
+    private func restoreSessionBundle(accessToken: String?, refreshToken: String?) async throws -> AuthSessionBundle {
+        if let accessToken {
+            do {
+                return try await authClient.fetchUserIfSessionValid(accessToken: accessToken)
+            } catch {
+                guard let refreshToken else { throw error }
+                return try await authClient.refreshSession(refreshToken: refreshToken)
+            }
+        }
+
+        guard let refreshToken else { throw APIError.status(code: 401, body: nil) }
+        return try await authClient.refreshSession(refreshToken: refreshToken)
     }
 
     func signIn(email: String, password: String) async {
@@ -159,5 +175,12 @@ final class AuthManager: ObservableObject {
             banner = message
             return .failure(message)
         }
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

@@ -1,11 +1,22 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+function safeInternalPath(rawPath: string | null) {
+  if (!rawPath) {
+    return "/overview";
+  }
+
+  if (!rawPath.startsWith("/") || rawPath.startsWith("//") || rawPath.includes("://") || rawPath.includes("\\")) {
+    return "/overview";
+  }
+
+  return rawPath;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
-  const nextRaw = searchParams.get("next") ?? "/overview";
-  const next = nextRaw.startsWith("/") ? nextRaw : "/overview";
+  const next = safeInternalPath(searchParams.get("next"));
 
   if (!code) {
     return NextResponse.redirect(new URL("/auth/error", request.url));

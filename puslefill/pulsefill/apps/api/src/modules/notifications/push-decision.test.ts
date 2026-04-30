@@ -216,9 +216,9 @@ test("decideCustomerOfferSentPush composes builder and eligibility", () => {
 
   assert.equal(decision.ok, true);
   if (!decision.ok) return;
-  assert.equal(decision.payload.type, "customer_offer_sent");
+  assert.equal(decision.payload.type, "offer_received");
   assert.equal(decision.payload.deep_link, "/customer/offers/offer_1");
-  assert.equal(decision.dedupe_key, "customer_offer_sent:offer_1");
+  assert.equal(decision.dedupe_key, "offer_received:offer_1");
 });
 
 test("decideOperatorClaimNeedsConfirmationPush preserves payload contract", () => {

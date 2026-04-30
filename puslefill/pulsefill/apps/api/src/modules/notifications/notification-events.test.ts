@@ -178,7 +178,7 @@ test("booking confirmed event processes when context exists", async () => {
   assert.equal(out.ok, true);
   if (!out.ok || out.outcome !== "processed") return;
   assert.equal(state.providerCalls, 1);
-  assert.equal(String(state.inserted?.dedupe_key), "customer_booking_confirmed:44444444-4444-4444-8444-444444444444");
+  assert.equal(String(state.inserted?.dedupe_key), "booking_confirmed:44444444-4444-4444-8444-444444444444");
 });
 
 test("booking confirmed event skips when claim missing", async () => {

@@ -6,18 +6,18 @@ import { createApnsPushProvider } from "./apns-provider.js";
 
 function samplePayload(): PulseFillPushPayload {
   return {
-    type: "customer_offer_sent",
+    type: "offer_received",
     title: "New opening available",
     body: "Dental cleaning is available soon.",
     deep_link: "/customer/offers/offer_1",
-    dedupe_key: "customer_offer_sent:offer_1",
+    dedupe_key: "offer_received:offer_1",
     created_at: "2026-04-25T12:00:00.000Z",
     business_id: "11111111-1111-4111-8111-111111111111",
     open_slot_id: "22222222-2222-4222-8222-222222222222",
     customer_id: "33333333-3333-4333-8333-333333333333",
     actor: "system",
     data: {
-      type: "customer_offer_sent",
+      type: "offer_received",
       business_id: "11111111-1111-4111-8111-111111111111",
       customer_id: "33333333-3333-4333-8333-333333333333",
       open_slot_id: "22222222-2222-4222-8222-222222222222",
@@ -58,7 +58,7 @@ test("createApnsPushProvider builds sandbox URL, headers, and body", async () =>
   const out = await provider.send({
     payload: samplePayload(),
     device_token: "abc123token",
-    dedupe_key: "customer_offer_sent:offer_1",
+    dedupe_key: "offer_received:offer_1",
   });
 
   assert.equal(captured.url, "https://api.sandbox.push.apple.com/3/device/abc123token");
@@ -66,14 +66,14 @@ test("createApnsPushProvider builds sandbox URL, headers, and body", async () =>
   assert.equal(captured.init.headers["apns-topic"], "com.pulsefill.app");
   assert.equal(captured.init.headers["apns-push-type"], "alert");
   assert.equal(captured.init.headers["apns-priority"], "10");
-  assert.equal(captured.init.headers["apns-collapse-id"], "customer_offer_sent:offer_1");
+  assert.equal(captured.init.headers["apns-collapse-id"], "offer_received:offer_1");
   assert.ok(captured.init.headers.authorization);
   assert.ok(captured.init.headers.authorization.startsWith("bearer "));
   const parsed = JSON.parse(captured.init.body) as Record<string, unknown>;
   assert.equal((parsed.aps as { alert: { title: string } }).alert.title, "New opening available");
   assert.equal((parsed.aps as { alert: { body: string } }).alert.body, "Dental cleaning is available soon.");
   assert.equal(parsed.deep_link, "/customer/offers/offer_1");
-  assert.equal(parsed.type, "customer_offer_sent");
+  assert.equal(parsed.type, "offer_received");
   assert.equal(out.ok, true);
   if (out.ok) {
     assert.equal(out.provider_message_id, "apns-id-1");
@@ -105,7 +105,7 @@ test("createApnsPushProvider builds production URL", async () => {
   await provider.send({
     payload: samplePayload(),
     device_token: "prod-token",
-    dedupe_key: "customer_offer_sent:offer_1",
+    dedupe_key: "offer_received:offer_1",
   });
 
   assert.equal(urlSeen, "https://api.push.apple.com/3/device/prod-token");
@@ -133,7 +133,7 @@ test("createApnsPushProvider maps 429/500/503 to retryable failures", async () =
     const out = await provider.send({
       payload: samplePayload(),
       device_token: "token",
-      dedupe_key: "customer_offer_sent:offer_1",
+      dedupe_key: "offer_received:offer_1",
     });
     assert.equal(out.ok, false);
     if (!out.ok) {
@@ -165,7 +165,7 @@ test("createApnsPushProvider maps 400/403/410 to non-retryable failures", async 
     const out = await provider.send({
       payload: samplePayload(),
       device_token: "token",
-      dedupe_key: "customer_offer_sent:offer_1",
+      dedupe_key: "offer_received:offer_1",
     });
     assert.equal(out.ok, false);
     if (!out.ok) {
@@ -196,7 +196,7 @@ test("createApnsPushProvider handles APNs JSON reason body", async () => {
   const out = await provider.send({
     payload: samplePayload(),
     device_token: "token",
-    dedupe_key: "customer_offer_sent:offer_1",
+    dedupe_key: "offer_received:offer_1",
   });
 
   assert.equal(out.ok, false);
@@ -225,7 +225,7 @@ test("createApnsPushProvider maps network errors to retryable failure", async ()
   const out = await provider.send({
     payload: samplePayload(),
     device_token: "token",
-    dedupe_key: "customer_offer_sent:offer_1",
+    dedupe_key: "offer_received:offer_1",
   });
 
   assert.equal(out.ok, false);

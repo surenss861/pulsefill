@@ -19,7 +19,7 @@ const baseInput = {
     disabled_types: [],
     quiet_hours_enabled: false,
   },
-  type: "customer_offer_sent" as const,
+  type: "offer_received" as const,
   nowIso: "2026-04-25T14:00:00.000Z",
   requiredTarget: {
     customerId: "customer_1",
@@ -90,7 +90,7 @@ test("missing token returns no_push_device retryable", () => {
 test("disabled notification type returns notification_type_disabled", () => {
   const result = evaluatePushEligibility({
     ...baseInput,
-    notificationPrefs: { ...baseInput.notificationPrefs, disabled_types: ["customer_offer_sent"] },
+    notificationPrefs: { ...baseInput.notificationPrefs, disabled_types: ["offer_received"] },
   });
   assert.deepEqual(result, { ok: false, reason: "notification_type_disabled", retryable: false });
 });

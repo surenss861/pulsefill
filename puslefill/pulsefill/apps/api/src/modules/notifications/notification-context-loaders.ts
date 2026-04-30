@@ -3,12 +3,23 @@ import {
   type ActivePushDevice,
   type PushDevicePlatform,
   type PushDeviceTokenType,
+  type SupabaseClientLike as ActivePushDeviceSupabaseClientLike,
 } from "./active-push-device.js";
+
+type LookupResult = {
+  data: Record<string, unknown> | null;
+  error: { code?: string; message?: string } | null;
+};
+
+type LookupQueryBuilder = {
+  eq: (field: string, value: string | boolean) => LookupQueryBuilder;
+  maybeSingle: () => Promise<LookupResult>;
+};
 
 type SupabaseClientLike = {
   from: (table: string) => {
     select: (fields: string) => {
-      eq: (field: string, value: string | boolean) => any;
+      eq: (field: string, value: string | boolean) => LookupQueryBuilder;
     };
   };
 };
@@ -163,12 +174,19 @@ export async function loadCustomerOfferSentNotificationContext(
     const [prefs, serviceName, device] = await Promise.all([
       loadPreferences(input.supabase, input.customerId),
       loadServiceName(input.supabase, slot.service_id as string | null),
-      (deps.getActivePushDevice ?? getActivePushDeviceForCustomer)({
-        supabase: input.supabase as any,
-        customerId: input.customerId,
-        platform: input.platform,
-        tokenType: input.tokenType,
-      }),
+      deps.getActivePushDevice
+        ? deps.getActivePushDevice({
+            supabase: input.supabase,
+            customerId: input.customerId,
+            platform: input.platform,
+            tokenType: input.tokenType,
+          })
+        : getActivePushDeviceForCustomer({
+            supabase: input.supabase as unknown as ActivePushDeviceSupabaseClientLike,
+            customerId: input.customerId,
+            platform: input.platform,
+            tokenType: input.tokenType,
+          }),
     ]);
 
     return {
@@ -233,12 +251,19 @@ export async function loadCustomerBookingConfirmedNotificationContext(
     const [prefs, serviceName, device] = await Promise.all([
       loadPreferences(input.supabase, customerId),
       loadServiceName(input.supabase, slot.service_id as string | null),
-      (deps.getActivePushDevice ?? getActivePushDeviceForCustomer)({
-        supabase: input.supabase as any,
-        customerId,
-        platform: input.platform,
-        tokenType: input.tokenType,
-      }),
+      deps.getActivePushDevice
+        ? deps.getActivePushDevice({
+            supabase: input.supabase,
+            customerId,
+            platform: input.platform,
+            tokenType: input.tokenType,
+          })
+        : getActivePushDeviceForCustomer({
+            supabase: input.supabase as unknown as ActivePushDeviceSupabaseClientLike,
+            customerId,
+            platform: input.platform,
+            tokenType: input.tokenType,
+          }),
     ]);
 
     return {

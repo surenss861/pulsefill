@@ -1,10 +1,16 @@
-export type PulseFillPushType =
+import type { CustomerPushEventType } from "@pulsefill/shared";
+
+export type LegacyCustomerPushType =
   | "customer_offer_sent"
   | "customer_offer_expiring_soon"
   | "customer_booking_confirmed"
   | "customer_lost_opportunity"
   | "customer_standby_setup_suggestion"
-  | "customer_standby_status_reminder"
+  | "customer_standby_status_reminder";
+
+export type PulseFillPushType =
+  | CustomerPushEventType
+  | LegacyCustomerPushType
   | "operator_claim_needs_confirmation"
   | "operator_delivery_failure";
 
@@ -55,18 +61,18 @@ export function buildCustomerOfferSentPush(input: {
   const service = normalizeServiceName(input.serviceName);
   const when = input.startsAt ? formatPushSlotTime(input.startsAt) : "soon";
   return {
-    type: "customer_offer_sent",
+    type: "offer_received",
     title: "New opening available",
     body: `${service} is available ${when}.`,
     deep_link: `/customer/offers/${input.offerId}`,
-    dedupe_key: `customer_offer_sent:${input.offerId}`,
+    dedupe_key: `offer_received:${input.offerId}`,
     created_at: input.createdAt,
     business_id: input.businessId,
     customer_id: input.customerId,
     open_slot_id: input.openSlotId,
     actor: "system",
     data: {
-      type: "customer_offer_sent",
+      type: "offer_received",
       business_id: input.businessId,
       customer_id: input.customerId,
       open_slot_id: input.openSlotId,
@@ -87,11 +93,11 @@ export function buildCustomerBookingConfirmedPush(input: {
   const service = normalizeServiceName(input.serviceName, "Your appointment");
   const when = input.startsAt ? formatPushSlotTime(input.startsAt) : "soon";
   return {
-    type: "customer_booking_confirmed",
+    type: "booking_confirmed",
     title: "Booking confirmed",
     body: `${service} is confirmed for ${when}.`,
     deep_link: `/customer/claims/${input.claimId}`,
-    dedupe_key: `customer_booking_confirmed:${input.claimId}`,
+    dedupe_key: `booking_confirmed:${input.claimId}`,
     created_at: input.createdAt,
     business_id: input.businessId,
     customer_id: input.customerId,
@@ -99,7 +105,7 @@ export function buildCustomerBookingConfirmedPush(input: {
     claim_id: input.claimId,
     actor: "operator",
     data: {
-      type: "customer_booking_confirmed",
+      type: "booking_confirmed",
       business_id: input.businessId,
       customer_id: input.customerId,
       open_slot_id: input.openSlotId,
@@ -152,11 +158,12 @@ export function buildCustomerLostOpportunityPush(input: {
   const service = normalizeServiceName(input.serviceName, "That opening");
   const deepLink = input.claimId ? `/customer/claims/${input.claimId}` : "/customer/standby";
   const dedupeKey = input.claimId
-    ? `customer_lost_opportunity:${input.claimId}`
-    : `customer_lost_opportunity:${input.openSlotId}:${input.customerId}`;
+    ? `claim_unavailable:${input.claimId}`
+    : `missed_opportunity:${input.openSlotId}:${input.customerId}`;
+  const type: CustomerPushEventType = input.claimId ? "claim_unavailable" : "missed_opportunity";
 
   return {
-    type: "customer_lost_opportunity",
+    type,
     title: "Opening no longer available",
     body: `${service} is no longer available.`,
     deep_link: deepLink,
@@ -168,7 +175,7 @@ export function buildCustomerLostOpportunityPush(input: {
     claim_id: input.claimId ?? undefined,
     actor: "system",
     data: {
-      type: "customer_lost_opportunity",
+      type,
       business_id: input.businessId,
       customer_id: input.customerId,
       open_slot_id: input.openSlotId,
@@ -183,17 +190,17 @@ export function buildCustomerStandbySetupSuggestionPush(input: {
   createdAt: string;
 }): PulseFillPushPayload {
   return {
-    type: "customer_standby_setup_suggestion",
+    type: "standby_setup_suggestion",
     title: "Set up standby alerts",
     body: "Choose how you want to hear about earlier openings.",
     deep_link: "/customer/standby",
-    dedupe_key: `customer_standby_setup_suggestion:${input.businessId}:${input.customerId}:${dayKey(input.createdAt)}`,
+    dedupe_key: `standby_setup_suggestion:${input.businessId}:${input.customerId}:${dayKey(input.createdAt)}`,
     created_at: input.createdAt,
     business_id: input.businessId,
     customer_id: input.customerId,
     actor: "system",
     data: {
-      type: "customer_standby_setup_suggestion",
+      type: "standby_setup_suggestion",
       business_id: input.businessId,
       customer_id: input.customerId,
     },
@@ -206,17 +213,17 @@ export function buildCustomerStandbyStatusReminderPush(input: {
   createdAt: string;
 }): PulseFillPushPayload {
   return {
-    type: "customer_standby_status_reminder",
+    type: "standby_status_reminder",
     title: "Standby is ready",
     body: "You are set up for earlier-opening alerts.",
     deep_link: "/customer/standby",
-    dedupe_key: `customer_standby_status_reminder:${input.businessId}:${input.customerId}:${dayKey(input.createdAt)}`,
+    dedupe_key: `standby_status_reminder:${input.businessId}:${input.customerId}:${dayKey(input.createdAt)}`,
     created_at: input.createdAt,
     business_id: input.businessId,
     customer_id: input.customerId,
     actor: "system",
     data: {
-      type: "customer_standby_status_reminder",
+      type: "standby_status_reminder",
       business_id: input.businessId,
       customer_id: input.customerId,
     },
@@ -234,11 +241,11 @@ export function buildCustomerOfferExpiringSoonPush(input: {
 }): PulseFillPushPayload {
   const service = normalizeServiceName(input.serviceName, "This opening");
   return {
-    type: "customer_offer_expiring_soon",
+    type: "offer_expiring_soon",
     title: "Opening expires soon",
     body: `${service} may be claimed soon.`,
     deep_link: `/customer/offers/${input.offerId}`,
-    dedupe_key: `customer_offer_expiring_soon:${input.offerId}`,
+    dedupe_key: `offer_expiring_soon:${input.offerId}`,
     created_at: input.createdAt,
     business_id: input.businessId,
     customer_id: input.customerId,
@@ -246,7 +253,7 @@ export function buildCustomerOfferExpiringSoonPush(input: {
     claim_id: input.claimId ?? undefined,
     actor: "system",
     data: {
-      type: "customer_offer_expiring_soon",
+      type: "offer_expiring_soon",
       business_id: input.businessId,
       customer_id: input.customerId,
       open_slot_id: input.openSlotId,

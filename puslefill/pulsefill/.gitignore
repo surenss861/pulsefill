@@ -5,6 +5,9 @@ dist
 .env
 *.log
 .DS_Store
+*.tsbuildinfo
+**/xcuserdata/
+**/*.xcuserstate
 
 # Supabase CLI (local link / version cache; may include connection metadata)
 supabase/.temp/

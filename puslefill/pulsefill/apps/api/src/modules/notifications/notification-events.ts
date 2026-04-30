@@ -10,9 +10,16 @@ import type { PushDevicePlatform, PushDeviceTokenType } from "./active-push-devi
 import type { PushProviderAdapter } from "./test-push-provider.js";
 import type { ProcessPushDecisionResult } from "./process-push-decision.js";
 
-type NotificationsSupabaseClientLike = {
-  from: (table: string) => any;
-};
+type CustomerOfferLoaderSupabase = Parameters<typeof loadCustomerOfferSentNotificationContext>[0]["supabase"];
+type CustomerBookingLoaderSupabase = Parameters<typeof loadCustomerBookingConfirmedNotificationContext>[0]["supabase"];
+type CustomerOfferQueueSupabase = Parameters<typeof queueCustomerOfferSentNotification>[0]["supabase"];
+type CustomerBookingQueueSupabase = Parameters<typeof queueCustomerBookingConfirmedNotification>[0]["supabase"];
+
+type NotificationsSupabaseClientLike =
+  & CustomerOfferLoaderSupabase
+  & CustomerBookingLoaderSupabase
+  & CustomerOfferQueueSupabase
+  & CustomerBookingQueueSupabase;
 
 export type NotificationEventResult =
   | {
@@ -58,7 +65,7 @@ export async function handleCustomerOfferSentNotificationEvent(
     const queue = deps.queueCustomerOfferSent ?? queueCustomerOfferSentNotification;
 
     const loaded = await loader({
-      supabase: input.supabase as any,
+      supabase: input.supabase,
       businessId: input.businessId,
       offerId: input.offerId,
       customerId: input.customerId,
@@ -76,7 +83,7 @@ export async function handleCustomerOfferSentNotificationEvent(
     }
 
     const result = await queue({
-      supabase: input.supabase as any,
+      supabase: input.supabase,
       provider: input.provider,
       nowIso: input.nowIso,
       businessId: loaded.context.businessId,
@@ -117,7 +124,7 @@ export async function handleCustomerBookingConfirmedNotificationEvent(
     const queue = deps.queueCustomerBookingConfirmed ?? queueCustomerBookingConfirmedNotification;
 
     const loaded = await loader({
-      supabase: input.supabase as any,
+      supabase: input.supabase,
       businessId: input.businessId,
       claimId: input.claimId,
       platform: input.platform,
@@ -134,7 +141,7 @@ export async function handleCustomerBookingConfirmedNotificationEvent(
     }
 
     const result = await queue({
-      supabase: input.supabase as any,
+      supabase: input.supabase,
       provider: input.provider,
       nowIso: input.nowIso,
       businessId: loaded.context.businessId,
