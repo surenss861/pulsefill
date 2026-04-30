@@ -1,4 +1,4 @@
-import { MetricCard } from "@/components/ui/metric-card";
+import { OperatorMetricStrip } from "@/components/operator/operator-metric-strip";
 import type { OperatorActivitySummary } from "@/lib/operator-activity-summary";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
@@ -35,25 +35,7 @@ export function ActivitySummaryStrip({ summary }: ActivitySummaryStripProps) {
         </div>
       ) : null}
 
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: allZero ? 8 : 10,
-          opacity: allZero ? 0.78 : 1,
-        }}
-      >
-        {cards.map((c) => (
-          <MetricCard
-            key={c.label}
-            label={c.label}
-            value={c.value}
-            emphasis={c.emphasis}
-            size={allZero ? "compact" : "default"}
-            style={{ flex: "1 1 110px", minWidth: allZero ? 88 : 100 }}
-          />
-        ))}
-      </div>
+      <OperatorMetricStrip items={cards} compact={allZero} />
     </section>
   );
 }

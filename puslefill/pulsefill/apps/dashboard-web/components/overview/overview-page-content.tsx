@@ -36,6 +36,7 @@ import { CommandCenterRecentActivity } from "@/components/overview/command-cente
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { FadeUp } from "@/components/motion/operator-motion";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
+import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 export type OverviewPageContentProps = {
@@ -115,6 +116,24 @@ export function OverviewPageContent({
     if (!dailyOps.data) return DEFAULT_OVERVIEW_RECOVERY_SUBTITLE;
     return buildTodayRecoverySubtitle(dailyOps.data, actionQueue.data?.summary ?? null);
   }, [dailyOps.data, actionQueue.data]);
+
+  const recoveryPipelineStep = useMemo((): RecoveryPipelineStepId | undefined => {
+    if (awaitingConfirmationCount > 0) return "claim";
+    if (urgentOpeningsCount > 0) return "offers";
+    if (metrics && metrics.slots_booked > 0) return "confirmed";
+    if (metrics && metrics.offers_sent > 0) return "offers";
+    return "opening";
+  }, [awaitingConfirmationCount, urgentOpeningsCount, metrics?.slots_booked, metrics?.offers_sent]);
+
+  const recoveryPipelineCounts = useMemo((): Partial<Record<RecoveryPipelineStepId, number>> | undefined => {
+    if (!metrics) return undefined;
+    const c: Partial<Record<RecoveryPipelineStepId, number>> = {};
+    if (setup.openSlotsCount > 0) c.opening = setup.openSlotsCount;
+    if (metrics.offers_sent > 0) c.offers = metrics.offers_sent;
+    if (awaitingConfirmationCount > 0) c.claim = awaitingConfirmationCount;
+    if (metrics.slots_booked > 0) c.confirmed = metrics.slots_booked;
+    return Object.keys(c).length ? c : undefined;
+  }, [metrics, setup.openSlotsCount, awaitingConfirmationCount]);
 
   const pulseLines = useMemo((): OverviewPulseLine[] | null => {
     if (!dailyOps.data) return null;
@@ -291,17 +310,28 @@ export function OverviewPageContent({
 
       {loading ? <p style={{ color: "var(--muted)", marginTop: 20 }}>Loading overview…</p> : null}
 
-      {showGettingStarted && !loading ? <GettingStartedCard state={checklist} /> : null}
-
       {showGettingStarted && !loading ? (
-        <div className="pf-cockpit-grid">
-          <ActionQueuePreviewCard
-            items={actionQueue.data?.sections.needs_action ?? []}
-            loading={actionQueue.loading}
-            error={actionQueue.error}
-            summary={actionQueue.data?.summary}
-          />
-          <CommandCenterRecentActivity />
+        <div className="pf-command-cockpit">
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
+            <GettingStartedCard state={checklist} />
+            <ActionQueuePreviewCard
+              items={actionQueue.data?.sections.needs_action ?? []}
+              loading={actionQueue.loading}
+              error={actionQueue.error}
+              summary={actionQueue.data?.summary}
+            />
+          </div>
+          <aside className="pf-command-cockpit-rail">
+            <RecoveryPipeline
+              activeStep={recoveryPipelineStep}
+              counts={recoveryPipelineCounts}
+              compact
+              animated
+            />
+          </aside>
+          <div className="pf-command-cockpit-footer">
+            <CommandCenterRecentActivity />
+          </div>
         </div>
       ) : null}
 
@@ -340,14 +370,26 @@ export function OverviewPageContent({
             }}
           />
 
-          <div className="pf-cockpit-grid">
-            <ActionQueuePreviewCard
-              items={actionQueue.data?.sections.needs_action ?? []}
-              loading={actionQueue.loading}
-              error={actionQueue.error}
-              summary={actionQueue.data?.summary}
-            />
-            <CommandCenterRecentActivity />
+          <div className="pf-command-cockpit">
+            <div style={{ minWidth: 0 }}>
+              <ActionQueuePreviewCard
+                items={actionQueue.data?.sections.needs_action ?? []}
+                loading={actionQueue.loading}
+                error={actionQueue.error}
+                summary={actionQueue.data?.summary}
+              />
+            </div>
+            <aside className="pf-command-cockpit-rail">
+              <RecoveryPipeline
+                activeStep={recoveryPipelineStep}
+                counts={recoveryPipelineCounts}
+                compact
+                animated
+              />
+            </aside>
+            <div className="pf-command-cockpit-footer">
+              <CommandCenterRecentActivity />
+            </div>
           </div>
 
           <OverviewDeliveryReliabilityBlock data={deliveryReliability.data} loading={deliveryReliability.loading} />

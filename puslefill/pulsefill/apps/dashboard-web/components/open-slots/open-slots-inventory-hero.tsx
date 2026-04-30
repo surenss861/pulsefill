@@ -1,37 +1,20 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import { PageIntroCard } from "@/components/ui/page-intro-card";
-
-const primaryLinkStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: 40,
-  padding: "0 16px",
-  borderRadius: 12,
-  border: "1px solid rgba(255, 122, 24, 0.45)",
-  background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
-  color: "var(--pf-btn-primary-text)",
-  fontSize: 14,
-  fontWeight: 700,
-  textDecoration: "none",
-  boxShadow: "0 14px 34px rgba(255, 122, 24, 0.22)",
-};
+import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { actionLinkStyle } from "@/components/ui/action-button";
 
 export function OpenSlotsInventoryHero() {
   return (
-    <PageIntroCard
-      style={{ marginBottom: 16 }}
-      density="compact"
-      tone="elevated"
-      overline="Openings"
+    <PageCommandHeader
+      tone="strong"
+      eyebrow="Openings"
       title="Openings"
-      description="Post cancelled appointment times, send offers to matching standby customers, and confirm recovered bookings."
-      actions={
-        <Link href="/open-slots/create" style={primaryLinkStyle}>
+      description="Create, send, and confirm recovered appointment times."
+      primaryAction={
+        <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
           Create opening
         </Link>
       }
+      style={{ marginBottom: 12 }}
     />
   );
 }

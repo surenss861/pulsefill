@@ -1,4 +1,7 @@
+import Link from "next/link";
+import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
 import { PageState } from "@/components/ui/page-state";
+import { actionLinkStyle } from "@/components/ui/action-button";
 
 type ActivityEmptySectionProps = {
   variant?: "section" | "filtered";
@@ -15,10 +18,19 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
     );
   }
   return (
-    <PageState
-      variant="empty"
+    <OperatorEmptyState
       title="No recovery activity yet"
       description="Create an opening, send offers, or confirm a booking to start building history."
+      primaryAction={
+        <>
+          <Link href="/open-slots/create" style={{ ...actionLinkStyle("primary"), marginRight: 10 }}>
+            Create opening
+          </Link>
+          <Link href="/open-slots" style={actionLinkStyle("secondary")}>
+            View openings
+          </Link>
+        </>
+      }
     />
   );
 }

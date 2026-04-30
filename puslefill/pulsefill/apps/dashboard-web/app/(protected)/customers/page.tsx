@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { OperatorMetricStrip } from "@/components/operator/operator-metric-strip";
 import { actionLinkStyle } from "@/components/ui/action-button";
-import { PageIntroCard } from "@/components/ui/page-intro-card";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { apiFetch } from "@/lib/api";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
@@ -103,17 +104,20 @@ export default function CustomersPage() {
   return (
     <main style={{ padding: 0, maxWidth: 1024 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        <PageIntroCard
-          density="compact"
+        <PageCommandHeader
           tone="default"
-          layout="split"
-          overline="Customers"
-          title="Customers & standby"
+          eyebrow="Customers"
+          title="Standby pool"
           description="Invite customers to join standby so PulseFill can match them to new openings."
-          actions={
+          primaryAction={
+            <Link href="#invite-customer" style={actionLinkStyle("primary")}>
+              Invite customer
+            </Link>
+          }
+          secondaryAction={
             standbyPending.count > 0 ? (
               reduceMotion ? (
-                <Link href="/customers/standby-requests" style={actionLinkStyle("primary")}>
+                <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
                   Standby requests
                 </Link>
               ) : (
@@ -122,7 +126,7 @@ export default function CustomersPage() {
                   transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
                   style={{ display: "inline-block" }}
                 >
-                  <Link href="/customers/standby-requests" style={actionLinkStyle("primary")}>
+                  <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
                     Standby requests
                   </Link>
                 </motion.span>
@@ -150,20 +154,19 @@ export default function CustomersPage() {
           <span style={{ color: "var(--muted)" }}> — review customers who asked to join when you use request-to-join access.</span>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 10,
-          }}
-        >
-          <SummaryCard label="Pending invites" value={pendingInvites} helper="Customers waiting to accept your invite." />
-          <SummaryCard label="Active standby" value={acceptedInvites} helper="Customers connected to this clinic." />
-          <SummaryCard label="Match coverage" value={acceptedInvites > 0 ? "Improving" : "Low"} helper={matchCoverage} />
-        </div>
+        <OperatorMetricStrip
+          items={[
+            { label: "Pending invites", value: pendingInvites },
+            { label: "Active standby", value: acceptedInvites, emphasis: "primary" },
+            { label: "Match coverage", value: acceptedInvites > 0 ? "Improving" : "Low" },
+          ]}
+          compact
+        />
+        <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", lineHeight: 1.45 }}>{matchCoverage}</p>
 
         <div className="pf-customers-split" style={{ marginTop: 4 }}>
         <form
+          id="invite-customer"
           onSubmit={onSubmit}
           style={{
             display: "flex",
@@ -363,23 +366,6 @@ const copyButton: CSSProperties = {
   fontSize: 12,
   cursor: "pointer",
 };
-
-function SummaryCard({ label, value, helper }: { label: string; value: string | number; helper: string }) {
-  return (
-    <div
-      style={{
-        padding: "14px 16px",
-        ...operatorSurfaceShell("metric"),
-      }}
-    >
-      <p style={{ margin: 0, fontSize: 10, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(245,247,250,0.42)" }}>
-        {label}
-      </p>
-      <p style={{ margin: "8px 0 0", fontSize: 22, fontWeight: 650, letterSpacing: "-0.03em" }}>{value}</p>
-      <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)", lineHeight: 1.45 }}>{helper}</p>
-    </div>
-  );
-}
 
 const thStyle: CSSProperties = {
   textAlign: "left",

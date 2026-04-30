@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { signOutAction } from "@/app/actions/auth";
 import { ActionButton, actionLinkStyle } from "@/components/ui/action-button";
-import { PageIntroCard } from "@/components/ui/page-intro-card";
+import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { PageState } from "@/components/ui/page-state";
 import { SectionCard } from "@/components/ui/section-card";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -82,14 +82,13 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
   return (
     <main style={{ padding: 0, maxWidth: 1024 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <PageIntroCard
-          tone="elevated"
-          density="compact"
-          layout="split"
-          overline="Settings"
+        <PageCommandHeader
+          animate={false}
+          tone="default"
+          eyebrow="Settings"
           title="Account and workspace settings"
           description="Manage your account and business details used across daily recovery workflows."
-          badge={
+          meta={
             <span style={{ display: "inline-flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <StatusPill variant="default" caps>
                 {roleLabel(profile.role)}
@@ -99,7 +98,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
               </StatusPill>
             </span>
           }
-          actions={
+          secondaryAction={
             <>
               <Link href="/overview" style={actionLinkStyle("secondary")}>
                 Back to overview

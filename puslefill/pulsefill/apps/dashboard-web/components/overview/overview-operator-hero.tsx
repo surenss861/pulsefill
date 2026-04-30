@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageIntroCard } from "@/components/ui/page-intro-card";
+import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { actionLinkStyle } from "@/components/ui/action-button";
 
 type OverviewOperatorHeroProps = {
@@ -18,24 +18,24 @@ export function OverviewOperatorHero({
   const hasUrgent = urgentOpeningsCount > 0;
   const claimWaiting = awaitingConfirmationCount > 0;
 
-  const actions = claimWaiting ? (
-    <>
-      <Link href="/claims" style={actionLinkStyle("primary")}>
-        Review claim
-      </Link>
-      <Link href="/open-slots/create" style={actionLinkStyle("secondary")}>
-        Create opening
-      </Link>
-    </>
+  const primaryAction = claimWaiting ? (
+    <Link href="/claims" style={actionLinkStyle("primary")}>
+      Review claim
+    </Link>
   ) : (
-    <>
-      <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
-        Create opening
-      </Link>
-      <Link href={secondaryHref} style={actionLinkStyle("secondary")}>
-        {secondaryLabel}
-      </Link>
-    </>
+    <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
+      Create opening
+    </Link>
+  );
+
+  const secondaryAction = claimWaiting ? (
+    <Link href="/open-slots/create" style={actionLinkStyle("secondary")}>
+      Create opening
+    </Link>
+  ) : (
+    <Link href={secondaryHref} style={actionLinkStyle("secondary")}>
+      {secondaryLabel}
+    </Link>
   );
 
   const title = claimWaiting ? "Claim needs confirmation" : "Today's recovery";
@@ -46,15 +46,15 @@ export function OverviewOperatorHero({
       : "No urgent openings right now.";
 
   return (
-    <PageIntroCard
-      style={{ marginBottom: 18 }}
-      density="compact"
-      tone="elevated"
-      layout="split"
-      overline="Command Center"
+    <PageCommandHeader
+      animate={false}
+      tone="strong"
+      eyebrow="Command Center"
       title={title}
       description={description}
-      actions={actions}
+      primaryAction={primaryAction}
+      secondaryAction={secondaryAction}
+      style={{ marginBottom: 4 }}
     />
   );
 }

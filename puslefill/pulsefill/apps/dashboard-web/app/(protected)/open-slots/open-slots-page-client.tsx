@@ -12,7 +12,6 @@ import { OperatorSlotListRow } from "@/components/slots/operator-slot-list-row";
 import { OperatorSlotListSummary } from "@/components/slots/operator-slot-list-summary";
 import { OperatorSlotListToolbar } from "@/components/slots/operator-slot-list-toolbar";
 import { SendOffersPrereqCallout } from "@/components/slots/send-offers-prereq-callout";
-import { ActionEmptyState } from "@/components/ui/action-empty-state";
 import { useToast } from "@/components/ui/toast-provider";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useOperatorFilterOptions } from "@/hooks/useOperatorFilterOptions";
@@ -22,7 +21,9 @@ import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscr
 import { useOperatorSlotsList } from "@/hooks/useOperatorSlotsList";
 import { runOperatorBulkAction } from "@/lib/operator-bulk-actions";
 import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
-import { WorkflowSteps } from "@/components/motion/operator-motion";
+import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
+import { RecoveryPipeline } from "@/components/operator/recovery-pipeline";
+import { actionLinkStyle } from "@/components/ui/action-button";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
@@ -244,36 +245,23 @@ export default function OpenSlotsPageClient() {
               gap: 16,
             }}
           >
-            <ActionEmptyState
+            <OperatorEmptyState
               title="No openings yet"
               description="Create an appointment opening when a cancellation appears. PulseFill will help match it to standby customers."
-              ctaLabel="Create opening"
-              ctaHref="/open-slots/create"
+              primaryAction={
+                <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
+                  Create opening
+                </Link>
+              }
+              secondaryContent={
+                <>
+                  <RecoveryPipeline activeStep="opening" compact animated />
+                  <Link href="/customers" style={{ display: "inline-block", marginTop: 12, color: "var(--primary)", fontWeight: 600 }}>
+                    Invite standby customers
+                  </Link>
+                </>
+              }
             />
-            <div style={{ ...operatorSurfaceShell("quiet"), padding: 16 }}>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  color: "rgba(245,247,250,0.42)",
-                }}
-              >
-                How matching works
-              </p>
-              <WorkflowSteps
-                steps={[
-                  "Create an opening when a cancellation appears.",
-                  "PulseFill sends it to customers with active standby preferences.",
-                  "If nobody matches yet, invite standby customers first.",
-                ]}
-              />
-              <Link href="/customers" style={{ display: "inline-block", marginTop: 12, color: "var(--primary)", fontWeight: 600 }}>
-                Invite standby customers
-              </Link>
-            </div>
           </div>
         </div>
       ) : null}

@@ -276,6 +276,54 @@ a:hover {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
+/* Command Center: main column + sticky recovery rail */
+.pf-command-cockpit {
+  display: grid;
+  gap: var(--pf-page-section-gap);
+}
+
+@media (min-width: 1080px) {
+  .pf-command-cockpit {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
+    align-items: start;
+  }
+
+  .pf-command-cockpit-rail {
+    position: sticky;
+    top: 12px;
+  }
+}
+
+.pf-command-cockpit-footer {
+  grid-column: 1 / -1;
+}
+
+/* Recovery pipeline: stack on narrow, flow left-to-right on desktop */
+.pf-recovery-pipeline-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.pf-recovery-pipeline-connector {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .pf-recovery-pipeline-inner {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 4px 0;
+  }
+
+  .pf-recovery-pipeline-connector {
+    display: block;
+  }
+}
+
 /* Post-auth workspace: main content sits in a subtle “field” vs flat black. */
 .pf-workspace-field {
   position: relative;
