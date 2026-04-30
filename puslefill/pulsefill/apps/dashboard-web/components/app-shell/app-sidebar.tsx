@@ -123,7 +123,8 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           style={{
             borderRadius: 18,
             border: "1px solid rgba(255,255,255,0.1)",
-            background: "linear-gradient(165deg, rgba(255,255,255,0.04), rgba(10,12,18,0.92))",
+            background:
+              "linear-gradient(165deg, rgba(255,255,255,0.04), rgba(255,122,24,0.012) 48%, rgba(10,9,7,0.94))",
             padding: 16,
           }}
         >

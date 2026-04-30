@@ -6,7 +6,7 @@ const toneShell: Record<PageIntroTone, CSSProperties> = {
   default: {
     border: "1px solid var(--pf-border-subtle)",
     background:
-      "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012)), var(--pf-bg-surface)",
+      "linear-gradient(180deg, rgba(255,255,255,0.038), rgba(255,122,24,0.018)), var(--pf-bg-surface)",
     boxShadow: "0 24px 70px rgba(0,0,0,0.35)",
   },
   quiet: {

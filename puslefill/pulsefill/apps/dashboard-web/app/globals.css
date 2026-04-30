@@ -9,9 +9,9 @@
   /* —— Core neutrals —— */
   --pf-bg-app: #050505;
   --pf-bg-page: #0a0a0b;
-  --pf-bg-surface: #0f1013;
-  --pf-bg-surface-muted: #080809;
-  --pf-bg-elevated: #14151a;
+  --pf-bg-surface: #11100f;
+  --pf-bg-surface-muted: #090806;
+  --pf-bg-elevated: #171511;
 
   --pf-border-subtle: rgba(255, 255, 255, 0.08);
   --pf-border-default: rgba(255, 255, 255, 0.1);
@@ -54,7 +54,7 @@
   --pf-info-border: rgba(168, 162, 158, 0.22);
 
   /* —— Shell & cards —— */
-  --pf-card-bg: rgba(15, 16, 19, 0.94);
+  --pf-card-bg: rgba(17, 16, 15, 0.94);
   --pf-card-border: var(--pf-border-default);
   --pf-card-radius-xl: 24px;
   --pf-card-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.02);
@@ -63,9 +63,9 @@
   --pf-card-quiet-border: rgba(255, 255, 255, 0.08);
 
   /* Command-center intros: ember wash stays subtle; border reads as glass, not orange chrome. */
-  --pf-card-hero-bg: radial-gradient(circle at top left, rgba(255, 122, 24, 0.055), transparent 44%),
-    radial-gradient(circle at top right, rgba(201, 59, 47, 0.06), transparent 38%),
-    linear-gradient(180deg, rgba(18, 19, 24, 0.97), rgba(11, 12, 17, 0.99));
+  --pf-card-hero-bg: radial-gradient(circle at top left, rgba(255, 122, 24, 0.075), transparent 44%),
+    radial-gradient(circle at top right, rgba(201, 59, 47, 0.055), transparent 38%),
+    linear-gradient(180deg, rgba(22, 19, 15, 0.97), rgba(10, 9, 7, 0.99));
   --pf-card-hero-border: rgba(255, 255, 255, 0.1);
 
   /* —— Queue row surfaces —— */
@@ -136,7 +136,7 @@
   --pf-chip-success-border: var(--pf-success-border);
   --pf-chip-success-text: #a7f3d0;
 
-  --pf-shell-bg: linear-gradient(180deg, #050505 0%, #0a0a0b 40%, #0f1013 100%);
+  --pf-shell-bg: linear-gradient(180deg, #050505 0%, #0a0908 42%, #11100f 100%);
 
   --pf-hover-lift: translateY(-1px);
   --pf-focus-ring: 0 0 0 3px rgba(255, 122, 24, 0.28);
@@ -161,7 +161,7 @@ body {
   padding: 0;
   min-height: 100%;
   background-color: var(--pf-bg-app);
-  background-image: linear-gradient(180deg, #050505 0%, #0a0a0b 42%, #0f1013 100%);
+  background-image: linear-gradient(180deg, #050505 0%, #0a0908 42%, #11100f 100%);
   background-attachment: fixed;
   color: var(--text);
   font-family: var(--pf-font-sans);

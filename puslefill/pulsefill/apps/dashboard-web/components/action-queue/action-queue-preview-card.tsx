@@ -32,7 +32,8 @@ export function ActionQueuePreviewCard({
         marginTop: 24,
         borderRadius: 20,
         border: "1px solid rgba(255,255,255,0.1)",
-        background: "linear-gradient(165deg, rgba(255,255,255,0.045), rgba(10,12,18,0.88))",
+        background:
+          "linear-gradient(165deg, rgba(255,255,255,0.045), rgba(255,122,24,0.014) 48%, rgba(10,9,7,0.92))",
         boxShadow: "0 20px 56px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
         padding: 22,
       }}

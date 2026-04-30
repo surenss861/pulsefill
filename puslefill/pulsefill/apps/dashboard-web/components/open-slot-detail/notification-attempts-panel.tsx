@@ -22,7 +22,7 @@ function statusTone(status: string): { border: string; bg: string } {
   if (s === "sent") return { border: "rgba(52,211,153,0.35)", bg: "rgba(16,185,129,0.08)" };
   if (s === "suppressed") return { border: "rgba(250,204,21,0.35)", bg: "rgba(250,204,21,0.08)" };
   if (s === "failed") return { border: "rgba(248,113,113,0.35)", bg: "rgba(239,68,68,0.1)" };
-  return { border: "rgba(148,163,184,0.3)", bg: "rgba(148,163,184,0.08)" };
+  return { border: "rgba(255,255,255,0.14)", bg: "rgba(255,255,255,0.055)" };
 }
 
 function apnsFailureHint(errorCode: string | null): string | null {
@@ -84,9 +84,9 @@ export function NotificationAttemptsPanel({ attempts }: { attempts: Notification
           <span
             style={{
               borderRadius: 999,
-              border: "1px solid rgba(148,163,184,0.3)",
-              background: "rgba(148,163,184,0.08)",
-              color: "rgba(226,232,240,0.9)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              background: "rgba(255,255,255,0.055)",
+              color: "rgba(245,247,250,0.74)",
               padding: "3px 10px",
               fontSize: 11,
               fontWeight: 600,

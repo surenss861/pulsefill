@@ -185,7 +185,8 @@ export function OpenSlotDetailPage() {
             style={{
               borderRadius: 22,
               border: "1px solid rgba(255, 255, 255, 0.1)",
-              background: "linear-gradient(165deg, rgba(255,255,255,0.05), rgba(10,15,26,0.92))",
+              background:
+                "linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,122,24,0.014) 48%, rgba(10,9,7,0.94))",
               padding: "22px 22px 20px",
               boxShadow: "0 24px 70px rgba(0,0,0,0.35)",
             }}

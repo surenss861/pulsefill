@@ -43,17 +43,17 @@ function chipStyle(status: string): CSSProperties {
   if (normalized === "delivered") {
     return {
       ...base,
-      borderColor: "rgba(56,189,248,0.35)",
-      background: "rgba(14,165,233,0.12)",
-      color: "#7dd3fc",
+      borderColor: "rgba(255,122,24,0.32)",
+      background: "rgba(255,122,24,0.1)",
+      color: "#fed7aa",
     };
   }
   if (normalized === "viewed") {
     return {
       ...base,
-      borderColor: "rgba(167,139,250,0.35)",
-      background: "rgba(139,92,246,0.12)",
-      color: "#c4b5fd",
+      borderColor: "rgba(255,255,255,0.14)",
+      background: "rgba(255,255,255,0.065)",
+      color: "rgba(245,247,250,0.78)",
     };
   }
   if (normalized === "sent") {

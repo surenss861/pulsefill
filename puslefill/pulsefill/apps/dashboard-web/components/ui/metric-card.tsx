@@ -15,7 +15,8 @@ const surfaceFor: Record<MetricCardEmphasis, CSSProperties> = {
   },
   default: {
     border: "1px solid var(--pf-border-subtle)",
-    background: "#0a0f1a",
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,122,24,0.01)), var(--pf-bg-surface)",
   },
 };
 

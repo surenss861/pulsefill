@@ -46,7 +46,9 @@ export function OverviewMetricCard({ label, value, isCurrency = false }: Props) 
   const shell: CSSProperties = {
     borderRadius: "var(--pf-radius-xl)",
     border: `1px solid ${borderColor}`,
-    background: flash ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+    background: flash
+      ? "linear-gradient(180deg, rgba(255,122,24,0.12), rgba(255,255,255,0.04)), var(--pf-bg-surface)"
+      : "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,122,24,0.012)), var(--pf-bg-surface)",
     padding: "18px 20px",
     color: "var(--text)",
     transition: "background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease",

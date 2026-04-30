@@ -24,7 +24,8 @@ export function OutcomesActionStrip() {
       style={{
         borderRadius: 24,
         border: "1px solid var(--pf-border-subtle)",
-        background: "#090b10",
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,122,24,0.012)), var(--pf-bg-surface)",
         padding: "16px 18px",
       }}
     >

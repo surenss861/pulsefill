@@ -21,7 +21,9 @@ export function SectionCard({ eyebrow, title, description, headerActions, childr
       style={{
         borderRadius: 28,
         border: "1px solid var(--pf-border-subtle)",
-        background: "#0a0f1a",
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,122,24,0.012)), var(--pf-bg-surface)",
+        boxShadow: "0 18px 54px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.035)",
         padding: pad,
         ...style,
       }}

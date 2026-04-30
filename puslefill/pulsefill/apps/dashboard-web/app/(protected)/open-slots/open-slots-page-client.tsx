@@ -210,11 +210,11 @@ export default function OpenSlotsPageClient() {
             marginTop: 16,
             padding: 14,
             borderRadius: 14,
-            border: "1px solid rgba(96,165,250,0.35)",
-            background: "rgba(59,130,246,0.12)",
+            border: "1px solid var(--pf-accent-primary-border)",
+            background: "rgba(255, 122, 24, 0.08)",
           }}
         >
-          <div style={{ fontSize: 12, color: "#93c5fd", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+          <div style={{ fontSize: 12, color: "var(--pf-chip-primary-text)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
             Morning Recovery Digest
           </div>
           <div style={{ fontSize: 16, fontWeight: 650, marginTop: 4 }}>{digestBanner.title}</div>
