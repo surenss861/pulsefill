@@ -33,13 +33,13 @@ export default function SignUpPage() {
         description="Set up your operator account and connect your recovery workflow."
         footer={
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <span style={{ fontSize: 13, color: "rgba(245,247,250,0.44)" }}>
+            <span style={{ fontSize: 13, color: "rgba(169,162,154,0.82)" }}>
               Already have an account?{" "}
               <Link href="/sign-in" style={{ color: "rgba(253, 186, 116, 0.78)", fontWeight: 600 }}>
                 Sign in
               </Link>
             </span>
-            <span style={{ fontSize: 10, lineHeight: 1.45, color: "rgba(245,247,250,0.32)" }}>
+            <span style={{ fontSize: 10, lineHeight: 1.45, color: "rgba(111,104,97,0.95)" }}>
               By continuing, you agree to PulseFill&apos;s Terms and Privacy Policy.
             </span>
           </div>

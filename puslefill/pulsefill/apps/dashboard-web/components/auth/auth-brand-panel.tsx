@@ -26,7 +26,7 @@ export function AuthBrandPanel({
               boxShadow: "0 0 18px rgba(255, 122, 24, 0.55)",
             }}
           />
-          <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: "0.18em", color: "rgba(245,247,250,0.9)" }}>
+          <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: "0.18em", color: "rgba(245,242,237,0.9)" }}>
             PulseFill
           </span>
         </div>
@@ -39,7 +39,7 @@ export function AuthBrandPanel({
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.24em",
-              color: "rgba(245,247,250,0.46)",
+              color: "rgba(245,242,237,0.46)",
             }}
           >
             {eyebrow}
@@ -63,7 +63,7 @@ export function AuthBrandPanel({
               maxWidth: "32rem",
               fontSize: 16,
               lineHeight: 1.65,
-              color: "rgba(245,247,250,0.66)",
+              color: "rgba(169,162,154,0.95)",
             }}
           >
             {body}
@@ -96,7 +96,7 @@ export function AuthBrandPanel({
                   flexShrink: 0,
                 }}
               />
-              <span style={{ fontSize: 14, color: "rgba(245,247,250,0.82)" }}>{item}</span>
+              <span style={{ fontSize: 14, color: "rgba(245,242,237,0.82)" }}>{item}</span>
             </div>
           ))}
         </div>
@@ -119,7 +119,7 @@ export function AuthBrandPanel({
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: "0.2em",
-                color: "rgba(245,247,250,0.42)",
+                color: "rgba(245,242,237,0.42)",
               }}
             >
               Today&apos;s recovery
@@ -151,7 +151,7 @@ export function AuthBrandPanel({
                 style={{
                   borderRadius: 16,
                   border: "1px solid rgba(255, 122, 24, 0.18)",
-                  background: "#0a0d12",
+                  background: "#12110f",
                   padding: 14,
                 }}
               >
@@ -160,7 +160,7 @@ export function AuthBrandPanel({
                     fontSize: 11,
                     textTransform: "uppercase",
                     letterSpacing: "0.16em",
-                    color: "rgba(245,247,250,0.38)",
+                    color: "rgba(169,162,154,0.85)",
                   }}
                 >
                   {label}

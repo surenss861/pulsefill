@@ -153,7 +153,7 @@ export function LoginForm() {
             borderRadius: 14,
             border: "none",
             background: "var(--primary)",
-            color: "#0a0c10",
+            color: "var(--pf-text-inverse)",
             fontWeight: 600,
             cursor: loading ? "not-allowed" : "pointer",
             opacity: loading ? 0.7 : 1,

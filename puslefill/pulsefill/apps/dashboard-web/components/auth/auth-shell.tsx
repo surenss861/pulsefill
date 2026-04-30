@@ -7,7 +7,7 @@ const ambient = {
   background: `
     radial-gradient(circle at 72% 14%, rgba(255, 122, 24, 0.12), transparent 32%),
     radial-gradient(circle at 8% 92%, rgba(158, 42, 31, 0.1), transparent 26%),
-    linear-gradient(180deg, #050505 0%, #060606 48%, #050505 100%)
+    linear-gradient(180deg, #030303 0%, #050505 48%, #030303 100%)
   `,
 };
 

@@ -6,26 +6,27 @@
 :root {
   color-scheme: dark;
 
-  /* —— Core neutrals —— */
-  --pf-bg-app: #050505;
-  --pf-bg-page: #0a0a0b;
-  --pf-bg-surface: #11100f;
-  --pf-bg-surface-muted: #090806;
-  --pf-bg-elevated: #171511;
+  /* —— Core neutrals (charcoal / ember command center — no navy) —— */
+  --pf-bg-app: #030303;
+  --pf-bg-page: #050505;
+  --pf-bg-surface: #10100f;
+  --pf-bg-surface-muted: #080807;
+  --pf-bg-elevated: #171410;
 
   --pf-border-subtle: rgba(255, 255, 255, 0.08);
   --pf-border-default: rgba(255, 255, 255, 0.1);
   --pf-border-strong: rgba(255, 255, 255, 0.14);
 
-  --pf-text-primary: #f5f7fa;
-  --pf-text-secondary: #a7afbc;
-  --pf-text-tertiary: rgba(167, 175, 188, 0.88);
+  --pf-text-primary: #f5f2ed;
+  --pf-text-secondary: #a9a29a;
+  --pf-text-tertiary: rgba(169, 162, 154, 0.9);
+  --pf-text-muted: #6f6861;
   --pf-text-inverse: #0a0908;
 
   /* —— Brand —— */
   --pf-accent-primary: #ff7a18;
   --pf-accent-primary-hover: #ff8c2a;
-  --pf-accent-primary-deep: #c2410c;
+  --pf-accent-primary-deep: #b74310;
   --pf-accent-primary-soft: rgba(255, 122, 24, 0.14);
   --pf-accent-primary-border: rgba(255, 122, 24, 0.28);
   --pf-accent-primary-glow: rgba(255, 122, 24, 0.28);
@@ -136,15 +137,15 @@
   --pf-chip-success-border: var(--pf-success-border);
   --pf-chip-success-text: #a7f3d0;
 
-  --pf-shell-bg: linear-gradient(180deg, #050505 0%, #0a0908 42%, #11100f 100%);
+  --pf-shell-bg: linear-gradient(180deg, #030303 0%, #050505 42%, #10100f 100%);
 
   --pf-hover-lift: translateY(-1px);
   --pf-focus-ring: 0 0 0 3px rgba(255, 122, 24, 0.28);
   --pf-transition-fast: 140ms ease;
   --pf-transition-base: 180ms ease;
 
-  /* Auth inputs — elevated contrast on dark glass */
-  --pf-auth-input-bg: #111820;
+  /* Auth inputs — near-black warm fill (never slate/navy) */
+  --pf-auth-input-bg: #12110f;
   --pf-auth-input-border: rgba(255, 255, 255, 0.14);
   --pf-auth-input-border-focus: rgba(255, 122, 24, 0.72);
 
@@ -161,7 +162,7 @@ body {
   padding: 0;
   min-height: 100%;
   background-color: var(--pf-bg-app);
-  background-image: linear-gradient(180deg, #050505 0%, #0a0908 42%, #11100f 100%);
+  background-image: linear-gradient(180deg, #030303 0%, #050505 42%, #10100f 100%);
   background-attachment: fixed;
   color: var(--text);
   font-family: var(--pf-font-sans);
@@ -179,7 +180,7 @@ a:hover {
 
 /* Auth surfaces — secure console inputs */
 .pf-auth-input::placeholder {
-  color: rgba(245, 247, 250, 0.38);
+  color: rgba(245, 242, 237, 0.38);
 }
 
 .pf-auth-input:focus {

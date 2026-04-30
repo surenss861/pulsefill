@@ -124,7 +124,7 @@ function MutedTextLink({ children, href, variant = "default" }: { children: Reac
         fontSize: cta ? 12 : 13,
         fontWeight: cta ? 620 : 500,
         letterSpacing: cta ? "0.04em" : undefined,
-        color: cta ? "rgba(186,194,210,0.92)" : "var(--pf-text-tertiary)",
+        color: cta ? "rgba(169,162,154,0.92)" : "var(--pf-text-tertiary)",
         textDecoration: "none",
         padding: cta ? "8px 0" : "10px 0",
         borderBottom: cta ? "1px solid rgba(255,255,255,0.08)" : undefined,
@@ -164,7 +164,7 @@ function HeroEyebrow({ children }: { children: ReactNode }) {
       <span
         style={{
           display: "inline-block",
-          color: "rgba(245,247,250,0.65)",
+          color: "rgba(245,242,237,0.65)",
           fontSize: 10,
           fontWeight: 700,
           letterSpacing: "0.18em",
@@ -250,7 +250,7 @@ function OperatorHeroMock() {
       style={{
         borderRadius: 22,
         border: `1px solid ${TOKENS.border}`,
-        background: "rgba(5,8,16,0.94)",
+        background: "rgba(8,7,6,0.94)",
         overflow: "hidden",
         boxShadow: "0 40px 100px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,122,24,0.14), 0 0 140px rgba(255,122,24,0.22)",
       }}
@@ -352,7 +352,7 @@ function CustomerHeroPhone() {
         width: 198,
         borderRadius: 28,
         border: `1px solid rgba(255,255,255,0.08)`,
-        background: "linear-gradient(165deg, rgba(14,18,30,0.98), rgba(6,8,14,0.98))",
+        background: "linear-gradient(165deg, rgba(28,23,18,0.98), rgba(10,9,8,0.98))",
         padding: 7,
         boxShadow: "0 22px 56px rgba(0,0,0,0.55), 0 0 48px rgba(255,122,24,0.12)",
       }}
@@ -364,7 +364,7 @@ function CustomerHeroPhone() {
           border: `1px solid ${TOKENS.borderSubtle}`,
           minHeight: 320,
           padding: 16,
-          background: "linear-gradient(180deg, rgba(21,32,51,0.5), rgba(11,18,32,0.92))",
+          background: "linear-gradient(180deg, rgba(28,23,18,0.52), rgba(14,12,10,0.96))",
         }}
       >
         <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" }}>
@@ -425,7 +425,7 @@ function OperatorPayoffMock() {
       style={{
         borderRadius: 26,
         border: `1px solid rgba(255,122,24,0.35)`,
-        background: "rgba(4,7,14,0.96)",
+        background: "rgba(5,5,5,0.97)",
         overflow: "hidden",
         boxShadow: "0 40px 100px rgba(0,0,0,0.6), 0 0 140px rgba(255,122,24,0.2)",
       }}
@@ -507,7 +507,7 @@ function CustomerPayoffPhone() {
         maxWidth: 280,
         borderRadius: 36,
         border: `1px solid ${TOKENS.border}`,
-        background: "rgba(6,10,18,0.98)",
+        background: "rgba(5,5,5,0.98)",
         padding: 10,
         boxShadow: "0 32px 88px rgba(0,0,0,0.58), 0 0 72px rgba(255,122,24,0.14)",
       }}
@@ -518,7 +518,7 @@ function CustomerPayoffPhone() {
           overflow: "hidden",
           border: `1px solid ${TOKENS.borderSubtle}`,
           minHeight: 440,
-          background: "linear-gradient(180deg, rgba(21,32,51,0.96), rgba(11,18,32,0.96))",
+          background: "linear-gradient(180deg, rgba(28,23,18,0.96), rgba(12,11,9,0.98))",
           padding: 18,
         }}
       >
@@ -690,7 +690,7 @@ export function PulseFillLandingPageContent() {
                   data-hero-reveal
                   style={{
                     margin: "26px 0 0 0",
-                    color: "rgba(231,236,245,0.88)",
+                    color: "rgba(245,242,237,0.88)",
                     fontSize: 15,
                     lineHeight: 1.52,
                     maxWidth: 400,
@@ -785,7 +785,7 @@ export function PulseFillLandingPageContent() {
                     padding: "9px 12px",
                     borderRadius: 12,
                     border: "1px solid rgba(255,122,24,0.4)",
-                    background: "rgba(4,6,12,0.92)",
+                    background: "rgba(12,11,9,0.94)",
                     backdropFilter: "blur(14px)",
                     boxShadow: "0 14px 40px rgba(0,0,0,0.55), 0 0 32px rgba(255,122,24,0.2)",
                   }}
@@ -1046,8 +1046,8 @@ export function PulseFillLandingPageContent() {
                           block.emphasis === "hero"
                             ? "rgba(253,186,116,0.95)"
                             : block.emphasis === "medium"
-                              ? "rgba(148,163,184,0.78)"
-                              : "rgba(148,163,184,0.52)",
+                              ? "rgba(169,162,154,0.78)"
+                              : "rgba(169,162,154,0.52)",
                       }}
                     >
                       {block.k}
@@ -1232,7 +1232,7 @@ export function PulseFillLandingPageContent() {
                   padding: "10px 12px",
                   borderRadius: 11,
                   border: "1px solid rgba(255,122,24,0.38)",
-                  background: "rgba(3,5,12,0.94)",
+                  background: "rgba(8,7,6,0.96)",
                   backdropFilter: "blur(12px)",
                   boxShadow: "0 16px 40px rgba(0,0,0,0.55), 0 0 24px rgba(255,122,24,0.12)",
                 }}
@@ -1324,7 +1324,7 @@ export function PulseFillLandingPageContent() {
                 </span>
                 <div style={{ flex: "1 1 220px", minWidth: 0 }}>
                   <div style={{ color: TOKENS.text, fontSize: "clamp(17px, 2.1vw, 20px)", fontWeight: 660, letterSpacing: "-0.032em" }}>{row.title}</div>
-                  <p style={{ margin: "6px 0 0 0", color: "rgba(148,163,184,0.88)", fontSize: 13, lineHeight: 1.52, maxWidth: 480 }}>
+                  <p style={{ margin: "6px 0 0 0", color: "rgba(169,162,154,0.88)", fontSize: 13, lineHeight: 1.52, maxWidth: 480 }}>
                     {row.body}
                   </p>
                 </div>
@@ -1388,7 +1388,7 @@ export function PulseFillLandingPageContent() {
               <div style={{ marginTop: 12, fontSize: "clamp(62px, 9.2vw, 84px)", fontWeight: 660, letterSpacing: "-0.056em", lineHeight: 0.86, color: TOKENS.text }}>
                 12
               </div>
-              <p style={{ margin: "20px 0 0 0", color: "rgba(148,163,184,0.92)", fontSize: 12, lineHeight: 1.5, maxWidth: 260 }}>
+              <p style={{ margin: "20px 0 0 0", color: "rgba(169,162,154,0.92)", fontSize: 12, lineHeight: 1.5, maxWidth: 260 }}>
                 Proof where the team already works — not a buried report.
               </p>
             </div>
@@ -1406,7 +1406,7 @@ export function PulseFillLandingPageContent() {
               <div style={{ marginTop: 12, fontSize: "clamp(62px, 9.2vw, 84px)", fontWeight: 660, letterSpacing: "-0.056em", lineHeight: 0.86, color: TOKENS.text }}>
                 $1.8K
               </div>
-              <p style={{ margin: "20px 0 0 0", color: "rgba(148,163,184,0.92)", fontSize: 12, lineHeight: 1.5, maxWidth: 260 }}>
+              <p style={{ margin: "20px 0 0 0", color: "rgba(169,162,154,0.92)", fontSize: 12, lineHeight: 1.5, maxWidth: 260 }}>
                 Revenue the desk recognizes — tied to recovery, not guesswork.
               </p>
             </div>
@@ -1537,7 +1537,7 @@ export function PulseFillLandingPageContent() {
                   background: `
                   radial-gradient(ellipse 38% 48% at 50% 0%, rgba(255,122,24,0.48), transparent 52%),
                   radial-gradient(ellipse 32% 36% at 94% 98%, rgba(201,59,47,0.12), transparent 52%),
-                  radial-gradient(circle at 50% 60%, rgba(4,6,12,0.2), rgba(0,0,0,0.9))
+                  radial-gradient(circle at 50% 60%, rgba(16,14,12,0.35), rgba(0,0,0,0.9))
                 `,
                 }}
               />

@@ -34,7 +34,7 @@ export default async function CheckEmailPage({
             padding: "14px 16px",
             fontSize: 14,
             lineHeight: 1.55,
-            color: "rgba(245,247,250,0.72)",
+            color: "rgba(245,242,237,0.78)",
           }}
         >
           Didn&apos;t get it? Check spam, promotions, or filtered folders first.
@@ -51,7 +51,7 @@ export default async function CheckEmailPage({
             padding: "14px 18px",
             fontSize: 14,
             fontWeight: 600,
-            color: "rgba(245,247,250,0.88)",
+            color: "rgba(245,242,237,0.9)",
             background: "rgba(255,255,255,0.03)",
             textAlign: "center",
           }}

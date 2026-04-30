@@ -33,7 +33,7 @@ export function PasswordField({
             fontWeight: 700,
             textTransform: "uppercase",
             letterSpacing: "0.2em",
-            color: "rgba(245,247,250,0.48)",
+            color: "rgba(169,162,154,0.92)",
           }}
         >
           {label}
@@ -51,7 +51,7 @@ export function PasswordField({
               boxSizing: "border-box",
               borderRadius: 18,
               border,
-              background: "#0a0f1a",
+              background: "var(--pf-auth-input-bg)",
               padding: "16px 52px 16px 18px",
               minHeight: 56,
               fontSize: 15,
@@ -74,7 +74,7 @@ export function PasswordField({
               fontSize: 11,
               fontWeight: 500,
               letterSpacing: "0.04em",
-              color: "rgba(245,247,250,0.42)",
+              color: "rgba(169,162,154,0.85)",
               background: "transparent",
               cursor: "pointer",
             }}

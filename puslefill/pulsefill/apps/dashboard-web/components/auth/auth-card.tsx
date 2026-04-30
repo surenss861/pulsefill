@@ -21,11 +21,12 @@ export function AuthCard({
     <div
       style={{
         borderRadius: 30,
-        border: "1px solid rgba(255,255,255,0.1)",
-        background: "linear-gradient(180deg, rgba(18,21,32,0.94), rgba(9,11,18,0.97))",
+        border: "1px solid rgba(255, 122, 24, 0.22)",
+        background:
+          "radial-gradient(ellipse 120% 90% at 50% 0%, rgba(255, 122, 24, 0.14), transparent 42%), linear-gradient(180deg, #171410 0%, #12110f 48%, #0a0908 100%)",
         padding: "clamp(28px, 4vw, 40px)",
         boxShadow:
-          "0 40px 120px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 0 1px rgba(255, 122, 24, 0.1)",
+          "0 40px 120px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 72px rgba(255, 122, 24, 0.1)",
         backdropFilter: "blur(20px)",
       }}
     >
@@ -47,7 +48,7 @@ export function AuthCard({
                 background: "var(--pf-accent-primary)",
               }}
             />
-            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: "0.16em", color: "rgba(245,247,250,0.88)" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: "0.16em", color: "rgba(245,242,237,0.88)" }}>
               PulseFill
             </span>
           </div>
@@ -60,7 +61,7 @@ export function AuthCard({
               fontWeight: 700,
               letterSpacing: "0.22em",
               textTransform: "uppercase",
-              color: "rgba(245,247,250,0.42)",
+              color: "rgba(245,242,237,0.42)",
             }}
           >
             {overtitle}

@@ -19,7 +19,7 @@ export function AuthField({ label, error, style, className, ...props }: AuthFiel
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: "0.2em",
-          color: "rgba(245,247,250,0.55)",
+          color: "rgba(169,162,154,0.92)",
         }}
       >
         {label}

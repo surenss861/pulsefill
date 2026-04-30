@@ -48,26 +48,26 @@ export function SignInClient() {
                 gap: "10px 18px",
                 justifyContent: "space-between",
                 fontSize: 13,
-                color: "rgba(245,247,250,0.42)",
+                color: "rgba(169,162,154,0.75)",
               }}
             >
-              <Link href="/forgot-password" style={{ color: "rgba(245,247,250,0.48)", fontWeight: 500 }}>
+              <Link href="/forgot-password" style={{ color: "rgba(169,162,154,0.88)", fontWeight: 500 }}>
                 Forgot password
               </Link>
-              <span style={{ color: "rgba(245,247,250,0.42)" }}>
+              <span style={{ color: "rgba(169,162,154,0.75)" }}>
                 Don&apos;t have an account?{" "}
                 <Link href="/sign-up" style={{ color: "rgba(253, 186, 116, 0.75)", fontWeight: 600 }}>
                   Create one
                 </Link>
               </span>
             </div>
-            <div style={{ fontSize: 11, lineHeight: 1.4, color: "rgba(245,247,250,0.28)" }}>
-              <span style={{ color: "rgba(245,247,250,0.26)" }}>Internal — </span>
-              <Link href="/staff-login" style={{ color: "rgba(245,247,250,0.36)", fontWeight: 500 }}>
+            <div style={{ fontSize: 11, lineHeight: 1.4, color: "rgba(111,104,97,0.9)" }}>
+              <span style={{ color: "rgba(111,104,97,0.85)" }}>Internal — </span>
+              <Link href="/staff-login" style={{ color: "rgba(169,162,154,0.72)", fontWeight: 500 }}>
                 Paste access token
               </Link>
             </div>
-            <span style={{ fontSize: 11, lineHeight: 1.45, color: "rgba(245,247,250,0.34)", maxWidth: 400 }}>
+            <span style={{ fontSize: 11, lineHeight: 1.45, color: "rgba(111,104,97,0.95)", maxWidth: 400 }}>
               Protected operator access. Session activity may be monitored.
             </span>
           </div>
@@ -98,8 +98,8 @@ export function SignInClient() {
                   fontWeight: 650,
                   textTransform: "uppercase",
                   letterSpacing: "0.2em",
-                  color: "rgba(245,247,250,0.28)",
-                  background: "rgba(10,12,18,0.92)",
+                  color: "rgba(169,162,154,0.65)",
+                  background: "rgba(18,17,15,0.96)",
                 }}
               >
                 Or
@@ -122,7 +122,7 @@ export function SignInClient() {
                 padding: "11px 16px",
                 fontSize: 13,
                 fontWeight: 500,
-                color: "rgba(245,247,250,0.58)",
+                color: "rgba(245,242,237,0.72)",
                 background: "rgba(255,255,255,0.02)",
                 cursor: "pointer",
               }}
