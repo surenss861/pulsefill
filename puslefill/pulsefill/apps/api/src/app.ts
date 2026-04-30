@@ -38,6 +38,12 @@ export async function buildApp(env: Env) {
     "Push provider configured",
   );
 
+  if (env.NODE_ENV === "production" && !env.API_CORS_ORIGINS?.length) {
+    app.log.warn(
+      "API_CORS_ORIGINS is unset — browser CORS is off in production. Set comma-separated origins (e.g. https://pulsefill.vercel.app) on the API host or the dashboard cannot load data.",
+    );
+  }
+
   await app.register(errorHandler);
   await app.register(cors, { origin: corsOriginForEnv(env) });
   await app.register(authPlugin, { env });
