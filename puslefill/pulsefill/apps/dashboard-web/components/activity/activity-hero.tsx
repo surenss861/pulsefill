@@ -26,6 +26,8 @@ export function ActivityHero({ actions }: ActivityHeroProps) {
 
   return (
     <PageIntroCard
+      density="compact"
+      tone="quiet"
       overline="Activity"
       title="Activity"
       description="Track openings, offers, customer requests, and notification events across your recovery workflow."

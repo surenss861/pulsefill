@@ -27,7 +27,7 @@ function field(label: string, value: string | null | undefined) {
         display: "grid",
         gridTemplateColumns: "minmax(0, 140px) 1fr",
         gap: "10px 20px",
-        padding: "12px 0",
+        padding: "10px 0",
         borderBottom: "1px solid var(--pf-border-subtle)",
         fontSize: 14,
       }}
@@ -42,6 +42,17 @@ function roleLabel(role: string) {
   if (!role) return "Operator";
   return role.charAt(0).toUpperCase() + role.slice(1);
 }
+
+const selectStyle = {
+  maxWidth: 360,
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid var(--pf-border-default)",
+  background: "var(--pf-auth-input-bg)",
+  color: "var(--text)",
+  fontSize: 14,
+  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+} as const;
 
 export type SettingsPageClientProps = {
   authEmail: string | null;
@@ -69,10 +80,11 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
       : null;
 
   return (
-    <main style={{ padding: 0, maxWidth: 880 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <main style={{ padding: 0, maxWidth: 1024 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <PageIntroCard
           tone="elevated"
+          density="compact"
           layout="split"
           overline="Settings"
           title="Account and workspace settings"
@@ -100,54 +112,8 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
         />
 
         <SectionCard
-          eyebrow="Your account"
-          title="Account"
-          description="Your name, email, role, and sign-in session."
-        >
-          <div style={{ marginTop: 4 }}>{field("Display name", profile.full_name)}</div>
-          {field("Work email", displayEmail)}
-          {field("Last sign-in", lastIn)}
-          <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-            <form action={signOutAction} style={{ display: "inline" }}>
-              <ActionButton variant="secondary" type="submit">
-                Sign out
-              </ActionButton>
-            </form>
-            <span style={{ fontSize: 13, color: "rgba(245, 247, 250, 0.45)" }}>Ends this session on this device.</span>
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          eyebrow="Workspace"
-          title="Workspace"
-          description="Business details used across openings and customer invites."
-        >
-          {business.loading ? (
-            <PageState variant="info" title="Loading workspace" description="Fetching business from the PulseFill API." style={{ maxWidth: "100%" }} />
-          ) : business.error ? (
-            <div>
-              <PageState variant="error" title="Could not load workspace" description={business.error} style={{ maxWidth: "100%" }} />
-              <div style={{ marginTop: 14 }}>
-                <ActionButton variant="primary" onClick={() => void business.reload()}>
-                  Try again
-                </ActionButton>
-              </div>
-            </div>
-          ) : business.data ? (
-            <div style={{ marginTop: 4 }}>
-              {field("Business name", business.data.name)}
-              {field("Timezone", business.data.timezone)}
-              {field("Category", business.data.category)}
-              {field("Phone", business.data.phone)}
-              {field("Business email", business.data.email)}
-              {field("Website", formatWebsiteDisplay(business.data.website))}
-            </div>
-          ) : (
-            <PageState variant="empty" title="No workspace data" description="Try refreshing the page." style={{ maxWidth: "100%" }} />
-          )}
-        </SectionCard>
-
-        <SectionCard
+          surfaceTone="operational"
+          density="dense"
           eyebrow="Customers"
           title="Standby access"
           description="Control how new customers can join your standby pool. Invite-only stays the default until you turn on discovery."
@@ -157,21 +123,13 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
           ) : business.error ? (
             <PageState variant="error" title="Could not load" description={business.error} style={{ maxWidth: "100%" }} />
           ) : business.data ? (
-            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 14 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: "rgba(245,247,250,0.55)" }}>
                 Access mode
                 <select
                   value={accessMode ?? "private"}
                   onChange={(e) => setAccessMode(e.target.value as BusinessMineResponse["standby_access_mode"])}
-                  style={{
-                    maxWidth: 360,
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    border: "1px solid var(--pf-border-subtle)",
-                    background: "rgba(0,0,0,0.35)",
-                    color: "var(--text)",
-                    fontSize: 14,
-                  }}
+                  style={selectStyle}
                 >
                   <option value="private">Private — invite only</option>
                   <option value="request_to_join">Request to join — customers apply, you approve</option>
@@ -226,53 +184,108 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
         </SectionCard>
 
         <SectionCard
-          eyebrow="Workspace setup"
-          title="Setup"
-          description="Manage locations, providers, services, billing, and account settings."
+          surfaceTone="quiet"
+          density="dense"
+          eyebrow="Your account"
+          title="Account"
+          description="Your name, email, role, and sign-in session."
         >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 10,
-              marginTop: 4,
-            }}
-          >
-            <Link href="/locations" style={actionLinkStyle("secondary")}>
-              Locations
-            </Link>
-            <Link href="/providers" style={actionLinkStyle("secondary")}>
-              Providers
-            </Link>
-            <Link href="/services" style={actionLinkStyle("secondary")}>
-              Services
-            </Link>
-            <Link href="/billing" style={actionLinkStyle("secondary")}>
-              Billing
-            </Link>
-            <Link href="/account" style={actionLinkStyle("secondary")}>
-              Account
-            </Link>
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          eyebrow="Security"
-          title="Security"
-          description="Manage sign-in and session controls."
-        >
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            <Link href="/forgot-password" style={actionLinkStyle("secondary")}>
-              Reset password
-            </Link>
+          <div style={{ marginTop: 2 }}>{field("Display name", profile.full_name)}</div>
+          {field("Work email", displayEmail)}
+          {field("Last sign-in", lastIn)}
+          <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
             <form action={signOutAction} style={{ display: "inline" }}>
               <ActionButton variant="secondary" type="submit">
                 Sign out
               </ActionButton>
             </form>
+            <span style={{ fontSize: 13, color: "rgba(245, 247, 250, 0.45)" }}>Ends this session on this device.</span>
           </div>
         </SectionCard>
 
+        <SectionCard
+          density="dense"
+          eyebrow="Workspace"
+          title="Workspace"
+          description="Business details used across openings and customer invites."
+        >
+          {business.loading ? (
+            <PageState variant="info" title="Loading workspace" description="Fetching business from the PulseFill API." style={{ maxWidth: "100%" }} />
+          ) : business.error ? (
+            <div>
+              <PageState variant="error" title="Could not load workspace" description={business.error} style={{ maxWidth: "100%" }} />
+              <div style={{ marginTop: 14 }}>
+                <ActionButton variant="primary" onClick={() => void business.reload()}>
+                  Try again
+                </ActionButton>
+              </div>
+            </div>
+          ) : business.data ? (
+            <div style={{ marginTop: 2 }}>
+              {field("Business name", business.data.name)}
+              {field("Timezone", business.data.timezone)}
+              {field("Category", business.data.category)}
+              {field("Phone", business.data.phone)}
+              {field("Business email", business.data.email)}
+              {field("Website", formatWebsiteDisplay(business.data.website))}
+            </div>
+          ) : (
+            <PageState variant="empty" title="No workspace data" description="Try refreshing the page." style={{ maxWidth: "100%" }} />
+          )}
+        </SectionCard>
+
+        <div className="pf-settings-two-col">
+          <SectionCard
+            density="dense"
+            eyebrow="Workspace setup"
+            title="Setup"
+            description="Manage locations, providers, services, billing, and account settings."
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                gap: 10,
+                marginTop: 2,
+              }}
+            >
+              <Link href="/locations" style={actionLinkStyle("secondary")}>
+                Locations
+              </Link>
+              <Link href="/providers" style={actionLinkStyle("secondary")}>
+                Providers
+              </Link>
+              <Link href="/services" style={actionLinkStyle("secondary")}>
+                Services
+              </Link>
+              <Link href="/billing" style={actionLinkStyle("secondary")}>
+                Billing
+              </Link>
+              <Link href="/account" style={actionLinkStyle("secondary")}>
+                Account
+              </Link>
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            surfaceTone="quiet"
+            density="dense"
+            eyebrow="Security"
+            title="Security"
+            description="Manage sign-in and session controls."
+          >
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 2 }}>
+              <Link href="/forgot-password" style={actionLinkStyle("secondary")}>
+                Reset password
+              </Link>
+              <form action={signOutAction} style={{ display: "inline" }}>
+                <ActionButton variant="secondary" type="submit">
+                  Sign out
+                </ActionButton>
+              </form>
+            </div>
+          </SectionCard>
+        </div>
       </div>
     </main>
   );

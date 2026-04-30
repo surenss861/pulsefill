@@ -48,6 +48,7 @@ export function OverviewOperatorHero({
   return (
     <PageIntroCard
       style={{ marginBottom: 18 }}
+      density="compact"
       tone="elevated"
       layout="split"
       overline="Command Center"

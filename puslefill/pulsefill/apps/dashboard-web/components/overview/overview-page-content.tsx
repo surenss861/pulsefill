@@ -35,6 +35,7 @@ import { OperatorMorningRecoveryDigestPanel } from "@/components/workflow/operat
 import { CommandCenterRecentActivity } from "@/components/overview/command-center-recent-activity";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
+import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 export type OverviewPageContentProps = {
   displayName: string | null;
@@ -288,7 +289,7 @@ export function OverviewPageContent({
       {showGettingStarted && !loading ? <GettingStartedCard state={checklist} /> : null}
 
       {showGettingStarted && !loading ? (
-        <>
+        <div className="pf-cockpit-grid">
           <ActionQueuePreviewCard
             items={actionQueue.data?.sections.needs_action ?? []}
             loading={actionQueue.loading}
@@ -296,7 +297,7 @@ export function OverviewPageContent({
             summary={actionQueue.data?.summary}
           />
           <CommandCenterRecentActivity />
-        </>
+        </div>
       ) : null}
 
       {!showGettingStarted && !loading ? (
@@ -334,14 +335,15 @@ export function OverviewPageContent({
             }}
           />
 
-          <ActionQueuePreviewCard
-            items={actionQueue.data?.sections.needs_action ?? []}
-            loading={actionQueue.loading}
-            error={actionQueue.error}
-            summary={actionQueue.data?.summary}
-          />
-
-          <CommandCenterRecentActivity />
+          <div className="pf-cockpit-grid">
+            <ActionQueuePreviewCard
+              items={actionQueue.data?.sections.needs_action ?? []}
+              loading={actionQueue.loading}
+              error={actionQueue.error}
+              summary={actionQueue.data?.summary}
+            />
+            <CommandCenterRecentActivity />
+          </div>
 
           <OverviewDeliveryReliabilityBlock data={deliveryReliability.data} loading={deliveryReliability.loading} />
           <OverviewOpsBreakdownBlock data={opsBreakdown.data} loading={opsBreakdown.loading} />
@@ -376,10 +378,8 @@ export function OverviewPageContent({
         <div
           style={{
             marginTop: 24,
-            borderRadius: 24,
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.04)",
-            padding: 24,
+            padding: 22,
+            ...operatorSurfaceShell("operational"),
           }}
         >
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 650, letterSpacing: "-0.02em" }}>

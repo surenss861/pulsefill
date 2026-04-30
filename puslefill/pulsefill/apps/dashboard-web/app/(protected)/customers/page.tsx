@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import { actionLinkStyle } from "@/components/ui/action-button";
+import { PageIntroCard } from "@/components/ui/page-intro-card";
 import { apiFetch } from "@/lib/api";
+import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 type CustomerInviteRow = {
   id: string;
@@ -94,49 +97,58 @@ export default function CustomersPage() {
   }
 
   return (
-    <main style={{ padding: 0, maxWidth: 980 }}>
-      <h1 style={{ marginTop: 0 }}>Customers & standby</h1>
-      <p style={{ color: "var(--muted)", lineHeight: 1.6, marginTop: 8 }}>
-        Invite customers to join standby so PulseFill can match them to new openings.
-      </p>
-      <p style={{ marginTop: 10, fontSize: 14 }}>
-        <Link href="/customers/standby-requests" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
-          Standby requests
-        </Link>
-        <span style={{ color: "var(--muted)" }}> — review customers who asked to join when you use request-to-join access.</span>
-      </p>
+    <main style={{ padding: 0, maxWidth: 1024 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <PageIntroCard
+          density="compact"
+          tone="default"
+          layout="split"
+          overline="Customers"
+          title="Customers & standby"
+          description="Invite customers to join standby so PulseFill can match them to new openings."
+          actions={
+            <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
+              Standby requests
+            </Link>
+          }
+        />
 
-      <div
-        style={{
-          marginTop: 16,
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: 10,
-        }}
-      >
-        <SummaryCard label="Pending invites" value={pendingInvites} helper="Customers waiting to accept your invite." />
-        <SummaryCard label="Active standby" value={acceptedInvites} helper="Customers connected to this clinic." />
-        <SummaryCard label="Match coverage" value={acceptedInvites > 0 ? "Improving" : "Low"} helper={matchCoverage} />
-      </div>
+        <div
+          style={{
+            ...operatorSurfaceShell("quiet"),
+            padding: "14px 16px",
+            fontSize: 13,
+            lineHeight: 1.55,
+            color: "rgba(245,247,250,0.78)",
+          }}
+        >
+          <Link href="/customers/standby-requests" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
+            Standby requests
+          </Link>
+          <span style={{ color: "var(--muted)" }}> — review customers who asked to join when you use request-to-join access.</span>
+        </div>
 
-      <div
-        style={{
-          marginTop: 24,
-          display: "grid",
-          gridTemplateColumns: "1.1fr 1fr",
-          gap: 14,
-        }}
-      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 10,
+          }}
+        >
+          <SummaryCard label="Pending invites" value={pendingInvites} helper="Customers waiting to accept your invite." />
+          <SummaryCard label="Active standby" value={acceptedInvites} helper="Customers connected to this clinic." />
+          <SummaryCard label="Match coverage" value={acceptedInvites > 0 ? "Improving" : "Low"} helper={matchCoverage} />
+        </div>
+
+        <div className="pf-customers-split" style={{ marginTop: 4 }}>
         <form
           onSubmit={onSubmit}
           style={{
             display: "flex",
             flexDirection: "column",
             gap: 12,
-            padding: 16,
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.04)",
+            padding: 18,
+            ...operatorSurfaceShell("operational"),
           }}
         >
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Invite customer</h2>
@@ -152,12 +164,13 @@ export default function CustomersPage() {
               placeholder="patients@example.com"
               required
               style={{
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(0,0,0,0.2)",
+                borderRadius: 12,
+                border: "1px solid var(--pf-border-default)",
+                background: "var(--pf-auth-input-bg)",
                 color: "var(--text)",
                 padding: "10px 12px",
                 fontSize: 14,
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
               }}
             />
           </label>
@@ -166,14 +179,16 @@ export default function CustomersPage() {
             type="submit"
             disabled={saving}
             style={{
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.18)",
-              background: "rgba(255,255,255,0.1)",
-              color: "var(--text)",
-              padding: "10px 14px",
+              borderRadius: 12,
+              border: "1px solid var(--pf-accent-primary-border)",
+              background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
+              color: "var(--pf-btn-primary-text)",
+              padding: "10px 16px",
               fontSize: 14,
+              fontWeight: 700,
               cursor: saving ? "wait" : "pointer",
               alignSelf: "flex-start",
+              boxShadow: "0 10px 28px rgba(255, 122, 24, 0.28)",
             }}
           >
             {saving ? "Creating…" : "Create invite code"}
@@ -182,10 +197,8 @@ export default function CustomersPage() {
 
         <div
           style={{
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.03)",
-            padding: 16,
+            padding: 18,
+            ...operatorSurfaceShell("quiet"),
           }}
         >
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Standby coverage</h2>
@@ -201,7 +214,7 @@ export default function CustomersPage() {
             </Link>
           </p>
         </div>
-      </div>
+        </div>
 
       {lastCreated ? (
         <div
@@ -267,11 +280,9 @@ export default function CustomersPage() {
       {!loading && !listError && invites.length === 0 ? (
         <div
           style={{
-            marginTop: 24,
-            borderRadius: 14,
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.03)",
-            padding: 14,
+            marginTop: 20,
+            padding: 16,
+            ...operatorSurfaceShell("emptyState"),
           }}
         >
           <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>No pending invites yet</p>
@@ -281,8 +292,8 @@ export default function CustomersPage() {
         </div>
       ) : null}
 
-      <div style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 650, marginBottom: 8 }}>Pending invites</h2>
+      <div style={{ marginTop: 20 }}>
+        <h2 style={{ fontSize: 15, fontWeight: 650, marginBottom: 8, letterSpacing: "-0.02em" }}>Pending invites</h2>
         {!loading && !listError && invites.length > 0 ? (
           <div
             style={{
@@ -316,6 +327,7 @@ export default function CustomersPage() {
           </div>
         ) : null}
       </div>
+      </div>
     </main>
   );
 }
@@ -334,15 +346,15 @@ function SummaryCard({ label, value, helper }: { label: string; value: string | 
   return (
     <div
       style={{
-        borderRadius: 12,
-        border: "1px solid rgba(255,255,255,0.1)",
-        background: "rgba(255,255,255,0.03)",
-        padding: 12,
+        padding: "14px 16px",
+        ...operatorSurfaceShell("metric"),
       }}
     >
-      <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>{label}</p>
-      <p style={{ margin: "6px 0 0", fontSize: 20, fontWeight: 650 }}>{value}</p>
-      <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--muted)", lineHeight: 1.4 }}>{helper}</p>
+      <p style={{ margin: 0, fontSize: 10, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(245,247,250,0.42)" }}>
+        {label}
+      </p>
+      <p style={{ margin: "8px 0 0", fontSize: 22, fontWeight: 650, letterSpacing: "-0.03em" }}>{value}</p>
+      <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)", lineHeight: 1.45 }}>{helper}</p>
     </div>
   );
 }

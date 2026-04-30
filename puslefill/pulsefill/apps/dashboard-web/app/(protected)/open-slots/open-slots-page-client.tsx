@@ -22,6 +22,7 @@ import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscr
 import { useOperatorSlotsList } from "@/hooks/useOperatorSlotsList";
 import { runOperatorBulkAction } from "@/lib/operator-bulk-actions";
 import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
+import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
 import { digestSectionBannerTitle } from "@/lib/morning-recovery-digest-ui";
@@ -232,30 +233,55 @@ export default function OpenSlotsPageClient() {
       {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
 
       {!loading && !error && slots.length === 0 ? (
-        <div style={{ marginTop: 24 }}>
-          <ActionEmptyState
-            title="No openings yet"
-            description="Create an appointment opening when a cancellation appears. PulseFill will help match it to standby customers."
-            ctaLabel="Create opening"
-            ctaHref="/open-slots/create"
-          />
+        <div style={{ marginTop: 20 }}>
           <div
             style={{
-              marginTop: 14,
-              borderRadius: 14,
-              border: "1px solid rgba(255,255,255,0.1)",
-              background: "rgba(255,255,255,0.03)",
-              padding: 14,
+              ...operatorSurfaceShell("operational"),
+              padding: 20,
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
             }}
           >
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>How matching works</p>
-            <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
-              PulseFill sends openings to customers with active standby preferences. If nobody matches yet, invite
-              standby customers first.
-            </p>
-            <Link href="/customers" style={{ display: "inline-block", marginTop: 8, color: "var(--primary)", fontWeight: 600 }}>
-              Invite standby customers
-            </Link>
+            <ActionEmptyState
+              title="No openings yet"
+              description="Create an appointment opening when a cancellation appears. PulseFill will help match it to standby customers."
+              ctaLabel="Create opening"
+              ctaHref="/open-slots/create"
+            />
+            <div style={{ ...operatorSurfaceShell("quiet"), padding: 16 }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "rgba(245,247,250,0.42)",
+                }}
+              >
+                How matching works
+              </p>
+              <ol
+                style={{
+                  margin: "10px 0 0",
+                  paddingLeft: 18,
+                  color: "var(--muted)",
+                  fontSize: 13,
+                  lineHeight: 1.55,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <li>Create an opening when a cancellation appears.</li>
+                <li>PulseFill sends it to customers with active standby preferences.</li>
+                <li>If nobody matches yet, invite standby customers first.</li>
+              </ol>
+              <Link href="/customers" style={{ display: "inline-block", marginTop: 12, color: "var(--primary)", fontWeight: 600 }}>
+                Invite standby customers
+              </Link>
+            </div>
           </div>
         </div>
       ) : null}

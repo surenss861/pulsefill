@@ -24,18 +24,21 @@ type MetricCardProps = {
   label: string;
   value: ReactNode;
   emphasis?: MetricCardEmphasis;
+  /** Tighter strip for zero / low-signal dashboards (e.g. Activity). */
+  size?: "default" | "compact";
   style?: CSSProperties;
 };
 
 /** Shared metric / scorecard cell (Overview, Queue summary, Outcomes, Activity strip). */
-export function MetricCard({ label, value, emphasis = "default", style }: MetricCardProps) {
+export function MetricCard({ label, value, emphasis = "default", size = "default", style }: MetricCardProps) {
+  const compact = size === "compact";
   return (
     <div
       style={{
         flex: "1 1 120px",
-        minWidth: 110,
-        borderRadius: "var(--pf-radius-xl)",
-        padding: "var(--pf-card-padding)",
+        minWidth: compact ? 88 : 110,
+        borderRadius: compact ? "var(--pf-radius-md)" : "var(--pf-radius-xl)",
+        padding: compact ? "10px 12px" : "var(--pf-card-padding)",
         ...surfaceFor[emphasis],
         ...style,
       }}
@@ -43,7 +46,7 @@ export function MetricCard({ label, value, emphasis = "default", style }: Metric
       <p
         style={{
           margin: 0,
-          fontSize: 10,
+          fontSize: compact ? 9 : 10,
           fontWeight: 600,
           letterSpacing: "0.2em",
           textTransform: "uppercase",
@@ -54,8 +57,8 @@ export function MetricCard({ label, value, emphasis = "default", style }: Metric
       </p>
       <div
         style={{
-          marginTop: 12,
-          fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
+          marginTop: compact ? 6 : 12,
+          fontSize: compact ? "clamp(1.1rem, 2.2vw, 1.35rem)" : "clamp(1.5rem, 3vw, 2.25rem)",
           fontWeight: 650,
           letterSpacing: "-0.04em",
           color: "var(--pf-text-primary)",

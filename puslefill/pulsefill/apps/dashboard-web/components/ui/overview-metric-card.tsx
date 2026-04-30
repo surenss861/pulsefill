@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 import { AnimatedNumber } from "@/components/ui/animated-number";
+import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 function formatCurrency(cents: number) {
   return new Intl.NumberFormat("en-CA", {
@@ -26,9 +27,10 @@ type Props = {
   label: string;
   value: number;
   isCurrency?: boolean;
+  size?: "default" | "compact";
 };
 
-export function OverviewMetricCard({ label, value, isCurrency = false }: Props) {
+export function OverviewMetricCard({ label, value, isCurrency = false, size = "default" }: Props) {
   const [flash, setFlash] = useState(false);
   const prev = useRef(value);
 
@@ -42,23 +44,44 @@ export function OverviewMetricCard({ label, value, isCurrency = false }: Props) 
   }, [value]);
 
   const borderColor = accentForKey(label);
+  const compact = size === "compact";
+  const metricBase = operatorSurfaceShell("metric");
 
-  const shell: CSSProperties = {
-    borderRadius: "var(--pf-radius-xl)",
-    border: `1px solid ${borderColor}`,
-    background: flash
-      ? "linear-gradient(180deg, rgba(255,122,24,0.12), rgba(255,255,255,0.04)), var(--pf-bg-surface)"
-      : "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,122,24,0.012)), var(--pf-bg-surface)",
-    padding: "18px 20px",
-    color: "var(--text)",
-    transition: "background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease",
-    boxShadow: flash ? "0 0 0 1px rgba(255,255,255,0.06)" : "none",
-  };
+  const shell: CSSProperties = compact
+    ? {
+        ...metricBase,
+        border: `1px solid ${borderColor}`,
+        background: flash
+          ? "linear-gradient(180deg, rgba(255,122,24,0.1), rgba(255,255,255,0.03)), var(--pf-bg-surface-muted)"
+          : metricBase.background,
+        padding: "12px 14px",
+        color: "var(--text)",
+        transition: "background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease",
+        boxShadow: flash ? "inset 0 1px 0 rgba(255,255,255,0.04)" : metricBase.boxShadow,
+      }
+    : {
+        borderRadius: "var(--pf-radius-xl)",
+        border: `1px solid ${borderColor}`,
+        background: flash
+          ? "linear-gradient(180deg, rgba(255,122,24,0.12), rgba(255,255,255,0.04)), var(--pf-bg-surface)"
+          : "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,122,24,0.012)), var(--pf-bg-surface)",
+        padding: "18px 20px",
+        color: "var(--text)",
+        transition: "background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease",
+        boxShadow: flash ? "0 0 0 1px rgba(255,255,255,0.06)" : "none",
+      };
 
   return (
     <div style={shell}>
-      <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>{label}</p>
-      <p style={{ margin: "10px 0 0", fontSize: 28, fontWeight: 650, letterSpacing: "-0.02em" }}>
+      <p style={{ margin: 0, fontSize: compact ? 12 : 13, color: "var(--muted)" }}>{label}</p>
+      <p
+        style={{
+          margin: compact ? "6px 0 0" : "10px 0 0",
+          fontSize: compact ? 22 : 28,
+          fontWeight: 650,
+          letterSpacing: "-0.02em",
+        }}
+      >
         {isCurrency ? (
           <AnimatedNumber value={value} formatter={(n) => formatCurrency(n)} />
         ) : (

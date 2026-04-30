@@ -1,6 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
+import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 export type SectionCardDensity = "default" | "dense";
+
+/** Visual shell: default matches legacy section card; operational / quiet use shared operator surfaces. */
+export type SectionCardSurfaceTone = "default" | "operational" | "quiet";
 
 type SectionCardProps = {
   eyebrow: string;
@@ -10,20 +14,40 @@ type SectionCardProps = {
   headerActions?: ReactNode;
   children: ReactNode;
   density?: SectionCardDensity;
+  surfaceTone?: SectionCardSurfaceTone;
   style?: CSSProperties;
 };
 
+const defaultShell: CSSProperties = {
+  borderRadius: 28,
+  border: "1px solid var(--pf-border-subtle)",
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,122,24,0.012)), var(--pf-bg-surface)",
+  boxShadow: "0 18px 54px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.035)",
+};
+
+function sectionShell(tone: SectionCardSurfaceTone): CSSProperties {
+  if (tone === "operational") return { ...operatorSurfaceShell("operational"), borderRadius: 28 };
+  if (tone === "quiet") return { ...operatorSurfaceShell("quiet"), borderRadius: 28 };
+  return defaultShell;
+}
+
 /** Section container: eyebrow → title → body copy → children. */
-export function SectionCard({ eyebrow, title, description, headerActions, children, density = "default", style }: SectionCardProps) {
-  const pad = density === "dense" ? "18px 20px" : "22px 24px";
+export function SectionCard({
+  eyebrow,
+  title,
+  description,
+  headerActions,
+  children,
+  density = "default",
+  surfaceTone = "default",
+  style,
+}: SectionCardProps) {
+  const pad = density === "dense" ? "16px 18px" : "22px 24px";
   return (
     <section
       style={{
-        borderRadius: 28,
-        border: "1px solid var(--pf-border-subtle)",
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,122,24,0.012)), var(--pf-bg-surface)",
-        boxShadow: "0 18px 54px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.035)",
+        ...sectionShell(surfaceTone),
         padding: pad,
         ...style,
       }}

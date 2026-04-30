@@ -22,6 +22,8 @@ export function OpenSlotsInventoryHero() {
   return (
     <PageIntroCard
       style={{ marginBottom: 16 }}
+      density="compact"
+      tone="elevated"
       overline="Openings"
       title="Openings"
       description="Post cancelled appointment times, send offers to matching standby customers, and confirm recovered bookings."

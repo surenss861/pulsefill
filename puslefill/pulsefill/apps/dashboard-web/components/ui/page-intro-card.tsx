@@ -34,6 +34,8 @@ type PageIntroCardProps = {
   layout?: "stack" | "split";
   /** Max width of the text column. */
   introMaxWidth?: number;
+  /** Tighter hero for list pages with less headline copy. */
+  density?: "default" | "compact";
   style?: CSSProperties;
 };
 
@@ -50,8 +52,10 @@ export function PageIntroCard({
   tone = "default",
   layout = "stack",
   introMaxWidth = 720,
+  density = "default",
   style,
 }: PageIntroCardProps) {
+  const compact = density === "compact";
   const textBlock = (
     <div style={{ maxWidth: introMaxWidth, flex: layout === "split" ? "1 1 280px" : undefined, minWidth: 0 }}>
       <p
@@ -68,8 +72,8 @@ export function PageIntroCard({
       </p>
       <div
         style={{
-          marginTop: 12,
-          fontSize: "clamp(1.75rem, 4vw, 2.75rem)",
+          marginTop: compact ? 8 : 12,
+          fontSize: compact ? "clamp(1.35rem, 3vw, 2rem)" : "clamp(1.75rem, 4vw, 2.75rem)",
           fontWeight: 650,
           letterSpacing: "-0.04em",
           lineHeight: 1.1,
@@ -81,9 +85,9 @@ export function PageIntroCard({
       {description ? (
         <div
           style={{
-            marginTop: 14,
+            marginTop: compact ? 10 : 14,
             maxWidth: 560,
-            fontSize: 15,
+            fontSize: compact ? 14 : 15,
             lineHeight: 1.55,
             color: "rgba(245, 247, 250, 0.62)",
           }}
@@ -115,7 +119,7 @@ export function PageIntroCard({
       style={{
         marginBottom: 0,
         borderRadius: 28,
-        padding: "clamp(20px, 3vw, 28px)",
+        padding: compact ? "clamp(14px, 2vw, 20px)" : "clamp(20px, 3vw, 28px)",
         ...toneShell[tone],
         ...style,
       }}

@@ -17,8 +17,8 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
   return (
     <PageState
       variant="empty"
-      title="No activity yet"
-      description="Activity appears after you create openings, send offers, or confirm bookings."
+      title="No recovery activity yet"
+      description="Create an opening, send offers, or confirm a booking to start building history."
     />
   );
 }

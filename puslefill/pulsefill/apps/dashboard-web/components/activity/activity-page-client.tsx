@@ -121,14 +121,7 @@ export function ActivityPageClient() {
         <ActivityHero actions={heroActions} />
         <ActivitySummaryStrip summary={summary} />
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            alignItems: "center",
-          }}
-        >
+        <div className="pf-filter-rail">
           {operatorActivityFilterOptions.map((opt) => {
             const on = filter === opt.value;
             return (
