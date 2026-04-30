@@ -14,6 +14,8 @@ enum PFColor {
     static let customerGlassDeep = Color(red: 0.048, green: 0.046, blue: 0.051)
     static let customerHairline = Color.white.opacity(0.095)
     static let customerHairlineStrong = Color.white.opacity(0.14)
+    static let customerTopGlow = Color(red: 1.0, green: 0.36, blue: 0.06).opacity(0.16)
+    static let customerSuccessGlow = Color(red: 0.11, green: 0.72, blue: 0.38).opacity(0.10)
     static let emberGlow = Color(red: 1.0, green: 0.42, blue: 0.05).opacity(0.22)
     /// Ember wash for chips / icon tiles on dark glass.
     static let emberSoft = Color(red: 1.0, green: 0.42, blue: 0.05).opacity(0.13)

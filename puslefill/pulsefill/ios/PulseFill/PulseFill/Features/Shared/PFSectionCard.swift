@@ -33,11 +33,24 @@ struct PFSectionCard<Content: View>: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFSurface.card)
+        .background {
+            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            PFColor.surface2.opacity(0.72),
+                            PFSurface.card,
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        }
         .overlay(
             RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
                 .stroke(borderColor, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+        .shadow(color: Color.black.opacity(0.20), radius: 14, x: 0, y: 8)
     }
 }

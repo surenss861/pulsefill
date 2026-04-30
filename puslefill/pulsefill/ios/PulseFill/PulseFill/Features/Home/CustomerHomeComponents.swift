@@ -6,8 +6,31 @@ struct CustomerHomeHeader: View {
     let greeting: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            PFTypography.Customer.screenSubtitle(greeting)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 10) {
+                PFTypography.Customer.screenSubtitle(greeting)
+
+                Spacer(minLength: 12)
+
+                HStack(spacing: 7) {
+                    Circle()
+                        .fill(PFColor.success)
+                        .frame(width: 7, height: 7)
+                        .shadow(color: PFColor.success.opacity(0.45), radius: 8)
+
+                    Text("Watching")
+                        .font(.system(size: 12, weight: .bold, design: .default))
+                        .foregroundStyle(PFColor.customerTextSecondary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(Color.white.opacity(0.055))
+                .clipShape(Capsule())
+                .overlay {
+                    Capsule()
+                        .stroke(PFColor.customerHairline, lineWidth: 1)
+                }
+            }
 
             PFTypography.Customer.screenTitle("Your appointment updates,\nall in one place.")
                 .multilineTextAlignment(.leading)

@@ -80,14 +80,29 @@ extension View {
 /// Warm near-black gradient behind customer flows (Home, Offers, Activity, Profile).
 struct CustomerScreenBackground: View {
     var body: some View {
-        LinearGradient(
-            colors: [
-                PFColor.customerInk,
-                PFColor.background,
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+        ZStack {
+            LinearGradient(
+                colors: [
+                    PFColor.customerInkDeep,
+                    PFColor.customerInk,
+                    PFColor.background,
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            Circle()
+                .fill(PFColor.customerTopGlow)
+                .frame(width: 260, height: 260)
+                .blur(radius: 54)
+                .offset(x: -130, y: -300)
+
+            Circle()
+                .fill(PFColor.customerSuccessGlow)
+                .frame(width: 240, height: 240)
+                .blur(radius: 64)
+                .offset(x: 150, y: -110)
+        }
         .ignoresSafeArea()
     }
 }
@@ -351,13 +366,40 @@ struct CustomerSectionCard<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous)
-                    .fill(elevated ? PFColor.customerGlassElevated : PFColor.customerGlass)
+                    .fill(
+                        LinearGradient(
+                            colors: elevated
+                                ? [PFColor.customerGlassElevated, PFColor.customerGlass]
+                                : [PFColor.customerGlass, PFColor.customerGlassDeep.opacity(0.92)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(alignment: .topLeading) {
+                        Circle()
+                            .fill(elevated ? PFColor.emberGlow.opacity(0.62) : Color.white.opacity(0.035))
+                            .frame(width: 140, height: 140)
+                            .blur(radius: 32)
+                            .offset(x: -62, y: -78)
+                    }
                     .overlay {
                         RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous)
-                            .stroke(PFColor.customerHairline, lineWidth: 1)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        elevated ? PFColor.primaryBorder : PFColor.customerHairlineStrong,
+                                        PFColor.customerHairline,
+                                        Color.white.opacity(0.04),
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
                     }
             }
             .clipShape(RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous))
+            .shadow(color: Color.black.opacity(elevated ? 0.34 : 0.22), radius: elevated ? 22 : 14, x: 0, y: elevated ? 16 : 8)
     }
 }
 
