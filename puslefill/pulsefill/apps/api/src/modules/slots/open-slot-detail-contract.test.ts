@@ -49,7 +49,9 @@ test("GET /v1/open-slots/:id returns 404 for missing or wrong-tenant slot", asyn
   });
 
   assert.equal(res.statusCode, 404);
-  assert.deepEqual(res.json(), { error: "not_found" });
+  const notFound = res.json() as { error: string; request_id?: string };
+  assert.equal(notFound.error, "not_found");
+  assert.ok(notFound.request_id && typeof notFound.request_id === "string");
 });
 
 test("GET /v1/open-slots/:id returns stable detail contract", async () => {
@@ -168,5 +170,7 @@ test("GET /v1/open-slots/:id returns 500 load_failed when detail loader throws",
   });
 
   assert.equal(res.statusCode, 500);
-  assert.deepEqual(res.json(), { error: "load_failed" });
+  const loadFailed = res.json() as { error: string; request_id?: string };
+  assert.equal(loadFailed.error, "load_failed");
+  assert.ok(loadFailed.request_id && typeof loadFailed.request_id === "string");
 });

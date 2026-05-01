@@ -112,7 +112,7 @@ struct CustomerOfferCard: View {
 
                         Spacer()
 
-                        CustomerStatusPill(text: displayStatus.label, tone: displayStatus.pillToneOnPass)
+                        PFCustomerStatusChip(kind: .fromInboxDisplayStatus(displayStatus))
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -147,8 +147,8 @@ struct CustomerOfferPastCard: View {
     let displayStatus: CustomerOfferDisplayStatus
 
     var body: some View {
-        CustomerSectionCard(padding: 16, elevated: false) {
-            VStack(alignment: .leading, spacing: 10) {
+        PFCustomerSectionCard(variant: .quiet, padding: 16) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(CustomerOfferInboxCopy.serviceLine(for: offer))
@@ -161,15 +161,26 @@ struct CustomerOfferPastCard: View {
                             .foregroundStyle(PFColor.customerMutedText)
                     }
                     Spacer()
-                    CustomerStatusPill(text: displayStatus.label, tone: displayStatus.pillToneOnDark)
+                    PFCustomerStatusChip(kind: .fromInboxDisplayStatus(displayStatus))
                 }
 
                 Text(CustomerOfferInboxCopy.clinicLine(for: offer))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(PFColor.textMuted)
-                    .lineLimit(1)
+                    .lineLimit(2)
+
+                HStack(spacing: 6) {
+                    Text("View details")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(PFColor.ember)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(PFColor.ember.opacity(0.85))
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, 2)
             }
         }
-        .opacity(0.92)
+        .opacity(0.96)
     }
 }

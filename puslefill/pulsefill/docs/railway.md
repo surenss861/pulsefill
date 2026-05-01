@@ -6,11 +6,13 @@ Monorepo root: this `pulsefill/` directory. Use **pnpm** everywhere.
 
 | Railway service | Role | Redis |
 |-----------------|------|-------|
-| **api** | Fastify HTTP (`/health`, `/v1/*`) | Enqueues BullMQ jobs |
-| **worker** | BullMQ consumer (`send-offer-notification`, `expire-offers`) | Required |
+| **api** | Fastify HTTP (`/health`, `/v1/*`) | Set **`REDIS_URL`** on this service for BullMQ enqueue **and** shared `@fastify/rate-limit` counters when scaled. |
+| **worker** | BullMQ consumer (`send-offer-notification`, `expire-offers`) | **`REDIS_URL`** required |
 | **Redis** | Railway Redis (or Upstash TCP URL) | — |
 
 Supabase and Stripe stay **external**.
+
+**Secrets hygiene:** If a Redis URL or service-role key was exposed, rotate it in Railway and update variables on **api** / **worker** only. Do not duplicate backend secrets on Vercel unless a server workload needs them — see [DEPLOYMENT_SMOKE_CHECKLIST.md](./DEPLOYMENT_SMOKE_CHECKLIST.md) §7–9.
 
 ## Docker (optional, recommended for reproducible builds)
 

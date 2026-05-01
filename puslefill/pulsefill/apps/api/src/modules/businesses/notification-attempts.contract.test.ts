@@ -86,5 +86,7 @@ test("GET /v1/businesses/mine/notification-attempts returns 500 on failure", asy
     headers: routeTestHeaders(),
   });
   assert.equal(res.statusCode, 500);
-  assert.deepEqual(res.json(), { error: "notification_attempts_failed" });
+  const body = res.json() as { error: string; request_id?: string };
+  assert.equal(body.error, "notification_attempts_failed");
+  assert.ok(body.request_id && typeof body.request_id === "string");
 });

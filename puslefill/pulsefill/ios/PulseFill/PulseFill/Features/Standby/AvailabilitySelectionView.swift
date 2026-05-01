@@ -4,13 +4,21 @@ struct AvailabilitySelectionView: View {
     @Binding var draft: StandbyPreferenceDraft
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            PFTypography.section("When could you actually make it?")
-            PFTypography.caption("Pick the days and usual hours that work. We’ll only offer openings that fit this window.")
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("When are you available?")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
 
-            DayOfWeekPillSelector(selectedDays: $draft.daysOfWeek)
+                Text("Choose the days and times that usually work for you. We’ll only show openings that fit this window.")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
 
-            TimeWindowCard(earliest: $draft.earliestTime, latest: $draft.latestTime)
+                DayOfWeekPillSelector(selectedDays: $draft.daysOfWeek)
+
+                TimeWindowCard(earliest: $draft.earliestTime, latest: $draft.latestTime)
+            }
         }
     }
 }

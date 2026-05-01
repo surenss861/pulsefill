@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { sendJson } from "../../lib/http-errors.js";
 import { requireStaff } from "../../plugins/guards.js";
 
 const createBody = z
@@ -29,7 +30,7 @@ export async function registerLocationRoutes(app: FastifyInstance) {
         .eq("business_id", req.staff!.business_id)
         .order("created_at", { ascending: true });
 
-      if (error) return reply.status(500).send({ error: "list_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "list_failed" });
       return reply.send(data ?? []);
     },
   );
@@ -46,7 +47,7 @@ export async function registerLocationRoutes(app: FastifyInstance) {
         .select("*")
         .single();
 
-      if (error) return reply.status(500).send({ error: "create_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "create_failed" });
       return reply.status(201).send(data);
     },
   );
@@ -65,10 +66,10 @@ export async function registerLocationRoutes(app: FastifyInstance) {
         .eq("id", id)
         .eq("business_id", req.staff!.business_id)
         .maybeSingle();
-      if (!existing) return reply.status(404).send({ error: "not_found" });
+      if (!existing) return sendJson(req, reply, 404, { error: "not_found" });
 
       const { data, error } = await admin.from("locations").update(body).eq("id", id).select("*").single();
-      if (error) return reply.status(500).send({ error: "update_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "update_failed" });
       return reply.send(data);
     },
   );
@@ -86,7 +87,7 @@ export async function registerLocationRoutes(app: FastifyInstance) {
         .eq("id", id)
         .eq("business_id", req.staff!.business_id);
 
-      if (error) return reply.status(500).send({ error: "delete_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "delete_failed" });
       return reply.status(204).send();
     },
   );

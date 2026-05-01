@@ -3,6 +3,8 @@ import cors from "@fastify/cors";
 import type { Env } from "./config/env.js";
 import errorHandler from "./plugins/error-handler.js";
 import authPlugin from "./plugins/auth.js";
+import rateLimitPlugin from "./plugins/rate-limit.js";
+import requestIdPlugin from "./plugins/request-id.js";
 import { registerRoutes } from "./routes/index.js";
 
 function corsOriginForEnv(env: Env): boolean | string[] {
@@ -44,9 +46,11 @@ export async function buildApp(env: Env) {
     );
   }
 
+  await app.register(requestIdPlugin);
   await app.register(errorHandler);
   await app.register(cors, { origin: corsOriginForEnv(env) });
   await app.register(authPlugin, { env });
+  await app.register(rateLimitPlugin, { env });
   await registerRoutes(app);
 
   return app;

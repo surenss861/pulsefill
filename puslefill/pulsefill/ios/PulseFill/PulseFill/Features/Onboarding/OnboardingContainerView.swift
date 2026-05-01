@@ -8,7 +8,7 @@ struct OnboardingContainerView: View {
         VStack(alignment: .leading, spacing: PFSpacing.lg) {
             MascotIntroView()
             PFTypography.hero("Get earlier appointments")
-            PFTypography.caption("Join standby, set preferences, and claim openings when businesses send you offers.")
+            PFTypography.caption("Join standby, set preferences, and claim openings when businesses send them to you.")
             Spacer()
             HStack {
                 Button("Skip") { isComplete = true }

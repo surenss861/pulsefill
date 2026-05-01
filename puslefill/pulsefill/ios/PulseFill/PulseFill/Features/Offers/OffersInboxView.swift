@@ -53,119 +53,128 @@ struct OffersInboxView: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        PFTypography.Customer.screenTitle("Offers")
-                            .multilineTextAlignment(.leading)
+            ZStack {
+                PFScreenBackground()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 22) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            PFTypography.Customer.screenTitle("Openings")
+                                .multilineTextAlignment(.leading)
 
-                        PFTypography.Customer.screenLead(
-                            "Openings from businesses you’ve connected with show up here when they match your standby preferences."
-                        )
+                            PFTypography.Customer.screenLead(
+                                "Openings from businesses you’ve joined will appear here when they match your standby preferences."
+                            )
+                        }
+                        .customerAppearAnimation(staggerIndex: 0)
+
+                        if loading && offers.isEmpty {
+                            PFCustomerLoadingState(
+                                title: "Loading openings…",
+                                message: "Checking for openings that match your standby preferences.",
+                                compact: false,
+                            )
+                            .padding(.top, 8)
+                        } else if !env.sessionStore.isSignedIn {
+                            CustomerEmptyStateCard(
+                                systemImage: "person.crop.circle.badge.questionmark",
+                                title: "Sign in to see openings",
+                                message: "Openings from businesses you’ve joined will appear here after you sign in.",
+                                footnote: nil,
+                            )
+                        } else if let errorMessage {
+                            PFCustomerErrorState(
+                                title: "We couldn’t load openings",
+                                message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(errorMessage),
+                                primaryTitle: "Try again",
+                                primaryAction: { Task { await load() } },
+                                secondaryTitle: nil,
+                                secondaryAction: nil,
+                            )
+                        } else if offers.isEmpty {
+                            CustomerEmptyStateCard(
+                                systemImage: "bell.badge",
+                                title: "No openings yet",
+                                message:
+                                    "Openings from businesses you’ve joined will appear here when they match your standby preferences.",
+                                footnote: nil,
+                                primaryActionTitle: "Find businesses",
+                                primaryAction: {
+                                    env.customerNavigation.selectedTab = .find
+                                },
+                                secondaryActionTitle: "Edit standby preferences",
+                                secondaryAction: {
+                                    env.customerNavigation.open(.standbyStatus)
+                                },
+                            )
+                        } else {
+                            if loading {
+                                ProgressView()
+                                    .tint(PFColor.ember)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.vertical, 6)
+                            }
+
+                            let parts = partitioned
+                            let waitingStaggerBase = parts.available.count
+                            let historyStaggerBase = parts.available.count + parts.waiting.count
+
+                            if !parts.available.isEmpty {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    PFTypography.Customer.label("Available")
+
+                                    ForEach(Array(parts.available.enumerated()), id: \.element.id) { index, item in
+                                        let st = customerOfferDisplayStatus(forInbox: item)
+                                        CustomerOfferCard(offer: item, displayStatus: st) {
+                                            navigationPath.append(item.id)
+                                        }
+                                        .customerAppearAnimation(staggerIndex: index)
+                                    }
+                                }
+                            }
+
+                            if !parts.waiting.isEmpty {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    PFTypography.Customer.label("Waiting")
+
+                                    ForEach(Array(parts.waiting.enumerated()), id: \.element.id) { index, item in
+                                        let st = customerOfferDisplayStatus(forInbox: item)
+                                        CustomerOfferCard(
+                                            offer: item,
+                                            displayStatus: st,
+                                            chromeActionTitle: "View status",
+                                            openingLabel: "Waiting for confirmation",
+                                        ) {
+                                            navigationPath.append(item.id)
+                                        }
+                                        .customerAppearAnimation(staggerIndex: waitingStaggerBase + index)
+                                    }
+                                }
+                            }
+
+                            if !parts.history.isEmpty {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    PFTypography.Customer.label("History")
+
+                                    ForEach(Array(parts.history.enumerated()), id: \.element.id) { index, item in
+                                        let st = customerOfferDisplayStatus(forInbox: item)
+                                        Button {
+                                            PFHaptics.lightImpact()
+                                            navigationPath.append(item.id)
+                                        } label: {
+                                            CustomerOfferPastCard(offer: item, displayStatus: st)
+                                        }
+                                        .buttonStyle(CustomerCardPressButtonStyle())
+                                        .customerAppearAnimation(staggerIndex: historyStaggerBase + index)
+                                    }
+                                }
+                            }
+                        }
                     }
-                    .customerAppearAnimation(staggerIndex: 0)
-
-                    if loading {
-                        ProgressView()
-                            .tint(PFColor.ember)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 12)
-                    } else if !env.sessionStore.isSignedIn {
-                        CustomerEmptyStateCard(
-                            systemImage: "person.crop.circle.badge.questionmark",
-                            title: "Sign in to see openings",
-                            message: "Openings from businesses you connect with will appear here after you sign in.",
-                            footnote: nil
-                        )
-                    } else if let errorMessage {
-                        CustomerEmptyStateCard(
-                            systemImage: "exclamationmark.triangle",
-                            title: "Couldn’t load openings",
-                            message: errorMessage,
-                            footnote: nil
-                        )
-
-                        CustomerPrimaryButton(title: "Try again") {
-                            Task { await load() }
-                        }
-                    } else if offers.isEmpty {
-                        CustomerEmptyStateCard(
-                            systemImage: "bell.badge",
-                            title: "No openings yet",
-                            message:
-                                "When a business you’ve joined sends an opening that fits your standby setup, it will show up here. Keep notifications on so you don’t miss one.",
-                            footnote: nil,
-                            primaryActionTitle: "Check notification settings",
-                            primaryAction: {
-                                env.customerNavigation.open(.notificationSettings)
-                            },
-                            secondaryActionTitle: "Update standby preferences",
-                            secondaryAction: {
-                                env.customerNavigation.open(.standbyStatus)
-                            }
-                        )
-                    } else {
-                        let parts = partitioned
-                        let waitingStaggerBase = parts.available.count
-                        let historyStaggerBase = parts.available.count + parts.waiting.count
-
-                        if !parts.available.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                PFTypography.Customer.label("Available")
-
-                                ForEach(Array(parts.available.enumerated()), id: \.element.id) { index, item in
-                                    let st = customerOfferDisplayStatus(forInbox: item)
-                                    CustomerOfferCard(offer: item, displayStatus: st) {
-                                        navigationPath.append(item.id)
-                                    }
-                                    .customerAppearAnimation(staggerIndex: index)
-                                }
-                            }
-                        }
-
-                        if !parts.waiting.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                PFTypography.Customer.label("Waiting")
-
-                                ForEach(Array(parts.waiting.enumerated()), id: \.element.id) { index, item in
-                                    let st = customerOfferDisplayStatus(forInbox: item)
-                                    CustomerOfferCard(
-                                        offer: item,
-                                        displayStatus: st,
-                                        chromeActionTitle: "View status",
-                                        openingLabel: "Waiting for confirmation",
-                                    ) {
-                                        navigationPath.append(item.id)
-                                    }
-                                    .customerAppearAnimation(staggerIndex: waitingStaggerBase + index)
-                                }
-                            }
-                        }
-
-                        if !parts.history.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                PFTypography.Customer.label("History")
-
-                                ForEach(Array(parts.history.enumerated()), id: \.element.id) { index, item in
-                                    let st = customerOfferDisplayStatus(forInbox: item)
-                                    Button {
-                                        PFHaptics.lightImpact()
-                                        navigationPath.append(item.id)
-                                    } label: {
-                                        CustomerOfferPastCard(offer: item, displayStatus: st)
-                                    }
-                                    .buttonStyle(CustomerCardPressButtonStyle())
-                                    .customerAppearAnimation(staggerIndex: historyStaggerBase + index)
-                                }
-                            }
-                        }
-                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 36)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 24)
-                .padding(.bottom, 36)
             }
-            .background(CustomerScreenBackground())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: String.self) { id in
@@ -202,7 +211,7 @@ struct OffersInboxView: View {
             let res = try await env.apiClient.get("/v1/customers/me/offers", as: OfferInboxResponse.self)
             offers = res.offers
         } catch {
-            errorMessage = APIErrorCopy.message(for: error)
+            errorMessage = PFCustomerFacingErrorCopy.sanitizeCustomerMessage(APIErrorCopy.message(for: error))
         }
     }
 

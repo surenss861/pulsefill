@@ -3,13 +3,13 @@ import Foundation
 enum CustomerEventCopy {
     static func stateLabel(for kind: CustomerEventKind) -> String {
         switch kind {
-        case .offerReceived: "New offer"
-        case .offerExpiringSoon: "Expiring soon"
-        case .offerExpired: "Expired"
-        case .claimSubmitted: "Submitted"
-        case .claimPendingConfirmation: "Pending confirmation"
+        case .offerReceived: "New opening"
+        case .offerExpiringSoon: "Ends soon"
+        case .offerExpired: "No longer available"
+        case .claimSubmitted: "Claim sent"
+        case .claimPendingConfirmation: "Waiting for confirmation"
         case .bookingConfirmed: "Confirmed"
-        case .claimUnavailable: "Unavailable"
+        case .claimUnavailable: "No longer available"
         case .missedOpportunity: "Missed"
         case .standbyStatusReminder: "Status"
         case .standbySetupSuggestion: "Suggestion"
@@ -18,12 +18,12 @@ enum CustomerEventCopy {
 
     static func fallbackTitle(for kind: CustomerEventKind) -> String {
         switch kind {
-        case .offerReceived: "Offer received"
-        case .offerExpiringSoon: "Offer expiring soon"
-        case .offerExpired: "Offer expired"
-        case .claimSubmitted: "Claim submitted"
-        case .claimPendingConfirmation: "Waiting for clinic confirmation"
-        case .bookingConfirmed: "Booking confirmed"
+        case .offerReceived: "Opening received"
+        case .offerExpiringSoon: "Opening ends soon"
+        case .offerExpired: "Opening no longer available"
+        case .claimSubmitted: "Claim sent"
+        case .claimPendingConfirmation: "Waiting for confirmation"
+        case .bookingConfirmed: "Confirmed"
         case .claimUnavailable: "Opening no longer available"
         case .missedOpportunity: "Missed opportunity"
         case .standbyStatusReminder: "Check your standby status"
@@ -51,7 +51,7 @@ enum CustomerEventCopy {
         case .offerExpiringSoon:
             return "Opening ends soon"
         case .offerExpired:
-            return "Opening timed out"
+            return "Opening no longer available"
         case .claimSubmitted:
             return "You picked an earlier time"
         case .claimPendingConfirmation:

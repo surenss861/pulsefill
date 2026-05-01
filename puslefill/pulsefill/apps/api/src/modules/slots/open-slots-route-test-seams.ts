@@ -61,10 +61,43 @@ export type CancelOpenSlotMutationTestDelegate = (
   args: CancelOpenSlotMutationTestDelegateArgs,
 ) => Promise<{ ok: boolean; error?: string }>;
 
+export type ClaimOpenSlotRpcTestDelegateArgs = {
+  openSlotId: string;
+  customerId: string;
+  deposit_payment_intent_id: string | null;
+};
+
+export type ClaimOpenSlotRpcTestDelegateResult = {
+  ok?: boolean;
+  error?: string;
+  claim_id?: string;
+};
+
+export type ClaimOpenSlotRpcTestDelegate = (
+  args: ClaimOpenSlotRpcTestDelegateArgs,
+) => Promise<ClaimOpenSlotRpcTestDelegateResult>;
+
+export type ConfirmBookedClaimLookupTestDelegateArgs = {
+  claimId: string;
+  openSlotId: string;
+};
+
+export type ConfirmBookedClaimLookupRow = {
+  id: string;
+  status: string;
+  open_slot_id: string;
+};
+
+export type ConfirmBookedClaimLookupTestDelegate = (
+  args: ConfirmBookedClaimLookupTestDelegateArgs,
+) => Promise<ConfirmBookedClaimLookupRow | null>;
+
 let confirmOpenSlotMutationTestDelegate: ConfirmOpenSlotMutationTestDelegate | null = null;
 let sendOffersMutationTestDelegate: SendOffersMutationTestDelegate | null = null;
 let expireOpenSlotMutationTestDelegate: ExpireOpenSlotMutationTestDelegate | null = null;
 let cancelOpenSlotMutationTestDelegate: CancelOpenSlotMutationTestDelegate | null = null;
+let claimOpenSlotRpcTestDelegate: ClaimOpenSlotRpcTestDelegate | null = null;
+let confirmBookedClaimLookupTestDelegate: ConfirmBookedClaimLookupTestDelegate | null = null;
 
 export function getConfirmOpenSlotMutationTestDelegate(): ConfirmOpenSlotMutationTestDelegate | null {
   return process.env.PULSEFILL_API_TEST === "1" ? confirmOpenSlotMutationTestDelegate : null;
@@ -80,6 +113,14 @@ export function getExpireOpenSlotMutationTestDelegate(): ExpireOpenSlotMutationT
 
 export function getCancelOpenSlotMutationTestDelegate(): CancelOpenSlotMutationTestDelegate | null {
   return process.env.PULSEFILL_API_TEST === "1" ? cancelOpenSlotMutationTestDelegate : null;
+}
+
+export function getClaimOpenSlotRpcTestDelegate(): ClaimOpenSlotRpcTestDelegate | null {
+  return process.env.PULSEFILL_API_TEST === "1" ? claimOpenSlotRpcTestDelegate : null;
+}
+
+export function getConfirmBookedClaimLookupTestDelegate(): ConfirmBookedClaimLookupTestDelegate | null {
+  return process.env.PULSEFILL_API_TEST === "1" ? confirmBookedClaimLookupTestDelegate : null;
 }
 
 export function setConfirmOpenSlotMutationTestDelegate(delegate: ConfirmOpenSlotMutationTestDelegate | null) {
@@ -122,11 +163,33 @@ export function setCancelOpenSlotMutationTestDelegate(delegate: CancelOpenSlotMu
   cancelOpenSlotMutationTestDelegate = delegate;
 }
 
+export function setClaimOpenSlotRpcTestDelegate(delegate: ClaimOpenSlotRpcTestDelegate | null) {
+  if (process.env.PULSEFILL_API_TEST !== "1") {
+    if (delegate != null) {
+      throw new Error("setClaimOpenSlotRpcTestDelegate is only valid when PULSEFILL_API_TEST=1");
+    }
+    return;
+  }
+  claimOpenSlotRpcTestDelegate = delegate;
+}
+
+export function setConfirmBookedClaimLookupTestDelegate(delegate: ConfirmBookedClaimLookupTestDelegate | null) {
+  if (process.env.PULSEFILL_API_TEST !== "1") {
+    if (delegate != null) {
+      throw new Error("setConfirmBookedClaimLookupTestDelegate is only valid when PULSEFILL_API_TEST=1");
+    }
+    return;
+  }
+  confirmBookedClaimLookupTestDelegate = delegate;
+}
+
 export function resetOpenSlotsRouteMutationTestDelegates() {
   if (process.env.PULSEFILL_API_TEST === "1") {
     confirmOpenSlotMutationTestDelegate = null;
     sendOffersMutationTestDelegate = null;
     expireOpenSlotMutationTestDelegate = null;
     cancelOpenSlotMutationTestDelegate = null;
+    claimOpenSlotRpcTestDelegate = null;
+    confirmBookedClaimLookupTestDelegate = null;
   }
 }

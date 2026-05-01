@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { sendJson } from "../../lib/http-errors.js";
 import { requireCustomer, requireStaff } from "../../plugins/guards.js";
 
 const portalBody = z
@@ -22,10 +23,10 @@ export async function registerBillingRoutes(app: FastifyInstance) {
     { preHandler: requireStaff },
     async (req, reply) => {
       if (!req.server.env.STRIPE_SECRET_KEY) {
-        return reply.status(501).send({ error: "stripe_not_configured" });
+        return sendJson(req, reply, 501, { error: "stripe_not_configured" });
       }
       checkoutBody.parse(req.body ?? {});
-      return reply.status(501).send({
+      return sendJson(req, reply, 501, {
         error: "stripe_checkout_not_implemented",
         hint: "Wire Stripe Checkout Session creation here using req.staff.business_id.",
       });
@@ -37,10 +38,10 @@ export async function registerBillingRoutes(app: FastifyInstance) {
     { preHandler: requireStaff },
     async (req, reply) => {
       if (!req.server.env.STRIPE_SECRET_KEY) {
-        return reply.status(501).send({ error: "stripe_not_configured" });
+        return sendJson(req, reply, 501, { error: "stripe_not_configured" });
       }
       portalBody.parse(req.body ?? {});
-      return reply.status(501).send({
+      return sendJson(req, reply, 501, {
         error: "stripe_portal_not_implemented",
         hint: "Create a Stripe billing portal session for the business Stripe customer.",
       });
@@ -52,11 +53,11 @@ export async function registerBillingRoutes(app: FastifyInstance) {
     { preHandler: requireCustomer },
     async (req, reply) => {
       if (!req.server.env.STRIPE_SECRET_KEY) {
-        return reply.status(501).send({ error: "stripe_not_configured" });
+        return sendJson(req, reply, 501, { error: "stripe_not_configured" });
       }
       void req.customer;
       void req.body;
-      return reply.status(501).send({ error: "setup_intent_not_implemented" });
+      return sendJson(req, reply, 501, { error: "setup_intent_not_implemented" });
     },
   );
 
@@ -65,11 +66,11 @@ export async function registerBillingRoutes(app: FastifyInstance) {
     { preHandler: requireCustomer },
     async (req, reply) => {
       if (!req.server.env.STRIPE_SECRET_KEY) {
-        return reply.status(501).send({ error: "stripe_not_configured" });
+        return sendJson(req, reply, 501, { error: "stripe_not_configured" });
       }
       void req.customer;
       void req.body;
-      return reply.status(501).send({ error: "deposit_intent_not_implemented" });
+      return sendJson(req, reply, 501, { error: "deposit_intent_not_implemented" });
     },
   );
 }

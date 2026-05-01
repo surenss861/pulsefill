@@ -14,9 +14,9 @@ struct StandbyRecentActivityCard: View {
                 .foregroundStyle(PFColor.textSecondary)
 
             HStack(spacing: 16) {
-                metric(title: "Offers", value: activity.recentOffers)
+                metric(title: "Openings", value: activity.recentOffers)
                 metric(title: "Claims", value: activity.recentClaims)
-                metric(title: "Missed / lost", value: activity.recentMissed)
+                metric(title: "Missed", value: activity.recentMissed)
             }
         }
         .padding(18)

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ServiceSelectionView: View {
     @ObservedObject var viewModel: StandbyPreferencesViewModel
+    @State private var showAdvancedOptions = false
 
     private var selectedServiceBinding: Binding<String> {
         Binding(
@@ -20,67 +21,77 @@ struct ServiceSelectionView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            PFTypography.section("What appointment do you want sooner?")
-            PFTypography.caption(
-                "Choose a visit type when your clinic lists services below, or keep “Any service.” Optional location and provider IDs help when your clinic uses them."
-            )
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Which openings do you want?")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
 
-            VStack(alignment: .leading, spacing: 10) {
-                if viewModel.businessSelectionLocked, viewModel.draft.isBusinessIdValid {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(viewModel.lockedBusinessDisplayName ?? "Your clinic")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(PFColor.textPrimary)
-                        Text("Clinic is set from your directory selection.")
-                            .font(.system(size: 13, weight: .regular))
-                            .foregroundStyle(PFColor.textSecondary)
+                Text("Choose the services you want to hear about when times become available.")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+
+                if !viewModel.businessSelectionLocked {
+                    if !viewModel.draft.isBusinessIdValid, viewModel.draft.trimmedBusinessId.isEmpty {
+                        Text(StandbySetupCustomerCopy.businessMissingBody)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(PFColor.textMuted)
+                            .lineSpacing(3)
                     }
-                    .padding(PFSpacing.md)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(PFSurface.card)
-                    .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-                } else {
-                    TextField("Business ID (required, UUID)", text: $viewModel.draft.businessId)
+
+                    TextField("Business identifier from your clinic", text: $viewModel.draft.businessId)
                         .textContentType(.none)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .disabled(viewModel.isEditingExistingPreference)
-                        .padding(PFSpacing.md)
-                        .background(PFSurface.card)
-                        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-                }
+                        .font(.system(size: 15, weight: .medium))
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(PFColor.customerCard)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(PFColor.hairline, lineWidth: 1)
+                        )
 
-                if viewModel.isEditingExistingPreference {
-                    Text("Business can’t be changed while editing. Cancel and create a new preference to use a different clinic.")
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(PFColor.textSecondary)
-                } else if !viewModel.businessSelectionLocked, !viewModel.draft.businessId.isEmpty, !viewModel.draft.isBusinessIdValid {
-                    Text("Enter a valid business UUID from your clinic.")
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(PFColor.error)
+                    if viewModel.isEditingExistingPreference {
+                        Text("Business can’t be changed while you’re editing. Cancel to start a new preference for a different business.")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .lineSpacing(3)
+                    } else if !viewModel.draft.businessId.isEmpty, !viewModel.draft.isBusinessIdValid {
+                        Text(StandbySetupCustomerCopy.businessIdInvalid)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(PFColor.error)
+                    }
                 }
 
                 if viewModel.draft.isBusinessIdValid {
                     if viewModel.loadingBusinessServices {
-                        HStack(spacing: 10) {
-                            ProgressView()
-                                .tint(PFColor.primary)
-                            Text("Loading services…")
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundStyle(PFColor.textSecondary)
-                        }
-                        .padding(.vertical, 4)
+                        PFCustomerLoadingState(
+                            title: "Loading services…",
+                            message: "Getting the list from this business.",
+                            compact: true
+                        )
                     }
 
                     if let err = viewModel.businessServicesError {
-                        Text(err)
-                            .font(.system(size: 13, weight: .regular))
+                        Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(err))
+                            .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(PFColor.error)
+                            .lineSpacing(3)
                     } else if viewModel.draft.isBusinessIdValid, !viewModel.loadingBusinessServices, viewModel.businessServices.isEmpty {
-                        Text("No services are listed for this clinic yet — “Any service” still works.")
-                            .font(.system(size: 13, weight: .regular))
-                            .foregroundStyle(PFColor.textSecondary)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(StandbySetupCustomerCopy.servicesEmpty)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(PFColor.textPrimary)
+                            Text(StandbySetupCustomerCopy.servicesEmptyBody)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(PFColor.textSecondary)
+                                .lineSpacing(3)
+                        }
                     }
 
                     ServicePickerCardList(
@@ -89,19 +100,49 @@ struct ServiceSelectionView: View {
                     )
                 }
 
-                TextField("Location ID (optional)", text: $viewModel.draft.locationId)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .padding(PFSpacing.md)
-                    .background(PFSurface.card)
-                    .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+                DisclosureGroup(isExpanded: $showAdvancedOptions) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        TextField(StandbySetupCustomerCopy.locationFieldLabel, text: $viewModel.draft.locationId)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .font(.system(size: 15, weight: .medium))
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(PFColor.customerCard)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(PFColor.hairline, lineWidth: 1)
+                            )
 
-                TextField("Provider ID (optional)", text: $viewModel.draft.providerId)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .padding(PFSpacing.md)
-                    .background(PFSurface.card)
-                    .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+                        TextField(StandbySetupCustomerCopy.providerFieldLabel, text: $viewModel.draft.providerId)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .font(.system(size: 15, weight: .medium))
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(PFColor.customerCard)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(PFColor.hairline, lineWidth: 1)
+                            )
+                    }
+                    .padding(.top, 6)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(StandbySetupCustomerCopy.advancedOptionsTitle)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(PFColor.textPrimary)
+                        Text(StandbySetupCustomerCopy.advancedOptionsCaption)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(PFColor.textMuted)
+                            .lineSpacing(2)
+                    }
+                }
+                .tint(PFColor.ember)
             }
         }
     }

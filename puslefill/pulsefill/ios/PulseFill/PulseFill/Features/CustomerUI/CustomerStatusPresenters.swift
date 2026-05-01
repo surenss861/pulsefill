@@ -16,13 +16,13 @@ enum CustomerOfferDisplayStatus: Equatable {
     var label: String {
         switch self {
         case .readyToClaim: return "Ready to claim"
-        case .offerAvailable: return "Offer available"
-        case .expiresSoon: return "Expires soon"
-        case .claimed: return "Claim submitted"
-        case .confirmed: return "Booking confirmed"
-        case .expired: return "Expired"
-        case .unavailable: return "Unavailable"
-        case .unknown: return "Status pending"
+        case .offerAvailable: return "Opening available"
+        case .expiresSoon: return "Ends soon"
+        case .claimed: return "Waiting for confirmation"
+        case .confirmed: return "Confirmed"
+        case .expired: return "No longer available"
+        case .unavailable: return "No longer available"
+        case .unknown: return "Status unavailable"
         }
     }
 
@@ -47,7 +47,7 @@ enum CustomerOfferDisplayStatus: Equatable {
         }
     }
 
-    /// Status chip on **dark** section cards (past offers, status rows).
+    /// Status chip on **dark** section cards (past openings, status rows).
     var pillToneOnDark: CustomerStatusPillTone {
         switch self {
         case .readyToClaim, .offerAvailable:
@@ -113,20 +113,20 @@ func customerOfferDisplayStatus(forDetail offer: CustomerOfferDetail, now: Date 
     return customerOfferDisplayStatus(rawStatus: offer.status, expiresAt: exp, now: now)
 }
 
-// MARK: - Home spotlight (same truth layer as Offers)
+// MARK: - Home spotlight (same truth layer as Openings inbox)
 
 func homeSpotlightActionTitle(for status: CustomerOfferDisplayStatus) -> String {
     switch status {
     case .readyToClaim, .offerAvailable, .expiresSoon:
-        return "View offer"
+        return "View opening"
     case .claimed:
         return "View status"
     case .confirmed:
         return "View booking"
     case .expired:
-        return "Offer expired"
+        return "No longer available"
     case .unavailable:
-        return "Unavailable"
+        return "No longer available"
     case .unknown:
         return "View update"
     }
@@ -141,7 +141,7 @@ func homeSpotlightCanOpenOfferDetails(for status: CustomerOfferDisplayStatus) ->
     }
 }
 
-/// Home hero offer: claimable first (soonest start), then claimed/confirmed (latest `sentAt`), then unknown; never expired/unavailable.
+/// Home hero opening: claimable first (soonest start), then claimed/confirmed (latest `sentAt`), then unknown; never expired/unavailable.
 func homeSpotlightPick(from offers: [OfferInboxItem], now: Date = .init()) -> (offer: OfferInboxItem, status: CustomerOfferDisplayStatus)? {
     let pairs = offers.map { ($0, customerOfferDisplayStatus(forInbox: $0, now: now)) }
 

@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { sendJson } from "../../lib/http-errors.js";
 import { requireAuth } from "../../plugins/guards.js";
 
 const syncBody = z
@@ -47,7 +48,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "customer upsert failed");
-        return reply.status(500).send({ error: "sync_failed" });
+        return sendJson(req, reply, 500, { error: "sync_failed" });
       }
 
       return reply.send({ ok: true, synced: true, customer_id: data.id });

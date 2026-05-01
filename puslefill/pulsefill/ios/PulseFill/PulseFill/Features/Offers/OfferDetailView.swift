@@ -16,34 +16,36 @@ struct OfferDetailView: View {
             switch viewModel.loadState {
             case .idle, .loading:
                 ZStack {
-                    CustomerScreenBackground()
-                    ProgressView("Loading opening…")
-                        .tint(PFColor.ember)
+                    PFScreenBackground()
+                    PFCustomerLoadingState(
+                        title: "Loading opening…",
+                        message: "Getting the latest details.",
+                        compact: false,
+                    )
                 }
 
             case let .failed(message):
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        CustomerEmptyStateCard(
-                            systemImage: "calendar.badge.exclamationmark",
+                        PFCustomerErrorState(
                             title: "Opening unavailable",
-                            message: message,
-                            footnote: nil,
+                            message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(message),
+                            primaryTitle: "Try again",
+                            primaryAction: { Task { await viewModel.load() } },
+                            secondaryTitle: nil,
+                            secondaryAction: nil,
                         )
-                        CustomerPrimaryButton(title: "Try again") {
-                            Task { await viewModel.load() }
-                        }
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
                 }
-                .background(CustomerScreenBackground())
+                .background(PFScreenBackground())
 
             case .loaded:
                 if let offer = viewModel.offer {
                     loadedBody(offer)
                 } else {
-                    CustomerScreenBackground()
+                    PFScreenBackground()
                 }
             }
         }
@@ -124,13 +126,14 @@ struct OfferDetailView: View {
             .padding(.top, 20)
             .padding(.bottom, 120)
         }
-        .background(CustomerScreenBackground())
+        .background(PFScreenBackground())
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if let slotId = offer.openSlotId, !slotId.isEmpty, ui.showsClaimButton {
+            if let slotId = offer.openSlotId, !slotId.isEmpty, ui.showsClaimButton || viewModel.isClaiming {
                 CustomerStickyActionBar {
-                    CustomerPrimaryButton(
+                    PFCustomerPrimaryButton(
                         title: viewModel.primaryActionTitle,
                         isEnabled: viewModel.canClaim,
+                        isLoading: viewModel.isClaiming,
                         onDisabledTap: {},
                     ) {
                         Task { await viewModel.claimOpening() }
@@ -141,20 +144,34 @@ struct OfferDetailView: View {
     }
 
     private func offerDetailStatusBanner(uiState: OfferDetailUIState) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(uiState.bannerTitle)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(PFColor.textPrimary)
+        PFCustomerSectionCard(variant: statusBannerVariant(uiState), padding: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(uiState.bannerTitle)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
 
-            Text(uiState.bannerMessage)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(PFColor.textSecondary)
-                .lineSpacing(3)
+                Text(uiState.bannerMessage)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(PFColor.customerCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func statusBannerVariant(_ uiState: OfferDetailUIState) -> PFCustomerSectionVariant {
+        switch uiState {
+        case .claiming, .waitingForConfirmation:
+            return .attention
+        case .confirmed:
+            return .elevated
+        case .available:
+            return .default
+        case .expired, .unavailable, .taken:
+            return .quiet
+        case .unknown:
+            return .default
+        }
     }
 
     private func offerBusinessServiceCard(offer: CustomerOfferDetail, pillStatus: CustomerOfferDisplayStatus) -> some View {
@@ -186,7 +203,7 @@ struct OfferDetailView: View {
     }
 
     private func offerTimeLocationCard(offer: CustomerOfferDetail) -> some View {
-        CustomerSectionCard {
+        PFCustomerSectionCard(variant: .default) {
             VStack(alignment: .leading, spacing: 12) {
                 PFTypography.Customer.label("Opening time")
                 if let startsAt = offer.startsAt {
@@ -212,32 +229,18 @@ struct OfferDetailView: View {
     }
 
     private func offerWhyReceivedCard(uiState: OfferDetailUIState, offer: CustomerOfferDetail) -> some View {
-        CustomerSectionCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Why you received this")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(PFColor.textPrimary)
-
-                Text(uiState.whyReceivedParagraph(offer: offer))
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(PFColor.customerMutedText)
-                    .lineSpacing(3)
-            }
-        }
+        PFCustomerInfoCallout(
+            title: "Why you received this",
+            message: uiState.whyReceivedParagraph(offer: offer),
+            variant: .neutral,
+        )
     }
 
     private func offerNextStepCard(uiState: OfferDetailUIState, offer: CustomerOfferDetail) -> some View {
-        CustomerSectionCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(uiState.nextStepTitle)
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(PFColor.textPrimary)
-
-                Text(uiState.nextStepBody(fallbackGuidance: offer.claimGuidance))
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(PFColor.customerMutedText)
-                    .lineSpacing(3)
-            }
-        }
+        PFCustomerInfoCallout(
+            title: uiState.nextStepTitle,
+            message: uiState.nextStepBody(fallbackGuidance: offer.claimGuidance),
+            variant: uiState == .available ? .attention : .neutral,
+        )
     }
 }

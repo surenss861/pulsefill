@@ -4,28 +4,36 @@ struct NoticeWindowSelectionView: View {
     @Binding var draft: StandbyPreferenceDraft
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            PFTypography.section("How much notice do you need?")
-            PFTypography.caption(
-                "This tells PulseFill how last-minute an opening can still be useful. Same-day openings need a notice window that fits your schedule."
-            )
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("How much notice do you need?")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
 
-            NoticePresetPicker(maxNoticeHours: $draft.maxNoticeHours)
+                Text("Choose how soon before an opening you’re comfortable being notified.")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
 
-            VStack(alignment: .leading, spacing: 12) {
-                Stepper(value: $draft.maxDistanceKm, in: 1 ... 200) {
-                    Text("Up to \(draft.maxDistanceKm) km away")
-                        .font(.system(size: 17, weight: .regular))
-                        .foregroundStyle(PFColor.textPrimary)
+                NoticePresetPicker(maxNoticeHours: $draft.maxNoticeHours)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Stepper(value: $draft.maxDistanceKm, in: 1 ... 200) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Up to \(draft.maxDistanceKm) km away")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(PFColor.textPrimary)
+                            Text(StandbySetupCustomerCopy.distanceCaption)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(PFColor.textMuted)
+                        }
+                    }
+
+                    Toggle(StandbySetupCustomerCopy.depositToggle, isOn: $draft.depositOk)
+                        .font(.system(size: 15, weight: .medium))
+                        .tint(PFColor.ember)
                 }
-                .padding(PFSpacing.md)
-                .background(PFSurface.card)
-                .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-
-                Toggle("I’m OK if a deposit is required to claim", isOn: $draft.depositOk)
-                    .padding(PFSpacing.md)
-                    .background(PFSurface.card)
-                    .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+                .padding(.top, 4)
             }
         }
     }

@@ -1,7 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { sendJson, sendPublicError } from "../../lib/http-errors.js";
 import { requireCustomer } from "../../plugins/guards.js";
+import { rateLimitTier } from "../../plugins/rate-limit.js";
+import {
+  assertActiveCustomerBusinessMembership,
+  assertCustomerBusinessMetadataReadAllowed,
+} from "./membership.js";
 import { fetchCustomerActivityFeed } from "./activity-feed.js";
 import { fetchCustomerClaimStatus } from "./claim-status.js";
 import { fetchMissedOpportunities } from "./missed-opportunities.js";
@@ -104,7 +110,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const { data, error } = await admin.from("customers").select("*").eq("id", req.customer!.id).maybeSingle();
-      if (error) return reply.status(500).send({ error: "load_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "load_failed" });
       return reply.send(data);
     },
   );
@@ -120,9 +126,13 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         .parse((req.query as Record<string, string | undefined>) ?? {});
 
       const admin = createServiceSupabase(req.server.env);
-      const { data: biz, error: bizErr } = await admin.from("businesses").select("id").eq("id", q.business_id).maybeSingle();
-      if (bizErr) return reply.status(500).send({ error: "lookup_failed" });
-      if (!biz) return reply.status(404).send({ error: "business_not_found" });
+      const gate = await assertCustomerBusinessMetadataReadAllowed(admin, req.customer!.id, q.business_id);
+      if (!gate.ok) {
+        if (gate.status === 403 && gate.message) {
+          return sendPublicError(req, reply, 403, gate.error, gate.message);
+        }
+        return sendJson(req, reply, gate.status, { error: gate.error });
+      }
 
       const { data, error } = await admin
         .from("services")
@@ -131,7 +141,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         .eq("active", true)
         .order("name", { ascending: true });
 
-      if (error) return reply.status(500).send({ error: "list_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "list_failed" });
       return reply.send(data ?? []);
     },
   );
@@ -148,9 +158,13 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         .parse((req.query as Record<string, string | undefined>) ?? {});
 
       const admin = createServiceSupabase(req.server.env);
-      const { data: biz, error: bizErr } = await admin.from("businesses").select("id, name").eq("id", q.business_id).maybeSingle();
-      if (bizErr) return reply.status(500).send({ error: "lookup_failed" });
-      if (!biz) return reply.status(404).send({ error: "business_not_found" });
+      const gate = await assertCustomerBusinessMetadataReadAllowed(admin, req.customer!.id, q.business_id);
+      if (!gate.ok) {
+        if (gate.status === 403 && gate.message) {
+          return sendPublicError(req, reply, 403, gate.error, gate.message);
+        }
+        return sendJson(req, reply, gate.status, { error: gate.error });
+      }
 
       let serviceName: string | null = null;
       if (q.service_id) {
@@ -160,12 +174,12 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
           .eq("id", q.service_id)
           .eq("business_id", q.business_id)
           .maybeSingle();
-        if (svcErr) return reply.status(500).send({ error: "lookup_failed" });
+        if (svcErr) return sendJson(req, reply, 500, { error: "lookup_failed" });
         serviceName = svc?.name ?? null;
       }
 
       return reply.send({
-        business_name: biz.name,
+        business_name: gate.business.name,
         service_name: serviceName,
       });
     },
@@ -182,20 +196,26 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         .eq("customer_id", req.customer!.id)
         .order("created_at", { ascending: false });
 
-      if (error) return reply.status(500).send({ error: "list_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "list_failed" });
       return reply.send(data ?? []);
     },
   );
 
   app.post(
     "/v1/customers/me/preferences",
-    { preHandler: requireCustomer },
+    { preHandler: requireCustomer, config: { rateLimit: rateLimitTier.preferenceSave } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const body = prefBody.parse(req.body ?? {});
 
       const { data: biz } = await admin.from("businesses").select("id").eq("id", body.business_id).maybeSingle();
-      if (!biz) return reply.status(400).send({ error: "invalid_business" });
+      if (!biz) return sendJson(req, reply, 400, { error: "invalid_business" });
+
+      const membership = await assertActiveCustomerBusinessMembership(admin, req.customer!.id, body.business_id);
+      if (membership === "error") return sendJson(req, reply, 500, { error: "membership_lookup_failed" });
+      if (membership === "missing") {
+        return sendJson(req, reply, 403, { error: "business_membership_required" });
+      }
 
       const { data, error } = await admin
         .from("standby_preferences")
@@ -206,7 +226,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         .select("*")
         .single();
 
-      if (error) return reply.status(500).send({ error: "create_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "create_failed" });
       return reply.status(201).send(data);
     },
   );
@@ -225,7 +245,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         .eq("id", id)
         .eq("customer_id", req.customer!.id)
         .maybeSingle();
-      if (!existing) return reply.status(404).send({ error: "not_found" });
+      if (!existing) return sendJson(req, reply, 404, { error: "not_found" });
 
       const { data, error } = await admin
         .from("standby_preferences")
@@ -234,7 +254,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         .select("*")
         .single();
 
-      if (error) return reply.status(500).send({ error: "update_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "update_failed" });
       return reply.send(data);
     },
   );
@@ -252,7 +272,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         .eq("id", id)
         .eq("customer_id", req.customer!.id);
 
-      if (error) return reply.status(500).send({ error: "delete_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "delete_failed" });
       return reply.status(204).send();
     },
   );
@@ -272,7 +292,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         .gt("expires_at", now)
         .order("sent_at", { ascending: false });
 
-      if (error) return reply.status(500).send({ error: "list_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "list_failed" });
       const offers = (data ?? []).map((r) => mapCustomerOfferRow(r as Record<string, unknown>));
       return reply.send({ offers });
     },
@@ -285,7 +305,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
       const offerId = z.string().uuid().parse((req.params as { offerId?: string }).offerId);
       const admin = createServiceSupabase(req.server.env);
       const out = await fetchCustomerOfferDetail(admin, req.customer!.id, offerId);
-      if (!out.ok) return reply.status(out.status).send({ error: out.error });
+      if (!out.ok) return sendJson(req, reply, out.status, { error: out.error });
       return reply.send(out.body);
     },
   );
@@ -297,7 +317,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
       const claimId = z.string().uuid().parse((req.params as { claimId?: string }).claimId);
       const admin = createServiceSupabase(req.server.env);
       const out = await fetchCustomerClaimStatus(admin, req.customer!.id, claimId);
-      if (!out.ok) return reply.status(out.status).send({ error: out.error });
+      if (!out.ok) return sendJson(req, reply, out.status, { error: out.error });
       return reply.send(out.body);
     },
   );
@@ -321,7 +341,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
       });
       if ("error" in out) {
         req.log.error({ error: out.error }, "activity feed failed");
-        return reply.status(500).send({ error: out.error });
+        return sendJson(req, reply, 500, { error: out.error });
       }
       return reply.send({ items: out.items });
     },
@@ -337,7 +357,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         return reply.send(body);
       } catch (e) {
         req.log.error({ err: e }, "missed opportunities failed");
-        return reply.status(500).send({ error: "missed_opportunities_failed" });
+        return sendJson(req, reply, 500, { error: "missed_opportunities_failed" });
       }
     },
   );
@@ -388,7 +408,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
       const admin = createServiceSupabase(req.server.env);
       const parsed = notificationPrefsPatch.safeParse(req.body ?? {});
       if (!parsed.success) {
-        return reply.status(400).send({ error: "invalid_body" });
+        return sendJson(req, reply, 400, { error: "invalid_body" });
       }
       const out = await patchCustomerNotificationPreferences(
         admin,
@@ -397,7 +417,9 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         q.push_permission_status,
       );
       if ("error" in out) {
-        return reply.status((out as { status: number }).status).send({ error: (out as { error: string }).error });
+        return sendJson(req, reply, (out as { status: number }).status, {
+          error: (out as { error: string }).error,
+        });
       }
       return reply.send(out);
     },
@@ -410,7 +432,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
       const admin = createServiceSupabase(req.server.env);
       const parsed = pushDeviceBody.safeParse(req.body ?? {});
       if (!parsed.success) {
-        return reply.status(400).send({ error: "invalid_body" });
+        return sendJson(req, reply, 400, { error: "invalid_body" });
       }
       const body = parsed.data;
       const nowIso = new Date().toISOString();
@@ -450,7 +472,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "push device upsert failed");
-        return reply.status(500).send({ error: "register_failed" });
+        return sendJson(req, reply, 500, { error: "register_failed" });
       }
 
       if (body.replace_existing) {
@@ -468,7 +490,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
           .eq("active", true);
         if (deactivationError) {
           req.log.error({ deactivationError }, "push device replacement deactivate failed");
-          return reply.status(500).send({ error: "register_failed" });
+          return sendJson(req, reply, 500, { error: "register_failed" });
         }
       }
 
@@ -489,7 +511,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
       const admin = createServiceSupabase(req.server.env);
       const parsed = deactivatePushDeviceBody.safeParse(req.body ?? {});
       if (!parsed.success) {
-        return reply.status(400).send({ error: "invalid_body" });
+        return sendJson(req, reply, 400, { error: "invalid_body" });
       }
       const body = parsed.data;
       const nowIso = new Date().toISOString();
@@ -522,7 +544,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
       const { error } = await update;
       if (error) {
         req.log.error({ error }, "push device deactivate failed");
-        return reply.status(500).send({ error: "deactivate_failed" });
+        return sendJson(req, reply, 500, { error: "deactivate_failed" });
       }
 
       return reply.send({
@@ -550,7 +572,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
         return reply.send(body);
       } catch (e) {
         req.log.error({ err: e }, "standby status failed");
-        return reply.status(500).send({ error: "standby_status_failed" });
+        return sendJson(req, reply, 500, { error: "standby_status_failed" });
       }
     },
   );
@@ -584,7 +606,7 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "customer activity failed");
-        return reply.status(500).send({ error: "activity_failed" });
+        return sendJson(req, reply, 500, { error: "activity_failed" });
       }
 
       const activity = (data ?? []).map((row: Record<string, unknown>) => {

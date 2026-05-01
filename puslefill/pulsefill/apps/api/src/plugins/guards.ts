@@ -1,9 +1,10 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { createServiceSupabase } from "../config/supabase.js";
+import { sendPublicError } from "../lib/http-errors.js";
 
 export async function requireAuth(req: FastifyRequest, reply: FastifyReply) {
   if (!req.authUser) {
-    return reply.status(401).send({ error: "unauthorized" });
+    return sendPublicError(req, reply, 401, "unauthorized", "Sign in again to continue.");
   }
 }
 
@@ -34,18 +35,24 @@ export async function requireStaff(req: FastifyRequest, reply: FastifyReply) {
     .eq("auth_user_id", req.authUser!.id);
 
   if (error || !rows?.length) {
-    return reply.status(403).send({ error: "staff_required" });
+    return sendPublicError(req, reply, 403, "staff_required", "Staff access is required for this resource.");
   }
 
   const q = req.query as { business_id?: string };
   let row = rows[0]!;
   if (rows.length > 1) {
     if (!q.business_id) {
-      return reply.status(400).send({ error: "business_id_required" });
+      return sendPublicError(
+        req,
+        reply,
+        400,
+        "business_id_required",
+        "Add business_id to the query string when you belong to multiple businesses.",
+      );
     }
     const found = rows.find((r) => r.business_id === q.business_id);
     if (!found) {
-      return reply.status(403).send({ error: "forbidden_business" });
+      return sendPublicError(req, reply, 403, "forbidden_business", "You do not have access to that business.");
     }
     row = found;
   }
@@ -76,10 +83,16 @@ export async function requireCustomer(req: FastifyRequest, reply: FastifyReply) 
     .maybeSingle();
 
   if (error) {
-    return reply.status(500).send({ error: "customer_lookup_failed" });
+    return sendPublicError(req, reply, 500, "customer_lookup_failed", "Could not load your customer profile.");
   }
   if (!data) {
-    return reply.status(403).send({ error: "customer_profile_required" });
+    return sendPublicError(
+      req,
+      reply,
+      403,
+      "customer_profile_required",
+      "Complete customer setup before using this feature.",
+    );
   }
 
   req.customer = { id: data.id };

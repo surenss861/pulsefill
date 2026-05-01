@@ -42,7 +42,7 @@ final class OfferDetailViewModel {
                 }
             }
         } catch {
-            loadState = .failed(APIErrorCopy.message(for: error))
+            loadState = .failed(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(APIErrorCopy.message(for: error)))
         }
     }
 
@@ -117,7 +117,7 @@ final class OfferDetailViewModel {
                 successBanner = "Claim sent. The business will confirm this opening."
             }
         } catch {
-            errorBanner = APIErrorCopy.message(for: error)
+            errorBanner = PFCustomerFacingErrorCopy.claimFailureMessage(from: error)
             PFHaptics.warning()
         }
     }

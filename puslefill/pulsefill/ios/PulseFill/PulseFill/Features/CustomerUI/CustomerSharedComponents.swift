@@ -77,7 +77,7 @@ extension View {
 
 // MARK: - Screen chrome
 
-/// Warm near-black gradient behind customer flows (Home, Offers, Activity, Profile).
+/// Warm near-black gradient behind customer flows (Home, Openings, Activity, Profile).
 struct CustomerScreenBackground: View {
     var body: some View {
         ZStack {
@@ -109,7 +109,7 @@ struct CustomerScreenBackground: View {
 
 // MARK: - Appointment pass shell (dark glass)
 
-/// Elevated dark “appointment pass” — use for claimable Home / Offers / detail summaries.
+/// Elevated dark “appointment pass” — use for claimable Home / Openings / detail summaries.
 struct CustomerAppointmentPassCard<Content: View>: View {
     @ViewBuilder private let content: () -> Content
 
@@ -522,6 +522,9 @@ struct CustomerActivityRow: View {
     let relativeTime: String
     var detail: String? = nil
     var dot: CustomerActivityRowDot = .muted
+    /// When set, shows a customer-safe status chip (Activity timeline / staff filters).
+    var statusChipKind: PFCustomerOfferStatusKind? = nil
+    var statusChipCaption: String? = nil
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -530,7 +533,11 @@ struct CustomerActivityRow: View {
                 .frame(width: 6, height: 6)
                 .padding(.top, 5)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 6) {
+                if let statusChipKind {
+                    PFCustomerStatusChip(kind: statusChipKind, labelOverride: statusChipCaption)
+                }
+
                 Text(title)
                     .font(.system(size: 15, weight: .semibold, design: .default))
                     .foregroundStyle(PFColor.textPrimary)

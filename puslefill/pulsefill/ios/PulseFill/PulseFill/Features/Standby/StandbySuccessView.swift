@@ -2,11 +2,34 @@ import SwiftUI
 
 struct StandbySuccessView: View {
     let wantsPushReminders: Bool
+    /// When true (preferences flow), show **View openings** + **Done**; otherwise single **Continue** (onboarding).
+    var showOpeningsCTA: Bool = false
     let onDone: () -> Void
+    var onViewOpenings: (() -> Void)?
 
     @EnvironmentObject private var env: AppEnvironment
     @Environment(\.openURL) private var openURL
     @State private var pushFollowUp: StandbyPushFollowUp?
+
+    init(
+        wantsPushReminders: Bool,
+        showOpeningsCTA: Bool = false,
+        onDone: @escaping () -> Void,
+        onViewOpenings: (() -> Void)? = nil
+    ) {
+        self.wantsPushReminders = wantsPushReminders
+        self.showOpeningsCTA = showOpeningsCTA
+        self.onDone = onDone
+        self.onViewOpenings = onViewOpenings
+    }
+
+    private var titleText: String {
+        showOpeningsCTA ? StandbySetupCustomerCopy.successTitle : StandbyOnboardingCopy.Preference.successTitle
+    }
+
+    private var bodyText: String {
+        showOpeningsCTA ? StandbySetupCustomerCopy.successBody : StandbyOnboardingCopy.Preference.successBody
+    }
 
     var body: some View {
         VStack(spacing: PFSpacing.lg) {
@@ -16,12 +39,12 @@ struct StandbySuccessView: View {
                 .font(.system(size: 52, weight: .semibold))
                 .foregroundStyle(PFColor.success)
 
-            Text(StandbyOnboardingCopy.Preference.successTitle)
+            Text(titleText)
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundStyle(PFColor.textPrimary)
                 .multilineTextAlignment(.center)
 
-            Text(StandbyOnboardingCopy.Preference.successBody)
+            Text(bodyText)
                 .font(.system(size: 17, weight: .regular))
                 .foregroundStyle(PFColor.textSecondary)
                 .multilineTextAlignment(.center)
@@ -54,14 +77,26 @@ struct StandbySuccessView: View {
 
             Spacer(minLength: 24)
 
-            PrimaryCTAButton(title: StandbyOnboardingCopy.Preference.successPrimaryCTA) {
-                onDone()
+            if showOpeningsCTA, let onViewOpenings {
+                VStack(spacing: 12) {
+                    PFCustomerPrimaryButton(title: StandbySetupCustomerCopy.successViewOpenings, isEnabled: true) {
+                        onViewOpenings()
+                    }
+                    PFCustomerSecondaryButton(title: StandbySetupCustomerCopy.successDone, isEnabled: true) {
+                        onDone()
+                    }
+                }
+                .padding(.horizontal, PFSpacing.lg)
+            } else {
+                PrimaryCTAButton(title: StandbyOnboardingCopy.Preference.successPrimaryCTA) {
+                    onDone()
+                }
+                .padding(.horizontal, PFSpacing.lg)
             }
-            .padding(.horizontal, PFSpacing.lg)
-            .padding(.bottom, PFSpacing.xl)
+            Spacer(minLength: PFSpacing.md)
         }
         .frame(maxWidth: .infinity)
-        .background(PFColor.background.ignoresSafeArea())
+        .background(PFScreenBackground())
         .task {
             pushFollowUp = await env.pushRegistrationManager.standbyPushFollowUp(wantsPush: wantsPushReminders)
         }

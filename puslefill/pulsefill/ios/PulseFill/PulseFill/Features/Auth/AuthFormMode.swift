@@ -32,7 +32,7 @@ enum AuthFormMode: String, CaseIterable, Identifiable {
     var subtitle: String {
         switch self {
         case .signIn:
-            return "View offers, claim openings, and track booking updates."
+            return "View openings, claim them, and track booking updates."
         case .signUp:
             return "Use the email tied to your invite to start receiving appointment updates."
         }

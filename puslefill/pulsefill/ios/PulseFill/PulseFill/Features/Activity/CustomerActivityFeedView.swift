@@ -11,70 +11,89 @@ struct CustomerActivityFeedView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        PFTypography.Customer.screenTitle("Activity")
-                            .multilineTextAlignment(.leading)
+            ZStack {
+                PFScreenBackground()
 
-                        PFTypography.Customer.screenLead("A simple timeline of your offers and booking updates.")
-                    }
-                    .customerAppearAnimation(staggerIndex: 0)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 22) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            PFTypography.Customer.screenTitle("Activity")
+                                .multilineTextAlignment(.leading)
 
-                    if env.sessionStore.isStaffUser {
-                        CustomerActivityFilterBar(selected: $viewModel.selectedFilter)
-                            .customerAppearAnimation(staggerIndex: 1)
-                    }
+                            PFTypography.Customer.screenLead(
+                                "A simple timeline of your standby, openings, claims, and confirmations."
+                            )
+                        }
+                        .customerAppearAnimation(staggerIndex: 0)
 
-                    switch viewModel.loadState {
-                    case .idle, .loading:
-                        ProgressView()
-                            .tint(PFColor.ember)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 12)
-
-                    case let .failed(message):
-                        CustomerEmptyStateCard(
-                            systemImage: "exclamationmark.triangle",
-                            title: "Couldn’t load activity",
-                            message: message,
-                            footnote: nil
+                        PFCustomerInfoCallout(
+                            title: "About Activity",
+                            message:
+                                "We show what changed in plain language — not technical codes. Tap a row when there’s something you can open or review.",
+                            variant: .neutral
                         )
-                        CustomerPrimaryButton(title: "Try again") {
-                            Task { await viewModel.load() }
+                        .customerAppearAnimation(staggerIndex: 1)
+
+                        if env.sessionStore.isStaffUser {
+                            VStack(alignment: .leading, spacing: 8) {
+                                CustomerActivityFilterBar(selected: $viewModel.selectedFilter)
+                                    .accessibilityLabel("Activity filter")
+                            }
+                            .customerAppearAnimation(staggerIndex: 2)
                         }
 
-                    case .loaded:
-                        let groups = customerActivityTimelineGroups(from: viewModel.filteredItems)
-                        if groups.isEmpty {
-                            CustomerEmptyStateCard(
-                                systemImage: "list.bullet.rectangle",
-                                title: "No activity yet.",
-                                message: "When something changes — a new opening, a claim, or a booking update — it’ll show up here.",
-                                footnote: nil,
-                                primaryActionTitle: "Browse openings",
-                                primaryAction: {
-                                    env.customerNavigation.openOffersInbox()
-                                },
-                                secondaryActionTitle: "Update standby preferences",
-                                secondaryAction: {
-                                    env.customerNavigation.open(.standbyStatus)
-                                }
+                        switch viewModel.loadState {
+                        case .idle, .loading:
+                            PFCustomerLoadingState(
+                                title: "Loading activity…",
+                                message: "Gathering your latest updates.",
+                                compact: false
                             )
-                            .customerAppearAnimation(staggerIndex: 2)
-                        } else {
-                            ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
-                                activitySection(group)
-                                    .customerAppearAnimation(staggerIndex: index + 2)
+                            .padding(.top, 8)
+
+                        case let .failed(message):
+                            PFCustomerErrorState(
+                                title: "Couldn’t load activity",
+                                message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(message),
+                                primaryTitle: "Try again",
+                                primaryAction: { Task { await viewModel.load() } },
+                                secondaryTitle: nil,
+                                secondaryAction: nil
+                            )
+                            .padding(.top, 8)
+
+                        case .loaded:
+                            let groups = customerActivityTimelineGroups(from: viewModel.filteredItems)
+                            if groups.isEmpty {
+                                CustomerEmptyStateCard(
+                                    systemImage: "list.bullet.rectangle",
+                                    title: "No activity yet",
+                                    message:
+                                        "When something changes — a new opening, a claim, or a booking update — it’ll show up here.",
+                                    footnote: nil,
+                                    primaryActionTitle: "Browse openings",
+                                    primaryAction: {
+                                        env.customerNavigation.openOffersInbox()
+                                    },
+                                    secondaryActionTitle: "Standby status",
+                                    secondaryAction: {
+                                        env.customerNavigation.open(.standbyStatus)
+                                    }
+                                )
+                                .customerAppearAnimation(staggerIndex: 3)
+                            } else {
+                                ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
+                                    activitySection(group)
+                                        .customerAppearAnimation(staggerIndex: index + 3)
+                                }
                             }
                         }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 36)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 24)
-                .padding(.bottom, 36)
             }
-            .background(CustomerScreenBackground())
             .navigationTitle("Activity")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(PFColor.customerTabBar, for: .navigationBar)
@@ -106,7 +125,7 @@ struct CustomerActivityFeedView: View {
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(PFColor.customerDimText)
 
-            CustomerSectionCard(padding: 14) {
+            PFCustomerSectionCard(variant: .default, padding: 14) {
                 VStack(spacing: 14) {
                     ForEach(group.rows) { row in
                         if let item = viewModel.filteredItems.first(where: { $0.id == row.id }) {
@@ -114,7 +133,14 @@ struct CustomerActivityFeedView: View {
                                 handleActivityTap(item: item)
                             }
                         } else {
-                            CustomerActivityRow(title: row.title, relativeTime: row.relativeTime, detail: row.detail, dot: row.dot)
+                            CustomerActivityRow(
+                                title: row.title,
+                                relativeTime: row.relativeTime,
+                                detail: row.detail,
+                                dot: row.dot,
+                                statusChipKind: row.chipKind,
+                                statusChipCaption: row.chipCaption
+                            )
                         }
                     }
                 }

@@ -1,26 +1,63 @@
 import Foundation
 import SwiftUI
 
+/// Customer-safe activity row category (maps raw API `kind` strings — never shown in UI).
 enum CustomerActivityDisplayKind: Equatable {
-    case offerAvailable
-    case claimSubmitted
-    case bookingConfirmed
-    case openingExpired
+    case openingReceived
+    case claimSent
+    case waitingForConfirmation
+    case confirmed
+    case openingNoLongerAvailable
     case standbyUpdated
     case notificationSent
     case preferencesChanged
+    case businessJoined
     case unknown
 
     var title: String {
         switch self {
-        case .offerAvailable: return "Offer available"
-        case .claimSubmitted: return "Claim submitted"
-        case .bookingConfirmed: return "Booking confirmed"
-        case .openingExpired: return "Opening expired"
+        case .openingReceived: return "Opening received"
+        case .claimSent: return "Claim sent"
+        case .waitingForConfirmation: return "Waiting for confirmation"
+        case .confirmed: return "Confirmed"
+        case .openingNoLongerAvailable: return "Opening no longer available"
         case .standbyUpdated: return "Standby updated"
         case .notificationSent: return "Notification sent"
-        case .preferencesChanged: return "Preferences changed"
-        case .unknown: return "Activity update"
+        case .preferencesChanged: return "Preferences updated"
+        case .businessJoined: return "Joined business"
+        case .unknown: return "Update"
+        }
+    }
+
+    /// Compact chip for timeline rows (reuses customer chip styles; labels are activity-appropriate via `title` above).
+    var statusChipKind: PFCustomerOfferStatusKind {
+        switch self {
+        case .openingReceived: return .available
+        case .claimSent: return .waiting
+        case .waitingForConfirmation: return .waiting
+        case .confirmed: return .confirmed
+        case .openingNoLongerAvailable: return .unavailable
+        case .standbyUpdated: return .active
+        case .notificationSent: return .pending
+        case .preferencesChanged: return .active
+        case .businessJoined: return .active
+        case .unknown: return .unknown
+        }
+    }
+
+    /// Short chip text (row title stays the full customer sentence).
+    var timelineChipCaption: String {
+        switch self {
+        case .openingReceived: return "Opening"
+        case .claimSent: return "Claim"
+        case .waitingForConfirmation: return "Pending"
+        case .confirmed: return "Booked"
+        case .openingNoLongerAvailable: return "Unavailable"
+        case .standbyUpdated: return "Standby"
+        case .notificationSent: return "Alert"
+        case .preferencesChanged: return "Preferences"
+        case .businessJoined: return "Joined"
+        case .unknown: return "Update"
         }
     }
 }
@@ -30,19 +67,24 @@ func customerActivityDisplayKind(rawKind: String) -> CustomerActivityDisplayKind
 
     switch k {
     case "offer_sent", "offer_received", "offers", "offer_expiring_soon":
-        return .offerAvailable
-    case "claim_received", "claim_submitted", "claim_pending_confirmation":
-        return .claimSubmitted
+        return .openingReceived
+    case "claim_submitted":
+        return .claimSent
+    case "claim_received", "claim_pending_confirmation":
+        return .waitingForConfirmation
     case "booking_confirmed":
-        return .bookingConfirmed
+        return .confirmed
     case "slot_expired", "offer_expired", "claim_unavailable", "missed_opportunity":
-        return .openingExpired
+        return .openingNoLongerAvailable
     case "standby_status_reminder", "standby_setup_suggestion":
         return .standbyUpdated
     case "notification_sent", "push_sent":
         return .notificationSent
     case "preferences_updated", "notification_preferences_updated":
         return .preferencesChanged
+    case "business_joined", "customer_joined_business", "membership_activated", "joined_business",
+         "standby_joined", "customer_joined":
+        return .businessJoined
     default:
         return .unknown
     }
@@ -51,11 +93,11 @@ func customerActivityDisplayKind(rawKind: String) -> CustomerActivityDisplayKind
 /// Second line under the title (compact context, no raw `kind` strings).
 func customerActivityDetailLine(for item: CustomerActivityItem) -> String? {
     var parts: [String] = []
+    if let business = item.businessName?.trimmingCharacters(in: .whitespacesAndNewlines), !business.isEmpty {
+        parts.append(business)
+    }
     if let service = item.serviceName?.trimmingCharacters(in: .whitespacesAndNewlines), !service.isEmpty {
         parts.append(service)
-    }
-    if let provider = item.providerName?.trimmingCharacters(in: .whitespacesAndNewlines), !provider.isEmpty {
-        parts.append(provider)
     }
     if let location = item.locationName?.trimmingCharacters(in: .whitespacesAndNewlines), !location.isEmpty {
         parts.append(location)
@@ -75,9 +117,9 @@ func customerActivityDetailLine(for item: CustomerActivityItem) -> String? {
 
 func customerActivityRowDot(for kind: CustomerActivityDisplayKind) -> CustomerActivityRowDot {
     switch kind {
-    case .bookingConfirmed:
+    case .confirmed:
         return .success
-    case .offerAvailable, .claimSubmitted:
+    case .openingReceived, .claimSent, .waitingForConfirmation:
         return .ember
     default:
         return .muted
@@ -92,6 +134,8 @@ struct CustomerActivityTimelineRow: Identifiable {
     let detail: String?
     let relativeTime: String
     let dot: CustomerActivityRowDot
+    let chipKind: PFCustomerOfferStatusKind
+    let chipCaption: String
 }
 
 struct CustomerActivityTimelineGroup: Identifiable {
@@ -153,7 +197,9 @@ private func mapTimelineRows(_ items: [CustomerActivityItem]) -> [CustomerActivi
             title: kind.title,
             detail: customerActivityDetailLine(for: item),
             relativeTime: DateFormatterPF.relative(item.occurredAt),
-            dot: customerActivityRowDot(for: kind)
+            dot: customerActivityRowDot(for: kind),
+            chipKind: kind.statusChipKind,
+            chipCaption: kind.timelineChipCaption
         )
     }
 }
@@ -165,7 +211,14 @@ extension CustomerActivityTimelineRow {
             PFHaptics.lightImpact()
             tap()
         } label: {
-            CustomerActivityRow(title: title, relativeTime: relativeTime, detail: detail, dot: dot)
+            CustomerActivityRow(
+                title: title,
+                relativeTime: relativeTime,
+                detail: detail,
+                dot: dot,
+                statusChipKind: chipKind,
+                statusChipCaption: chipCaption
+            )
         }
         .buttonStyle(CustomerCardPressButtonStyle())
     }

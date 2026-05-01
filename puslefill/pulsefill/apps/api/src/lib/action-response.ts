@@ -15,6 +15,7 @@ export type ActionErrorCode =
   | "server_error";
 
 export type ActionErrorBody = {
+  request_id: string;
   error: {
     code: ActionErrorCode;
     message: string;

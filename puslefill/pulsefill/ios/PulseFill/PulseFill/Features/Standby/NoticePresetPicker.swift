@@ -3,14 +3,7 @@ import SwiftUI
 struct NoticePresetPicker: View {
     @Binding var maxNoticeHours: Int
 
-    private let presets: [(Int, String)] = [
-        (1, "1h"),
-        (2, "2h"),
-        (4, "4h"),
-        (8, "8h"),
-        (24, "1 day"),
-        (48, "2 days"),
-    ]
+    private let presets: [Int] = [1, 2, 4, 8, 24, 48]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -22,12 +15,12 @@ struct NoticePresetPicker: View {
                 ],
                 spacing: 8
             ) {
-                ForEach(presets, id: \.0) { hours, label in
+                ForEach(presets, id: \.self) { hours in
                     let isSelected = maxNoticeHours == hours
                     Button {
                         maxNoticeHours = hours
                     } label: {
-                        Text(label)
+                        Text(StandbySetupCustomerCopy.noticePresetShortLabel(hours: hours))
                             .font(.system(size: 13, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
@@ -44,13 +37,10 @@ struct NoticePresetPicker: View {
             }
 
             Stepper(value: $maxNoticeHours, in: 1 ... 72) {
-                Text("Custom: \(maxNoticeHours) hour\(maxNoticeHours == 1 ? "" : "s") minimum notice")
-                    .font(.system(size: 14, weight: .regular))
+                Text("Custom: \(StandbySetupCustomerCopy.noticeSummaryLabel(hours: maxNoticeHours)) minimum")
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(PFColor.textSecondary)
             }
         }
-        .padding(PFSpacing.md)
-        .background(PFSurface.card)
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
     }
 }

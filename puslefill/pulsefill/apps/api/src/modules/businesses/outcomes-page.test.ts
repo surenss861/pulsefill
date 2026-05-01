@@ -155,5 +155,7 @@ test("GET /v1/businesses/mine/outcomes returns standardized 500 error when build
   });
 
   assert.equal(res.statusCode, 500);
-  assert.deepEqual(res.json(), { error: "outcomes_page_failed" });
+  const body = res.json() as { error: string; request_id?: string };
+  assert.equal(body.error, "outcomes_page_failed");
+  assert.ok(body.request_id && typeof body.request_id === "string");
 });

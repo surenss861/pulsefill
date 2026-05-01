@@ -29,7 +29,7 @@ struct RootTabView: View {
                 .tag(AppTab.find)
 
                 OffersInboxView()
-                    .tabItem { Label("Offers", systemImage: "bell.badge.fill") }
+                    .tabItem { Label("Openings", systemImage: "bell.badge.fill") }
                     .tag(AppTab.offers)
 
                 CustomerActivityFeedView(api: env.apiClient)

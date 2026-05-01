@@ -1,7 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { sendJson } from "../../lib/http-errors.js";
 import { requireStaff } from "../../plugins/guards.js";
+import { rateLimitTier } from "../../plugins/rate-limit.js";
 import { upsertActiveCustomerMembership } from "./membership.js";
 
 const reviewBody = z
@@ -34,7 +36,7 @@ export async function registerStaffCustomerStandbyRequestsRoutes(app: FastifyIns
 
       if (error) {
         req.log.error({ error }, "list standby requests");
-        return reply.status(500).send({ error: "list_failed" });
+        return sendJson(req, reply, 500, { error: "list_failed" });
       }
 
       const list = rows ?? [];
@@ -70,7 +72,7 @@ export async function registerStaffCustomerStandbyRequestsRoutes(app: FastifyIns
 
   app.post<{ Params: { requestId: string } }>(
     "/v1/businesses/mine/customer-standby-requests/:requestId/review",
-    { preHandler: requireStaff },
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     async (req, reply) => {
       const requestId = z.string().uuid().parse(req.params.requestId);
       const body = reviewBody.parse(req.body ?? {});
@@ -86,14 +88,14 @@ export async function registerStaffCustomerStandbyRequestsRoutes(app: FastifyIns
         .maybeSingle();
 
       if (fetchErr || !row) {
-        return reply.status(404).send({ error: "not_found" });
+        return sendJson(req, reply, 404, { error: "not_found" });
       }
       const r = row as { id: string; business_id: string; customer_id: string; status: string };
       if (r.business_id !== businessId) {
-        return reply.status(404).send({ error: "not_found" });
+        return sendJson(req, reply, 404, { error: "not_found" });
       }
       if (r.status !== "pending") {
-        return reply.status(409).send({ error: "not_pending" });
+        return sendJson(req, reply, 409, { error: "not_pending" });
       }
 
       if (body.decision === "decline") {
@@ -109,7 +111,7 @@ export async function registerStaffCustomerStandbyRequestsRoutes(app: FastifyIns
           .select("id, status")
           .maybeSingle();
         if (upErr || !updated) {
-          return reply.status(500).send({ error: "update_failed" });
+          return sendJson(req, reply, 500, { error: "update_failed" });
         }
         return reply.send({ request: updated });
       }
@@ -127,7 +129,7 @@ export async function registerStaffCustomerStandbyRequestsRoutes(app: FastifyIns
         .maybeSingle();
 
       if (upErr || !updated) {
-        return reply.status(500).send({ error: "update_failed" });
+        return sendJson(req, reply, 500, { error: "update_failed" });
       }
 
       const u = updated as { id: string; status: string; customer_id: string };
@@ -135,7 +137,7 @@ export async function registerStaffCustomerStandbyRequestsRoutes(app: FastifyIns
         await upsertActiveCustomerMembership(admin, u.customer_id, businessId, "request");
       } catch (e) {
         req.log.error({ e }, "membership after approve");
-        return reply.status(500).send({ error: "membership_failed" });
+        return sendJson(req, reply, 500, { error: "membership_failed" });
       }
 
       return reply.send({ request: updated });

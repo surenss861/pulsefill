@@ -2,7 +2,9 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
 import { sendActionError, sendConfirmSuccess } from "../../lib/action-replies.js";
+import { sendJson } from "../../lib/http-errors.js";
 import { requireCustomer, requireStaff } from "../../plugins/guards.js";
+import { rateLimitTier } from "../../plugins/rate-limit.js";
 import { executeBulkOpenSlotAction } from "./bulk-actions.js";
 import {
   buildOperatorActionRejectionDetails,
@@ -20,6 +22,8 @@ import {
 import { loadSlotRuleContext } from "./load-slot-rule-context.js";
 import {
   getCancelOpenSlotMutationTestDelegate,
+  getClaimOpenSlotRpcTestDelegate,
+  getConfirmBookedClaimLookupTestDelegate,
   getConfirmOpenSlotMutationTestDelegate,
   getExpireOpenSlotMutationTestDelegate,
 } from "./open-slots-route-test-seams.js";
@@ -209,7 +213,7 @@ async function listOpenSlots(req: FastifyRequest, reply: FastifyReply) {
   }
 
   const { data, error } = await query;
-  if (error) return reply.status(500).send({ error: "list_failed" });
+  if (error) return sendJson(req, reply, 500, { error: "list_failed" });
   const rows = (data ?? []).map((r) => mapSlotListRow(r as Record<string, unknown>));
   return reply.send({ openSlots: rows });
 }
@@ -220,11 +224,11 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
   app.post(
     "/v1/open-slots/bulk-action",
-    { preHandler: requireStaff },
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     async (req, reply) => {
       const parsed = bulkActionBody.safeParse(req.body ?? {});
       if (!parsed.success) {
-        return reply.status(400).send({
+        return sendJson(req, reply, 400, {
           error: { code: "invalid_request", message: "Invalid bulk action payload.", retryable: false },
         });
       }
@@ -248,7 +252,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const slotId = z.string().uuid().parse((req.params as { id?: string }).id);
 
       const ok = await assertSlotInBusiness(admin, slotId, req.staff!.business_id);
-      if (!ok) return reply.status(404).send({ error: "not_found" });
+      if (!ok) return sendJson(req, reply, 404, { error: "not_found" });
 
       const { data, error } = await admin
         .from("audit_events")
@@ -259,7 +263,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "slot timeline failed");
-        return reply.status(500).send({ error: "timeline_failed" });
+        return sendJson(req, reply, 500, { error: "timeline_failed" });
       }
 
       const raw = (data ?? []) as Array<{
@@ -303,7 +307,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const slotId = z.string().uuid().parse((req.params as { id?: string }).id);
 
       const ok = await assertSlotInBusiness(admin, slotId, req.staff!.business_id);
-      if (!ok) return reply.status(404).send({ error: "not_found" });
+      if (!ok) return sendJson(req, reply, 404, { error: "not_found" });
 
       const { data, error } = await admin
         .from("notification_logs")
@@ -313,7 +317,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "notification logs failed");
-        return reply.status(500).send({ error: "notification_logs_failed" });
+        return sendJson(req, reply, 500, { error: "notification_logs_failed" });
       }
 
       return reply.send({ logs: data ?? [] });
@@ -322,7 +326,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
   app.post(
     "/v1/open-slots",
-    { preHandler: requireStaff },
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const body = createSlotBody.parse(req.body ?? {});
@@ -340,7 +344,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "create slot failed");
-        return reply.status(500).send({ error: "create_failed" });
+        return sendJson(req, reply, 500, { error: "create_failed" });
       }
 
       await admin.from("audit_events").insert({
@@ -371,10 +375,10 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           ? await openSlotDetailTestDelegate(admin, { slotId: id, businessId: req.staff!.business_id })
           : await loadOpenSlotDetailRoutePayload(admin, { slotId: id, businessId: req.staff!.business_id });
 
-        if (result.kind === "not_found") return reply.status(404).send({ error: "not_found" });
+        if (result.kind === "not_found") return sendJson(req, reply, 404, { error: "not_found" });
         return reply.send(result.payload);
       } catch {
-        return reply.status(500).send({ error: "load_failed" });
+        return sendJson(req, reply, 500, { error: "load_failed" });
       }
     },
   );
@@ -387,44 +391,57 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const id = z.string().uuid().parse((req.params as { id?: string }).id);
 
       const ok = await assertSlotInBusiness(admin, id, req.staff!.business_id);
-      if (!ok) return reply.status(404).send({ error: "not_found" });
+      if (!ok) return sendJson(req, reply, 404, { error: "not_found" });
 
       const { data, error } = await admin.from("slot_offers").select("*").eq("open_slot_id", id).order("sent_at", {
         ascending: false,
       });
-      if (error) return reply.status(500).send({ error: "list_failed" });
+      if (error) return sendJson(req, reply, 500, { error: "list_failed" });
       return reply.send(data ?? []);
     },
   );
 
   app.post(
     "/v1/open-slots/:id/send-offers",
-    { preHandler: requireStaff },
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     sendOpenSlotOffersRouteHandler,
   );
 
   app.post(
     "/v1/open-slots/:id/claim",
-    { preHandler: requireCustomer },
+    { preHandler: requireCustomer, config: { rateLimit: rateLimitTier.strict } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const openSlotId = z.string().uuid().parse((req.params as { id?: string }).id);
       const body = claimBody.parse(req.body ?? {});
 
-      const { data, error } = await admin.rpc("claim_open_slot", {
-        p_open_slot_id: openSlotId,
-        p_customer_id: req.customer!.id,
-        p_deposit_payment_intent_id: body.deposit_payment_intent_id ?? null,
-      });
+      const claimRpcDelegate = getClaimOpenSlotRpcTestDelegate();
+      let data: unknown;
+      let error: { message: string } | null = null;
+      if (claimRpcDelegate) {
+        data = await claimRpcDelegate({
+          openSlotId,
+          customerId: req.customer!.id,
+          deposit_payment_intent_id: body.deposit_payment_intent_id ?? null,
+        });
+      } else {
+        const rpcOut = await admin.rpc("claim_open_slot", {
+          p_open_slot_id: openSlotId,
+          p_customer_id: req.customer!.id,
+          p_deposit_payment_intent_id: body.deposit_payment_intent_id ?? null,
+        });
+        data = rpcOut.data;
+        error = rpcOut.error;
+      }
 
       if (error) {
         req.log.error({ error }, "claim_open_slot rpc failed");
-        return reply.status(500).send({ error: "claim_failed" });
+        return sendJson(req, reply, 500, { error: "claim_failed" });
       }
 
       const result = data as { ok?: boolean; error?: string; claim_id?: string };
       if (!result?.ok) {
-        return reply.status(409).send({ error: result?.error ?? "claim_rejected" });
+        return sendJson(req, reply, 409, { error: result?.error ?? "claim_rejected" });
       }
 
       return reply.send({
@@ -442,13 +459,13 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
   app.post(
     "/v1/open-slots/:id/confirm",
-    { preHandler: requireStaff },
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const slotId = z.string().uuid().parse((req.params as { id?: string }).id);
       const parsed = confirmBody.safeParse(req.body ?? {});
       if (!parsed.success) {
-        return sendActionError(reply, 400, "invalid_request", "A valid claim ID is required.", false);
+        return sendActionError(req, reply, 400, "invalid_request", "A valid claim ID is required.", false);
       }
       const body = parsed.data;
 
@@ -457,20 +474,26 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         businessId: req.staff!.business_id,
       });
       if (!loaded) {
-        return sendActionError(reply, 404, "not_found", "This opening or claim no longer exists.", false);
+        return sendActionError(req, reply, 404, "not_found", "This opening or claim no longer exists.", false);
       }
 
       const st = String(loaded.slot.status ?? "");
 
       if (st === "booked") {
-        const { data: claimRow } = await admin
-          .from("slot_claims")
-          .select("id, status, open_slot_id")
-          .eq("id", body.claim_id)
-          .maybeSingle();
+        const bookedClaimLookup = getConfirmBookedClaimLookupTestDelegate();
+        const claimRow = bookedClaimLookup
+          ? await bookedClaimLookup({ claimId: body.claim_id, openSlotId: slotId })
+          : (
+              await admin
+                .from("slot_claims")
+                .select("id, status, open_slot_id")
+                .eq("id", body.claim_id)
+                .maybeSingle()
+            ).data;
 
         if (!claimRow || (claimRow as { open_slot_id: string }).open_slot_id !== slotId) {
           return sendActionError(
+            req,
             reply,
             404,
             "not_found",
@@ -492,6 +515,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         }
 
         return sendActionError(
+          req,
           reply,
           409,
           "slot_terminal_state",
@@ -503,6 +527,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       if (st === "expired" || st === "cancelled") {
         return sendActionError(
+          req,
           reply,
           409,
           "slot_terminal_state",
@@ -514,6 +539,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       if (st !== "claimed") {
         return sendActionError(
+          req,
           reply,
           409,
           "slot_not_claimed",
@@ -528,10 +554,11 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         businessId: req.staff!.business_id,
       });
       if (!guardReload) {
-        return sendActionError(reply, 404, "not_found", "This opening or claim no longer exists.", false);
+        return sendActionError(req, reply, 404, "not_found", "This opening or claim no longer exists.", false);
       }
       if (!canPerformAction("confirm_booking", guardReload.signals)) {
         return sendActionError(
+          req,
           reply,
           409,
           "operator_action_not_allowed",
@@ -579,6 +606,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       if (error) {
         req.log.error({ error }, "confirm rpc failed");
         return sendActionError(
+          req,
           reply,
           500,
           "server_error",
@@ -592,6 +620,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         const err = result?.error ?? "";
         if (err === "forbidden") {
           return sendActionError(
+            req,
             reply,
             403,
             "forbidden",
@@ -600,12 +629,13 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           );
         }
         if (err === "slot_not_found") {
-          return sendActionError(reply, 404, "not_found", "This opening or claim no longer exists.", false);
+          return sendActionError(req, reply, 404, "not_found", "This opening or claim no longer exists.", false);
         }
         if (err === "slot_not_claimed") {
           const cs = result.status ? String(result.status) : undefined;
           if (cs === "expired" || cs === "cancelled") {
             return sendActionError(
+              req,
               reply,
               409,
               "slot_terminal_state",
@@ -615,6 +645,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
             );
           }
           return sendActionError(
+            req,
             reply,
             409,
             "slot_not_claimed",
@@ -625,6 +656,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         }
         if (err === "claim_not_found" || err === "claim_not_won") {
           return sendActionError(
+            req,
             reply,
             409,
             "claim_mismatch",
@@ -633,6 +665,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           );
         }
         return sendActionError(
+          req,
           reply,
           409,
           "slot_terminal_state",
@@ -677,7 +710,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
   app.post(
     "/v1/open-slots/:id/cancel",
-    { preHandler: requireStaff },
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const id = z.string().uuid().parse((req.params as { id?: string }).id);
@@ -689,9 +722,10 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       });
       if (!cancelGuard.ok) {
         if (cancelGuard.status === 404) {
-          return reply.status(404).send({ error: "not_found" });
+          return sendJson(req, reply, 404, { error: "not_found" });
         }
         return sendActionError(
+          req,
           reply,
           409,
           "operator_action_not_allowed",
@@ -726,10 +760,10 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         result = (mutationOut ?? (data as { ok?: boolean; error?: string })) as { ok?: boolean; error?: string };
       } catch (error) {
         req.log.error({ error }, "cancel slot mutation failed");
-        return sendActionError(reply, 500, "cancel_slot_failed", "Could not cancel slot.", true);
+        return sendActionError(req, reply, 500, "cancel_slot_failed", "Could not cancel slot.", true);
       }
 
-      if (!result?.ok) return reply.status(409).send({ error: result?.error ?? "cancel_rejected" });
+      if (!result?.ok) return sendJson(req, reply, 409, { error: result?.error ?? "cancel_rejected" });
 
       await admin.from("audit_events").insert({
         business_id: req.staff!.business_id,
@@ -759,14 +793,14 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       const id = z.string().uuid().parse((req.params as { id?: string }).id);
       const body = patchInternalNoteBody.safeParse(req.body ?? {});
       if (!body.success) {
-        return reply.status(400).send({
+        return sendJson(req, reply, 400, {
           error: { code: "invalid_request", message: "Invalid internal note payload.", retryable: false },
         });
       }
 
       const ok = await assertSlotInBusiness(admin, id, req.staff!.business_id);
       if (!ok) {
-        return reply.status(404).send({
+        return sendJson(req, reply, 404, {
           error: { code: "not_found", message: "This opening no longer exists.", retryable: false },
         });
       }
@@ -789,7 +823,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       if (updErr || !updated) {
         req.log.error({ updErr }, "internal note update failed");
-        return reply.status(500).send({
+        return sendJson(req, reply, 500, {
           error: { code: "server_error", message: "Could not save internal note.", retryable: true },
         });
       }
@@ -825,7 +859,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
   app.post(
     "/v1/open-slots/:id/expire",
-    { preHandler: requireStaff },
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const id = z.string().uuid().parse((req.params as { id?: string }).id);
@@ -837,9 +871,10 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       });
       if (!expireGuard.ok) {
         if (expireGuard.status === 404) {
-          return reply.status(404).send({ error: "not_found" });
+          return sendJson(req, reply, 404, { error: "not_found" });
         }
         return sendActionError(
+          req,
           reply,
           409,
           "operator_action_not_allowed",
@@ -874,10 +909,10 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         result = (mutationOut ?? (data as { ok?: boolean; error?: string })) as { ok?: boolean; error?: string };
       } catch (error) {
         req.log.error({ error }, "expire slot mutation failed");
-        return sendActionError(reply, 500, "expire_slot_failed", "Could not expire slot.", true);
+        return sendActionError(req, reply, 500, "expire_slot_failed", "Could not expire slot.", true);
       }
 
-      if (!result?.ok) return reply.status(409).send({ error: result?.error ?? "expire_rejected" });
+      if (!result?.ok) return sendJson(req, reply, 409, { error: result?.error ?? "expire_rejected" });
 
       await admin.from("audit_events").insert({
         business_id: req.staff!.business_id,

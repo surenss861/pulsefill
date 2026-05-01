@@ -1,4 +1,4 @@
-import type { FastifyReply } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
 import type {
   ActionErrorCode,
   ConfirmSuccessResponse,
@@ -6,6 +6,7 @@ import type {
 } from "./action-response.js";
 
 export function sendActionError(
+  req: FastifyRequest,
   reply: FastifyReply,
   statusCode: number,
   code: ActionErrorCode,
@@ -14,6 +15,7 @@ export function sendActionError(
   details?: Record<string, unknown>,
 ) {
   return reply.status(statusCode).send({
+    request_id: req.requestId,
     error: {
       code,
       message,

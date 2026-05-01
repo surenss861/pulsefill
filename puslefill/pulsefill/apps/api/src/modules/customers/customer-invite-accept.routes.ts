@@ -1,8 +1,10 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { sendJson } from "../../lib/http-errors.js";
 import { requireAuth } from "../../plugins/guards.js";
+import { rateLimitTier } from "../../plugins/rate-limit.js";
 import { hashInviteToken, normalizeEmailForInvite } from "./invite-token.js";
 import { upsertActiveCustomerMembership } from "./membership.js";
 
@@ -17,8 +19,8 @@ type CustomerInviteRow = {
   accepted_by_customer_id: string | null;
 };
 
-function errPayload(code: string, message: string) {
-  return { error: { code, message } };
+function errPayload(req: FastifyRequest, code: string, message: string) {
+  return { error: { code, message }, request_id: req.requestId };
 }
 
 async function upsertCustomerForUser(admin: SupabaseClient, u: User): Promise<{ id: string }> {
@@ -64,12 +66,12 @@ async function countStandbyForBusiness(
 export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
   app.post(
     "/v1/customers/invites/accept",
-    { preHandler: requireAuth },
+    { preHandler: requireAuth, config: { rateLimit: rateLimitTier.strict } },
     async (req, reply) => {
       const u = req.authUser!;
       const userEmail = u.email != null ? normalizeEmailForInvite(u.email) : null;
       if (!userEmail) {
-        return reply.status(400).send(errPayload("email_required", "Add an email to your account to accept an invite."));
+        return reply.status(400).send(errPayload(req, "email_required", "Add an email to your account to accept an invite."));
       }
 
       const body = acceptBody.parse(req.body ?? {});
@@ -85,13 +87,13 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
 
       if (invErr) {
         req.log.error({ error: invErr }, "invite lookup by token");
-        return reply.status(500).send({ error: "lookup_failed" });
+        return sendJson(req, reply, 500, { error: "lookup_failed" });
       }
 
       if (!invite) {
         return reply
           .status(404)
-          .send(errPayload("invite_not_found", "This invite link is not valid. Ask the business for a new invite."));
+          .send(errPayload(req, "invite_not_found", "This invite link is not valid. Ask the business for a new invite."));
       }
 
       const row = invite as CustomerInviteRow;
@@ -103,16 +105,16 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
           .eq("status", "pending");
         return reply
           .status(410)
-          .send(errPayload("invite_expired", "This invite has expired. Ask the business to send a new one."));
+          .send(errPayload(req, "invite_expired", "This invite has expired. Ask the business to send a new one."));
       }
 
       if (row.status !== "pending" && row.status !== "accepted") {
         if (row.status === "expired" || row.status === "revoked") {
           return reply
             .status(410)
-            .send(errPayload("invite_not_valid", "This invite is no longer available."));
+            .send(errPayload(req, "invite_not_valid", "This invite is no longer available."));
         }
-        return reply.status(410).send(errPayload("invite_not_valid", "This invite is no longer available."));
+        return reply.status(410).send(errPayload(req, "invite_not_valid", "This invite is no longer available."));
       }
 
       if (userEmail !== normalizeEmailForInvite(row.email)) {
@@ -120,6 +122,7 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
           .status(403)
           .send(
             errPayload(
+              req,
               "invite_email_mismatch",
               "This invite was sent to a different email. Sign in with the invited email or ask the clinic for a new invite.",
             ),
@@ -130,7 +133,7 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
       try {
         customer = await upsertCustomerForUser(admin, u);
       } catch {
-        return reply.status(500).send({ error: "customer_sync_failed" });
+        return sendJson(req, reply, 500, { error: "customer_sync_failed" });
       }
 
       if (row.status === "accepted") {
@@ -139,7 +142,7 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
             await upsertActiveCustomerMembership(admin, customer.id, row.business_id, "invite");
           } catch (e) {
             req.log.error({ e }, "membership upsert after idempotent accept");
-            return reply.status(500).send({ error: "membership_sync_failed" });
+            return sendJson(req, reply, 500, { error: "membership_sync_failed" });
           }
           try {
             await ensureDefaultNotificationPreferences(admin, customer.id);
@@ -157,7 +160,7 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
         return reply
           .status(409)
           .send(
-            errPayload("invite_already_used", "This invite was already used by a different sign-in. Ask the business for a new invite if this was a mistake."),
+            errPayload(req, "invite_already_used", "This invite was already used by a different sign-in. Ask the business for a new invite if this was a mistake."),
           );
       }
 
@@ -175,7 +178,7 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
 
       if (upErr) {
         req.log.error({ error: upErr }, "invite accept update");
-        return reply.status(500).send({ error: "accept_failed" });
+        return sendJson(req, reply, 500, { error: "accept_failed" });
       }
 
       if (!updated) {
@@ -201,21 +204,21 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
         }
         return reply
           .status(409)
-          .send(errPayload("invite_already_used", "This invite was just accepted. Try again if it was you."));
+          .send(errPayload(req, "invite_already_used", "This invite was just accepted. Try again if it was you."));
       }
 
       try {
         await upsertActiveCustomerMembership(admin, customer.id, row.business_id, "invite");
       } catch (e) {
         req.log.error({ e }, "membership upsert on accept");
-        return reply.status(500).send({ error: "membership_sync_failed" });
+        return sendJson(req, reply, 500, { error: "membership_sync_failed" });
       }
 
       try {
         await ensureDefaultNotificationPreferences(admin, customer.id);
       } catch (e) {
         req.log.error({ e }, "notification preferences insert");
-        return reply.status(500).send({ error: "notification_prefs_failed" });
+        return sendJson(req, reply, 500, { error: "notification_prefs_failed" });
       }
 
       const n = await countStandbyForBusiness(admin, customer.id, row.business_id);

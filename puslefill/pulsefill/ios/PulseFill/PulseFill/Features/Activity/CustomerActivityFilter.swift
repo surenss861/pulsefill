@@ -2,7 +2,7 @@ import Foundation
 
 enum CustomerActivityFilter: String, CaseIterable, Identifiable {
     case all = "All"
-    case offers = "Offers"
+    case openings = "Openings"
     case claims = "Claims"
     case confirmed = "Confirmed"
     case missed = "Missed"
@@ -16,7 +16,7 @@ enum CustomerActivityFilter: String, CaseIterable, Identifiable {
         switch self {
         case .all:
             return true
-        case .offers:
+        case .openings:
             return kind == .offerReceived || kind == .offerExpiringSoon
         case .claims:
             return kind == .claimSubmitted || kind == .claimPendingConfirmation || kind == .claimUnavailable

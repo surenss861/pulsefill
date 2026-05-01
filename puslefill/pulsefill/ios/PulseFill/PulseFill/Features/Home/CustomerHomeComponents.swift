@@ -40,7 +40,7 @@ struct CustomerHomeHeader: View {
     }
 }
 
-// MARK: - Spotlight offer (aligned with Offers / presenters)
+// MARK: - Spotlight opening (aligned with Openings inbox / presenters)
 
 struct CustomerOfferSpotlightCard: View {
     let offer: OfferInboxItem
@@ -157,7 +157,7 @@ struct CustomerOfferSpotlightCard: View {
     }
 }
 
-// MARK: - Empty offer
+// MARK: - Empty openings state
 
 struct EmptyOfferStateCard: View {
     var onNotificationSettings: (() -> Void)?

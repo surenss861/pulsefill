@@ -2,7 +2,9 @@ import type { FastifyInstance } from "fastify";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { sendJson } from "../../lib/http-errors.js";
 import { requireAuth } from "../../plugins/guards.js";
+import { rateLimitTier } from "../../plugins/rate-limit.js";
 import { normalizeEmailForInvite } from "./invite-token.js";
 import {
   getCustomerBusinessRelationship,
@@ -32,7 +34,7 @@ const standbyIntentBody = z
 export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
   app.get(
     "/v1/customers/directory/businesses",
-    { preHandler: requireAuth },
+    { preHandler: requireAuth, config: { rateLimit: rateLimitTier.directoryRead } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const { data, error } = await admin
@@ -44,7 +46,7 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "directory list failed");
-        return reply.status(500).send({ error: "directory_list_failed" });
+        return sendJson(req, reply, 500, { error: "directory_list_failed" });
       }
       return reply.send({ businesses: data ?? [] });
     },
@@ -52,7 +54,7 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
 
   app.get<{ Params: { businessId: string } }>(
     "/v1/customers/directory/businesses/:businessId",
-    { preHandler: requireAuth },
+    { preHandler: requireAuth, config: { rateLimit: rateLimitTier.directoryRead } },
     async (req, reply) => {
       const businessId = z.string().uuid().parse(req.params.businessId);
       const admin = createServiceSupabase(req.server.env);
@@ -64,17 +66,17 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
         .maybeSingle();
 
       if (bErr || !b) {
-        return reply.status(404).send({ error: "not_found" });
+        return sendJson(req, reply, 404, { error: "not_found" });
       }
       if (!(b as { customer_discovery_enabled?: boolean }).customer_discovery_enabled) {
-        return reply.status(404).send({ error: "not_found" });
+        return sendJson(req, reply, 404, { error: "not_found" });
       }
 
       let customerId: string;
       try {
         customerId = (await ensureCustomerRow(admin, req.authUser!)).id;
       } catch {
-        return reply.status(500).send({ error: "customer_sync_failed" });
+        return sendJson(req, reply, 500, { error: "customer_sync_failed" });
       }
 
       const [{ data: locations }, { data: services }, customer_relationship] = await Promise.all([
@@ -94,7 +96,7 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
 
   app.post<{ Params: { businessId: string } }>(
     "/v1/customers/directory/businesses/:businessId/standby-intent",
-    { preHandler: requireAuth },
+    { preHandler: requireAuth, config: { rateLimit: rateLimitTier.strict } },
     async (req, reply) => {
       const businessId = z.string().uuid().parse(req.params.businessId);
       const body = standbyIntentBody.parse(req.body ?? {});
@@ -105,7 +107,7 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
       try {
         customerId = (await ensureCustomerRow(admin, u)).id;
       } catch {
-        return reply.status(500).send({ error: "customer_sync_failed" });
+        return sendJson(req, reply, 500, { error: "customer_sync_failed" });
       }
 
       const { data: b, error: bErr } = await admin
@@ -115,11 +117,11 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
         .maybeSingle();
 
       if (bErr || !b) {
-        return reply.status(404).send({ error: "not_found" });
+        return sendJson(req, reply, 404, { error: "not_found" });
       }
       const row = b as { id: string; standby_access_mode: string; customer_discovery_enabled: boolean };
       if (!row.customer_discovery_enabled) {
-        return reply.status(404).send({ error: "not_found" });
+        return sendJson(req, reply, 404, { error: "not_found" });
       }
 
       const { data: existing } = await admin
@@ -139,7 +141,7 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
 
       if (row.standby_access_mode === "private") {
         const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
-        return reply.status(403).send({
+        return sendJson(req, reply, 403, {
           error: "private_business",
           message: "This business only connects customers through an invite from the clinic.",
           ...standbyIntentPayload(rel, "invite_required", "invite_required"),
@@ -151,7 +153,7 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
           await upsertActiveCustomerMembership(admin, customerId, businessId, "public");
         } catch (e) {
           req.log.error({ e }, "public membership upsert");
-          return reply.status(500).send({ error: "membership_failed" });
+          return sendJson(req, reply, 500, { error: "membership_failed" });
         }
         const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
         return reply.status(201).send({
@@ -182,7 +184,7 @@ export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
           });
         }
         req.log.error({ error: insErr }, "standby request insert");
-        return reply.status(500).send({ error: "request_failed" });
+        return sendJson(req, reply, 500, { error: "request_failed" });
       }
 
       const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);

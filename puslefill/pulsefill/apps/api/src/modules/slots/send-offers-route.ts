@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { sendJson } from "../../lib/http-errors.js";
 import { sendActionError, sendSendOffersSuccess } from "../../lib/action-replies.js";
 import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
 import { computeStandbyMatchesForOpenSlot } from "../../lib/open-slot-send-offers-match.js";
@@ -36,9 +37,10 @@ export async function sendOpenSlotOffersRouteHandler(req: FastifyRequest, reply:
   });
   if (!sendGuard.ok) {
     if (sendGuard.status === 404) {
-      return sendActionError(reply, 404, "not_found", "This opening no longer exists.", false);
+      return sendActionError(req, reply, 404, "not_found", "This opening no longer exists.", false);
     }
     return sendActionError(
+      req,
       reply,
       409,
       "operator_action_not_allowed",
@@ -88,7 +90,7 @@ export async function sendOpenSlotOffersRouteHandler(req: FastifyRequest, reply:
     .select("*")
     .eq("id", slot.business_id)
     .single();
-  if (bizErr || !business) return reply.status(500).send({ error: "business_load_failed" });
+  if (bizErr || !business) return sendJson(req, reply, 500, { error: "business_load_failed" });
 
   const slotRow = slot as OpenSlotRow;
   let computed: Awaited<ReturnType<typeof computeMatches>>;
@@ -96,9 +98,9 @@ export async function sendOpenSlotOffersRouteHandler(req: FastifyRequest, reply:
     computed = await computeMatches(admin, id, slotRow, String((business as { timezone: string }).timezone));
   } catch (e) {
     const code = e instanceof Error ? e.message : "";
-    if (code === "prefs_load_failed") return reply.status(500).send({ error: "prefs_load_failed" });
-    if (code === "memberships_load_failed") return reply.status(500).send({ error: "memberships_load_failed" });
-    if (code === "offers_load_failed") return reply.status(500).send({ error: "offers_load_failed" });
+    if (code === "prefs_load_failed") return sendJson(req, reply, 500, { error: "prefs_load_failed" });
+    if (code === "memberships_load_failed") return sendJson(req, reply, 500, { error: "memberships_load_failed" });
+    if (code === "offers_load_failed") return sendJson(req, reply, 500, { error: "offers_load_failed" });
     throw e;
   }
 
@@ -126,7 +128,7 @@ export async function sendOpenSlotOffersRouteHandler(req: FastifyRequest, reply:
     })),
   });
   if (!committed.ok) {
-    return sendAtomicSendOffersError(reply, committed.error);
+    return sendAtomicSendOffersError(req, reply, committed.error);
   }
 
   const offerRowsForQueue = committed.offer_customer_ids;
@@ -237,7 +239,7 @@ async function handleNoMatches(
     matchDiagnostics: input.matchDiagnostics,
   });
   if (!recorded.ok) {
-    return sendAtomicSendOffersError(reply, recorded.error);
+    return sendAtomicSendOffersError(req, reply, recorded.error);
   }
 
   return sendSendOffersSuccess(reply, {
@@ -253,15 +255,16 @@ async function handleNoMatches(
   });
 }
 
-function sendAtomicSendOffersError(reply: FastifyReply, error: string) {
+function sendAtomicSendOffersError(req: FastifyRequest, reply: FastifyReply, error: string) {
   if (error === "slot_not_found") {
-    return sendActionError(reply, 404, "not_found", "This opening no longer exists.", false);
+    return sendActionError(req, reply, 404, "not_found", "This opening no longer exists.", false);
   }
   if (error === "forbidden") {
-    return sendActionError(reply, 403, "forbidden", "You cannot modify this opening.", false);
+    return sendActionError(req, reply, 403, "forbidden", "You cannot modify this opening.", false);
   }
   if (error === "slot_not_sendable" || error === "offers_in_flight") {
     return sendActionError(
+      req,
       reply,
       409,
       "operator_action_not_allowed",
@@ -269,5 +272,5 @@ function sendAtomicSendOffersError(reply: FastifyReply, error: string) {
       false,
     );
   }
-  return sendActionError(reply, 500, "server_error", "Could not send offers.", true);
+  return sendActionError(req, reply, 500, "server_error", "Could not send offers.", true);
 }

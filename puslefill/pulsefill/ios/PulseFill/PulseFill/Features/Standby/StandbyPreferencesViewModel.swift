@@ -129,7 +129,7 @@ final class StandbyPreferencesViewModel: ObservableObject {
             ServiceOption(
                 id: "any",
                 name: "Any service",
-                description: "Open to earlier openings for any visit type at this clinic."
+                description: "Openings for any visit type at this business can appear in your Openings tab."
             ),
         ]
         for s in businessServices {
@@ -150,7 +150,7 @@ final class StandbyPreferencesViewModel: ObservableObject {
                 ServiceOption(
                     id: trimmed,
                     name: "Other service",
-                    description: "Not in the current list — we’ll keep this selection."
+                    description: "This service isn’t in the list right now — we’ll keep your selection."
                 )
             )
         }
@@ -216,9 +216,9 @@ final class StandbyPreferencesViewModel: ObservableObject {
         guard draft.canReview else {
             let msg: String
             if draft.isBasicSetupComplete, draft.hasAvailabilityWindow, !draft.isTimeWindowValid {
-                msg = "Set your latest time after your earliest time."
+                msg = StandbySetupCustomerCopy.validationTimeOrder
             } else {
-                msg = "Add your clinic’s business ID, pick at least one day, and fix any time window issues."
+                msg = StandbySetupCustomerCopy.validationIncomplete
             }
             saveState = .failed(msg)
             return false
@@ -268,7 +268,7 @@ final class StandbyPreferencesViewModel: ObservableObject {
             await loadExistingPreferences()
             return true
         } catch {
-            saveState = .failed(APIErrorCopy.message(for: error))
+            saveState = .failed(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(APIErrorCopy.message(for: error)))
             return false
         }
     }

@@ -43,6 +43,14 @@ const schema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   ENABLE_BILLING_ROUTES: featureFlag,
   ENABLE_STRIPE_WEBHOOK_ROUTES: featureFlag,
+  /** When true, skips registering @fastify/rate-limit (used by API route tests). */
+  RATE_LIMIT_DISABLED: z.preprocess(
+    (val) => {
+      if (val === undefined || val === "") return false;
+      return ["1", "true", "yes", "on"].includes(String(val).trim().toLowerCase());
+    },
+    z.boolean(),
+  ),
   PUSH_PROVIDER: z.enum(["noop", "apns"]).default("noop"),
   APNS_TEAM_ID: z.string().optional(),
   APNS_KEY_ID: z.string().optional(),

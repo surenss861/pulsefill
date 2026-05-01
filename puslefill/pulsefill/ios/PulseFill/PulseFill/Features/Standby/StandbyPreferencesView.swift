@@ -44,78 +44,110 @@ struct StandbyPreferencesView: View {
         )
     }
 
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 18) {
-                if onboardingMode {
-                    onboardingHeader
-                } else {
-                    StandbyIntroCard()
-                }
-
-                if viewModel.isEditingExistingPreference {
-                    HStack(alignment: .center, spacing: 12) {
-                        Text("Editing saved preference")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(PFColor.textPrimary)
-                        Spacer(minLength: 0)
-                        Button("Cancel") {
-                            viewModel.cancelEditing()
-                        }
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(PFColor.primary)
-                    }
-                    .padding(PFSpacing.md)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(PFColor.primary.opacity(0.10))
-                    .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                            .strokeBorder(PFColor.primary.opacity(0.25), lineWidth: 1)
-                    )
-                }
-
-                if onboardingMode {
-                    Text(StandbyOnboardingCopy.Preference.businessHelper)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(PFColor.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                ServiceSelectionView(viewModel: viewModel)
-
-                if onboardingMode {
-                    Text(StandbyOnboardingCopy.Preference.availabilityHelper)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(PFColor.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                AvailabilitySelectionView(draft: $viewModel.draft)
-
-                if onboardingMode {
-                    Text(StandbyOnboardingCopy.Preference.noticeHelper)
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundStyle(PFColor.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                NoticeWindowSelectionView(draft: $viewModel.draft)
-                NotificationPreferenceView(draft: $viewModel.draft)
-                StandbyPreferenceReviewCard(draft: viewModel.draft, resolved: viewModel.draftResolvedLabels)
-
-                saveSection
-
-                if !onboardingMode || !viewModel.existingPreferences.isEmpty {
-                    savedPreferencesSection
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 20)
+    private var navigationTitleText: String {
+        if onboardingMode {
+            return navigationTitleOverride ?? "Standby"
         }
-        .background(PFColor.background.ignoresSafeArea())
-        .navigationTitle(navigationTitleOverride ?? "Standby")
+        if viewModel.isEditingExistingPreference {
+            return "Edit standby"
+        }
+        if viewModel.businessSelectionLocked {
+            return "Set up standby"
+        }
+        return navigationTitleOverride ?? "Standby preferences"
+    }
+
+    private var customerSubtitle: String? {
+        guard !onboardingMode else { return nil }
+        if viewModel.isEditingExistingPreference {
+            return StandbySetupCustomerCopy.subtitleEdit
+        }
+        if viewModel.businessSelectionLocked {
+            return StandbySetupCustomerCopy.subtitleSetupLocked
+        }
+        return StandbySetupCustomerCopy.subtitleSetupOpen
+    }
+
+    var body: some View {
+        ZStack {
+            PFScreenBackground()
+
+            ScrollView {
+                VStack(spacing: 20) {
+                    if onboardingMode {
+                        onboardingHeader
+                    } else {
+                        customerFlowHeader
+                    }
+
+                    if viewModel.isEditingExistingPreference {
+                        PFCustomerSectionCard(variant: .attention, padding: 14) {
+                            HStack(alignment: .center, spacing: 12) {
+                                Text("You’re editing a saved preference")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(PFColor.textPrimary)
+                                Spacer(minLength: 0)
+                                Button("Cancel") {
+                                    viewModel.cancelEditing()
+                                }
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(PFColor.ember)
+                            }
+                        }
+                    }
+
+                    if onboardingMode {
+                        Text(StandbyOnboardingCopy.Preference.businessHelper)
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    if !onboardingMode, viewModel.businessSelectionLocked, viewModel.draft.isBusinessIdValid {
+                        lockedBusinessContextCard
+                    }
+
+                    if !onboardingMode, !viewModel.businessSelectionLocked {
+                        StandbyIntroCard()
+                    }
+
+                    ServiceSelectionView(viewModel: viewModel)
+
+                    if onboardingMode {
+                        Text(StandbyOnboardingCopy.Preference.availabilityHelper)
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    AvailabilitySelectionView(draft: $viewModel.draft)
+
+                    if onboardingMode {
+                        Text(StandbyOnboardingCopy.Preference.noticeHelper)
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    NoticeWindowSelectionView(draft: $viewModel.draft)
+                    NotificationPreferenceView(draft: $viewModel.draft)
+                    StandbyPreferenceReviewCard(draft: viewModel.draft, resolved: viewModel.draftResolvedLabels)
+
+                    saveSection
+
+                    if !onboardingMode || !viewModel.existingPreferences.isEmpty {
+                        savedPreferencesSection
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 20)
+            }
+        }
+        .navigationTitle(navigationTitleText)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(PFColor.customerTabBar, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .tint(PFColor.ember)
         .task {
             await viewModel.loadExistingPreferences()
             await viewModel.handleBusinessIdentifierChange()
@@ -137,10 +169,21 @@ struct StandbyPreferencesView: View {
             Task { await viewModel.refreshDraftLabels() }
         }
         .sheet(isPresented: $showSuccess) {
-            StandbySuccessView(wantsPushReminders: viewModel.draft.wantsPushReminders) {
-                viewModel.resetDraftAfterSuccess(keepingBusinessId: true)
-                showSuccess = false
-            }
+            StandbySuccessView(
+                wantsPushReminders: viewModel.draft.wantsPushReminders,
+                showOpeningsCTA: !onboardingMode,
+                onDone: {
+                    viewModel.resetDraftAfterSuccess(keepingBusinessId: true)
+                    showSuccess = false
+                },
+                onViewOpenings: !onboardingMode
+                    ? {
+                        viewModel.resetDraftAfterSuccess(keepingBusinessId: true)
+                        showSuccess = false
+                        env.customerNavigation.openOffersInbox()
+                    }
+                    : nil
+            )
             .environmentObject(env)
         }
         .alert("Delete standby preference?", isPresented: Binding(
@@ -161,45 +204,68 @@ struct StandbyPreferencesView: View {
         }
     }
 
+    private var customerFlowHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let customerSubtitle {
+                PFTypography.Customer.screenLead(customerSubtitle)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var lockedBusinessContextCard: some View {
+        PFCustomerSectionCard(variant: .elevated, padding: 18) {
+            VStack(alignment: .leading, spacing: 8) {
+                PFTypography.Customer.label("Business")
+                Text(viewModel.lockedBusinessDisplayName ?? "This business")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
+                Text("You’re setting standby preferences for this business.")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     @ViewBuilder
     private var saveSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             if case let .failed(message) = viewModel.saveState {
-                Text(message)
-                    .font(.system(size: 13))
+                Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(message))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(PFColor.error)
+                    .lineSpacing(3)
             }
 
             if let err = viewModel.actionError {
-                Text(err)
-                    .font(.system(size: 13))
+                Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(err))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(PFColor.error)
+                    .lineSpacing(3)
             }
 
-            Button {
-                Task {
-                    let hadNoPreferencesBeforeSave = viewModel.existingPreferences.isEmpty
-                    let wasEditing = viewModel.isEditingExistingPreference
-                    let didSave = await viewModel.savePreference()
-                    guard didSave else { return }
-                    if !wasEditing, hadNoPreferencesBeforeSave, let onSaved {
-                        onSaved()
-                    } else {
-                        showSuccess = true
+            PFCustomerPrimaryButton(
+                title: saveButtonTitle,
+                isEnabled: viewModel.draft.canReview,
+                isLoading: isSaving,
+                onDisabledTap: nil,
+                action: {
+                    Task {
+                        let hadNoPreferencesBeforeSave = viewModel.existingPreferences.isEmpty
+                        let wasEditing = viewModel.isEditingExistingPreference
+                        let didSave = await viewModel.savePreference()
+                        guard didSave else { return }
+                        if !wasEditing, hadNoPreferencesBeforeSave, let onSaved {
+                            onSaved()
+                        } else {
+                            showSuccess = true
+                        }
                     }
                 }
-            } label: {
-                HStack {
-                    if case .saving = viewModel.saveState {
-                        ProgressView()
-                            .tint(PFColor.background)
-                    }
-                    Text(saveButtonTitle)
-                        .frame(maxWidth: .infinity)
-                }
-            }
-            .buttonStyle(PFPrimaryButtonStyle())
-            .disabled(!viewModel.draft.canReview || isSaving)
+            )
         }
     }
 
@@ -210,10 +276,14 @@ struct StandbyPreferencesView: View {
 
     private var saveButtonTitle: String {
         if isSaving { return "Saving…" }
-        if viewModel.isEditingExistingPreference {
-            return onboardingMode ? StandbyOnboardingCopy.Preference.saveChangesCTA : "Save changes"
+        if onboardingMode {
+            return viewModel.isEditingExistingPreference
+                ? StandbyOnboardingCopy.Preference.saveChangesCTA
+                : StandbyOnboardingCopy.Preference.saveCTA
         }
-        return onboardingMode ? StandbyOnboardingCopy.Preference.saveCTA : "Save standby preference"
+        return viewModel.isEditingExistingPreference
+            ? StandbySetupCustomerCopy.savePrimaryEdit
+            : StandbySetupCustomerCopy.savePrimaryNew
     }
 
     private var onboardingHeader: some View {
@@ -232,21 +302,25 @@ struct StandbyPreferencesView: View {
     @ViewBuilder
     private var savedPreferencesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeaderView(title: "Your standby preferences")
+            Text("Your standby preferences")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(PFColor.textPrimary)
 
             if viewModel.loadingExisting {
-                ProgressView()
-                    .tint(PFColor.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 8)
+                PFCustomerLoadingState(
+                    title: "Loading preferences…",
+                    message: "Getting your saved standby setups.",
+                    compact: true
+                )
             } else if let loadError = viewModel.loadError {
-                Text(loadError)
-                    .font(.system(size: 13))
+                Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(loadError))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(PFColor.error)
             } else if viewModel.existingPreferences.isEmpty {
                 Text("Once you save, your preferences appear here so you can pause or remove them later.")
-                    .font(.system(size: 13))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
                     .padding(.top, 4)
             } else {
                 VStack(spacing: 12) {

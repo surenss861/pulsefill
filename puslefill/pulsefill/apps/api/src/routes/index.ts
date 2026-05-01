@@ -1,4 +1,6 @@
 import type { FastifyInstance } from "fastify";
+import { createServiceSupabase } from "../config/supabase.js";
+import { sendJson } from "../lib/http-errors.js";
 import { registerAuthRoutes } from "../modules/auth/auth.routes.js";
 import { registerBillingRoutes } from "../modules/billing/billing.routes.js";
 import { registerBusinessRoutes } from "../modules/businesses/businesses.routes.js";
@@ -16,6 +18,23 @@ import { registerStripeWebhookRoutes } from "../modules/webhooks/stripe.routes.j
 
 export async function registerRoutes(app: FastifyInstance) {
   app.get("/health", async () => ({ ok: true }));
+
+  /** Liveness vs readiness: verifies service-role DB connectivity (no auth). */
+  app.get("/ready", async (req, reply) => {
+    const admin = createServiceSupabase(req.server.env);
+    const { error } = await admin.from("businesses").select("id").limit(1);
+    if (error) {
+      req.log.warn({ err: error }, "readiness database check failed");
+      return sendJson(req, reply, 503, {
+        ready: false,
+        checks: { database: "error" },
+      });
+    }
+    return reply.send({
+      ready: true,
+      checks: { database: "ok" },
+    });
+  });
 
   await registerAuthRoutes(app);
   await registerBusinessRoutes(app);

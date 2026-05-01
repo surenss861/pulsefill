@@ -13,6 +13,9 @@ final class CustomerNavigationCoordinator: ObservableObject {
     @Published private(set) var pendingCustomerDestination: CustomerDestination?
     @Published private(set) var pendingOfferRouting: PendingOfferRouting?
 
+    /// When `true`, Profile should scroll to the invite code card and focus the field (e.g. from Business Detail).
+    @Published private(set) var focusProfileInviteSection = false
+
     func open(_ destination: CustomerDestination) {
         switch destination {
         case .offerDetail(let offerId):
@@ -40,6 +43,17 @@ final class CustomerNavigationCoordinator: ObservableObject {
         selectedTab = .offers
         pendingOfferRouting = nil
         pendingCustomerDestination = nil
+    }
+
+    /// Switches to Profile and requests scroll + keyboard focus on the invite code section.
+    func openProfileInviteEntry() {
+        selectedTab = .profile
+        pendingCustomerDestination = nil
+        focusProfileInviteSection = true
+    }
+
+    func acknowledgeProfileInviteFocus() {
+        focusProfileInviteSection = false
     }
 
     func clearPendingOfferRouting() {

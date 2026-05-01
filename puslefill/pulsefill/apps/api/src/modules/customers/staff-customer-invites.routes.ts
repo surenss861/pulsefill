@@ -2,8 +2,9 @@ import { randomBytes } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
-import { requireStaff } from "../../plugins/guards.js";
 import type { Env } from "../../config/env.js";
+import { sendJson } from "../../lib/http-errors.js";
+import { requireStaff } from "../../plugins/guards.js";
 import { hashInviteToken, normalizeEmailForInvite } from "./invite-token.js";
 
 const postBody = z.object({ email: z.string().email() }).strict();
@@ -27,7 +28,7 @@ export async function registerStaffCustomerInviteRoutes(app: FastifyInstance) {
         .order("created_at", { ascending: false });
       if (error) {
         req.log.error({ error }, "list customer_invites failed");
-        return reply.status(500).send({ error: "list_failed" });
+        return sendJson(req, reply, 500, { error: "list_failed" });
       }
       return reply.send({ invites: data ?? [] });
     },
@@ -72,12 +73,13 @@ export async function registerStaffCustomerInviteRoutes(app: FastifyInstance) {
         const code = String((error as { code?: string }).code ?? "");
         const message = String((error as { message?: string }).message ?? "").toLowerCase();
         if (code === "23505" || message.includes("duplicate key")) {
-          return reply
-            .status(409)
-            .send({ error: "duplicate_pending_invite", message: "A pending invite already exists for this email." });
+          return sendJson(req, reply, 409, {
+            error: "duplicate_pending_invite",
+            message: "A pending invite already exists for this email.",
+          });
         }
         req.log.error({ error }, "create customer_invite failed");
-        return reply.status(500).send({ error: "create_failed" });
+        return sendJson(req, reply, 500, { error: "create_failed" });
       }
 
       const invite_url = buildInviteUrl(env.CUSTOMER_APP_BASE_URL, token);

@@ -4,20 +4,30 @@ struct NotificationPreferenceView: View {
     @Binding var draft: StandbyPreferenceDraft
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            PFTypography.section("Stay reachable")
-            PFTypography.caption(
-                "PulseFill notifies you when a matching earlier slot opens. First valid claim wins — if you’re slow to respond, someone else may get it."
-            )
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Stay reachable")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
 
-            Toggle("I’ll watch for PulseFill alerts (recommended)", isOn: $draft.wantsPushReminders)
-                .padding(PFSpacing.md)
-                .background(PFSurface.card)
-                .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
+                Text(
+                    "PulseFill notifies you when a matching earlier time opens. First valid claim wins — if you’re slow to respond, someone else may get it."
+                )
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(PFColor.textSecondary)
+                .lineSpacing(3)
 
-            PFTypography.caption(
-                "Turn on iOS notifications for PulseFill in Settings so you don’t miss a match. SMS/email on your account are handled separately by your clinic when available."
-            )
+                Toggle("I’ll watch for PulseFill alerts (recommended)", isOn: $draft.wantsPushReminders)
+                    .font(.system(size: 15, weight: .medium))
+                    .tint(PFColor.ember)
+
+                Text(
+                    "Turn on iOS notifications for PulseFill in Settings so you don’t miss a match. Your clinic may still reach you separately when needed."
+                )
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(PFColor.textMuted)
+                .lineSpacing(3)
+            }
         }
     }
 }

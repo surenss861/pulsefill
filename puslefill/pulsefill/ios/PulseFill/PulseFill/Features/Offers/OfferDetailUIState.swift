@@ -1,6 +1,6 @@
 import Foundation
 
-/// Patient-facing states for the offer **detail** screen (maps API + local claiming).
+/// Patient-facing states for the opening **detail** screen (maps API + local claiming).
 enum OfferDetailUIState: Equatable {
     case claiming
     case available
@@ -43,7 +43,7 @@ enum OfferDetailUIState: Equatable {
     var bannerTitle: String {
         switch self {
         case .claiming:
-            return "Sending your claim"
+            return "Claiming opening"
         case .available:
             return "Opening available"
         case .waitingForConfirmation:
@@ -62,7 +62,7 @@ enum OfferDetailUIState: Equatable {
     var bannerMessage: String {
         switch self {
         case .claiming:
-            return "Hang tight — we’re locking this in with the clinic."
+            return "Sending your claim now."
         case .available:
             return "You can claim this opening if the time still works for you."
         case .waitingForConfirmation:

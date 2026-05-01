@@ -16,6 +16,7 @@ function baseEnv(overrides?: Partial<Env>): Env {
     STRIPE_WEBHOOK_SECRET: undefined,
     ENABLE_BILLING_ROUTES: false,
     ENABLE_STRIPE_WEBHOOK_ROUTES: false,
+    RATE_LIMIT_DISABLED: false,
     PUSH_PROVIDER: "noop",
     APNS_TEAM_ID: undefined,
     APNS_KEY_ID: undefined,

@@ -1,5 +1,9 @@
 import SwiftUI
 
+private enum ProfileInviteScrollTarget: String {
+    case inviteCode = "profileInviteCode"
+}
+
 struct ProfileView: View {
     @EnvironmentObject private var env: AppEnvironment
     @AppStorage("pf.preferCustomerTabs") private var preferCustomerTabs = false
@@ -8,6 +12,8 @@ struct ProfileView: View {
     @State private var businessInviteToken = ""
     @State private var inviteInlineError: String?
     @State private var inviteInlineSuccess: String?
+    @FocusState private var inviteCodeFieldFocused: Bool
+    @State private var inviteSectionEmphasized = false
     @State private var pushDebug = PushDebugSnapshot(
         permission: "Unknown",
         registrationState: .never,
@@ -21,98 +27,73 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    if standbyJustCompleted {
-                        onboardingCompletionBanner
+            ZStack {
+                PFScreenBackground()
+
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 22) {
+                            if standbyJustCompleted {
+                                onboardingCompletionBanner
+                            }
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                PFTypography.Customer.screenTitle("Profile")
+                                    .multilineTextAlignment(.leading)
+                                PFTypography.Customer.screenLead(
+                                    "Manage your businesses, standby preferences, notifications, and account."
+                                )
+                            }
+
+                            PFCustomerInfoCallout(
+                                title: "How Profile fits in",
+                                message:
+                                    "Use an invite code to connect to a business, find businesses in PulseFill, then set standby so matching openings can reach you.",
+                                variant: .neutral
+                            )
+
+                            inviteCodeSection
+                            yourBusinessesCard
+                            standbyPreferencesCard
+                            notificationsCard
+
+                            #if DEBUG
+                            pushDebugCard
+                            #endif
+
+                            accountCard
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 24)
+                        .padding(.bottom, 36)
                     }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        PFTypography.Customer.screenTitle("Profile")
-                            .multilineTextAlignment(.leading)
-                        PFTypography.Customer.screenLead("Account, alerts, and standby in one place.")
+                    .onAppear {
+                        clearCompletionBannerLaterIfNeeded()
+                        consumePendingRouteIfNeeded()
+                        Task { await refreshPushDebug() }
+                        focusInviteSectionIfNeeded(proxy: proxy)
                     }
-
-                    accountCard
-
-                    businessInviteCard
-
-                    findBusinessesCard
-
-                    CustomerSectionCard {
-                        VStack(alignment: .leading, spacing: 0) {
-                            profileNavRow(
-                                title: "Standby status",
-                                subtitle: "See if you’re set up to receive openings",
-                                destination: .standbyStatus
-                            )
-                            Divider().background(PFColor.hairline)
-                            profileNavRow(
-                                title: "Notification settings",
-                                subtitle: "Quiet hours and how we reach you",
-                                destination: .notificationSettings
-                            )
-                            Divider().background(PFColor.hairline)
-                            profileNavRow(
-                                title: "Earlier openings you missed",
-                                subtitle: "Past times that didn’t work out",
-                                destination: .missedOpportunities
-                            )
+                    .onChange(of: env.customerNavigation.focusProfileInviteSection) { _, shouldFocus in
+                        if shouldFocus {
+                            focusInviteSectionIfNeeded(proxy: proxy)
                         }
                     }
-
-                    CustomerSectionCard {
-                        NavigationLink {
-                            StandbyPreferencesView(api: env.apiClient)
-                                .environmentObject(env)
-                        } label: {
-                            ProfileRow(
-                                title: "Standby preferences",
-                                subtitle: "Preferred days, times, and locations"
-                            )
+                    .onChange(of: env.customerNavigation.selectedTab) { _, tab in
+                        if tab == .profile {
+                            consumePendingRouteIfNeeded()
+                            Task { await refreshPushDebug() }
+                            focusInviteSectionIfNeeded(proxy: proxy)
                         }
-                        .buttonStyle(.plain)
                     }
-
-                    #if DEBUG
-                    pushDebugCard
-                    #endif
-
-                    Button(role: .destructive) {
-                        Task { await env.authManager.signOut() }
-                    } label: {
-                        Text("Sign out")
-                            .font(.system(size: 17, weight: .semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(PFColor.error)
-                    .padding(.top, 8)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 24)
-                .padding(.bottom, 36)
             }
-            .background(CustomerScreenBackground())
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(PFColor.customerTabBar, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .tint(PFColor.ember)
-            .onAppear {
-                clearCompletionBannerLaterIfNeeded()
-                consumePendingRouteIfNeeded()
-                Task { await refreshPushDebug() }
-            }
             .onChange(of: env.customerNavigation.pendingCustomerDestination) { _, _ in
                 consumePendingRouteIfNeeded()
-            }
-            .onChange(of: env.customerNavigation.selectedTab) { _, tab in
-                if tab == .profile {
-                    consumePendingRouteIfNeeded()
-                    Task { await refreshPushDebug() }
-                }
             }
             .navigationDestination(for: CustomerDestination.self) { destination in
                 profileDestinationView(for: destination)
@@ -120,89 +101,211 @@ struct ProfileView: View {
         }
     }
 
-    private var findBusinessesCard: some View {
-        CustomerSectionCard {
-            VStack(alignment: .leading, spacing: 10) {
-                PFTypography.Customer.label("Find businesses")
-                Text("Browse clinics that listed themselves in PulseFill, or connect with an invite from your clinic.")
+    private var onboardingCompletionBanner: some View {
+        PFCustomerSectionCard(variant: .elevated, padding: 18) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Standby is active")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(PFColor.textPrimary)
+
+                Text("You’re set up to receive openings that match what you saved.")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(PFColor.textSecondary)
                     .lineSpacing(3)
-                Button {
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    // MARK: - Invite code
+
+    private var inviteCodeCard: some View {
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Have an invite code?")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
+
+                Text(
+                    "Use an invite code from a business to connect and set standby preferences."
+                )
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(PFColor.textSecondary)
+                .lineSpacing(3)
+
+                TextField("Invite code", text: $businessInviteToken)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 15, weight: .medium))
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(PFColor.customerCard)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(PFColor.hairline, lineWidth: 1)
+                    )
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .focused($inviteCodeFieldFocused)
+
+                if let success = inviteInlineSuccess {
+                    Text(success)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(PFColor.success)
+                        .lineSpacing(3)
+                }
+                if let err = inviteInlineError {
+                    Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(err))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(PFColor.error)
+                        .lineSpacing(3)
+                }
+
+                PFCustomerPrimaryButton(
+                    title: env.authManager.isBusy ? "Connecting…" : "Connect with invite code",
+                    isEnabled: !businessInviteToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !env.authManager.isBusy,
+                    isLoading: env.authManager.isBusy,
+                    action: {
+                        Task { await acceptInvite() }
+                    }
+                )
+            }
+        }
+    }
+
+    private var inviteCodeSection: some View {
+        inviteCodeCard
+            .id(ProfileInviteScrollTarget.inviteCode.rawValue)
+            .overlay {
+                if inviteSectionEmphasized {
+                    RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous)
+                        .stroke(PFColor.ember.opacity(0.88), lineWidth: 2)
+                }
+            }
+    }
+
+    // MARK: - Your businesses
+
+    private var yourBusinessesCard: some View {
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Your businesses")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
+
+                Text("Businesses you’ve joined or requested access to appear in Find businesses.")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+
+                PFCustomerPrimaryButton(title: "Find businesses", isEnabled: true) {
                     PFHaptics.lightImpact()
                     env.customerNavigation.selectedTab = .find
+                }
+            }
+        }
+    }
+
+    // MARK: - Standby preferences
+
+    private var standbyPreferencesCard: some View {
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Standby preferences")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
+
+                Text("Choose the openings you want to hear about.")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+
+                NavigationLink(value: CustomerDestination.standbyStatus) {
+                    CustomerPrimaryChromeLabel(title: "View standby status")
+                }
+                .buttonStyle(.plain)
+
+                NavigationLink {
+                    StandbyPreferencesView(api: env.apiClient)
+                        .environmentObject(env)
                 } label: {
-                    Text("Open directory")
+                    Text("Manage standby preferences")
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                 }
                 .buttonStyle(.bordered)
                 .tint(PFColor.ember)
+
+                NavigationLink(value: CustomerDestination.missedOpportunities) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Earlier openings you missed")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(PFColor.textPrimary)
+                            Text("Past times that didn’t work out")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(PFColor.textMuted)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(PFColor.textMuted)
+                    }
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.plain)
             }
         }
     }
 
-    private var businessInviteCard: some View {
-        CustomerSectionCard {
-            VStack(alignment: .leading, spacing: 10) {
-                PFTypography.Customer.label("Business invite")
-                Text("Your clinic sent you an invite link or code. Paste the code here so we can show you earlier appointment openings from that clinic.")
-                    .font(.system(size: 14, weight: .medium))
+    // MARK: - Notifications
+
+    private var notificationsCard: some View {
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Notifications")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
+
+                Text("Control how PulseFill lets you know about new openings.")
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(PFColor.textSecondary)
                     .lineSpacing(3)
-                TextField("Invite code", text: $businessInviteToken)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 15, weight: .medium))
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(PFColor.customerCard)
-                    )
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                if let success = inviteInlineSuccess {
-                    Text(success)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(PFColor.success)
-                        .lineSpacing(2)
+
+                HStack {
+                    Text("On this device")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(PFColor.textMuted)
+                    Spacer()
+                    Text(notificationsSummary)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(PFColor.textPrimary)
                 }
-                if let err = inviteInlineError {
-                    Text(err)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(PFColor.error)
-                        .lineSpacing(2)
+
+                NavigationLink(value: CustomerDestination.notificationSettings) {
+                    CustomerPrimaryChromeLabel(title: "Notification settings")
                 }
-                Button {
-                    Task { await acceptInvite() }
-                } label: {
-                    HStack(spacing: 8) {
-                        if env.authManager.isBusy {
-                            ProgressView()
-                                .tint(.black)
-                        }
-                        Text(env.authManager.isBusy ? "Accepting…" : "Accept invite")
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(PFColor.ember)
-                .disabled(businessInviteToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || env.authManager.isBusy)
+                .buttonStyle(.plain)
             }
         }
     }
 
+    // MARK: - Account
+
     private var accountCard: some View {
-        CustomerSectionCard {
-            VStack(alignment: .leading, spacing: 12) {
-                PFTypography.Customer.label("Account")
+        PFCustomerSectionCard(variant: .quiet, padding: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Account")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
 
                 if let email = env.sessionStore.email, !email.isEmpty {
-                    Text(email)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(PFColor.textPrimary)
+                    Text("Signed in as \(email)")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(PFColor.textSecondary)
+                        .lineSpacing(3)
                 } else {
                     Text("Not signed in")
                         .font(.system(size: 15, weight: .medium))
@@ -219,56 +322,28 @@ struct ProfileView: View {
                 #endif
 
                 if env.sessionStore.isStaffUser {
-                    Toggle("Customer mode (standby & offers)", isOn: $preferCustomerTabs)
+                    Toggle("Customer mode (standby & openings)", isOn: $preferCustomerTabs)
                         .font(.system(size: 15, weight: .medium))
                         .tint(PFColor.ember)
                 }
 
-                HStack {
-                    Text("Push")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(PFColor.textSecondary)
-                    Spacer()
-                    Text(notificationsSummary)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(PFColor.textPrimary)
+                Button(role: .destructive) {
+                    Task { await env.authManager.signOut() }
+                } label: {
+                    Text("Sign out")
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
                 }
-                .padding(.top, 4)
-            }
-        }
-    }
-
-    private var notificationsSummary: String {
-        switch pushDebug.permission.lowercased() {
-        case "authorized":
-            return "Notifications on"
-        case "denied":
-            return "Notifications off"
-        case "not_determined":
-            return "Permission needed"
-        default:
-            return pushDebug.permission
-        }
-    }
-
-    private var onboardingCompletionBanner: some View {
-        CustomerSectionCard {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Standby is active")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(PFColor.textPrimary)
-
-                Text("You’re set up to receive openings that match what you saved.")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(PFColor.textSecondary)
-                    .lineSpacing(3)
+                .buttonStyle(.bordered)
+                .tint(PFColor.error)
             }
         }
     }
 
     #if DEBUG
     private var pushDebugCard: some View {
-        CustomerSectionCard {
+        PFCustomerSectionCard(variant: .default, padding: 18) {
             VStack(alignment: .leading, spacing: 10) {
                 PFTypography.Customer.label("Push debug")
 
@@ -286,13 +361,6 @@ struct ProfileView: View {
         }
     }
     #endif
-
-    private func profileNavRow(title: String, subtitle: String, destination: CustomerDestination) -> some View {
-        NavigationLink(value: destination) {
-            ProfileRow(title: title, subtitle: subtitle)
-        }
-        .buttonStyle(.plain)
-    }
 
     @ViewBuilder
     private func profileDestinationView(for destination: CustomerDestination) -> some View {
@@ -329,19 +397,36 @@ struct ProfileView: View {
         }
     }
 
+    private func focusInviteSectionIfNeeded(proxy: ScrollViewProxy) {
+        guard env.customerNavigation.focusProfileInviteSection else { return }
+        guard env.customerNavigation.selectedTab == .profile else { return }
+        env.customerNavigation.acknowledgeProfileInviteFocus()
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            withAnimation(.easeOut(duration: 0.38)) {
+                proxy.scrollTo(ProfileInviteScrollTarget.inviteCode.rawValue, anchor: .center)
+            }
+            inviteSectionEmphasized = true
+            inviteCodeFieldFocused = true
+            try? await Task.sleep(nanoseconds: 1_600_000_000)
+            inviteSectionEmphasized = false
+        }
+    }
+
     private func acceptInvite() async {
         inviteInlineError = nil
         inviteInlineSuccess = nil
         let token = businessInviteToken.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
-            inviteInlineError = "Enter the invite code from your clinic."
+            inviteInlineError = "Enter the invite code from your business."
             return
         }
 
         let result = await env.authManager.acceptInviteTokenNow(token)
         switch result {
         case .success:
-            inviteInlineSuccess = "Invite accepted. Set your standby preferences to get earlier appointment openings."
+            inviteInlineSuccess =
+                "You’re connected. Set your standby preferences so we can show you the right openings."
             businessInviteToken = ""
         case let .failure(message):
             inviteInlineError = message
@@ -372,6 +457,19 @@ struct ProfileView: View {
     private func refreshPushDebug() async {
         await env.pushRegistrationManager.refreshAuthorizationStatus()
         pushDebug = env.pushRegistrationManager.debugSnapshot()
+    }
+
+    private var notificationsSummary: String {
+        switch pushDebug.permission.lowercased() {
+        case "authorized":
+            return "On"
+        case "denied":
+            return "Off"
+        case "not_determined":
+            return "Not set"
+        default:
+            return pushDebug.permission
+        }
     }
 
     private func attemptLabel(state: PushDebugSnapshot.AttemptState, at: Date?) -> String {

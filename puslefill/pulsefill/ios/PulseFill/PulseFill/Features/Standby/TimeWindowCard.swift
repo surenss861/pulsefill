@@ -16,7 +16,7 @@ struct TimeWindowCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Earliest I could make it")
+                Text("Earliest time")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(PFColor.textSecondary)
 
@@ -27,7 +27,7 @@ struct TimeWindowCard: View {
             Divider().background(PFColor.divider)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Latest I could make it")
+                Text("Latest time")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(PFColor.textSecondary)
 

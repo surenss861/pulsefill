@@ -33,7 +33,7 @@ struct AuthAppointmentPreview: Equatable {
             pillDay: "Friday",
             scheduleEyebrow: "FRI",
             time: "4:00 PM",
-            status: "Offer available"
+            status: "Opening available"
         ),
     ]
 }

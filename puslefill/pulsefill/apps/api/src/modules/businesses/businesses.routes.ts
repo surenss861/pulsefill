@@ -1,7 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { sendJson } from "../../lib/http-errors.js";
 import { requireStaff } from "../../plugins/guards.js";
+import { rateLimitTier } from "../../plugins/rate-limit.js";
 import { buildActionQueue } from "./action-queue.js";
 import { buildDailyOpsSummary } from "./daily-ops-summary.js";
 import { buildDeliveryReliability } from "./delivery-reliability.js";
@@ -98,12 +100,12 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         const { data, error } = await query;
         if (error) {
           req.log.error({ error }, "notification attempts failed");
-          return reply.status(500).send({ error: "notification_attempts_failed" });
+          return sendJson(req, reply, 500, { error: "notification_attempts_failed" });
         }
         return reply.send({ items: data ?? [] });
       } catch (e) {
         req.log.error({ e }, "notification attempts failed");
-        return reply.status(500).send({ error: "notification_attempts_failed" });
+        return sendJson(req, reply, 500, { error: "notification_attempts_failed" });
       }
     },
   );
@@ -120,10 +122,10 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         .maybeSingle();
 
       if (error) {
-        return reply.status(500).send({ error: "business_lookup_failed" });
+        return sendJson(req, reply, 500, { error: "business_lookup_failed" });
       }
       if (!data) {
-        return reply.status(404).send({ error: "business_not_found" });
+        return sendJson(req, reply, 404, { error: "business_not_found" });
       }
       return reply.send(data);
     },
@@ -192,7 +194,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         return reply.send(data);
       } catch (e) {
         req.log.error({ e }, "operator_activity_feed_failed");
-        return reply.status(500).send({ error: "operator_activity_feed_failed" });
+        return sendJson(req, reply, 500, { error: "operator_activity_feed_failed" });
       }
     },
   );
@@ -207,7 +209,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         return reply.send(data);
       } catch (e) {
         req.log.error({ e }, "action_queue_failed");
-        return reply.status(500).send({ error: "action_queue_failed" });
+        return sendJson(req, reply, 500, { error: "action_queue_failed" });
       }
     },
   );
@@ -222,7 +224,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         return reply.send(data);
       } catch (e) {
         req.log.error({ e }, "morning_recovery_digest_failed");
-        return reply.status(500).send({ error: "morning_recovery_digest_failed" });
+        return sendJson(req, reply, 500, { error: "morning_recovery_digest_failed" });
       }
     },
   );
@@ -237,7 +239,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         return reply.send(data);
       } catch (e) {
         req.log.error({ e }, "daily_ops_summary_failed");
-        return reply.status(500).send({ error: "daily_ops_summary_failed" });
+        return sendJson(req, reply, 500, { error: "daily_ops_summary_failed" });
       }
     },
   );
@@ -252,7 +254,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         return reply.send(data);
       } catch (e) {
         req.log.error({ e }, "ops_breakdown_failed");
-        return reply.status(500).send({ error: "ops_breakdown_failed" });
+        return sendJson(req, reply, 500, { error: "ops_breakdown_failed" });
       }
     },
   );
@@ -269,7 +271,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         return reply.send(data);
       } catch (e) {
         req.log.error({ e }, "outcomes_page_failed");
-        return reply.status(500).send({ error: "outcomes_page_failed" });
+        return sendJson(req, reply, 500, { error: "outcomes_page_failed" });
       }
     },
   );
@@ -284,7 +286,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         return reply.send(data);
       } catch (e) {
         req.log.error({ e }, "delivery_reliability_failed");
-        return reply.status(500).send({ error: "delivery_reliability_failed" });
+        return sendJson(req, reply, 500, { error: "delivery_reliability_failed" });
       }
     },
   );
@@ -300,14 +302,14 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         const result = await buildOperatorCustomerContext(admin, req.staff!.business_id, customerId);
         if ("error" in result) {
           if (result.error === "not_found") {
-            return reply.status(404).send({ error: "customer_not_found" });
+            return sendJson(req, reply, 404, { error: "customer_not_found" });
           }
-          return reply.status(403).send({ error: "customer_context_forbidden" });
+          return sendJson(req, reply, 403, { error: "customer_context_forbidden" });
         }
         return reply.send(result);
       } catch (e) {
         req.log.error({ e }, "operator_customer_context_failed");
-        return reply.status(500).send({ error: "operator_customer_context_failed" });
+        return sendJson(req, reply, 500, { error: "operator_customer_context_failed" });
       }
     },
   );
@@ -323,7 +325,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "live counts failed");
-        return reply.status(500).send({ error: "live_counts_failed" });
+        return sendJson(req, reply, 500, { error: "live_counts_failed" });
       }
 
       const rows = data ?? [];
@@ -341,7 +343,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
 
   app.patch(
     "/v1/businesses/mine",
-    { preHandler: requireStaff },
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const body = patchBody.parse(req.body ?? {});
@@ -354,7 +356,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         .maybeSingle();
 
       if (error) {
-        return reply.status(500).send({ error: "business_update_failed" });
+        return sendJson(req, reply, 500, { error: "business_update_failed" });
       }
       return reply.send(data);
     },

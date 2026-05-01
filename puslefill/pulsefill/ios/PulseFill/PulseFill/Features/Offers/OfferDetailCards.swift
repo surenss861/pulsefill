@@ -51,7 +51,7 @@ struct OfferExpiryCard: View {
 
             if let expiresAtIso, let exp = OfferExpiryCard.parse(expiresAtIso) {
                 if exp.timeIntervalSinceNow <= 0 {
-                    Text("This offer has expired.")
+                    Text("This opening is no longer available.")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(PFColor.warning)
                 } else {
@@ -82,10 +82,10 @@ struct OfferExpiryCard: View {
     private func relativeExpiryText(_ expiresAt: Date) -> String {
         let minutes = max(1, Int(expiresAt.timeIntervalSinceNow / 60))
         if minutes < 60 {
-            return "Expires in about \(minutes) min"
+            return "Ends in about \(minutes) min"
         }
         let hours = Int(round(Double(minutes) / 60.0))
-        return "Expires in about \(hours) hr"
+        return "Ends in about \(hours) hr"
     }
 }
 

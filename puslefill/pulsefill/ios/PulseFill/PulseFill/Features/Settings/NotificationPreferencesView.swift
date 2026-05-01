@@ -107,7 +107,7 @@ struct NotificationPreferencesView: View {
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(PFColor.textSecondary)
 
-                    Toggle("New offers", isOn: $viewModel.notifyNewOffers)
+                    Toggle("New openings", isOn: $viewModel.notifyNewOffers)
                     Toggle("Claim updates", isOn: $viewModel.notifyClaimUpdates)
                     Toggle("Booking confirmations", isOn: $viewModel.notifyBookingConfirmations)
                     Toggle("Standby tips", isOn: $viewModel.notifyStandbyTips)
@@ -118,7 +118,7 @@ struct NotificationPreferencesView: View {
                 .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
 
                 Text(
-                    "Urgent new-offer alerts are designed to reach you quickly. Quiet hours apply best to reminders and non-urgent tips."
+                    "Urgent new-opening alerts are designed to reach you quickly. Quiet hours apply best to reminders and non-urgent tips."
                 )
                 .font(.system(size: 12))
                 .foregroundStyle(PFColor.textSecondary)
