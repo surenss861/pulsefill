@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { FadeUp } from "@/components/motion/operator-motion";
 import { ActivityEmptySection } from "@/components/activity/activity-empty-section";
 import { ActivityHero } from "@/components/activity/activity-hero";
@@ -30,6 +30,9 @@ import {
   operatorActivityFilterOptions,
   type OperatorActivityFilter,
 } from "@/types/operator-activity-filter";
+import { activityFeedErrorUi } from "@/lib/operator-activity-feed-errors";
+import Link from "next/link";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import type { BulkSlotActionResponse } from "@/types/bulk-actions";
 
 export function ActivityPageClient() {
@@ -98,6 +101,30 @@ export function ActivityPageClient() {
       setBulkConfirmOpen(false);
     }
   }
+
+  const activityLoadError: ReactNode = useMemo(() => {
+    if (!error) return null;
+    const ui = activityFeedErrorUi(error);
+    return (
+      <PageState
+        variant="error"
+        title={ui.title}
+        description={
+          ui.suggestSignIn ? (
+            <span>
+              {ui.description}{" "}
+              <Link href="/sign-in" style={actionLinkStyle("primary")}>
+                Sign in again
+              </Link>
+              .
+            </span>
+          ) : (
+            ui.description
+          )
+        }
+      />
+    );
+  }, [error]);
 
   const heroActions = (
     <>
@@ -170,8 +197,8 @@ export function ActivityPageClient() {
           </button>
         </div>
 
-        {error ? (
-          <PageState variant="error" title="Could not load activity" description={error} />
+        {activityLoadError ? (
+          activityLoadError
         ) : loading && items.length === 0 ? (
           <p style={{ color: "rgba(245, 247, 250, 0.45)", margin: 0, fontSize: 14 }}>Loading activity…</p>
         ) : items.length === 0 ? (

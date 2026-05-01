@@ -13,14 +13,14 @@
   --pf-bg-surface-muted: #080807;
   --pf-bg-elevated: #171410;
 
-  --pf-border-subtle: rgba(255, 255, 255, 0.08);
-  --pf-border-default: rgba(255, 255, 255, 0.1);
+  --pf-border-subtle: rgba(255, 255, 255, 0.055);
+  --pf-border-default: rgba(255, 255, 255, 0.085);
   --pf-border-strong: rgba(255, 255, 255, 0.14);
 
-  --pf-text-primary: #f5f2ed;
-  --pf-text-secondary: #a9a29a;
-  --pf-text-tertiary: rgba(169, 162, 154, 0.9);
-  --pf-text-muted: #6f6861;
+  --pf-text-primary: #f7f4ef;
+  --pf-text-secondary: #bcb4ab;
+  --pf-text-tertiary: rgba(188, 180, 171, 0.95);
+  --pf-text-muted: #7a726a;
   --pf-text-inverse: #0a0908;
 
   /* —— Brand —— */
@@ -274,11 +274,77 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 14px 16px;
-  border-radius: var(--pf-radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(0, 0, 0, 0.16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  padding: 12px 14px;
+  border-radius: var(--pf-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.pf-needs-attention-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 0 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.pf-settings-standby-split {
+  display: grid;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+@media (min-width: 720px) {
+  .pf-settings-standby-split {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.95fr);
+    align-items: start;
+  }
+}
+
+.pf-settings-standby-split__copy {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(245, 247, 250, 0.58);
+  max-width: 520px;
+}
+
+.pf-activity-empty-timeline {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.pf-activity-empty-timeline__spine {
+  width: 2px;
+  margin-top: 6px;
+  border-radius: 2px;
+  min-height: 140px;
+  background: linear-gradient(180deg, rgba(255, 122, 24, 0.28), rgba(255, 255, 255, 0.05));
+  opacity: 0.5;
+  justify-self: center;
+}
+
+.pf-activity-empty-timeline__body {
+  min-width: 0;
+}
+
+.pf-openings-empty-pipeline-wrap {
+  transform: scale(0.94);
+  transform-origin: top center;
+  margin-bottom: -8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-openings-empty-pipeline-wrap {
+    transform: none;
+    margin-bottom: 0;
+  }
 }
 
 /* Overview — collapsed product primer below Command Center */
@@ -316,6 +382,8 @@ a:hover {
 /* Activity filters — quieter when the feed is empty */
 .pf-filter-rail--quiet {
   opacity: 0.62;
+  border-color: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(0, 0, 0, 0.08));
 }
 
 .pf-settings-two-col {
@@ -362,7 +430,7 @@ a:hover {
 
 @media (min-width: 1080px) {
   .pf-command-cockpit {
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.32fr);
     align-items: start;
   }
 
@@ -479,21 +547,21 @@ a:hover {
     repeating-linear-gradient(
       90deg,
       transparent,
-      transparent 71px,
-      rgba(255, 255, 255, 0.012) 71px,
-      rgba(255, 255, 255, 0.012) 72px
+      transparent 95px,
+      rgba(255, 255, 255, 0.004) 95px,
+      rgba(255, 255, 255, 0.004) 96px
     ),
     repeating-linear-gradient(
       0deg,
       transparent,
-      transparent 71px,
-      rgba(255, 255, 255, 0.01) 71px,
-      rgba(255, 255, 255, 0.01) 72px
+      transparent 95px,
+      rgba(255, 255, 255, 0.0035) 95px,
+      rgba(255, 255, 255, 0.0035) 96px
     ),
-    radial-gradient(ellipse 120% 80% at 100% 0%, rgba(255, 122, 24, 0.042), transparent 52%),
-    radial-gradient(ellipse 90% 70% at 0% 100%, rgba(201, 59, 47, 0.026), transparent 45%),
+    radial-gradient(ellipse 120% 80% at 100% 0%, rgba(255, 122, 24, 0.028), transparent 52%),
+    radial-gradient(ellipse 90% 70% at 0% 100%, rgba(201, 59, 47, 0.018), transparent 45%),
     linear-gradient(180deg, #060605 0%, #050504 38%, #080807 100%);
-  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .pf-workspace-field::before {
@@ -501,14 +569,14 @@ a:hover {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  opacity: 0.035;
+  opacity: 0.014;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   mix-blend-mode: overlay;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .pf-workspace-field::before {
-    opacity: 0.02;
+    opacity: 0.008;
   }
 }
 
@@ -539,7 +607,7 @@ a:hover {
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(245, 247, 250, 0.34);
+  color: rgba(245, 247, 250, 0.44);
 }
 
 .pf-page-title {
@@ -563,7 +631,7 @@ a:hover {
 .pf-muted-copy {
   font-size: 13px;
   line-height: 1.55;
-  color: rgba(245, 247, 250, 0.52);
+  color: rgba(245, 247, 250, 0.62);
 }
 
 .pf-stat-value {
@@ -577,7 +645,7 @@ a:hover {
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.06em;
-  color: rgba(245, 247, 250, 0.38);
+  color: rgba(245, 247, 250, 0.48);
 }
 
 /* Dock nav — ember rail active state, icon capsule */
@@ -789,12 +857,12 @@ a:hover {
 
 .pf-page-openings,
 .pf-page-activity {
-  max-width: 1080px;
+  max-width: 1180px;
 }
 
 .pf-page-settings,
 .pf-page-customers {
-  max-width: 1024px;
+  max-width: 1120px;
 }
 
 .pf-page-locations,

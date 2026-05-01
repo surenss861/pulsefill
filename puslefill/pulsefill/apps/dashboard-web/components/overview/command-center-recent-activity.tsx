@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useOperatorActivityFeed } from "@/hooks/useOperatorActivityFeed";
+import { activityFeedErrorUi } from "@/lib/operator-activity-feed-errors";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 
 function formatFeedTime(iso: string | undefined): string {
   if (!iso) return "";
@@ -17,6 +19,7 @@ function formatFeedTime(iso: string | undefined): string {
 export function CommandCenterRecentActivity() {
   const { items, loading, error } = useOperatorActivityFeed(120_000);
   const top = items.slice(0, 3);
+  const errorUi = error ? activityFeedErrorUi(error) : null;
 
   return (
     <section className="pf-command-feed">
@@ -32,7 +35,30 @@ export function CommandCenterRecentActivity() {
         </Link>
       </div>
 
-      {error ? <p style={{ color: "#f87171", marginTop: 12, marginBottom: 0 }}>{error}</p> : null}
+      {errorUi ? (
+        <div
+          style={{
+            marginTop: 12,
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 650, color: "var(--pf-text-primary)" }}>{errorUi.title}</p>
+          <p className="pf-muted-copy" style={{ margin: "6px 0 0", fontSize: 13 }}>
+            {errorUi.description}
+          </p>
+          {errorUi.suggestSignIn ? (
+            <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+              <Link href="/sign-in" style={actionLinkStyle("primary")}>
+                Sign in
+              </Link>
+              <span className="pf-meta-row" style={{ letterSpacing: "0.04em" }}>or refresh this page</span>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {loading && !error ? <p className="pf-muted-copy" style={{ marginTop: 12, marginBottom: 0 }}>Loading…</p> : null}
 
       {!loading && !error && top.length === 0 ? (

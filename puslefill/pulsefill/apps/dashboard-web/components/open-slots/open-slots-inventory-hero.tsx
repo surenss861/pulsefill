@@ -5,7 +5,7 @@ import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 export function OpenSlotsInventoryHero() {
   return (
     <PageCommandHeader
-      tone="strong"
+      tone="default"
       eyebrow="Openings"
       title="Openings"
       description="Create, send, and confirm recovered appointment times."

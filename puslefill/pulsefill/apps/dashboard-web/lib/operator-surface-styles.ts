@@ -62,20 +62,20 @@ export function operatorSurfaceShell(variant: OperatorSurfaceVariant): CSSProper
     case "emptyState":
       return {
         borderRadius: xl,
-        border: "1px dashed rgba(255, 122, 24, 0.2)",
+        border: "1px solid rgba(255, 255, 255, 0.065)",
         background:
-          "radial-gradient(ellipse 92% 58% at 50% 0%, rgba(255,122,24,0.1), transparent 52%), radial-gradient(ellipse 55% 42% at 0% 100%, rgba(255,122,24,0.045), transparent 48%), rgba(5,5,4,0.94)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.045), 0 14px 44px rgba(0,0,0,0.28)",
+          "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(6,6,5,0.94)), radial-gradient(ellipse 100% 55% at 50% 0%, rgba(255,122,24,0.05), transparent 50%)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 36px rgba(0,0,0,0.22)",
       };
   }
 }
 
-/** Compact header strip when command hero chrome is too heavy. */
+/** Editorial page header — no card chrome (command surfaces stay in NBA / forms). */
 export function operatorPageHeaderDefaultShell(): CSSProperties {
   return {
-    borderRadius: 22,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.18)), #090807",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.045), 0 8px 28px rgba(0,0,0,0.22)",
+    borderRadius: 0,
+    border: "none",
+    background: "transparent",
+    boxShadow: "none",
   };
 }

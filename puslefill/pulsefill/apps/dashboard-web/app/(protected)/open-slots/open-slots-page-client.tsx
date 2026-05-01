@@ -260,16 +260,18 @@ export default function OpenSlotsPageClient() {
             }
             secondaryContent={
               <>
-                <RecoveryPipeline
-                  activeStep="opening"
-                  compact
-                  animated
-                  style={{
-                    background: "transparent",
-                    boxShadow: "none",
-                    border: "1px solid rgba(255,255,255,0.07)",
-                  }}
-                />
+                <div className="pf-openings-empty-pipeline-wrap">
+                  <RecoveryPipeline
+                    activeStep="opening"
+                    compact
+                    animated
+                    style={{
+                      background: "transparent",
+                      boxShadow: "none",
+                      border: "1px solid rgba(255,255,255,0.055)",
+                    }}
+                  />
+                </div>
                 <Link href="/customers" style={{ ...actionLinkStyle("ghost"), display: "inline-block", marginTop: 14, fontSize: 13 }}>
                   Invite standby customers
                 </Link>

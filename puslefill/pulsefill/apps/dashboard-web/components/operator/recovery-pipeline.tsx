@@ -166,7 +166,7 @@ export function RecoveryPipeline({
                 flexDirection: "column",
                 alignItems: "center",
                 textAlign: "center",
-                minWidth: compact ? 72 : 88,
+                minWidth: compact ? 58 : 88,
                 maxWidth: 120,
                 padding: "10px 6px",
                 borderRadius: 14,

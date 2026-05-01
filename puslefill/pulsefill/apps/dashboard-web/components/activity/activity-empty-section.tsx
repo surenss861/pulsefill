@@ -18,19 +18,24 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
     );
   }
   return (
-    <OperatorEmptyState
-      title="No recovery activity yet"
-      description="Create an opening, send offers, or confirm a booking to start building history."
-      primaryAction={
-        <>
-          <Link href="/open-slots/create" style={{ ...actionLinkStyle("primary"), marginRight: 10 }}>
-            Create opening
-          </Link>
-          <Link href="/open-slots" style={actionLinkStyle("secondary")}>
-            View openings
-          </Link>
-        </>
-      }
-    />
+    <div className="pf-activity-empty-timeline">
+      <div className="pf-activity-empty-timeline__spine" aria-hidden />
+      <div className="pf-activity-empty-timeline__body">
+        <OperatorEmptyState
+          title="No recovery activity yet"
+          description="Create an opening, send offers, or confirm a booking to start building history."
+          primaryAction={
+            <>
+              <Link href="/open-slots/create" style={{ ...actionLinkStyle("primary"), marginRight: 10 }}>
+                Create opening
+              </Link>
+              <Link href="/open-slots" style={actionLinkStyle("secondary")}>
+                View openings
+              </Link>
+            </>
+          }
+        />
+      </div>
+    </div>
   );
 }

@@ -33,7 +33,7 @@ export function PageCommandHeader({
 }: PageCommandHeaderProps) {
   const shell = tone === "strong" ? operatorSurfaceShell("command") : operatorPageHeaderDefaultShell();
   const padding =
-    tone === "strong" ? "clamp(12px, 2vw, 16px) clamp(14px, 2.2vw, 20px)" : "10px 16px";
+    tone === "strong" ? "clamp(12px, 2vw, 16px) clamp(14px, 2.2vw, 20px)" : "4px 0 18px";
 
   const inner = (
     <section
@@ -72,11 +72,11 @@ export function PageCommandHeader({
                 flexWrap: "wrap",
                 alignItems: "center",
                 gap: 8,
-                padding: "5px 10px",
-                borderRadius: 12,
-                background: "rgba(0,0,0,0.28)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
+                padding: tone === "strong" ? "5px 10px" : 0,
+                borderRadius: tone === "strong" ? 12 : 0,
+                background: tone === "strong" ? "rgba(0,0,0,0.28)" : "transparent",
+                border: tone === "strong" ? "1px solid rgba(255,255,255,0.07)" : "none",
+                boxShadow: tone === "strong" ? "inset 0 1px 0 rgba(255,255,255,0.05)" : "none",
               }}
             >
               {meta}

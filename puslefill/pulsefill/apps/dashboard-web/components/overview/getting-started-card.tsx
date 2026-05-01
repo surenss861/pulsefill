@@ -208,10 +208,10 @@ export function GettingStartedCard({
 
 const styles: Record<string, CSSProperties> = {
   compactCard: {
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.14))",
-    borderRadius: 16,
-    padding: "14px 16px 16px",
+    border: "1px solid rgba(255,255,255,0.055)",
+    background: "linear-gradient(180deg, rgba(255,255,255,0.022), rgba(0,0,0,0.1))",
+    borderRadius: 14,
+    padding: "12px 14px 14px",
     color: "var(--text)",
   },
   compactHeader: {

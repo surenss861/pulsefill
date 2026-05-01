@@ -31,10 +31,10 @@ function sectionShell(tone: SectionCardSurfaceTone): CSSProperties {
   if (tone === "quiet") return { ...operatorSurfaceShell("quiet"), borderRadius: 28 };
   if (tone === "hairline") {
     return {
-      borderRadius: 16,
-      border: "1px solid var(--pf-border-subtle)",
-      background: "rgba(255,255,255,0.02)",
-      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+      borderRadius: 14,
+      border: "1px solid rgba(255,255,255,0.045)",
+      background: "rgba(255,255,255,0.015)",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.02)",
     };
   }
   return defaultShell;

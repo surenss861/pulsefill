@@ -30,6 +30,38 @@ export function ActionQueuePreviewCard({
       : null;
 
   const secondary = hierarchy === "secondary";
+  const quietEmpty = !loading && !error && top.length === 0 && !summaryLine;
+
+  if (secondary && quietEmpty) {
+    return (
+      <div className="pf-needs-attention-strip">
+        <div style={{ minWidth: 0, flex: "1 1 200px" }}>
+          <h2 className="pf-section-title" style={{ fontSize: 15 }}>
+            Needs attention
+          </h2>
+          <p className="pf-muted-copy" style={{ margin: "4px 0 0", fontSize: 13, maxWidth: 520 }}>
+            No urgent items right now.
+          </p>
+        </div>
+        <Link
+          href="/action-queue?section=needs_action"
+          style={{
+            padding: "7px 12px",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: "var(--text)",
+            fontSize: 13,
+            fontWeight: 600,
+            textDecoration: "none",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
+        >
+          Open queue
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div
