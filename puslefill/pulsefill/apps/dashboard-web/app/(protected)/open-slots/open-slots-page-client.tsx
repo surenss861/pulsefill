@@ -24,7 +24,6 @@ import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-e
 import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
 import { RecoveryPipeline } from "@/components/operator/recovery-pipeline";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
 import { digestSectionBannerTitle } from "@/lib/morning-recovery-digest-ui";
@@ -236,47 +235,47 @@ export default function OpenSlotsPageClient() {
 
       {!loading && !error && slots.length === 0 ? (
         <div style={{ marginTop: 20 }}>
-          <div
-            style={{
-              ...operatorSurfaceShell("operational"),
-              padding: 20,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
-            <OperatorEmptyState
-              title="No openings yet"
-              description="Create an appointment opening when a cancellation appears. PulseFill will help match it to standby customers."
-              visual={
-                <div
-                  aria-hidden
+          <OperatorEmptyState
+            boardSplit
+            title="No openings yet"
+            description="Create an appointment opening when a cancellation appears. PulseFill will help match it to standby customers."
+            visual={
+              <div
+                aria-hidden
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  border: "1px solid rgba(255, 122, 24, 0.28)",
+                  background:
+                    "radial-gradient(circle at 32% 28%, rgba(255, 200, 150, 0.35), rgba(255, 122, 24, 0.1) 45%, rgba(8, 7, 6, 0.85))",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.35)",
+                }}
+              />
+            }
+            primaryAction={
+              <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
+                Create opening
+              </Link>
+            }
+            secondaryContent={
+              <>
+                <RecoveryPipeline
+                  activeStep="opening"
+                  compact
+                  animated
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 14,
-                    border: "1px solid rgba(255, 122, 24, 0.28)",
-                    background:
-                      "radial-gradient(circle at 32% 28%, rgba(255, 200, 150, 0.35), rgba(255, 122, 24, 0.1) 45%, rgba(8, 7, 6, 0.85))",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.35)",
+                    background: "transparent",
+                    boxShadow: "none",
+                    border: "1px solid rgba(255,255,255,0.07)",
                   }}
                 />
-              }
-              primaryAction={
-                <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
-                  Create opening
+                <Link href="/customers" style={{ ...actionLinkStyle("ghost"), display: "inline-block", marginTop: 14, fontSize: 13 }}>
+                  Invite standby customers
                 </Link>
-              }
-              secondaryContent={
-                <>
-                  <RecoveryPipeline activeStep="opening" compact animated />
-                  <Link href="/customers" style={{ display: "inline-block", marginTop: 12, color: "var(--primary)", fontWeight: 600 }}>
-                    Invite standby customers
-                  </Link>
-                </>
-              }
-            />
-          </div>
+              </>
+            }
+          />
         </div>
       ) : null}
 

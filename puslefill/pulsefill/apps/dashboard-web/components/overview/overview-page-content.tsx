@@ -40,8 +40,6 @@ import { NextBestActionCard } from "@/components/operator/next-best-action-card"
 import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import type { SetupChecklistState } from "@/hooks/useSetupChecklistState";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
-
 function nextSetupHref(state: SetupChecklistState): string {
   if (!state.hasLocation) return "/locations";
   if (!state.hasProvider) return "/providers";
@@ -380,12 +378,13 @@ export function OverviewPageContent({
       {showGettingStarted && !loading ? (
         <div className="pf-command-cockpit pf-command-cockpit--after-nba">
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
-            <GettingStartedCard state={checklist} />
+            <GettingStartedCard state={checklist} compact />
             <ActionQueuePreviewCard
               items={actionQueue.data?.sections.needs_action ?? []}
               loading={actionQueue.loading}
               error={actionQueue.error}
               summary={actionQueue.data?.summary}
+              hierarchy="secondary"
             />
           </div>
           <aside className="pf-command-cockpit-rail">
@@ -445,6 +444,7 @@ export function OverviewPageContent({
                 loading={actionQueue.loading}
                 error={actionQueue.error}
                 summary={actionQueue.data?.summary}
+                hierarchy="secondary"
               />
             </div>
             <aside className="pf-command-cockpit-rail">
@@ -491,29 +491,13 @@ export function OverviewPageContent({
       ) : null}
 
       {showGettingStarted && !loading ? (
-        <div
-          style={{
-            marginTop: 24,
-            padding: 22,
-            ...operatorSurfaceShell("operational"),
-          }}
-        >
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 650, letterSpacing: "-0.02em" }}>
-            How PulseFill works
-          </h2>
-          <p
-            style={{
-              margin: "10px 0 0 0",
-              fontSize: 14,
-              lineHeight: 1.6,
-              color: "var(--muted)",
-              maxWidth: 640,
-            }}
-          >
-            When a cancellation happens, staff creates an opening, PulseFill sends it to matching standby
-            customers, and claimed openings show up for confirmation in the dashboard.
+        <details className="pf-overview-edu">
+          <summary>How PulseFill works</summary>
+          <p className="pf-overview-edu__body">
+            When a cancellation happens, staff creates an opening, PulseFill sends it to matching standby customers,
+            and claimed openings show up for confirmation in the dashboard.
           </p>
-        </div>
+        </details>
       ) : null}
         </div>
       </FadeUp>

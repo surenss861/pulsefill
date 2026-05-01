@@ -156,8 +156,20 @@ export default function CustomersPage() {
 
         <OperatorMetricStrip
           items={[
-            { label: "Pending invites", value: pendingInvites, hint: "Awaiting acceptance" },
-            { label: "Active standby", value: acceptedInvites, emphasis: "primary", hint: "Ready for offers" },
+            {
+              label: "Pending invites",
+              value: pendingInvites,
+              emphasis: pendingInvites > 0 ? "primary" : "default",
+              signal: pendingInvites > 0 ? "live" : "idle",
+              hint: "Awaiting acceptance",
+            },
+            {
+              label: "Active standby",
+              value: acceptedInvites,
+              emphasis: acceptedInvites > 0 ? "primary" : "default",
+              signal: acceptedInvites > 0 ? "live" : "idle",
+              hint: "Ready for offers",
+            },
             {
               label: "Match coverage",
               value: acceptedInvites > 0 ? "Improving" : "Low",
@@ -180,7 +192,7 @@ export default function CustomersPage() {
             display: "flex",
             flexDirection: "column",
             gap: 12,
-            padding: 18,
+            padding: "20px 20px 22px",
             ...operatorSurfaceShell("operational"),
           }}
         >
@@ -232,19 +244,22 @@ export default function CustomersPage() {
 
         <div
           style={{
-            padding: 18,
-            ...operatorSurfaceShell("quiet"),
+            padding: "12px 14px",
+            borderRadius: 14,
+            border: "1px solid var(--pf-border-subtle)",
+            background: "rgba(0,0,0,0.14)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
           }}
         >
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>Standby coverage</h2>
-          <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 13, lineHeight: 1.6 }}>
-            Customers receive offers after accepting an invite and enabling standby preferences.
+          <p className="pf-kicker" style={{ margin: 0, fontSize: 10 }}>
+            Insight
           </p>
-          <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 13, lineHeight: 1.6 }}>
-            If <strong>Send offers</strong> finds no matches, invite more customers or ask connected customers to finish standby setup.
+          <h2 style={{ margin: "8px 0 0", fontSize: 14, fontWeight: 650, letterSpacing: "-0.02em" }}>Standby coverage</h2>
+          <p style={{ margin: "8px 0 0", color: "rgba(245,247,250,0.48)", fontSize: 12, lineHeight: 1.55 }}>
+            Offers go out after customers accept an invite and enable standby. No matches usually means thin coverage—not a broken pipeline.
           </p>
-          <p style={{ margin: "10px 0 0", fontSize: 13 }}>
-            <Link href="/open-slots?status=open" style={{ color: "var(--primary)", fontWeight: 600 }}>
+          <p style={{ margin: "10px 0 0", fontSize: 12 }}>
+            <Link href="/open-slots?status=open" style={{ ...actionLinkStyle("ghost"), fontWeight: 600 }}>
               Review openings
             </Link>
           </p>
@@ -328,38 +343,72 @@ export default function CustomersPage() {
       ) : null}
 
       <div style={{ marginTop: 20 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 650, marginBottom: 8, letterSpacing: "-0.02em" }}>Pending invites</h2>
+        <h2 style={{ fontSize: 15, fontWeight: 650, marginBottom: 8, letterSpacing: "-0.02em" }}>Invites</h2>
         {!loading && !listError && invites.length > 0 ? (
-          <div
-            style={{
-              borderRadius: 12,
-              overflow: "hidden",
-              border: "1px solid rgba(255,255,255,0.1)",
-              background: "rgba(0,0,0,0.2)",
-            }}
-          >
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: "rgba(255,255,255,0.04)" }}>
-                  <th style={thStyle}>Email</th>
-                  <th style={thStyle}>Status</th>
-                  <th style={thStyle}>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invites.map((r) => (
-                  <tr key={r.id}>
-                    <td style={tdStyle}>{r.email}</td>
-                    <td style={tdStyle}>
-                      {r.status}
-                      {r.status === "pending" ? ` · expires ${new Date(r.expires_at).toLocaleDateString()}` : null}
-                    </td>
-                    <td style={tdStyle}>{new Date(r.created_at).toLocaleString()}</td>
+          invites.length > 12 ? (
+            <div
+              style={{
+                borderRadius: 12,
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(0,0,0,0.2)",
+              }}
+            >
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: "rgba(255,255,255,0.04)" }}>
+                    <th style={thStyle}>Email</th>
+                    <th style={thStyle}>Status</th>
+                    <th style={thStyle}>Created</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {invites.map((r) => (
+                    <tr key={r.id}>
+                      <td style={tdStyle}>{r.email}</td>
+                      <td style={tdStyle}>
+                        {r.status}
+                        {r.status === "pending" ? ` · expires ${new Date(r.expires_at).toLocaleDateString()}` : null}
+                      </td>
+                      <td style={tdStyle}>{new Date(r.created_at).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div
+              style={{
+                borderRadius: 12,
+                border: "1px solid var(--pf-border-subtle)",
+                background: "rgba(0,0,0,0.12)",
+              }}
+            >
+              {invites.map((r, i) => (
+                <div
+                  key={r.id}
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "8px 16px",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                    padding: "12px 14px",
+                    borderBottom: i < invites.length - 1 ? "1px solid rgba(255,255,255,0.06)" : undefined,
+                  }}
+                >
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--pf-text-primary)", wordBreak: "break-word" }}>{r.email}</span>
+                  <span className="pf-meta-row" style={{ fontSize: 12 }}>
+                    {r.status}
+                    {r.status === "pending" ? ` · expires ${new Date(r.expires_at).toLocaleDateString()}` : null}
+                  </span>
+                  <span className="pf-meta-row" style={{ fontSize: 12, marginLeft: "auto" }}>
+                    {new Date(r.created_at).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )
         ) : null}
       </div>
       </div>

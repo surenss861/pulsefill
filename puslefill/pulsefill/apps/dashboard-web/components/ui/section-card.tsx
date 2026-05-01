@@ -3,8 +3,8 @@ import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 export type SectionCardDensity = "default" | "dense";
 
-/** Visual shell: default matches legacy section card; operational / quiet use shared operator surfaces. */
-export type SectionCardSurfaceTone = "default" | "operational" | "quiet";
+/** Visual shell: default matches legacy section card; operational / quiet use shared operator surfaces; hairline is a thin control-panel row. */
+export type SectionCardSurfaceTone = "default" | "operational" | "quiet" | "hairline";
 
 type SectionCardProps = {
   eyebrow: string;
@@ -29,6 +29,14 @@ const defaultShell: CSSProperties = {
 function sectionShell(tone: SectionCardSurfaceTone): CSSProperties {
   if (tone === "operational") return { ...operatorSurfaceShell("operational"), borderRadius: 28 };
   if (tone === "quiet") return { ...operatorSurfaceShell("quiet"), borderRadius: 28 };
+  if (tone === "hairline") {
+    return {
+      borderRadius: 16,
+      border: "1px solid var(--pf-border-subtle)",
+      background: "rgba(255,255,255,0.02)",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+    };
+  }
   return defaultShell;
 }
 
@@ -59,7 +67,7 @@ export function SectionCard({
           alignItems: "flex-start",
           justifyContent: "space-between",
           gap: 12,
-          marginBottom: description || children ? 18 : 0,
+          marginBottom: description || children ? (surfaceTone === "hairline" ? 12 : 18) : 0,
         }}
       >
         <div style={{ minWidth: 0, flex: "1 1 200px" }}>

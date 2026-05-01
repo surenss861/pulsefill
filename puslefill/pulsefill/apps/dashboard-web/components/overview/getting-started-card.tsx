@@ -4,7 +4,14 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { SetupChecklistState } from "@/hooks/useSetupChecklistState";
 
-export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
+export function GettingStartedCard({
+  state,
+  compact = false,
+}: {
+  state: SetupChecklistState;
+  /** Slim progress rail — use when Next Best Action already drives setup (Command Center). */
+  compact?: boolean;
+}) {
   const steps = [
     {
       label: "Add your first location",
@@ -47,29 +54,6 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
   const completed = steps.filter((step) => step.done).length;
   const firstIncomplete = steps.find((step) => !step.done);
 
-  const nextStepBody = (() => {
-    if (!firstIncomplete) return null;
-    if (firstIncomplete.href === "/locations") {
-      return "Tell PulseFill where openings happen before creating your first opening.";
-    }
-    if (firstIncomplete.href === "/providers") {
-      return "Add who openings belong to so PulseFill can label recovery correctly.";
-    }
-    if (firstIncomplete.href === "/services") {
-      return "Define appointment types so times and standby matches stay accurate.";
-    }
-    if (firstIncomplete.href === "/open-slots/create") {
-      return "Create your first opening when a cancellation appears.";
-    }
-    if (firstIncomplete.href === "/customers") {
-      return "Openings need active standby customers before offers can be sent.";
-    }
-    if (firstIncomplete.href === "/claims") {
-      return "When a customer books from an offer, confirm the appointment here.";
-    }
-    return "Complete this step so the rest of the recovery workflow can move forward.";
-  })();
-
   const staged = [
     {
       label: "1. Workspace basics",
@@ -92,6 +76,90 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
       detail: "Send offer, customer claims, confirm booking",
     },
   ];
+
+  if (compact) {
+    return (
+      <div id="getting-started" style={styles.compactCard}>
+        <div style={styles.compactHeader}>
+          <div style={{ minWidth: 0 }}>
+            <p className="pf-kicker" style={{ margin: 0, fontSize: 10 }}>
+              Workspace setup
+            </p>
+            <p style={styles.compactProgressLine}>
+              {completed >= steps.length ? (
+                <>All {steps.length} steps complete.</>
+              ) : (
+                <>
+                  Step {completed + 1} of {steps.length}
+                  {firstIncomplete ? (
+                    <>
+                      {" · "}
+                      <Link href={firstIncomplete.href} style={styles.compactStepLink}>
+                        {firstIncomplete.label}
+                      </Link>
+                    </>
+                  ) : null}
+                </>
+              )}
+            </p>
+          </div>
+          <div style={styles.progressPillCompact}>
+            {completed}/{steps.length}
+          </div>
+        </div>
+        <div style={styles.compactBarTrack} aria-hidden>
+          {steps.map((step) => (
+            <div
+              key={step.label}
+              style={{
+                ...styles.compactBarSeg,
+                opacity: step.done ? 1 : 0.35,
+                background: step.done ? "rgba(255, 122, 24, 0.55)" : "rgba(245,247,250,0.12)",
+              }}
+            />
+          ))}
+        </div>
+        <div style={styles.compactStages}>
+          {staged.map((step) => (
+            <span
+              key={step.label}
+              style={{
+                ...styles.compactStagePill,
+                borderColor: step.done ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.1)",
+                background: step.done ? "rgba(16,185,129,0.08)" : "rgba(0,0,0,0.2)",
+                color: step.done ? "rgba(209,250,229,0.92)" : "rgba(245,247,250,0.52)",
+              }}
+            >
+              {step.label.replace(/^\d+\.\s*/, "").replace("Workspace basics", "Basics").replace("First opening", "Opening").replace("Standby customers", "Standby").replace("Recovered booking", "Booked")}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const nextStepBody = (() => {
+    if (!firstIncomplete) return null;
+    if (firstIncomplete.href === "/locations") {
+      return "Tell PulseFill where openings happen before creating your first opening.";
+    }
+    if (firstIncomplete.href === "/providers") {
+      return "Add who openings belong to so PulseFill can label recovery correctly.";
+    }
+    if (firstIncomplete.href === "/services") {
+      return "Define appointment types so times and standby matches stay accurate.";
+    }
+    if (firstIncomplete.href === "/open-slots/create") {
+      return "Create your first opening when a cancellation appears.";
+    }
+    if (firstIncomplete.href === "/customers") {
+      return "Openings need active standby customers before offers can be sent.";
+    }
+    if (firstIncomplete.href === "/claims") {
+      return "When a customer books from an offer, confirm the appointment here.";
+    }
+    return "Complete this step so the rest of the recovery workflow can move forward.";
+  })();
 
   return (
     <div id="getting-started" style={styles.card}>
@@ -139,6 +207,69 @@ export function GettingStartedCard({ state }: { state: SetupChecklistState }) {
 }
 
 const styles: Record<string, CSSProperties> = {
+  compactCard: {
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.14))",
+    borderRadius: 16,
+    padding: "14px 16px 16px",
+    color: "var(--text)",
+  },
+  compactHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 12,
+  },
+  compactProgressLine: {
+    margin: "6px 0 0",
+    fontSize: 13,
+    lineHeight: 1.45,
+    color: "rgba(245,247,250,0.72)",
+  },
+  compactStepLink: {
+    color: "var(--pf-accent-primary)",
+    fontWeight: 600,
+    textDecoration: "none",
+  },
+  progressPillCompact: {
+    border: "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,255,255,0.05)",
+    borderRadius: 999,
+    padding: "6px 10px",
+    fontSize: 11,
+    fontWeight: 650,
+    color: "rgba(245,247,251,0.85)",
+    whiteSpace: "nowrap",
+    flexShrink: 0,
+  },
+  compactBarTrack: {
+    display: "flex",
+    gap: 4,
+    height: 4,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  compactBarSeg: {
+    flex: "1 1 0",
+    minWidth: 6,
+    borderRadius: 2,
+    transition: "background 0.2s ease",
+  },
+  compactStages: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  compactStagePill: {
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: "0.02em",
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid rgba(255,255,255,0.1)",
+  },
   card: {
     border: "1px solid rgba(255,255,255,0.1)",
     background: "rgba(255,255,255,0.04)",

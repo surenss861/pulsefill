@@ -126,7 +126,7 @@ export function ActivityPageClient() {
           <ActivitySummaryStrip summary={summary} />
         </FadeUp>
 
-        <div className="pf-filter-rail">
+        <div className={`pf-filter-rail${items.length === 0 ? " pf-filter-rail--quiet" : ""}`}>
           {operatorActivityFilterOptions.map((opt) => {
             const on = filter === opt.value;
             return (

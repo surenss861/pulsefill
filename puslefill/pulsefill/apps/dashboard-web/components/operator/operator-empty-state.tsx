@@ -8,6 +8,8 @@ type OperatorEmptyStateProps = {
   visual?: ReactNode;
   primaryAction?: ReactNode;
   secondaryContent?: ReactNode;
+  /** Wide board layout: primary column + secondary rail without nested inner frames. */
+  boardSplit?: boolean;
   style?: CSSProperties;
 };
 
@@ -18,16 +20,17 @@ export function OperatorEmptyState({
   visual,
   primaryAction,
   secondaryContent,
+  boardSplit = false,
   style,
 }: OperatorEmptyStateProps) {
-  return (
-    <div
-      style={{
-        padding: "22px 22px 20px",
-        ...operatorSurfaceShell("emptyState"),
-        ...style,
-      }}
-    >
+  const shell = {
+    padding: boardSplit ? "clamp(16px, 2vw, 22px)" : "22px 22px 20px",
+    ...operatorSurfaceShell("emptyState"),
+    ...style,
+  } as const;
+
+  const primaryBlock = (
+    <>
       {visual ? (
         <div style={{ marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "flex-start" }}>{visual}</div>
       ) : null}
@@ -38,6 +41,21 @@ export function OperatorEmptyState({
         {description}
       </div>
       {primaryAction ? <div style={{ marginTop: 20 }}>{primaryAction}</div> : null}
+    </>
+  );
+
+  if (boardSplit && secondaryContent) {
+    return (
+      <div className="pf-operator-empty-board" style={shell}>
+        <div className="pf-operator-empty-board__primary">{primaryBlock}</div>
+        <div className="pf-operator-empty-board__rail">{secondaryContent}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={shell}>
+      {primaryBlock}
       {secondaryContent ? (
         <div
           style={{

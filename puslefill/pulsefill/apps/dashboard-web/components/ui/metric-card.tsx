@@ -33,8 +33,8 @@ type MetricCardProps = {
 };
 
 const idleOverlay: CSSProperties = {
-  opacity: 0.72,
-  filter: "saturate(0.65)",
+  opacity: 0.82,
+  filter: "saturate(0.72)",
 };
 
 /** Shared metric / scorecard cell (Overview, Queue summary, Outcomes, Activity strip). */
@@ -69,7 +69,7 @@ export function MetricCard({
         style={{
           marginTop: compact ? 6 : 12,
           fontSize: compact ? "clamp(1.05rem, 2vw, 1.28rem)" : "clamp(1.45rem, 3vw, 2.2rem)",
-          color: idle ? "rgba(245,247,250,0.42)" : "var(--pf-text-primary)",
+          color: idle ? "rgba(245,247,250,0.52)" : "var(--pf-text-primary)",
           lineHeight: 1.1,
         }}
       >

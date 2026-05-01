@@ -247,9 +247,75 @@ a:hover {
 
 @media (min-width: 880px) {
   .pf-customers-split {
-    grid-template-columns: 1.05fr 0.95fr;
+    grid-template-columns: 1.12fr 0.88fr;
     align-items: stretch;
   }
+}
+
+/* Openings / board-style empty states */
+.pf-operator-empty-board {
+  display: grid;
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (min-width: 900px) {
+  .pf-operator-empty-board {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.92fr);
+  }
+}
+
+.pf-operator-empty-board__primary {
+  min-width: 0;
+}
+
+.pf-operator-empty-board__rail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 14px 16px;
+  border-radius: var(--pf-radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+/* Overview — collapsed product primer below Command Center */
+.pf-overview-edu {
+  margin-top: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.14);
+  padding: 0 14px;
+}
+
+.pf-overview-edu summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 0;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: rgba(245, 247, 250, 0.62);
+}
+
+.pf-overview-edu summary::-webkit-details-marker {
+  display: none;
+}
+
+.pf-overview-edu .pf-overview-edu__body {
+  margin: 0;
+  padding: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 640px;
+}
+
+/* Activity filters — quieter when the feed is empty */
+.pf-filter-rail--quiet {
+  opacity: 0.62;
 }
 
 .pf-settings-two-col {
@@ -259,6 +325,18 @@ a:hover {
 
 @media (min-width: 900px) {
   .pf-settings-two-col {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.pf-settings-account-workspace {
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 880px) {
+  .pf-settings-account-workspace {
     grid-template-columns: 1fr 1fr;
     align-items: start;
   }
@@ -291,7 +369,20 @@ a:hover {
   .pf-command-cockpit-rail {
     position: sticky;
     top: 12px;
+    min-width: 0;
   }
+}
+
+.pf-recovery-pipeline {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.pf-recovery-pipeline-inner {
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .pf-command-cockpit-footer {

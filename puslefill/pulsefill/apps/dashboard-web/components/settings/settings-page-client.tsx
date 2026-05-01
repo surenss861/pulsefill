@@ -84,7 +84,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
 
   return (
     <main className="pf-page-settings" style={{ padding: 0 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <PageCommandHeader
           animate={false}
           tone="default"
@@ -152,97 +152,85 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
                 (depending on access mode). Your current pilot flows and invites keep working.
               </p>
               {accessError ? <p style={{ margin: 0, color: "#f87171", fontSize: 14 }}>{accessError}</p> : null}
-              <ActionButton
-                variant="primary"
-                disabled={accessSaving}
-                onClick={() => {
-                  void (async () => {
-                    setAccessError(null);
-                    setAccessSaving(true);
-                    try {
-                      await apiFetch<BusinessMineResponse>("/v1/businesses/mine", {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          standby_access_mode: accessMode,
-                          customer_discovery_enabled: discovery,
-                        }),
-                      });
-                      await business.reload({ silent: true });
-                    } catch (e) {
-                      setAccessError(e instanceof Error ? e.message : "Save failed");
-                    } finally {
-                      setAccessSaving(false);
-                    }
-                  })();
-                }}
-              >
-                {accessSaving ? "Saving…" : "Save customer access"}
-              </ActionButton>
+              <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                <ActionButton
+                  variant="primary"
+                  disabled={accessSaving}
+                  onClick={() => {
+                    void (async () => {
+                      setAccessError(null);
+                      setAccessSaving(true);
+                      try {
+                        await apiFetch<BusinessMineResponse>("/v1/businesses/mine", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            standby_access_mode: accessMode,
+                            customer_discovery_enabled: discovery,
+                          }),
+                        });
+                        await business.reload({ silent: true });
+                      } catch (e) {
+                        setAccessError(e instanceof Error ? e.message : "Save failed");
+                      } finally {
+                        setAccessSaving(false);
+                      }
+                    })();
+                  }}
+                >
+                  {accessSaving ? "Saving…" : "Save customer access"}
+                </ActionButton>
+              </div>
             </div>
           ) : (
             <PageState variant="empty" title="No workspace" description="Try refreshing." style={{ maxWidth: "100%" }} />
           )}
         </SectionCard>
 
-        <SectionCard
-          surfaceTone="quiet"
-          density="dense"
-          eyebrow="Your account"
-          title="Account"
-          description="Your name, email, role, and sign-in session."
-        >
-          <div style={{ marginTop: 2 }}>{field("Display name", profile.full_name)}</div>
-          {field("Work email", displayEmail)}
-          {field("Last sign-in", lastIn)}
-          <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-            <form action={signOutAction} style={{ display: "inline" }}>
-              <ActionButton variant="secondary" type="submit">
-                Sign out
-              </ActionButton>
-            </form>
-            <span style={{ fontSize: 13, color: "rgba(245, 247, 250, 0.45)" }}>Ends this session on this device.</span>
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          density="dense"
-          eyebrow="Workspace"
-          title="Workspace"
-          description="Business details used across openings and customer invites."
-        >
-          {business.loading ? (
-            <PageState variant="info" title="Loading workspace" description="Fetching business from the PulseFill API." style={{ maxWidth: "100%" }} />
-          ) : business.error ? (
-            <div>
-              <PageState variant="error" title="Could not load workspace" description={business.error} style={{ maxWidth: "100%" }} />
-              <div style={{ marginTop: 14 }}>
-                <ActionButton variant="primary" onClick={() => void business.reload()}>
-                  Try again
+        <div className="pf-settings-account-workspace">
+          <SectionCard surfaceTone="hairline" density="dense" eyebrow="Your account" title="Account">
+            <div style={{ marginTop: 2 }}>{field("Display name", profile.full_name)}</div>
+            {field("Work email", displayEmail)}
+            {field("Last sign-in", lastIn)}
+            <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+              <form action={signOutAction} style={{ display: "inline" }}>
+                <ActionButton variant="secondary" type="submit">
+                  Sign out
                 </ActionButton>
+              </form>
+              <span style={{ fontSize: 12, color: "rgba(245, 247, 250, 0.45)" }}>Ends this session on this device.</span>
+            </div>
+          </SectionCard>
+
+          <SectionCard surfaceTone="hairline" density="dense" eyebrow="Workspace" title="Business profile">
+            {business.loading ? (
+              <PageState variant="info" title="Loading workspace" description="Fetching business from the PulseFill API." style={{ maxWidth: "100%" }} />
+            ) : business.error ? (
+              <div>
+                <PageState variant="error" title="Could not load workspace" description={business.error} style={{ maxWidth: "100%" }} />
+                <div style={{ marginTop: 14 }}>
+                  <ActionButton variant="primary" onClick={() => void business.reload()}>
+                    Try again
+                  </ActionButton>
+                </div>
               </div>
-            </div>
-          ) : business.data ? (
-            <div style={{ marginTop: 2 }}>
-              {field("Business name", business.data.name)}
-              {field("Timezone", business.data.timezone)}
-              {field("Category", business.data.category)}
-              {field("Phone", business.data.phone)}
-              {field("Business email", business.data.email)}
-              {field("Website", formatWebsiteDisplay(business.data.website))}
-            </div>
-          ) : (
-            <PageState variant="empty" title="No workspace data" description="Try refreshing the page." style={{ maxWidth: "100%" }} />
-          )}
-        </SectionCard>
+            ) : business.data ? (
+              <div style={{ marginTop: 2 }}>
+                {field("Business name", business.data.name)}
+                {field("Timezone", business.data.timezone)}
+                {field("Category", business.data.category)}
+                {field("Phone", business.data.phone)}
+                {field("Business email", business.data.email)}
+                {field("Website", formatWebsiteDisplay(business.data.website))}
+              </div>
+            ) : (
+              <PageState variant="empty" title="No workspace data" description="Try refreshing the page." style={{ maxWidth: "100%" }} />
+            )}
+          </SectionCard>
+        </div>
 
         <div className="pf-settings-two-col">
-          <SectionCard
-            density="dense"
-            eyebrow="Workspace setup"
-            title="Setup"
-            description="Manage locations, providers, services, billing, and account settings."
-          >
+          <SectionCard surfaceTone="hairline" density="dense" eyebrow="Workspace setup" title="Setup">
             <div
               style={{
                 display: "grid",
@@ -269,13 +257,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
             </div>
           </SectionCard>
 
-          <SectionCard
-            surfaceTone="quiet"
-            density="dense"
-            eyebrow="Security"
-            title="Security"
-            description="Manage sign-in and session controls."
-          >
+          <SectionCard surfaceTone="hairline" density="dense" eyebrow="Security" title="Security">
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 2 }}>
               <Link href="/forgot-password" style={actionLinkStyle("secondary")}>
                 Reset password

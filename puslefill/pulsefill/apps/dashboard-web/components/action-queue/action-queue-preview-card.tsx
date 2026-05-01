@@ -9,12 +9,15 @@ export function ActionQueuePreviewCard({
   loading,
   error,
   summary,
+  hierarchy = "default",
 }: {
   items: ActionQueueItem[];
   loading: boolean;
   error: string | null;
   /** When set, shows real queue counts above the list. */
   summary?: ActionQueueSummary | null;
+  /** Tighter surface when this module is secondary to Next Best Action (Command Center). */
+  hierarchy?: "default" | "secondary";
 }) {
   const top = items.slice(0, 5);
   const totalIssues =
@@ -26,16 +29,21 @@ export function ActionQueuePreviewCard({
       ? `${summary.needs_action_count} need action · ${summary.awaiting_confirmation_count} awaiting confirmation · ${summary.delivery_failed_count} delivery issues`
       : null;
 
+  const secondary = hierarchy === "secondary";
+
   return (
     <div
       style={{
-        marginTop: 24,
-        borderRadius: 20,
-        border: "1px solid rgba(255,255,255,0.1)",
-        background:
-          "linear-gradient(165deg, rgba(255,255,255,0.045), rgba(255,122,24,0.014) 48%, rgba(10,9,7,0.92))",
-        boxShadow: "0 20px 56px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
-        padding: 22,
+        marginTop: secondary ? 12 : 24,
+        borderRadius: secondary ? 16 : 20,
+        border: secondary ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(255,255,255,0.1)",
+        background: secondary
+          ? "linear-gradient(165deg, rgba(255,255,255,0.028), rgba(0,0,0,0.2))"
+          : "linear-gradient(165deg, rgba(255,255,255,0.045), rgba(255,122,24,0.014) 48%, rgba(10,9,7,0.92))",
+        boxShadow: secondary
+          ? "inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 28px rgba(0,0,0,0.2)"
+          : "0 20px 56px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
+        padding: secondary ? 18 : 22,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
@@ -74,10 +82,8 @@ export function ActionQueuePreviewCard({
       {error ? <p style={{ color: "#f87171", marginTop: 12 }}>{error}</p> : null}
       {loading ? <p style={{ color: "var(--muted)", marginTop: 16 }}>Loading…</p> : null}
 
-      {!loading && !error && top.length === 0 ? (
-        <p style={{ color: "var(--muted)", marginTop: 16, marginBottom: 0 }}>
-          No urgent items right now.
-        </p>
+      {!loading && !error && top.length === 0 && summaryLine ? (
+        <p style={{ color: "var(--muted)", marginTop: 16, marginBottom: 0 }}>Nothing queued in this section.</p>
       ) : null}
 
       {!loading && top.length > 0 ? (
