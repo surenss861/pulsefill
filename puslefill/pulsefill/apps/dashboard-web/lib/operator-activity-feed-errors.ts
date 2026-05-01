@@ -1,17 +1,8 @@
-/** Normalize activity API errors for operator UI (avoid raw "unauthorized" in dashboards). */
+import { isOperatorSessionError, operatorApiErrorUi } from "@/lib/operator-api-error-ui";
 
+/** @deprecated Use isOperatorSessionError from operator-api-error-ui */
 export function isActivityFeedAuthError(message: string): boolean {
-  const m = message.toLowerCase();
-  return (
-    m.includes("unauthorized") ||
-    m.includes("401") ||
-    m.includes("forbidden") ||
-    m.includes("403") ||
-    m.includes("not authenticated") ||
-    m.includes("invalid token") ||
-    m.includes("jwt expired") ||
-    m.includes("session expired")
-  );
+  return isOperatorSessionError(message);
 }
 
 export type ActivityFeedErrorUi = {
@@ -30,9 +21,10 @@ export function activityFeedErrorUi(raw: string): ActivityFeedErrorUi {
       suggestSignIn: true,
     };
   }
+  const u = operatorApiErrorUi(raw);
   return {
-    title: "Could not load activity",
-    description: raw,
+    title: u.severity === "network" ? u.title : "Could not load activity",
+    description: u.description,
     suggestSignIn: false,
   };
 }

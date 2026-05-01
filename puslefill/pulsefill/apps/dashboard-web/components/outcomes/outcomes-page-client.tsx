@@ -1,8 +1,10 @@
 "use client";
 
+import { OutcomesHero } from "@/components/outcomes/outcomes-hero";
 import { OutcomesPageContent } from "@/components/outcomes/outcomes-page-content";
+import { OperatorErrorState } from "@/components/operator/operator-error-state";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { ActionButton } from "@/components/ui/action-button";
-import { PageState } from "@/components/ui/page-state";
 import { useOutcomesPage } from "@/hooks/useOutcomesPage";
 
 export function OutcomesPageClient() {
@@ -11,16 +13,12 @@ export function OutcomesPageClient() {
   if (error) {
     return (
       <main className="pf-page-outcomes" style={{ padding: 0 }}>
-        <PageState
-          variant="error"
-          title="Could not load outcomes"
-          description={error}
-          style={{ maxWidth: 560 }}
-        />
-        <div style={{ marginTop: 16 }}>
-          <ActionButton variant="primary" onClick={() => void reload()}>
-            Try again
-          </ActionButton>
+        <OutcomesHero />
+        <div style={{ marginTop: 12 }}>
+          <OperatorErrorState
+            rawMessage={error}
+            primaryAction={<ActionButton onClick={() => void reload()}>Try again</ActionButton>}
+          />
         </div>
       </main>
     );
@@ -29,7 +27,10 @@ export function OutcomesPageClient() {
   if (loading || !data) {
     return (
       <main className="pf-page-outcomes" style={{ padding: 0 }}>
-        <PageState variant="info" title="Loading outcomes" description="Pulling recovery proof from your workspace." />
+        <OutcomesHero />
+        <div style={{ marginTop: 12 }}>
+          <OperatorLoadingState variant="section" skeleton="cards" title="Loading outcomes…" />
+        </div>
       </main>
     );
   }

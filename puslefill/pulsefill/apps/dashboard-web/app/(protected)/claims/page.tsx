@@ -6,6 +6,8 @@ import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscr
 import { ClaimWinnerCard } from "@/components/claims/claim-winner-card";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
+import { OperatorErrorState } from "@/components/operator/operator-error-state";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { OperatorMetricStrip } from "@/components/operator/operator-metric-strip";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
@@ -74,8 +76,16 @@ export default function ClaimsPage() {
         style={{ marginBottom: 18 }}
       />
 
-      {loading ? <p className="pf-muted-copy">Loading claims…</p> : null}
-      {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
+      {loading ? (
+        <div style={{ marginTop: 8 }}>
+          <OperatorLoadingState variant="section" skeleton="rows" title="Loading claims…" />
+        </div>
+      ) : null}
+      {error ? (
+        <div style={{ marginTop: 12 }}>
+          <OperatorErrorState rawMessage={error} />
+        </div>
+      ) : null}
 
       {!loading && claims.length > 0 ? (
         <div className="pf-filter-rail" style={{ marginTop: 4, marginBottom: 16 }}>

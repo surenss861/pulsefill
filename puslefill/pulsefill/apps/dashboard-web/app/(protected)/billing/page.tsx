@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
+import { OperatorListEmptyState } from "@/components/operator/operator-list-empty-state";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 
 export default function BillingPage() {
   return (
@@ -12,20 +13,22 @@ export default function BillingPage() {
         title="Billing"
         description="Manage your PulseFill plan, invoices, and billing details when billing is enabled for your workspace."
         secondaryAction={
-          <Link href="/settings" style={{ fontSize: 13, fontWeight: 600, color: "rgba(245,247,250,0.55)" }}>
-            Account settings
+          <Link href="/settings" style={{ ...actionLinkStyle("ghost"), fontSize: 13 }}>
+            Settings
           </Link>
         }
         style={{ marginBottom: 16 }}
       />
-      <div style={{ padding: 18, ...operatorSurfaceShell("quiet") }}>
-        <h2 className="pf-section-title" style={{ fontSize: 15 }}>
-          Billing is not connected yet
-        </h2>
-        <p className="pf-muted-copy" style={{ margin: "8px 0 0" }}>
-          Plan management and invoices will appear here when billing is enabled. Nothing is wrong with your account — this area stays quiet until the feature is available.
-        </p>
-      </div>
+      <OperatorListEmptyState
+        compact
+        title="Billing is not active yet"
+        description="Billing will appear here when payments are connected for this workspace. Nothing is wrong with your account — this area stays quiet until the feature is available."
+        secondaryAction={
+          <Link href="/settings" style={actionLinkStyle("secondary")}>
+            Open settings
+          </Link>
+        }
+      />
     </main>
   );
 }

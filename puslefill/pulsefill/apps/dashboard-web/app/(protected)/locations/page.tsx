@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
-import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
+import { OperatorErrorState } from "@/components/operator/operator-error-state";
+import { OperatorFormShell } from "@/components/operator/operator-form-shell";
+import { OperatorListEmptyState } from "@/components/operator/operator-list-empty-state";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
+import { OperatorRow, OperatorRowList } from "@/components/operator/operator-row-list";
+import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { useStaffArrayResource } from "@/hooks/useStaffArrayResource";
 import { apiFetch } from "@/lib/api";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 type LocationRow = { id: string; name: string; city: string | null };
 
@@ -62,9 +65,9 @@ export default function LocationsPage() {
       <PageCommandHeader
         animate={false}
         tone="default"
-        eyebrow="Workspace"
+        eyebrow="Workspace setup"
         title="Locations"
-        description="Manage where openings can be recovered. Locations help route staff and customers to the right place."
+        description="Add the places where openings can be recovered. Locations route staff and customers before offers go out."
         primaryAction={
           <Link href="#add-location" style={actionLinkStyle("primary")}>
             Add location
@@ -73,27 +76,29 @@ export default function LocationsPage() {
         style={{ marginBottom: 16 }}
       />
 
-      <div
-        style={{
-          display: "grid",
-          gap: 14,
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
-        }}
+      <OperatorFormShell
+        title="New location"
+        description="Name the site where cancellations become openings."
+        rail={
+          <>
+            <h3 className="pf-section-title" style={{ fontSize: 14, margin: 0 }}>
+              Why it matters
+            </h3>
+            <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 13 }}>
+              Openings need a location before they can be sent to standby customers. Add every site you recover from.
+            </p>
+          </>
+        }
+        footer={
+          <>
+            {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
+            <button type="submit" form="add-location" disabled={saving} style={submitStyle(saving)}>
+              {saving ? "Saving…" : "Save location"}
+            </button>
+          </>
+        }
       >
-        <form
-          id="add-location"
-          onSubmit={onSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            padding: 18,
-            ...operatorSurfaceShell("operational"),
-          }}
-        >
-          <h2 className="pf-section-title" style={{ fontSize: 15 }}>
-            New location
-          </h2>
+        <form id="add-location" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
             <span className="pf-op-field-label">Name *</span>
             <input
@@ -108,76 +113,51 @@ export default function LocationsPage() {
             <span className="pf-op-field-label">City (optional)</span>
             <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Toronto" style={inputStyle} />
           </label>
-          {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-          <button type="submit" disabled={saving} style={submitStyle(saving)}>
-            {saving ? "Saving…" : "Save location"}
-          </button>
         </form>
-
-        <div style={{ padding: 18, ...operatorSurfaceShell("quiet") }}>
-          <h2 className="pf-section-title" style={{ fontSize: 15 }}>
-            Why locations matter
-          </h2>
-          <p className="pf-muted-copy" style={{ margin: "8px 0 0" }}>
-            Locations help route openings to the right clinic and improve standby matching.
-          </p>
-        </div>
-      </div>
+      </OperatorFormShell>
 
       {loading ? (
-        <p className="pf-muted-copy" style={{ marginTop: 22 }}>
-          Loading…
-        </p>
-      ) : null}
-      {error ? <p style={{ color: "#f87171", marginTop: 16 }}>{error}</p> : null}
-
-      {!loading && locations.length === 0 ? (
         <div style={{ marginTop: 22 }}>
-          <OperatorEmptyState
-            title="No locations yet"
-            description="Add a location so PulseFill knows where cancellations become openings — then link providers and services."
+          <OperatorLoadingState variant="section" skeleton="rows" />
+        </div>
+      ) : null}
+      {error ? (
+        <div style={{ marginTop: 16 }}>
+          <OperatorErrorState rawMessage={error} />
+        </div>
+      ) : null}
+
+      {!loading && !error && locations.length === 0 ? (
+        <div style={{ marginTop: 22 }}>
+          <OperatorListEmptyState
+            title="Add your first location"
+            description="Locations tell PulseFill where openings happen before customers receive offers."
             primaryAction={
               <Link href="#add-location" style={actionLinkStyle("primary")}>
                 Add location
               </Link>
             }
-            secondaryContent={
-              <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
-                <Link href="/overview#getting-started" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
-                  Back to getting started
-                </Link>
-              </p>
+            secondaryAction={
+              <Link href="/overview#getting-started" style={actionLinkStyle("secondary")}>
+                Back to getting started
+              </Link>
             }
           />
         </div>
       ) : null}
 
-      {!loading && locations.length > 0 ? (
-        <div
-          style={{
-            marginTop: 22,
-            borderRadius: 12,
-            overflowX: "auto",
-            ...operatorSurfaceShell("quiet"),
-            padding: 0,
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: "rgba(255,255,255,0.04)" }}>
-                <th style={thStyle}>Location</th>
-                <th style={thStyle}>City</th>
-              </tr>
-            </thead>
-            <tbody>
-              {locations.map((loc) => (
-                <tr key={loc.id}>
-                  <td style={tdStyle}>{loc.name}</td>
-                  <td style={tdStyle}>{loc.city ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {!loading && !error && locations.length > 0 ? (
+        <div style={{ marginTop: 22 }}>
+          <OperatorRowList>
+            {locations.map((loc) => (
+              <OperatorRow
+                key={loc.id}
+                title={loc.name}
+                meta={loc.city ? `${loc.city}` : "No city on file"}
+                status={<OperatorStatusChip kind="live" label="Active" />}
+              />
+            ))}
+          </OperatorRowList>
         </div>
       ) : null}
     </main>
@@ -187,28 +167,14 @@ export default function LocationsPage() {
 function submitStyle(disabled: boolean): CSSProperties {
   return {
     borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.18)",
-    background: "rgba(255,255,255,0.1)",
-    color: "var(--text)",
-    padding: "10px 14px",
+    border: "1px solid var(--pf-accent-primary-border)",
+    background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
+    color: "var(--pf-btn-primary-text)",
+    padding: "10px 16px",
     fontSize: 14,
+    fontWeight: 700,
     cursor: disabled ? "wait" : "pointer",
     alignSelf: "flex-start",
+    boxShadow: "0 10px 28px rgba(255, 122, 24, 0.28)",
   };
 }
-
-const thStyle: CSSProperties = {
-  textAlign: "left",
-  padding: "10px 14px",
-  borderBottom: "1px solid rgba(255,255,255,0.1)",
-  color: "rgba(245,247,250,0.42)",
-  fontWeight: 600,
-  fontSize: 11,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-};
-
-const tdStyle: CSSProperties = {
-  padding: "11px 14px",
-  borderBottom: "1px solid rgba(255,255,255,0.06)",
-};

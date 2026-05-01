@@ -30,7 +30,7 @@ export function OutcomesHero({ windowLabel }: OutcomesHeroProps) {
     <PageCommandHeader
       animate={false}
       tone="default"
-      eyebrow="Recovery"
+      eyebrow="Recovery archive"
       title="Outcomes"
       description="Recovered, missed, and expired openings in this window — use it as an operating log tied to measurable recovery."
       meta={meta}

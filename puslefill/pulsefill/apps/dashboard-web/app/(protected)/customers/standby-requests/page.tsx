@@ -5,8 +5,9 @@ import { useCallback, useEffect, useState } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
-import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
-import { PageState } from "@/components/ui/page-state";
+import { OperatorErrorState } from "@/components/operator/operator-error-state";
+import { OperatorListEmptyState } from "@/components/operator/operator-list-empty-state";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { apiFetch } from "@/lib/api";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
@@ -67,7 +68,7 @@ export default function StandbyRequestsPage() {
       <PageCommandHeader
         animate={false}
         tone="default"
-        eyebrow="Customers"
+        eyebrow="Standby access"
         title="Standby requests"
         description="Review customers who asked to join your standby pool. Approve when you are ready for them to set preferences and receive openings."
         secondaryAction={
@@ -78,22 +79,28 @@ export default function StandbyRequestsPage() {
         style={{ marginBottom: 16 }}
       />
 
-      {error ? <p style={{ color: "#f87171", marginTop: 12 }}>{error}</p> : null}
+      {error ? (
+        <div style={{ marginTop: 12 }}>
+          <OperatorErrorState rawMessage={error} />
+        </div>
+      ) : null}
 
       {loading ? (
-        <PageState variant="info" title="Loading" description="Fetching pending requests…" style={{ marginTop: 16 }} />
+        <div style={{ marginTop: 16 }}>
+          <OperatorLoadingState variant="section" skeleton="rows" title="Loading requests…" />
+        </div>
       ) : requests.length === 0 ? (
         <div style={{ marginTop: 16 }}>
-          <OperatorEmptyState
-            title="No pending requests"
-            description='When access mode is "request to join" and your business is listed, new requests appear here.'
+          <OperatorListEmptyState
+            title="No standby requests"
+            description='Customer requests will appear here when your access mode is request-to-join and your business is listed.'
             primaryAction={
               <Link href="/settings" style={actionLinkStyle("primary")}>
-                Open settings
+                Review access settings
               </Link>
             }
-            secondaryContent={
-              <Link href="/customers" style={{ ...actionLinkStyle("secondary"), display: "inline-block" }}>
+            secondaryAction={
+              <Link href="/customers" style={actionLinkStyle("secondary")}>
                 Back to customers
               </Link>
             }

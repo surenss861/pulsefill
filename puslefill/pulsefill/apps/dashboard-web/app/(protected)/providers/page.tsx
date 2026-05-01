@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import type { CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
-import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
+import { OperatorErrorState } from "@/components/operator/operator-error-state";
+import { OperatorFormShell } from "@/components/operator/operator-form-shell";
+import { OperatorListEmptyState } from "@/components/operator/operator-list-empty-state";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
+import { OperatorRow, OperatorRowList } from "@/components/operator/operator-row-list";
+import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { useStaffArrayResource } from "@/hooks/useStaffArrayResource";
 import { apiFetch } from "@/lib/api";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 const inputStyle: CSSProperties = {
   borderRadius: 10,
@@ -79,9 +82,9 @@ export default function ProvidersPage() {
       <PageCommandHeader
         animate={false}
         tone="default"
-        eyebrow="Workspace"
+        eyebrow="Workspace setup"
         title="Providers"
-        description="Manage staff calendars tied to openings. Providers label recovery work and optional default locations."
+        description="Add the people or calendars tied to recoverable openings. Providers label recovery work and optional default locations."
         primaryAction={
           <Link href="#add-provider" style={actionLinkStyle("primary")}>
             Add provider
@@ -90,27 +93,31 @@ export default function ProvidersPage() {
         style={{ marginBottom: 16 }}
       />
 
-      <div
-        style={{
-          display: "grid",
-          gap: 14,
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
-        }}
+      <OperatorFormShell
+        title="New provider"
+        description="Name the staff member or calendar that openings can belong to."
+        rail={
+          <>
+            <h3 className="pf-section-title" style={{ fontSize: 14, margin: 0 }}>
+              Setup guidance
+            </h3>
+            <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 13 }}>
+              {locations.length === 0
+                ? "Finish location setup first, then add providers so openings can be assigned correctly."
+                : "Link a default location when it helps route recovery work to the right site."}
+            </p>
+          </>
+        }
+        footer={
+          <>
+            {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
+            <button type="submit" form="add-provider" disabled={saving} style={primarySubmit(saving)}>
+              {saving ? "Saving…" : "Save provider"}
+            </button>
+          </>
+        }
       >
-        <form
-          id="add-provider"
-          onSubmit={onSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            padding: 18,
-            ...operatorSurfaceShell("operational"),
-          }}
-        >
-          <h2 className="pf-section-title" style={{ fontSize: 15 }}>
-            New provider
-          </h2>
+        <form id="add-provider" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
             <span className="pf-op-field-label">Name *</span>
             <input
@@ -146,113 +153,68 @@ export default function ProvidersPage() {
               first so providers can be linked to a clinic site.
             </p>
           )}
-          {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-          <button type="submit" disabled={saving} style={submitStyle(saving)}>
-            {saving ? "Saving…" : "Save provider"}
-          </button>
         </form>
-
-        <div style={{ padding: 18, ...operatorSurfaceShell("quiet") }}>
-          <h2 className="pf-section-title" style={{ fontSize: 15 }}>
-            Setup guidance
-          </h2>
-          {locations.length === 0 ? (
-            <p className="pf-muted-copy" style={{ margin: "8px 0 0" }}>
-              Finish location setup first, then add providers so openings can be assigned correctly.
-            </p>
-          ) : (
-            <p className="pf-muted-copy" style={{ margin: "8px 0 0" }}>
-              Providers can optionally be linked to a default location for cleaner routing.
-            </p>
-          )}
-        </div>
-      </div>
+      </OperatorFormShell>
 
       {listLoading ? (
-        <p className="pf-muted-copy" style={{ marginTop: 22 }}>
-          Loading…
-        </p>
-      ) : null}
-      {listError ? <p style={{ color: "#f87171", marginTop: 16 }}>{listError}</p> : null}
-
-      {!listLoading && providers.length === 0 ? (
         <div style={{ marginTop: 22 }}>
-          <OperatorEmptyState
-            title="No providers yet"
-            description="Add a provider so staff can attach openings to the right person or calendar."
+          <OperatorLoadingState variant="section" skeleton="rows" />
+        </div>
+      ) : null}
+      {listError ? (
+        <div style={{ marginTop: 16 }}>
+          <OperatorErrorState rawMessage={listError} />
+        </div>
+      ) : null}
+
+      {!listLoading && !listError && providers.length === 0 ? (
+        <div style={{ marginTop: 22 }}>
+          <OperatorListEmptyState
+            title="Add your first provider"
+            description="Providers help PulseFill route openings to the right schedule or staff member."
             primaryAction={
               <Link href="#add-provider" style={actionLinkStyle("primary")}>
                 Add provider
               </Link>
             }
-            secondaryContent={
-              <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
-                <Link href="/overview#getting-started" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
-                  Back to getting started
-                </Link>
-              </p>
+            secondaryAction={
+              <Link href="/overview#getting-started" style={actionLinkStyle("secondary")}>
+                Back to getting started
+              </Link>
             }
           />
         </div>
       ) : null}
 
-      {!listLoading && providers.length > 0 ? (
-        <div
-          style={{
-            marginTop: 22,
-            borderRadius: 12,
-            overflow: "hidden",
-            ...operatorSurfaceShell("quiet"),
-            padding: 0,
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: "rgba(255,255,255,0.04)" }}>
-                <th style={thStyle}>Provider</th>
-                <th style={thStyle}>Default location</th>
-              </tr>
-            </thead>
-            <tbody>
-              {providers.map((p) => (
-                <tr key={p.id}>
-                  <td style={tdStyle}>{p.name}</td>
-                  <td style={tdStyle}>{p.location_id ? locationNameById.get(p.location_id) ?? "Unlinked" : "Unlinked"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {!listLoading && !listError && providers.length > 0 ? (
+        <div style={{ marginTop: 22 }}>
+          <OperatorRowList>
+            {providers.map((p) => (
+              <OperatorRow
+                key={p.id}
+                title={p.name}
+                meta={p.location_id ? locationNameById.get(p.location_id) ?? "Linked location" : "No default location"}
+                status={<OperatorStatusChip kind="live" label="Active" />}
+              />
+            ))}
+          </OperatorRowList>
         </div>
       ) : null}
     </main>
   );
 }
 
-function submitStyle(disabled: boolean): CSSProperties {
+function primarySubmit(disabled: boolean): CSSProperties {
   return {
     borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.18)",
-    background: "rgba(255,255,255,0.1)",
-    color: "var(--text)",
-    padding: "10px 14px",
+    border: "1px solid var(--pf-accent-primary-border)",
+    background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
+    color: "var(--pf-btn-primary-text)",
+    padding: "10px 16px",
     fontSize: 14,
+    fontWeight: 700,
     cursor: disabled ? "wait" : "pointer",
     alignSelf: "flex-start",
+    boxShadow: "0 10px 28px rgba(255, 122, 24, 0.28)",
   };
 }
-
-const thStyle: CSSProperties = {
-  textAlign: "left",
-  padding: "10px 14px",
-  borderBottom: "1px solid rgba(255,255,255,0.1)",
-  color: "rgba(245,247,250,0.42)",
-  fontWeight: 600,
-  fontSize: 11,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-};
-
-const tdStyle: CSSProperties = {
-  padding: "11px 14px",
-  borderBottom: "1px solid rgba(255,255,255,0.06)",
-};

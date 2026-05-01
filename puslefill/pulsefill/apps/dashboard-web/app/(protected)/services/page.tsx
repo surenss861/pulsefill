@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
-import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
+import { OperatorErrorState } from "@/components/operator/operator-error-state";
+import { OperatorFormShell } from "@/components/operator/operator-form-shell";
+import { OperatorListEmptyState } from "@/components/operator/operator-list-empty-state";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
+import { OperatorRow, OperatorRowList } from "@/components/operator/operator-row-list";
+import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { useStaffArrayResource } from "@/hooks/useStaffArrayResource";
 import { apiFetch } from "@/lib/api";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 const inputStyle: CSSProperties = {
   borderRadius: 10,
@@ -78,7 +81,7 @@ export default function ServicesPage() {
       <PageCommandHeader
         animate={false}
         tone="default"
-        eyebrow="Workspace"
+        eyebrow="Workspace setup"
         title="Services"
         description="Define what customers can join standby for. Accurate services improve opening duration and match quality."
         primaryAction={
@@ -89,27 +92,29 @@ export default function ServicesPage() {
         style={{ marginBottom: 16 }}
       />
 
-      <div
-        style={{
-          display: "grid",
-          gap: 14,
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
-        }}
+      <OperatorFormShell
+        title="New service"
+        description="Name the appointment type customers can receive offers for."
+        rail={
+          <>
+            <h3 className="pf-section-title" style={{ fontSize: 14, margin: 0 }}>
+              Matching depends on this
+            </h3>
+            <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 13 }}>
+              Services keep duration, matching rules, and customer expectations aligned — weak service data means weaker recovery matches.
+            </p>
+          </>
+        }
+        footer={
+          <>
+            {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
+            <button type="submit" form="add-service" disabled={saving} style={primarySubmit(saving)}>
+              {saving ? "Saving…" : "Save service"}
+            </button>
+          </>
+        }
       >
-        <form
-          id="add-service"
-          onSubmit={onSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            padding: 18,
-            ...operatorSurfaceShell("operational"),
-          }}
-        >
-          <h2 className="pf-section-title" style={{ fontSize: 15 }}>
-            New service
-          </h2>
+        <form id="add-service" onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
             <span className="pf-op-field-label">Name *</span>
             <input
@@ -133,107 +138,68 @@ export default function ServicesPage() {
               Used to estimate the opening end time.
             </span>
           </label>
-          {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-          <button type="submit" disabled={saving} style={submitStyle(saving)}>
-            {saving ? "Saving…" : "Save service"}
-          </button>
         </form>
-
-        <div style={{ padding: 18, ...operatorSurfaceShell("quiet") }}>
-          <h2 className="pf-section-title" style={{ fontSize: 15 }}>
-            Why services matter
-          </h2>
-          <p className="pf-muted-copy" style={{ margin: "8px 0 0" }}>
-            Services keep opening duration, matching rules, and customer expectations aligned — weak service data means weaker recovery matches.
-          </p>
-        </div>
-      </div>
+      </OperatorFormShell>
 
       {loading ? (
-        <p className="pf-muted-copy" style={{ marginTop: 22 }}>
-          Loading…
-        </p>
-      ) : null}
-      {error ? <p style={{ color: "#f87171", marginTop: 16 }}>{error}</p> : null}
-
-      {!loading && services.length === 0 ? (
         <div style={{ marginTop: 22 }}>
-          <OperatorEmptyState
-            title="No services yet"
-            description="Add a service so PulseFill can match openings to the right type of care and send precise offers to standby customers."
+          <OperatorLoadingState variant="section" skeleton="rows" />
+        </div>
+      ) : null}
+      {error ? (
+        <div style={{ marginTop: 16 }}>
+          <OperatorErrorState rawMessage={error} />
+        </div>
+      ) : null}
+
+      {!loading && !error && services.length === 0 ? (
+        <div style={{ marginTop: 22 }}>
+          <OperatorListEmptyState
+            title="Add your first service"
+            description="Services help PulseFill match openings to the right standby customers."
             primaryAction={
               <Link href="#add-service" style={actionLinkStyle("primary")}>
                 Add service
               </Link>
             }
-            secondaryContent={
-              <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
-                <Link href="/overview#getting-started" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
-                  Back to getting started
-                </Link>
-              </p>
+            secondaryAction={
+              <Link href="/overview#getting-started" style={actionLinkStyle("secondary")}>
+                Back to getting started
+              </Link>
             }
           />
         </div>
       ) : null}
 
-      {!loading && services.length > 0 ? (
-        <div
-          style={{
-            marginTop: 22,
-            borderRadius: 12,
-            overflowX: "auto",
-            ...operatorSurfaceShell("quiet"),
-            padding: 0,
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: "rgba(255,255,255,0.04)" }}>
-                <th style={thStyle}>Service</th>
-                <th style={thStyle}>Duration</th>
-              </tr>
-            </thead>
-            <tbody>
-              {services.map((s) => (
-                <tr key={s.id}>
-                  <td style={tdStyle}>{s.name}</td>
-                  <td style={tdStyle}>{typeof s.duration_minutes === "number" ? `${s.duration_minutes} min` : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {!loading && !error && services.length > 0 ? (
+        <div style={{ marginTop: 22 }}>
+          <OperatorRowList>
+            {services.map((s) => (
+              <OperatorRow
+                key={s.id}
+                title={s.name}
+                meta={typeof s.duration_minutes === "number" ? `${s.duration_minutes} min` : "Duration not set"}
+                status={<OperatorStatusChip kind="live" label="Listed" />}
+              />
+            ))}
+          </OperatorRowList>
         </div>
       ) : null}
     </main>
   );
 }
 
-function submitStyle(disabled: boolean): CSSProperties {
+function primarySubmit(disabled: boolean): CSSProperties {
   return {
     borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.18)",
-    background: "rgba(255,255,255,0.1)",
-    color: "var(--text)",
-    padding: "10px 14px",
+    border: "1px solid var(--pf-accent-primary-border)",
+    background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
+    color: "var(--pf-btn-primary-text)",
+    padding: "10px 16px",
     fontSize: 14,
+    fontWeight: 700,
     cursor: disabled ? "wait" : "pointer",
     alignSelf: "flex-start",
+    boxShadow: "0 10px 28px rgba(255, 122, 24, 0.28)",
   };
 }
-
-const thStyle: CSSProperties = {
-  textAlign: "left",
-  padding: "10px 14px",
-  borderBottom: "1px solid rgba(255,255,255,0.1)",
-  color: "rgba(245,247,250,0.42)",
-  fontWeight: 600,
-  fontSize: 11,
-  letterSpacing: "0.12em",
-  textTransform: "uppercase",
-};
-
-const tdStyle: CSSProperties = {
-  padding: "11px 14px",
-  borderBottom: "1px solid rgba(255,255,255,0.06)",
-};

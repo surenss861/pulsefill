@@ -22,6 +22,8 @@ import { useOperatorSlotsList } from "@/hooks/useOperatorSlotsList";
 import { runOperatorBulkAction } from "@/lib/operator-bulk-actions";
 import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
 import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
+import { OperatorErrorState } from "@/components/operator/operator-error-state";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { RecoveryPipeline } from "@/components/operator/recovery-pipeline";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
@@ -230,8 +232,16 @@ export default function OpenSlotsPageClient() {
         </div>
       ) : null}
 
-      {loading ? <p style={{ color: "var(--muted)" }}>Loading openings…</p> : null}
-      {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
+      {loading ? (
+        <div style={{ marginTop: 8 }}>
+          <OperatorLoadingState variant="section" skeleton="rows" title="Loading openings…" />
+        </div>
+      ) : null}
+      {error ? (
+        <div style={{ marginTop: 12 }}>
+          <OperatorErrorState rawMessage={error} />
+        </div>
+      ) : null}
 
       {!loading && !error && slots.length === 0 ? (
         <div style={{ marginTop: 20 }}>
@@ -272,6 +282,15 @@ export default function OpenSlotsPageClient() {
                     }}
                   />
                 </div>
+                <p className="pf-kicker" style={{ margin: "16px 0 8px", fontSize: 9 }}>
+                  What happens next
+                </p>
+                <ol className="pf-openings-next-stack">
+                  <li>Capture cancelled time</li>
+                  <li>Match standby customers</li>
+                  <li>Send offers</li>
+                  <li>Confirm claimed booking</li>
+                </ol>
                 <Link href="/customers" style={{ ...actionLinkStyle("ghost"), display: "inline-block", marginTop: 14, fontSize: 13 }}>
                   Invite standby customers
                 </Link>

@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ActionQueueEmptyState } from "@/components/action-queue/action-queue-empty-state";
+import { OperatorErrorState } from "@/components/operator/operator-error-state";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { ActionQueueItemCard } from "@/components/action-queue/action-queue-item-card";
 import { ActionQueueSection } from "@/components/action-queue/action-queue-section";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
@@ -17,6 +20,7 @@ import { useOperatorFilters } from "@/hooks/useOperatorFilters";
 import { useOperatorRowAction } from "@/hooks/useOperatorRowAction";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import { deriveQueueInlinePrimaryAction } from "@/lib/operator-primary-action";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import type { ActionQueueFilter, ActionQueueItem } from "@/types/action-queue";
 
 const filterTabs: Array<{ id: ActionQueueFilter; label: string }> = [
@@ -117,9 +121,9 @@ function ActionQueuePageContent() {
       <PageCommandHeader
         animate={false}
         tone="default"
-        eyebrow="Recovery"
+        eyebrow="Operator queue"
         title="Action queue"
-        description="Worklist for appointment recovery — needs action, review, and resolved slots in one place."
+        description="Review recovery actions that need staff attention — needs action, review, and resolved slots in one place."
         meta={
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <RefreshIndicator updatedAt={refreshedAt} />
@@ -199,8 +203,16 @@ function ActionQueuePageContent() {
         </div>
       ) : null}
 
-      {error ? <p style={{ color: "#f87171" }}>{error}</p> : null}
-      {loading && !data ? <p className="pf-muted-copy">Loading queue…</p> : null}
+      {error ? (
+        <div style={{ marginBottom: 16 }}>
+          <OperatorErrorState rawMessage={error} />
+        </div>
+      ) : null}
+      {loading && !data ? (
+        <div style={{ marginBottom: 16 }}>
+          <OperatorLoadingState variant="section" skeleton="rows" title="Loading action queue…" />
+        </div>
+      ) : null}
 
       {data ? (
         <>
@@ -214,8 +226,18 @@ function ActionQueuePageContent() {
             >
               {filteredSections.needs_action.length === 0 ? (
                 <ActionQueueEmptyState
-                  title="Nothing urgent right now"
-                  body="Review lower-priority items below."
+                  title="No actions waiting"
+                  body={
+                    <span>
+                      When openings, claims, or customer requests need attention, they’ll appear here.{" "}
+                      <Link href="/open-slots/create" style={{ ...actionLinkStyle("primary"), marginRight: 8 }}>
+                        Create opening
+                      </Link>
+                      <Link href="/open-slots" style={actionLinkStyle("secondary")}>
+                        View openings
+                      </Link>
+                    </span>
+                  }
                 />
               ) : (
                 filteredSections.needs_action.map((item) => (
