@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
 import { PageState } from "@/components/ui/page-state";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 
 type ActivityEmptySectionProps = {
@@ -23,16 +26,29 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
       <div className="pf-activity-empty-timeline__body">
         <OperatorEmptyState
           title="No recovery activity yet"
-          description="Create an opening, send offers, or confirm a booking to start building history."
+          description="Create an opening, send offers, or confirm a booking to start building your recovery log."
           primaryAction={
             <>
-              <Link href="/open-slots/create" style={{ ...actionLinkStyle("primary"), marginRight: 10 }}>
-                Create opening
-              </Link>
-              <Link href="/open-slots" style={actionLinkStyle("secondary")}>
-                View openings
-              </Link>
+              <MotionAction>
+                <Link href="/open-slots/create" style={{ ...actionLinkStyle("primary"), marginRight: 10 }}>
+                  Create opening
+                </Link>
+              </MotionAction>
+              <MotionAction>
+                <Link href="/open-slots" style={actionLinkStyle("secondary")}>
+                  View openings
+                </Link>
+              </MotionAction>
             </>
+          }
+          secondaryContent={
+            <details className="pf-overview-edu" style={{ marginTop: 4 }}>
+              <summary>What gets logged?</summary>
+              <p className="pf-overview-edu__body">
+                Openings, offers, claims, confirmations, internal notes, and delivery attempts appear here as they happen so your team has a
+                single timeline to audit recovery.
+              </p>
+            </details>
           }
         />
       </div>

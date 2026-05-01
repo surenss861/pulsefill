@@ -4,6 +4,7 @@ import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { emitOperatorRefreshEvent, type OperatorRefreshAction } from "@/lib/operator-refresh-events";
 import { useToast } from "@/components/ui/toast-provider";
+import { MotionTapSurface } from "@/components/operator/operator-motion-primitives";
 import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
 
 type SendOffersMatchSummary = {
@@ -132,20 +133,22 @@ export function RetryOffersButton({
 
   return (
     <div style={{ display: "grid", gap: 10, minWidth: 0, maxWidth: 420 }}>
-      <button
-        type="button"
-        onClick={() => void handleSend()}
-        disabled={loading}
-        style={{
-          ...buttonStyle,
-          opacity: loading ? 0.65 : 1,
-          cursor: loading ? "not-allowed" : "pointer",
-          justifySelf: "start",
-        }}
-        {...pressableHandlers(loading)}
-      >
-        {loading ? "Sending offers…" : buttonLabel}
-      </button>
+      <MotionTapSurface disabled={loading}>
+        <button
+          type="button"
+          onClick={() => void handleSend()}
+          disabled={loading}
+          style={{
+            ...buttonStyle,
+            opacity: loading ? 0.65 : 1,
+            cursor: loading ? "not-allowed" : "pointer",
+            justifySelf: "start",
+          }}
+          {...pressableHandlers(loading)}
+        >
+          {loading ? "Sending offers…" : buttonLabel}
+        </button>
+      </MotionTapSurface>
 
       {lastResult ? (
         <div

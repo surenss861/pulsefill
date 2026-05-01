@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { RecordRowCard } from "@/components/ui/record-row-card";
 import { SectionCard } from "@/components/ui/section-card";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -35,22 +36,24 @@ export function OutcomesRecentList({ title, body, items, emphasis }: OutcomesRec
           title={item.title}
           detail={item.detail}
           actions={
-            <Link
-              href={item.href}
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#ffb070",
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-                padding: "8px 12px",
-                borderRadius: "var(--pf-radius-sm)",
-                border: "1px solid var(--pf-border-subtle)",
-                background: "rgba(255,255,255,0.03)",
-              }}
-            >
-              Open detail →
-            </Link>
+            <MotionAction>
+              <Link
+                href={item.href}
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#ffb070",
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                  padding: "8px 12px",
+                  borderRadius: "var(--pf-radius-sm)",
+                  border: "1px solid var(--pf-border-subtle)",
+                  background: "rgba(255,255,255,0.03)",
+                }}
+              >
+                Open detail →
+              </Link>
+            </MotionAction>
           }
         />
       ))}

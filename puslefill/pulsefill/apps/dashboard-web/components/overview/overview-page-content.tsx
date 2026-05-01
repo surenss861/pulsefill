@@ -38,6 +38,7 @@ import { FadeUp } from "@/components/motion/operator-motion";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
 import { NextBestActionCard } from "@/components/operator/next-best-action-card";
 import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import type { SetupChecklistState } from "@/hooks/useSetupChecklistState";
 function nextSetupHref(state: SetupChecklistState): string {
@@ -306,6 +307,7 @@ export function OverviewPageContent({
 
   return (
     <main className="pf-page-overview" style={{ padding: 0 }}>
+      <OperatorPageTransition>
       <FadeUp>
         <OverviewOperatorHero />
       </FadeUp>
@@ -394,6 +396,7 @@ export function OverviewPageContent({
               compact
               animated
               featured
+              interactive
             />
           </aside>
           <div className="pf-command-cockpit-footer">
@@ -454,6 +457,7 @@ export function OverviewPageContent({
                 compact
                 animated
                 featured
+                interactive
               />
             </aside>
             <div className="pf-command-cockpit-footer">
@@ -466,13 +470,7 @@ export function OverviewPageContent({
 
           {metrics ? (
             <OverviewLongRangeRecoveryBlock>
-              <div
-                style={{
-                  display: "grid",
-                  gap: 16,
-                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                }}
-              >
+              <div className="pf-overview-metric-grid">
                 <OverviewMetricCard label="Openings created" value={metrics.open_slots_created} />
                 <OverviewMetricCard label="Offers sent" value={metrics.offers_sent} />
                 <OverviewMetricCard label="Openings booked" value={metrics.slots_booked} />
@@ -501,6 +499,7 @@ export function OverviewPageContent({
       ) : null}
         </div>
       </FadeUp>
+      </OperatorPageTransition>
     </main>
   );
 }

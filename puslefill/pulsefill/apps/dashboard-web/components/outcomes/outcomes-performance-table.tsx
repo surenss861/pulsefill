@@ -45,6 +45,7 @@ export function OutcomesPerformanceTable({ rows }: OutcomesPerformanceTableProps
         {rows.map((row, i) => (
           <div
             key={row.label}
+            className="pf-outcomes-perf-row"
             style={{
               display: "grid",
               gridTemplateColumns: "minmax(0,1.2fr) repeat(3, minmax(0,0.9fr))",

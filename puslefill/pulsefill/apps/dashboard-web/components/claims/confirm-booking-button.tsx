@@ -4,6 +4,7 @@ import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { emitOperatorRefreshEvent } from "@/lib/operator-refresh-events";
 import { useToast } from "@/components/ui/toast-provider";
+import { MotionTapSurface } from "@/components/operator/operator-motion-primitives";
 import { pressableHandlers, pressablePrimary } from "@/lib/pressable";
 
 type Props = {
@@ -53,19 +54,21 @@ export function ConfirmBookingButton({ openSlotId, claimId, onConfirmed, onConfl
 
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <button
-        type="button"
-        onClick={() => void handleConfirm()}
-        disabled={loading}
-        style={{
-          ...pressablePrimary,
-          opacity: loading ? 0.6 : 1,
-          cursor: loading ? "not-allowed" : "pointer",
-        }}
-        {...pressableHandlers(loading)}
-      >
-        {loading ? "Confirming…" : "Confirm booking"}
-      </button>
+      <MotionTapSurface disabled={loading}>
+        <button
+          type="button"
+          onClick={() => void handleConfirm()}
+          disabled={loading}
+          style={{
+            ...pressablePrimary,
+            opacity: loading ? 0.6 : 1,
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
+          {...pressableHandlers(loading)}
+        >
+          {loading ? "Confirming…" : "Confirm booking"}
+        </button>
+      </MotionTapSurface>
       {error ? <p style={{ margin: 0, fontSize: 12, color: "#f87171" }}>{error}</p> : null}
     </div>
   );

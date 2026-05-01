@@ -5,11 +5,20 @@ type Props = {
   title: string;
   description?: string;
   children: ReactNode;
+  /** For in-page scroll targets (e.g. recovery pipeline step jump). */
+  sectionId?: string;
 };
 
-export function OpenSlotDetailSection({ eyebrow, title, description, children }: Props) {
+export function OpenSlotDetailSection({ eyebrow, title, description, children, sectionId }: Props) {
   return (
-    <section style={{ display: "grid", gap: 14 }}>
+    <section
+      id={sectionId}
+      style={{
+        display: "grid",
+        gap: 14,
+        ...(sectionId ? { scrollMarginTop: 96 } : {}),
+      }}
+    >
       <div>
         <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: "rgba(245,247,250,0.34)", textTransform: "uppercase" }}>
           {eyebrow}

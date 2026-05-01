@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { FadeUp } from "@/components/motion/operator-motion";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { ActivityEmptySection } from "@/components/activity/activity-empty-section";
 import { ActivityHero } from "@/components/activity/activity-hero";
 import { ActivitySummaryStrip } from "@/components/activity/activity-summary-strip";
@@ -145,6 +147,7 @@ export function ActivityPageClient() {
 
   return (
     <main className="pf-page-activity" style={{ padding: 0 }}>
+      <OperatorPageTransition>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <FadeUp>
           <ActivityHero actions={heroActions} />
@@ -200,7 +203,7 @@ export function ActivityPageClient() {
         {activityLoadError ? (
           activityLoadError
         ) : loading && items.length === 0 ? (
-          <p style={{ color: "rgba(245, 247, 250, 0.45)", margin: 0, fontSize: 14 }}>Loading activity…</p>
+          <OperatorLoadingState variant="section" skeleton="rows" title="Loading activity…" description="Fetching recent recovery events." />
         ) : items.length === 0 ? (
           <ActivityEmptySection />
         ) : filteredItems.length === 0 ? (
@@ -249,6 +252,7 @@ export function ActivityPageClient() {
 
         {bulkResult ? <OperatorBulkActionResult result={bulkResult} onDismiss={() => setBulkResult(null)} /> : null}
       </div>
+      </OperatorPageTransition>
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import type { OutcomesPageData } from "@/lib/outcomes-page-data";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { OutcomesActionStrip } from "./outcomes-action-strip";
 import { OutcomesHero } from "./outcomes-hero";
 import { OutcomesLeakPanel } from "./outcomes-leak-panel";
@@ -14,6 +15,7 @@ export type OutcomesPageContentProps = {
 export function OutcomesPageContent({ data }: OutcomesPageContentProps) {
   return (
     <main className="pf-page-outcomes" style={{ padding: 0 }}>
+      <OperatorPageTransition>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <OutcomesHero windowLabel={data.windowLabel} />
         <OutcomesScorecardRow scorecards={data.scorecards} />
@@ -56,6 +58,7 @@ export function OutcomesPageContent({ data }: OutcomesPageContentProps) {
 
         <OutcomesActionStrip />
       </div>
+      </OperatorPageTransition>
     </main>
   );
 }

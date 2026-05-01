@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { MotionAction, MotionTapSurface } from "@/components/operator/operator-motion-primitives";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorFormShell } from "@/components/operator/operator-form-shell";
 import { OperatorListEmptyState } from "@/components/operator/operator-list-empty-state";
@@ -69,13 +71,16 @@ export default function LocationsPage() {
         title="Locations"
         description="Add the places where openings can be recovered. Locations route staff and customers before offers go out."
         primaryAction={
-          <Link href="#add-location" style={actionLinkStyle("primary")}>
-            Add location
-          </Link>
+          <MotionAction>
+            <Link href="#add-location" style={actionLinkStyle("primary")}>
+              Add location
+            </Link>
+          </MotionAction>
         }
         style={{ marginBottom: 16 }}
       />
 
+      <OperatorPageTransition>
       <OperatorFormShell
         title="New location"
         description="Name the site where cancellations become openings."
@@ -92,9 +97,11 @@ export default function LocationsPage() {
         footer={
           <>
             {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-            <button type="submit" form="add-location" disabled={saving} style={submitStyle(saving)}>
-              {saving ? "Saving…" : "Save location"}
-            </button>
+            <MotionTapSurface disabled={saving}>
+              <button type="submit" form="add-location" disabled={saving} style={submitStyle(saving)}>
+                {saving ? "Saving…" : "Save location"}
+              </button>
+            </MotionTapSurface>
           </>
         }
       >
@@ -133,14 +140,18 @@ export default function LocationsPage() {
             title="Add your first location"
             description="Locations tell PulseFill where openings happen before customers receive offers."
             primaryAction={
-              <Link href="#add-location" style={actionLinkStyle("primary")}>
-                Add location
-              </Link>
+              <MotionAction>
+                <Link href="#add-location" style={actionLinkStyle("primary")}>
+                  Add location
+                </Link>
+              </MotionAction>
             }
             secondaryAction={
-              <Link href="/overview#getting-started" style={actionLinkStyle("secondary")}>
-                Back to getting started
-              </Link>
+              <MotionAction>
+                <Link href="/overview#getting-started" style={actionLinkStyle("secondary")}>
+                  Back to getting started
+                </Link>
+              </MotionAction>
             }
           />
         </div>
@@ -160,6 +171,7 @@ export default function LocationsPage() {
           </OperatorRowList>
         </div>
       ) : null}
+      </OperatorPageTransition>
     </main>
   );
 }

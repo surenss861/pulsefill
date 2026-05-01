@@ -18,7 +18,12 @@ import { SlotOffersInspector } from "@/components/slots/slot-offers-inspector";
 import { SlotTimeline } from "@/components/slots/slot-timeline";
 import { SlotDetailFactsGrid, SlotDetailIdentityHeader } from "@/components/slots/slot-detail-hero";
 import { SlotRecentActivityBar } from "@/components/slots/slot-recent-activity-bar";
-import { RecoveryPipeline } from "@/components/operator/recovery-pipeline";
+import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
+import { OperatorErrorState } from "@/components/operator/operator-error-state";
+import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
+import type { OperatorStatusKind } from "@/components/operator/operator-status-chip";
 import { OperatorCustomerContextSection } from "@/components/customers/operator-customer-context-section";
 import { useNotificationLogs } from "@/hooks/useNotificationLogs";
 import { useNotificationAttempts } from "@/hooks/useNotificationAttempts";
@@ -45,7 +50,21 @@ function queueCategoryChipLabel(ctx: OperatorSlotQueueContext): string | null {
     expired_unfilled: "Expired unfilled",
     confirmed_booking: "Confirmed",
   };
-  return map[c] ?? c;
+  return map[c] ?? null;
+}
+
+function queueCategoryToStatusKind(category: OperatorSlotQueueCategory | null): OperatorStatusKind | null {
+  if (!category) return null;
+  const map: Record<OperatorSlotQueueCategory, OperatorStatusKind> = {
+    awaiting_confirmation: "attention",
+    delivery_failed: "failed",
+    retry_recommended: "pending",
+    no_matches: "attention",
+    offered_active: "pending",
+    expired_unfilled: "expired",
+    confirmed_booking: "confirmed",
+  };
+  return map[category] ?? "pending";
 }
 
 function terminalRecoveryCopy(status: string): string {
@@ -173,16 +192,58 @@ export function OpenSlotDetailPage() {
     return null;
   }, [searchParams]);
 
+  const scrollToRecoverySection = useCallback((step: RecoveryPipelineStepId) => {
+    const ids: Record<RecoveryPipelineStepId, string> = {
+      opening: "pf-slot-scroll-appointment",
+      matched: "pf-slot-scroll-appointment",
+      offers: "pf-slot-scroll-workflow",
+      claim: "pf-slot-scroll-workflow",
+      confirmed: "pf-slot-scroll-timeline",
+    };
+    document.getElementById(ids[step])?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   return (
     <main className="pf-page-slot-detail" style={{ padding: 0 }}>
       <OpenSlotDetailToolbar refreshedAt={refreshedAt} backHref={back.href} backLabel={back.label} sourceChip={sourceChip} />
 
+      <OperatorPageTransition>
       {loading ? (
-        <p className="pf-muted-copy" style={{ marginTop: 16 }}>
-          Loading opening…
-        </p>
+        <div style={{ marginTop: 16 }}>
+          <OperatorLoadingState
+            variant="section"
+            skeleton="form"
+            title="Loading opening…"
+            description="Fetching case details, offers, and the latest recovery status."
+          />
+        </div>
       ) : null}
-      {error ? <p style={{ color: "#f87171", marginTop: 16 }}>{error}</p> : null}
+      {error ? (
+        <div style={{ marginTop: 16 }}>
+          <OperatorErrorState
+            rawMessage={error}
+            primaryAction={
+              <button
+                type="button"
+                onClick={() => void reload()}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  background: "rgba(255,255,255,0.06)",
+                  padding: "8px 14px",
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  color: "var(--text)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                Retry
+              </button>
+            }
+          />
+        </div>
+      ) : null}
 
       {slot && !loading ? (
         <SlotRecentActivityBar
@@ -227,32 +288,24 @@ export function OpenSlotDetailPage() {
                     compact
                     animated
                     showFlowLabel={false}
+                    interactive={false}
                   />
                 )}
               </div>
               {queueChip ? (
                 <div style={{ marginTop: 14 }}>
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      borderRadius: 999,
-                      padding: "6px 12px",
-                      fontSize: 11,
-                      fontWeight: 650,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      border: "1px solid rgba(255, 255, 255, 0.12)",
-                      background: "rgba(255, 122, 24, 0.07)",
-                      color: "rgba(255, 186, 120, 0.92)",
-                    }}
-                  >
-                    {queueChip}
-                  </span>
+                  <OperatorStatusChip
+                    kind={queueCategoryToStatusKind(queueContext?.current_category ?? null) ?? "pending"}
+                    label={queueChip}
+                    caps
+                  />
                 </div>
               ) : null}
               <div style={{ marginTop: 20 }}>
                 <OperatorSlotActionBar
                   openSlotId={slot.id}
+                  slotStatus={slot.status}
+                  queueCategory={queueContext?.current_category ?? null}
                   claimId={claimId}
                   availableActions={availableActions}
                   onMutationsDone={() => void refreshAll()}
@@ -272,6 +325,7 @@ export function OpenSlotDetailPage() {
 
             {/* 4 — Case summary */}
             <OpenSlotDetailSection
+              sectionId="pf-slot-scroll-appointment"
               eyebrow="Case"
               title="Appointment details"
               description="The time, provider, service, and location connected to this opening."
@@ -311,6 +365,7 @@ export function OpenSlotDetailPage() {
 
             {/* 5 — Offers / claims */}
             <OpenSlotDetailSection
+            sectionId="pf-slot-scroll-workflow"
             eyebrow="Workflow"
             title="Customer request"
             description="Confirm once the clinic has added this appointment to the schedule."
@@ -339,7 +394,12 @@ export function OpenSlotDetailPage() {
             </div>
 
             {/* 7 — Timeline */}
-            <OpenSlotDetailSection eyebrow="History" title="Activity timeline" description="What changed, when, and why it matters.">
+            <OpenSlotDetailSection
+              sectionId="pf-slot-scroll-timeline"
+              eyebrow="History"
+              title="Activity timeline"
+              description="What changed, when, and why it matters."
+            >
               {timelineLoading ? <p className="pf-muted-copy">Loading timeline…</p> : null}
               {timelineError ? <p style={{ color: "#f87171" }}>{timelineError}</p> : null}
               {!timelineLoading ? <SlotTimeline events={timelineEvents} /> : null}
@@ -387,6 +447,22 @@ export function OpenSlotDetailPage() {
           </div>
 
           <aside className="pf-slot-detail-case-rail">
+            {!isSlotRecoveryTerminalStatus(slot.status) ? (
+              <div style={{ padding: "12px 14px", ...operatorSurfaceShell("quiet") }}>
+                <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
+                  Recovery steps
+                </p>
+                <RecoveryPipeline
+                  activeStep={slotStatusToRecoveryPipelineActiveStep(slot.status)}
+                  compact
+                  animated
+                  showFlowLabel={false}
+                  interactive
+                  onStepSelect={scrollToRecoverySection}
+                  style={{ background: "transparent", boxShadow: "none", border: "1px solid rgba(255,255,255,0.06)", padding: "10px 8px" }}
+                />
+              </div>
+            ) : null}
             <div style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
               <p className="pf-kicker" style={{ margin: "0 0 6px" }}>
                 Last updated
@@ -435,6 +511,7 @@ export function OpenSlotDetailPage() {
           </aside>
         </div>
       ) : null}
+      </OperatorPageTransition>
     </main>
   );
 }

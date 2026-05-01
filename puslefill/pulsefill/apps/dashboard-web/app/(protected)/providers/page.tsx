@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState, type CSSProperties } from "react";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { MotionAction, MotionTapSurface } from "@/components/operator/operator-motion-primitives";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorFormShell } from "@/components/operator/operator-form-shell";
 import { OperatorListEmptyState } from "@/components/operator/operator-list-empty-state";
@@ -86,13 +88,16 @@ export default function ProvidersPage() {
         title="Providers"
         description="Add the people or calendars tied to recoverable openings. Providers label recovery work and optional default locations."
         primaryAction={
-          <Link href="#add-provider" style={actionLinkStyle("primary")}>
-            Add provider
-          </Link>
+          <MotionAction>
+            <Link href="#add-provider" style={actionLinkStyle("primary")}>
+              Add provider
+            </Link>
+          </MotionAction>
         }
         style={{ marginBottom: 16 }}
       />
 
+      <OperatorPageTransition>
       <OperatorFormShell
         title="New provider"
         description="Name the staff member or calendar that openings can belong to."
@@ -111,9 +116,11 @@ export default function ProvidersPage() {
         footer={
           <>
             {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-            <button type="submit" form="add-provider" disabled={saving} style={primarySubmit(saving)}>
-              {saving ? "Saving…" : "Save provider"}
-            </button>
+            <MotionTapSurface disabled={saving}>
+              <button type="submit" form="add-provider" disabled={saving} style={primarySubmit(saving)}>
+                {saving ? "Saving…" : "Save provider"}
+              </button>
+            </MotionTapSurface>
           </>
         }
       >
@@ -147,9 +154,11 @@ export default function ProvidersPage() {
           ) : (
             <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12 }}>
               Add a{" "}
-              <Link href="/locations" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
-                location
-              </Link>{" "}
+              <MotionAction>
+                <Link href="/locations" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
+                  location
+                </Link>
+              </MotionAction>{" "}
               first so providers can be linked to a clinic site.
             </p>
           )}
@@ -173,14 +182,18 @@ export default function ProvidersPage() {
             title="Add your first provider"
             description="Providers help PulseFill route openings to the right schedule or staff member."
             primaryAction={
-              <Link href="#add-provider" style={actionLinkStyle("primary")}>
-                Add provider
-              </Link>
+              <MotionAction>
+                <Link href="#add-provider" style={actionLinkStyle("primary")}>
+                  Add provider
+                </Link>
+              </MotionAction>
             }
             secondaryAction={
-              <Link href="/overview#getting-started" style={actionLinkStyle("secondary")}>
-                Back to getting started
-              </Link>
+              <MotionAction>
+                <Link href="/overview#getting-started" style={actionLinkStyle("secondary")}>
+                  Back to getting started
+                </Link>
+              </MotionAction>
             }
           />
         </div>
@@ -200,6 +213,7 @@ export default function ProvidersPage() {
           </OperatorRowList>
         </div>
       ) : null}
+      </OperatorPageTransition>
     </main>
   );
 }

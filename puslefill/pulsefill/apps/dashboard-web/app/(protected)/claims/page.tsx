@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscription";
 import { ClaimWinnerCard } from "@/components/claims/claim-winner-card";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
@@ -76,6 +78,7 @@ export default function ClaimsPage() {
         style={{ marginBottom: 18 }}
       />
 
+      <OperatorPageTransition>
       {loading ? (
         <div style={{ marginTop: 8 }}>
           <OperatorLoadingState variant="section" skeleton="rows" title="Loading claims…" />
@@ -99,9 +102,11 @@ export default function ClaimsPage() {
             title="No claims waiting"
             description="When customers claim openings, they'll appear here for confirmation."
             primaryAction={
-              <Link href="/open-slots" style={actionLinkStyle("primary")}>
-                View openings
-              </Link>
+              <MotionAction>
+                <Link href="/open-slots" style={actionLinkStyle("primary")}>
+                  View openings
+                </Link>
+              </MotionAction>
             }
           />
         </div>
@@ -112,6 +117,7 @@ export default function ClaimsPage() {
           <ClaimWinnerCard key={c.open_slot_id} claim={c} />
         ))}
       </div>
+      </OperatorPageTransition>
     </main>
   );
 }

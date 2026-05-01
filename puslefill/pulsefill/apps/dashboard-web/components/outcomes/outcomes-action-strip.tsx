@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
 
 const actions = [
   {
@@ -37,28 +38,32 @@ export function OutcomesActionStrip() {
         }}
       >
         {actions.map((action) => (
-          <Link
+          <MotionAction
             key={action.title}
-            href={action.href}
-            style={{
-              flex: "1 1 200px",
-              minWidth: 0,
-              display: "block",
-              borderRadius: 16,
-              border: "1px solid var(--pf-border-subtle)",
-              background: "rgba(255,255,255,0.02)",
-              padding: 16,
-              textDecoration: "none",
-              color: "inherit",
-              transition: "border-color 0.15s ease, background 0.15s ease",
-            }}
+            style={{ flex: "1 1 200px", minWidth: 0, display: "flex" }}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(245, 247, 250, 0.88)" }}>{action.title}</p>
-              <span style={{ color: "#ffb070", fontSize: 14 }}>→</span>
-            </div>
-            <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.5, color: "rgba(245, 247, 250, 0.55)" }}>{action.body}</p>
-          </Link>
+            <Link
+              href={action.href}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: "block",
+                borderRadius: 16,
+                border: "1px solid var(--pf-border-subtle)",
+                background: "rgba(255,255,255,0.02)",
+                padding: 16,
+                textDecoration: "none",
+                color: "inherit",
+                transition: "border-color 0.15s ease, background 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(245, 247, 250, 0.88)" }}>{action.title}</p>
+                <span style={{ color: "#ffb070", fontSize: 14 }}>→</span>
+              </div>
+              <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.5, color: "rgba(245, 247, 250, 0.55)" }}>{action.body}</p>
+            </Link>
+          </MotionAction>
         ))}
       </div>
     </section>

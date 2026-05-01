@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
@@ -48,6 +48,9 @@ type RecoveryPipelineProps = {
   featured?: boolean;
   /** When false, hides the “Recovery flow” kicker (parent supplies its own title). */
   showFlowLabel?: boolean;
+  /** Hover emphasis + optional step clicks (reduced-motion: no extra motion). */
+  interactive?: boolean;
+  onStepSelect?: (step: RecoveryPipelineStepId) => void;
   style?: CSSProperties;
 };
 
@@ -100,6 +103,19 @@ function StepGlyph({ id, phase }: { id: RecoveryPipelineStepId; phase: StepPhase
   return paths[id];
 }
 
+const btnReset: CSSProperties = {
+  margin: 0,
+  padding: 0,
+  border: "none",
+  background: "transparent",
+  font: "inherit",
+  color: "inherit",
+  cursor: "pointer",
+  textAlign: "center" as const,
+  WebkitAppearance: "none",
+  appearance: "none",
+};
+
 export function RecoveryPipeline({
   activeStep,
   counts,
@@ -107,9 +123,12 @@ export function RecoveryPipeline({
   animated = true,
   featured = false,
   showFlowLabel = true,
+  interactive = false,
+  onStepSelect,
   style,
 }: RecoveryPipelineProps) {
   const reduce = useReducedMotion();
+  const [hoveredStep, setHoveredStep] = useState<RecoveryPipelineStepId | null>(null);
   const activeIdx = stepIndex(activeStep);
   const runMotion = animated && !reduce;
   const micro = (id: RecoveryPipelineStepId) => (compact ? MICRO[id].short : MICRO[id].full);
@@ -157,9 +176,20 @@ export function RecoveryPipeline({
               ? "rgba(255, 122, 24, 0.07)"
               : "rgba(255,255,255,0.02)";
 
-          const nodeBorder = isActive ? "rgba(255, 122, 24, 0.55)" : isDone ? "rgba(255, 140, 60, 0.22)" : "rgba(255,255,255,0.08)";
+          const emphasize = Boolean(interactive && hoveredStep === id);
+          const nodeBorder = emphasize
+            ? "rgba(255, 186, 120, 0.42)"
+            : isActive
+              ? "rgba(255, 122, 24, 0.55)"
+              : isDone
+                ? "rgba(255, 140, 60, 0.22)"
+                : "rgba(255,255,255,0.08)";
 
-          const node = (
+          const microMuted = !compact ? "rgba(245,247,250,0.45)" : "rgba(245,247,250,0.38)";
+          const microStrong = !compact ? "rgba(245,247,250,0.78)" : "rgba(254, 215, 170, 0.88)";
+          const microColor = emphasize || isActive ? microStrong : microMuted;
+
+          const nodeCore = (
             <div
               style={{
                 display: "flex",
@@ -173,6 +203,7 @@ export function RecoveryPipeline({
                 border: `1px solid ${nodeBorder}`,
                 background: nodeBg,
                 boxShadow: ring,
+                transition: interactive ? "border-color 0.18s ease, box-shadow 0.18s ease" : undefined,
               }}
             >
               <StepGlyph id={id} phase={ph} />
@@ -189,11 +220,11 @@ export function RecoveryPipeline({
                 {TITLES[id]}
               </span>
               {!compact ? (
-                <span style={{ marginTop: 5, fontSize: 11, lineHeight: 1.35, color: "rgba(245,247,250,0.45)", fontWeight: 500 }}>
+                <span style={{ marginTop: 5, fontSize: 11, lineHeight: 1.35, color: microColor, fontWeight: 500 }}>
                   {micro(id)}
                 </span>
               ) : (
-                <span style={{ marginTop: 4, fontSize: 10, lineHeight: 1.3, color: "rgba(245,247,250,0.38)" }}>{micro(id)}</span>
+                <span style={{ marginTop: 4, fontSize: 10, lineHeight: 1.3, color: microColor }}>{micro(id)}</span>
               )}
               {count != null && count > 0 ? (
                 <span style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: "rgba(255,186,120,0.95)", letterSpacing: "-0.02em" }}>{count}</span>
@@ -201,6 +232,31 @@ export function RecoveryPipeline({
             </div>
           );
 
+          const node =
+            interactive && onStepSelect ? (
+              <button
+                type="button"
+                style={{ ...btnReset, display: "flex", justifyContent: "center", borderRadius: 16 }}
+                onClick={() => onStepSelect(id)}
+                aria-label={`${TITLES[id]}: ${MICRO[id].full}`}
+              >
+                {nodeCore}
+              </button>
+            ) : interactive ? (
+              <div
+                role="group"
+                title={MICRO[id].full}
+                onMouseEnter={() => setHoveredStep(id)}
+                onMouseLeave={() => setHoveredStep((h) => (h === id ? null : h))}
+                style={{ display: "flex", justifyContent: "center", borderRadius: 16, cursor: "default" }}
+              >
+                {nodeCore}
+              </div>
+            ) : (
+              nodeCore
+            );
+
+          const pulseActive = isActive && runMotion && !interactive;
           const wrappedNode = runMotion ? (
             <motion.div
               key={`n-${id}`}
@@ -209,7 +265,7 @@ export function RecoveryPipeline({
               transition={{ delay: i * 0.07, duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
               style={{ flex: "0 0 auto" }}
             >
-              {isActive ? (
+              {pulseActive ? (
                 <motion.div animate={{ opacity: [1, 0.92, 1] }} transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}>
                   {node}
                 </motion.div>

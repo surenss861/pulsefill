@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
 import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
@@ -254,7 +255,9 @@ export function NextBestActionCard({
                 justifyContent: "space-between",
               }}
             >
-              <div style={{ flex: "0 1 auto" }}>{primaryAction}</div>
+              <div style={{ flex: "0 1 auto" }}>
+                <MotionAction>{primaryAction}</MotionAction>
+              </div>
               {supportingStats && supportingStats.length > 0 ? (
                 <div
                   style={{

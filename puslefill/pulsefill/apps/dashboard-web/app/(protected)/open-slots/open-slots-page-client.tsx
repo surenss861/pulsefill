@@ -25,6 +25,8 @@ import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { RecoveryPipeline } from "@/components/operator/recovery-pipeline";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
@@ -190,6 +192,7 @@ export default function OpenSlotsPageClient() {
 
   return (
     <main className="pf-page-openings" style={{ padding: "0 0 24px", paddingBottom: selectedIds.length > 0 ? 120 : 24 }}>
+      <OperatorPageTransition>
       <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
         <button
           type="button"
@@ -264,9 +267,11 @@ export default function OpenSlotsPageClient() {
               />
             }
             primaryAction={
-              <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
-                Create opening
-              </Link>
+              <MotionAction>
+                <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
+                  Create opening
+                </Link>
+              </MotionAction>
             }
             secondaryContent={
               <>
@@ -275,6 +280,7 @@ export default function OpenSlotsPageClient() {
                     activeStep="opening"
                     compact
                     animated
+                    interactive
                     style={{
                       background: "transparent",
                       boxShadow: "none",
@@ -291,9 +297,18 @@ export default function OpenSlotsPageClient() {
                   <li>Send offers</li>
                   <li>Confirm claimed booking</li>
                 </ol>
-                <Link href="/customers" style={{ ...actionLinkStyle("ghost"), display: "inline-block", marginTop: 14, fontSize: 13 }}>
-                  Invite standby customers
-                </Link>
+                <MotionAction>
+                  <Link href="/customers" style={{ ...actionLinkStyle("ghost"), display: "inline-block", marginTop: 14, fontSize: 13 }}>
+                    Invite standby customers
+                  </Link>
+                </MotionAction>
+                <details className="pf-overview-edu" style={{ marginTop: 16 }}>
+                  <summary>Show how recovery works</summary>
+                  <p className="pf-overview-edu__body">
+                    Staff posts a cancelled time as an opening, PulseFill matches standby preferences, you send offers, a customer claims, and
+                    you confirm once the appointment exists on the calendar.
+                  </p>
+                </details>
               </>
             }
           />
@@ -430,6 +445,7 @@ export default function OpenSlotsPageClient() {
         result={bulkResult}
         onDismiss={() => setBulkResult(null)}
       />
+      </OperatorPageTransition>
     </main>
   );
 }

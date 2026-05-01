@@ -6,6 +6,8 @@ import { signOutAction } from "@/app/actions/auth";
 import { ActionButton } from "@/components/ui/action-button";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
+import { MotionTapSurface } from "@/components/operator/operator-motion-primitives";
 import { PageState } from "@/components/ui/page-state";
 import { SectionCard } from "@/components/ui/section-card";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -84,6 +86,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
 
   return (
     <main className="pf-page-settings" style={{ padding: 0 }}>
+      <OperatorPageTransition>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <PageCommandHeader
           animate={false}
@@ -153,33 +156,35 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
                 </label>
                 {accessError ? <p style={{ margin: 0, color: "#f87171", fontSize: 13 }}>{accessError}</p> : null}
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
-                  <ActionButton
-                    variant="primary"
-                    disabled={accessSaving}
-                    onClick={() => {
-                      void (async () => {
-                        setAccessError(null);
-                        setAccessSaving(true);
-                        try {
-                          await apiFetch<BusinessMineResponse>("/v1/businesses/mine", {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              standby_access_mode: accessMode,
-                              customer_discovery_enabled: discovery,
-                            }),
-                          });
-                          await business.reload({ silent: true });
-                        } catch (e) {
-                          setAccessError(e instanceof Error ? e.message : "Save failed");
-                        } finally {
-                          setAccessSaving(false);
-                        }
-                      })();
-                    }}
-                  >
-                    {accessSaving ? "Saving…" : "Save access"}
-                  </ActionButton>
+                  <MotionTapSurface disabled={accessSaving}>
+                    <ActionButton
+                      variant="primary"
+                      disabled={accessSaving}
+                      onClick={() => {
+                        void (async () => {
+                          setAccessError(null);
+                          setAccessSaving(true);
+                          try {
+                            await apiFetch<BusinessMineResponse>("/v1/businesses/mine", {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                standby_access_mode: accessMode,
+                                customer_discovery_enabled: discovery,
+                              }),
+                            });
+                            await business.reload({ silent: true });
+                          } catch (e) {
+                            setAccessError(e instanceof Error ? e.message : "Save failed");
+                          } finally {
+                            setAccessSaving(false);
+                          }
+                        })();
+                      }}
+                    >
+                      {accessSaving ? "Saving…" : "Save access"}
+                    </ActionButton>
+                  </MotionTapSurface>
                 </div>
               </div>
             </div>
@@ -272,6 +277,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
           </SectionCard>
         </div>
       </div>
+      </OperatorPageTransition>
     </main>
   );
 }

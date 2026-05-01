@@ -21,6 +21,8 @@ import { useOperatorRowAction } from "@/hooks/useOperatorRowAction";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import { deriveQueueInlinePrimaryAction } from "@/lib/operator-primary-action";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import type { ActionQueueFilter, ActionQueueItem } from "@/types/action-queue";
 
 const filterTabs: Array<{ id: ActionQueueFilter; label: string }> = [
@@ -152,6 +154,7 @@ function ActionQueuePageContent() {
         style={{ marginBottom: 14 }}
       />
 
+      <OperatorPageTransition>
       <div className="pf-filter-rail" style={{ marginBottom: 16 }}>
         {filterTabs.map((t) => (
           <button
@@ -230,12 +233,16 @@ function ActionQueuePageContent() {
                   body={
                     <span>
                       When openings, claims, or customer requests need attention, they’ll appear here.{" "}
-                      <Link href="/open-slots/create" style={{ ...actionLinkStyle("primary"), marginRight: 8 }}>
-                        Create opening
-                      </Link>
-                      <Link href="/open-slots" style={actionLinkStyle("secondary")}>
-                        View openings
-                      </Link>
+                      <MotionAction>
+                        <Link href="/open-slots/create" style={{ ...actionLinkStyle("primary"), marginRight: 8 }}>
+                          Create opening
+                        </Link>
+                      </MotionAction>
+                      <MotionAction>
+                        <Link href="/open-slots" style={actionLinkStyle("secondary")}>
+                          View openings
+                        </Link>
+                      </MotionAction>
                     </span>
                   }
                 />
@@ -292,6 +299,7 @@ function ActionQueuePageContent() {
           ) : null}
         </>
       ) : null}
+      </OperatorPageTransition>
     </main>
   );
 }

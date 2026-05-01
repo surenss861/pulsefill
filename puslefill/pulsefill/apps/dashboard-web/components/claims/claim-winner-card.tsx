@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { displayCustomer } from "@/lib/customer-ref";
 import { claimsDetailPath } from "@/lib/open-slot-routes";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
+import { OperatorActionPanel } from "@/components/operator/operator-action-panel";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
+import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import { StateChip } from "@/components/ui/state-chip";
 import type { ClaimRow } from "@/types/claim";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
+import { operatorClaimStatusKind, operatorClaimStatusLabel } from "@/lib/operator-claim-status-labels";
 import { ConfirmBookingButton } from "./confirm-booking-button";
 
 function dollars(cents?: number | null) {
@@ -39,6 +44,15 @@ export function ClaimWinnerCard({
 
   const customerName = displayCustomer(claim.winning_claim?.customer_id);
   const serviceLine = claim.provider_name_snapshot ?? "Open appointment";
+  const rawClaimStatus = claim.winning_claim?.status;
+  const claimStatusLabel = operatorClaimStatusLabel(rawClaimStatus);
+  const claimStatusKind = operatorClaimStatusKind(rawClaimStatus);
+  const claimStatusCell: ReactNode =
+    claim.winning_claim != null ? (
+      <OperatorStatusChip kind={claimStatusKind} label={claimStatusLabel} />
+    ) : (
+      "—"
+    );
 
   const shell =
     needsConfirmation
@@ -84,12 +98,6 @@ export function ClaimWinnerCard({
         <StateChip status={claim.slot_status} />
       </div>
 
-      {needsConfirmation ? (
-        <p className="pf-muted-copy" style={{ margin: "14px 0 0", fontSize: 13, lineHeight: 1.5 }}>
-          A customer won this opening. Confirm below to finalize the recovered appointment.
-        </p>
-      ) : null}
-
       {isBooked ? (
         <p className="pf-muted-copy" style={{ margin: "14px 0 0", fontSize: 13, lineHeight: 1.5 }}>
           This recovery is confirmed. No further staff action required on this opening.
@@ -97,13 +105,13 @@ export function ClaimWinnerCard({
       ) : null}
 
       <div
+        className="pf-claim-metrics-row"
         style={{
           marginTop: 16,
           paddingTop: 14,
           borderTop: "1px solid rgba(255,255,255,0.08)",
           display: "grid",
           gap: 10,
-          gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
         }}
       >
         <Metric label="Opening value" value={dollars(claim.estimated_value_cents)} quiet={!needsConfirmation} />
@@ -112,30 +120,61 @@ export function ClaimWinnerCard({
           value={claim.winning_claim?.claimed_at ? formatDate(claim.winning_claim.claimed_at) : "—"}
           quiet={!needsConfirmation}
         />
-        <Metric label="Claim status" value={claim.winning_claim?.status ?? "—"} hot={needsConfirmation} />
+        <Metric label="Claim status" value={claimStatusCell} hot={needsConfirmation} />
       </div>
 
-      <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-        {needsConfirmation && claimId ? (
-          <ConfirmBookingButton openSlotId={claim.open_slot_id} claimId={claimId} onConfirmed={onConfirmed} />
-        ) : needsConfirmation ? (
-          <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14 }}>
-            No winning claim id on this opening yet.
-          </p>
-        ) : isBooked ? null : (
-          <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14 }}>
-            No action available for this row.
-          </p>
-        )}
-        <Link href={claimsDetailPath(claim.open_slot_id)} prefetch={false} style={actionLinkStyle("secondary")}>
-          Open opening detail
-        </Link>
-      </div>
+      {needsConfirmation && claimId ? (
+        <div style={{ marginTop: 16 }}>
+          <OperatorActionPanel
+            eyebrow="Booking"
+            title="Confirm this booking"
+            description="The customer claimed this opening. Confirm once the appointment is booked in the clinic calendar."
+            priority="critical"
+            primaryAction={<ConfirmBookingButton openSlotId={claim.open_slot_id} claimId={claimId} onConfirmed={onConfirmed} />}
+            secondaryAction={
+              <MotionAction>
+                <Link href={claimsDetailPath(claim.open_slot_id)} prefetch={false} style={actionLinkStyle("secondary")}>
+                  Open opening detail
+                </Link>
+              </MotionAction>
+            }
+          />
+        </div>
+      ) : needsConfirmation ? (
+        <div style={{ marginTop: 16 }}>
+          <OperatorActionPanel
+            eyebrow="Booking"
+            title="Confirm this booking"
+            description="We couldn’t load a winning claim id for this row yet. Open the opening to refresh."
+            priority="attention"
+            secondaryAction={
+              <MotionAction>
+                <Link href={claimsDetailPath(claim.open_slot_id)} prefetch={false} style={actionLinkStyle("secondary")}>
+                  Open opening detail
+                </Link>
+              </MotionAction>
+            }
+          />
+        </div>
+      ) : (
+        <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+          {isBooked ? null : (
+            <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14 }}>
+              No action available for this row.
+            </p>
+          )}
+          <MotionAction>
+            <Link href={claimsDetailPath(claim.open_slot_id)} prefetch={false} style={actionLinkStyle("secondary")}>
+              Open opening detail
+            </Link>
+          </MotionAction>
+        </div>
+      )}
     </article>
   );
 }
 
-function Metric({ label, value, quiet, hot }: { label: string; value: string; quiet?: boolean; hot?: boolean }) {
+function Metric({ label, value, quiet, hot }: { label: string; value: ReactNode; quiet?: boolean; hot?: boolean }) {
   return (
     <div
       style={{
@@ -153,7 +192,20 @@ function Metric({ label, value, quiet, hot }: { label: string; value: string; qu
       <p className="pf-kicker" style={{ margin: 0, fontSize: 10 }}>
         {label}
       </p>
-      <p style={{ margin: "6px 0 0", fontSize: 14, fontWeight: hot ? 700 : 600, color: "var(--pf-text-primary)" }}>{value}</p>
+      <div
+        style={{
+          marginTop: 6,
+          fontSize: 14,
+          fontWeight: hot ? 700 : 600,
+          color: "var(--pf-text-primary)",
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 6,
+        }}
+      >
+        {value}
+      </div>
     </div>
   );
 }

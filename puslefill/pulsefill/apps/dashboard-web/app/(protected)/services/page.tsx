@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { MotionAction, MotionTapSurface } from "@/components/operator/operator-motion-primitives";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorFormShell } from "@/components/operator/operator-form-shell";
 import { OperatorListEmptyState } from "@/components/operator/operator-list-empty-state";
@@ -85,13 +87,16 @@ export default function ServicesPage() {
         title="Services"
         description="Define what customers can join standby for. Accurate services improve opening duration and match quality."
         primaryAction={
-          <Link href="#add-service" style={actionLinkStyle("primary")}>
-            Add service
-          </Link>
+          <MotionAction>
+            <Link href="#add-service" style={actionLinkStyle("primary")}>
+              Add service
+            </Link>
+          </MotionAction>
         }
         style={{ marginBottom: 16 }}
       />
 
+      <OperatorPageTransition>
       <OperatorFormShell
         title="New service"
         description="Name the appointment type customers can receive offers for."
@@ -108,9 +113,11 @@ export default function ServicesPage() {
         footer={
           <>
             {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-            <button type="submit" form="add-service" disabled={saving} style={primarySubmit(saving)}>
-              {saving ? "Saving…" : "Save service"}
-            </button>
+            <MotionTapSurface disabled={saving}>
+              <button type="submit" form="add-service" disabled={saving} style={primarySubmit(saving)}>
+                {saving ? "Saving…" : "Save service"}
+              </button>
+            </MotionTapSurface>
           </>
         }
       >
@@ -158,14 +165,18 @@ export default function ServicesPage() {
             title="Add your first service"
             description="Services help PulseFill match openings to the right standby customers."
             primaryAction={
-              <Link href="#add-service" style={actionLinkStyle("primary")}>
-                Add service
-              </Link>
+              <MotionAction>
+                <Link href="#add-service" style={actionLinkStyle("primary")}>
+                  Add service
+                </Link>
+              </MotionAction>
             }
             secondaryAction={
-              <Link href="/overview#getting-started" style={actionLinkStyle("secondary")}>
-                Back to getting started
-              </Link>
+              <MotionAction>
+                <Link href="/overview#getting-started" style={actionLinkStyle("secondary")}>
+                  Back to getting started
+                </Link>
+              </MotionAction>
             }
           />
         </div>
@@ -185,6 +196,7 @@ export default function ServicesPage() {
           </OperatorRowList>
         </div>
       ) : null}
+      </OperatorPageTransition>
     </main>
   );
 }

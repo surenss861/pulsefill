@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { ConfirmBookingButton } from "@/components/claims/confirm-booking-button";
 import { RetryOffersButton } from "@/components/slots/retry-offers-button";
+import { OperatorActionPanel } from "@/components/operator/operator-action-panel";
 import { useToast } from "@/components/ui/toast-provider";
 import { operatorActionMessageForCode } from "@/lib/operator-action-errors";
 import { emitOperatorRefreshEvent, type OperatorRefreshAction } from "@/lib/operator-refresh-events";
+import { slotNextActionPresentation } from "@/lib/operator-slot-next-action-panel";
+import { isSlotRecoveryTerminalStatus } from "@/lib/slot-recovery-pipeline";
 import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
-import type { OperatorSlotAvailableAction } from "@/types/open-slot-detail";
+import type { OperatorSlotAvailableAction, OperatorSlotQueueCategory } from "@/types/open-slot-detail";
 
 const ACTION_ORDER: OperatorSlotAvailableAction[] = [
   "confirm_booking",
@@ -36,6 +39,8 @@ function isUtility(a: OperatorSlotAvailableAction) {
 
 type Props = {
   openSlotId: string;
+  slotStatus: string;
+  queueCategory: OperatorSlotQueueCategory | null;
   claimId: string | null | undefined;
   availableActions: OperatorSlotAvailableAction[];
   onMutationsDone: () => void | Promise<void>;
@@ -45,6 +50,8 @@ type Props = {
 
 export function OperatorSlotActionBar({
   openSlotId,
+  slotStatus,
+  queueCategory,
   claimId,
   availableActions,
   onMutationsDone,
@@ -54,6 +61,16 @@ export function OperatorSlotActionBar({
   const { showToast } = useToast();
   const [expireLoading, setExpireLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+
+  const presentation = useMemo(
+    () =>
+      slotNextActionPresentation({
+        slotStatus,
+        queueCategory,
+        availableActions,
+      }),
+    [slotStatus, queueCategory, availableActions],
+  );
 
   const sorted = [...availableActions].sort(
     (a, b) => ACTION_ORDER.indexOf(a) - ACTION_ORDER.indexOf(b),
@@ -233,33 +250,40 @@ export function OperatorSlotActionBar({
     return null;
   }
 
-  if (sorted.length === 0) return null;
+  const statusLower = slotStatus.toLowerCase();
+  const showQuietTerminal =
+    sorted.length === 0 && (statusLower === "booked" || isSlotRecoveryTerminalStatus(slotStatus));
+
+  if (sorted.length === 0 && !showQuietTerminal) return null;
+
+  const primaryRow =
+    primary.length > 0 ? (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-start" }}>
+        {primary.map((a) => renderAction(a, "primary"))}
+      </div>
+    ) : null;
+  const secondaryRow =
+    secondary.length > 0 ? (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-start" }}>
+        {secondary.map((a) => renderAction(a, "secondary"))}
+      </div>
+    ) : null;
+
+  const combinedActions =
+    primaryRow || secondaryRow ? (
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+        {primaryRow}
+        {secondaryRow}
+      </div>
+    ) : null;
 
   return (
-    <div
-      style={{
-        borderRadius: 18,
-        border: "1px solid rgba(255,255,255,0.1)",
-        background: "rgba(0,0,0,0.22)",
-        padding: "16px 18px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-      }}
-    >
-      <p style={{ margin: 0, fontSize: 11, fontWeight: 650, letterSpacing: "0.14em", color: "rgba(245,247,250,0.42)", textTransform: "uppercase" }}>
-        Operator controls
-      </p>
-      {primary.length > 0 ? (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-start" }}>
-          {primary.map((a) => renderAction(a, "primary"))}
-        </div>
-      ) : null}
-      {secondary.length > 0 ? (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-start" }}>
-          {secondary.map((a) => renderAction(a, "secondary"))}
-        </div>
-      ) : null}
-    </div>
+    <OperatorActionPanel
+      eyebrow={presentation.eyebrow ?? undefined}
+      title={presentation.title}
+      description={presentation.description}
+      priority={presentation.priority}
+      primaryAction={combinedActions ?? undefined}
+    />
   );
 }

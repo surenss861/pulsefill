@@ -8,6 +8,7 @@ import { deriveQueueInlinePrimaryAction } from "@/lib/operator-primary-action";
 import { formatSlotRange } from "@/lib/format-slot-range";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import { queueDetailPath, type QueueDetailSection } from "@/lib/open-slot-routes";
+import { MotionAction, MotionTapSurface } from "@/components/operator/operator-motion-primitives";
 import { RecordRowCard } from "@/components/ui/record-row-card";
 import { StatusPill } from "@/components/ui/status-pill";
 import type { StatusPillVariant } from "@/components/ui/status-pill";
@@ -122,27 +123,33 @@ export function ActionQueueItemCard({ item, section, busy, onPrimaryAction }: Pr
   const footer = (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
       {canInline && inline ? (
-        <button
-          type="button"
-          onClick={() => onPrimaryAction?.(item)}
-          disabled={busy}
-          style={{
-            ...(primaryMuted ? primaryMutedBtn : primaryBtn),
-            cursor: busy ? "not-allowed" : "pointer",
-            opacity: busy ? 0.7 : 1,
-          }}
-        >
-          {busy ? "Working…" : inline.label}
-        </button>
+        <MotionTapSurface disabled={busy}>
+          <button
+            type="button"
+            onClick={() => onPrimaryAction?.(item)}
+            disabled={busy}
+            style={{
+              ...(primaryMuted ? primaryMutedBtn : primaryBtn),
+              cursor: busy ? "not-allowed" : "pointer",
+              opacity: busy ? 0.7 : 1,
+            }}
+          >
+            {busy ? "Working…" : inline.label}
+          </button>
+        </MotionTapSurface>
       ) : primary ? (
-        <Link href={detailHref} prefetch={false} style={{ ...(primaryMuted ? primaryMutedBtn : primaryBtn), textDecoration: "none" }}>
-          {actionButtonLabel(primary)}
-        </Link>
+        <MotionAction>
+          <Link href={detailHref} prefetch={false} style={{ ...(primaryMuted ? primaryMutedBtn : primaryBtn), textDecoration: "none" }}>
+            {actionButtonLabel(primary)}
+          </Link>
+        </MotionAction>
       ) : null}
       {secondary ? (
-        <Link href={detailHref} prefetch={false} style={{ ...secondaryLink, opacity: primaryMuted ? 0.85 : 1 }}>
-          {actionButtonLabel(secondary)}
-        </Link>
+        <MotionAction>
+          <Link href={detailHref} prefetch={false} style={{ ...secondaryLink, opacity: primaryMuted ? 0.85 : 1 }}>
+            {actionButtonLabel(secondary)}
+          </Link>
+        </MotionAction>
       ) : null}
     </div>
   );

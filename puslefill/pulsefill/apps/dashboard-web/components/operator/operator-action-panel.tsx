@@ -44,7 +44,7 @@ export function OperatorActionPanel({
       : {};
 
   return (
-    <section style={{ padding: 16, ...shell, ...borderAccent, ...style }}>
+    <section className="pf-operator-action-panel" style={{ padding: 16, ...shell, ...borderAccent, ...style }}>
       {eyebrow ? (
         <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
           {eyebrow}
@@ -64,7 +64,10 @@ export function OperatorActionPanel({
         {status ? <div style={{ flexShrink: 0 }}>{status}</div> : null}
       </div>
       {primaryAction || secondaryAction ? (
-        <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+        <div
+          className="pf-operator-action-panel__actions"
+          style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}
+        >
           {primaryAction}
           {secondaryAction}
         </div>

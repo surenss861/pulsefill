@@ -1,6 +1,10 @@
 "use client";
 
-import type { OperatorSlotQueueContext, OperatorSlotQueueSeverity } from "@/types/open-slot-detail";
+import type {
+  OperatorSlotQueueCategory,
+  OperatorSlotQueueContext,
+  OperatorSlotQueueSeverity,
+} from "@/types/open-slot-detail";
 
 function severityStyles(severity: OperatorSlotQueueSeverity | null | undefined) {
   if (severity === "high") {
@@ -31,7 +35,12 @@ type Props = {
   queueContext: OperatorSlotQueueContext;
 };
 
+const PANEL_COVERED_CATEGORIES = new Set<OperatorSlotQueueCategory>(["no_matches", "delivery_failed", "retry_recommended"]);
+
 export function OperatorSlotReasonBanner({ queueContext }: Props) {
+  if (queueContext.current_category && PANEL_COVERED_CATEGORIES.has(queueContext.current_category)) {
+    return null;
+  }
   if (!queueContext.reason_title) return null;
 
   const s = severityStyles(queueContext.severity);

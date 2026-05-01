@@ -25,12 +25,8 @@ export function OperatorFormShell({
 
   return (
     <div
-      style={{
-        display: "grid",
-        gap: 14,
-        gridTemplateColumns: showRail ? "repeat(auto-fit, minmax(min(100%, 300px), 1fr))" : "1fr",
-        ...style,
-      }}
+      className={["pf-operator-form-shell", showRail ? "pf-operator-form-shell--with-rail" : ""].filter(Boolean).join(" ")}
+      style={{ gap: 14, ...style }}
     >
       <div
         style={{

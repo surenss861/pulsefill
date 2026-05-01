@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
+import { MotionAction, MotionTapSurface } from "@/components/operator/operator-motion-primitives";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorListEmptyState } from "@/components/operator/operator-list-empty-state";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
@@ -72,13 +74,16 @@ export default function StandbyRequestsPage() {
         title="Standby requests"
         description="Review customers who asked to join your standby pool. Approve when you are ready for them to set preferences and receive openings."
         secondaryAction={
-          <Link href="/customers" style={actionLinkStyle("secondary")}>
-            Back to customers
-          </Link>
+          <MotionAction>
+            <Link href="/customers" style={actionLinkStyle("secondary")}>
+              Back to customers
+            </Link>
+          </MotionAction>
         }
         style={{ marginBottom: 16 }}
       />
 
+      <OperatorPageTransition>
       {error ? (
         <div style={{ marginTop: 12 }}>
           <OperatorErrorState rawMessage={error} />
@@ -95,14 +100,18 @@ export default function StandbyRequestsPage() {
             title="No standby requests"
             description='Customer requests will appear here when your access mode is request-to-join and your business is listed.'
             primaryAction={
-              <Link href="/settings" style={actionLinkStyle("primary")}>
-                Review access settings
-              </Link>
+              <MotionAction>
+                <Link href="/settings" style={actionLinkStyle("primary")}>
+                  Review access settings
+                </Link>
+              </MotionAction>
             }
             secondaryAction={
-              <Link href="/customers" style={actionLinkStyle("secondary")}>
-                Back to customers
-              </Link>
+              <MotionAction>
+                <Link href="/customers" style={actionLinkStyle("secondary")}>
+                  Back to customers
+                </Link>
+              </MotionAction>
             }
           />
         </div>
@@ -111,6 +120,7 @@ export default function StandbyRequestsPage() {
           {requests.map((r) => (
             <li
               key={r.id}
+              className="pf-standby-request-row"
               style={{
                 padding: 16,
                 ...operatorSurfaceShell("operational"),
@@ -123,18 +133,23 @@ export default function StandbyRequestsPage() {
                 Requested {new Date(r.requested_at).toLocaleString()}
               </p>
               {r.message ? <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 14 }}>{r.message}</p> : null}
-              <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 10 }}>
-                <ActionButton variant="primary" disabled={acting === r.id} onClick={() => void review(r.id, "approve")}>
-                  Approve
-                </ActionButton>
-                <ActionButton variant="secondary" disabled={acting === r.id} onClick={() => void review(r.id, "decline")}>
-                  Decline
-                </ActionButton>
+              <div className="pf-standby-request-actions" style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 10 }}>
+                <MotionTapSurface disabled={acting === r.id}>
+                  <ActionButton variant="primary" disabled={acting === r.id} onClick={() => void review(r.id, "approve")}>
+                    Approve
+                  </ActionButton>
+                </MotionTapSurface>
+                <MotionTapSurface disabled={acting === r.id}>
+                  <ActionButton variant="secondary" disabled={acting === r.id} onClick={() => void review(r.id, "decline")}>
+                    Decline
+                  </ActionButton>
+                </MotionTapSurface>
               </div>
             </li>
           ))}
         </ul>
       )}
+      </OperatorPageTransition>
     </main>
   );
 }

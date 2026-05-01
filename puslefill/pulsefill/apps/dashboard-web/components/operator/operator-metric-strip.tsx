@@ -26,6 +26,7 @@ function defaultSignal(item: OperatorMetricStripItem): "idle" | "live" {
 export function OperatorMetricStrip({ items, compact = false, style }: OperatorMetricStripProps) {
   return (
     <div
+      className="pf-operator-metric-strip"
       style={{
         display: "flex",
         flexWrap: "wrap",
@@ -46,7 +47,11 @@ export function OperatorMetricStrip({ items, compact = false, style }: OperatorM
             signal={sig}
             hint={item.hint}
             size={compact ? "compact" : "default"}
-            style={{ flex: "1 1 100px", minWidth: compact ? 88 : 100 }}
+            style={{
+              flex: "1 1 min(168px, 100%)",
+              minWidth: compact ? 80 : 96,
+              maxWidth: "100%",
+            }}
           />
         );
       })}

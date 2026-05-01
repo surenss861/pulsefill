@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 type OperatorEmptyStateProps = {
-  title: string;
+  title: ReactNode;
   description: ReactNode;
   /** Optional mark, icon, or small illustration above the title. */
   visual?: ReactNode;
@@ -34,9 +34,9 @@ export function OperatorEmptyState({
       {visual ? (
         <div style={{ marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "flex-start" }}>{visual}</div>
       ) : null}
-      <p className="pf-section-title" style={{ fontSize: 17, letterSpacing: "-0.02em" }}>
+      <div className="pf-section-title" role="heading" aria-level={2} style={{ fontSize: 17, letterSpacing: "-0.02em" }}>
         {title}
-      </p>
+      </div>
       <div className="pf-muted-copy" style={{ marginTop: 12, fontSize: 14, maxWidth: 560 }}>
         {description}
       </div>

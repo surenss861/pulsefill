@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
+import { MotionAction, MotionTapSurface } from "@/components/operator/operator-motion-primitives";
 import { OperatorMetricStrip } from "@/components/operator/operator-metric-strip";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
@@ -103,6 +105,7 @@ export default function CustomersPage() {
 
   return (
     <main className="pf-page-customers" style={{ padding: 0 }}>
+      <OperatorPageTransition>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <PageCommandHeader
           tone="default"
@@ -110,9 +113,11 @@ export default function CustomersPage() {
           title="Standby pool"
           description="Invite customers to join standby so PulseFill can match them to new openings."
           primaryAction={
-            <Link href="#invite-customer" style={actionLinkStyle("primary")}>
-              Invite customer
-            </Link>
+            <MotionAction>
+              <Link href="#invite-customer" style={actionLinkStyle("primary")}>
+                Invite customer
+              </Link>
+            </MotionAction>
           }
           secondaryAction={
             standbyPending.count > 0 ? (
@@ -222,24 +227,26 @@ export default function CustomersPage() {
             />
           </label>
           {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-          <button
-            type="submit"
-            disabled={saving}
-            style={{
-              borderRadius: 12,
-              border: "1px solid var(--pf-accent-primary-border)",
-              background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
-              color: "var(--pf-btn-primary-text)",
-              padding: "10px 16px",
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: saving ? "wait" : "pointer",
-              alignSelf: "flex-start",
-              boxShadow: "0 10px 28px rgba(255, 122, 24, 0.28)",
-            }}
-          >
-            {saving ? "Creating…" : "Create invite code"}
-          </button>
+          <MotionTapSurface disabled={saving}>
+            <button
+              type="submit"
+              disabled={saving}
+              style={{
+                borderRadius: 12,
+                border: "1px solid var(--pf-accent-primary-border)",
+                background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
+                color: "var(--pf-btn-primary-text)",
+                padding: "10px 16px",
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: saving ? "wait" : "pointer",
+                alignSelf: "flex-start",
+                boxShadow: "0 10px 28px rgba(255, 122, 24, 0.28)",
+              }}
+            >
+              {saving ? "Creating…" : "Create invite code"}
+            </button>
+          </MotionTapSurface>
         </form>
 
         <div
@@ -412,6 +419,7 @@ export default function CustomersPage() {
         ) : null}
       </div>
       </div>
+      </OperatorPageTransition>
     </main>
   );
 }
