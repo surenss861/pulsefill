@@ -45,6 +45,9 @@ final class AuthManager: ObservableObject {
             try await syncCustomerSession()
             await refreshStaffAccess()
         } catch {
+            #if DEBUG
+            print("AuthManager.restoreSessionIfNeeded error: \(error)")
+            #endif
             sessionStore.clear()
             banner = nil
         }
@@ -79,7 +82,10 @@ final class AuthManager: ObservableObject {
             try await syncCustomerSession()
             await refreshStaffAccess()
         } catch {
-            banner = error.localizedDescription
+            #if DEBUG
+            print("AuthManager.signIn error: \(error)")
+            #endif
+            banner = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
         }
     }
 
@@ -101,7 +107,10 @@ final class AuthManager: ObservableObject {
                 banner = "Check your inbox to verify your email, then sign in."
             }
         } catch {
-            banner = error.localizedDescription
+            #if DEBUG
+            print("AuthManager.signUp error: \(error)")
+            #endif
+            banner = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
         }
     }
 
@@ -150,8 +159,11 @@ final class AuthManager: ObservableObject {
                 sessionStore.standbyOnboardingRecheck += 1
             }
         } catch {
+            #if DEBUG
+            print("AuthManager.acceptPendingInviteIfNeeded error: \(error)")
+            #endif
             sessionStore.inviteSuccessBanner = nil
-            banner = error.localizedDescription
+            banner = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
         }
     }
 
@@ -171,7 +183,10 @@ final class AuthManager: ObservableObject {
             }
             return .success
         } catch {
-            let message = error.localizedDescription
+            #if DEBUG
+            print("AuthManager.acceptInviteTokenNow error: \(error)")
+            #endif
+            let message = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
             banner = message
             return .failure(message)
         }

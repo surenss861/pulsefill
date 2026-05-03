@@ -326,6 +326,18 @@ struct PFCustomerInfoCallout: View {
 // MARK: - Error copy sanitization (never show raw host/API lines to customers)
 
 enum PFCustomerFacingErrorCopy {
+    /// Sign-in / sign-up / Supabase auth: never surface raw Supabase JSON, API key hints, or HTTP envelopes.
+    static func sanitizeAuthMessage(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return "We couldn’t connect to PulseFill. Please try again shortly."
+        }
+        if looksLikeInvalidSupabaseClientOrKey(trimmed) {
+            return "We couldn’t connect to PulseFill. Please try again shortly."
+        }
+        return sanitizeCustomerMessage(trimmed)
+    }
+
     /// Prefer friendly copy when the underlying message looks technical.
     static func sanitizeCustomerMessage(_ raw: String) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -333,6 +345,9 @@ enum PFCustomerFacingErrorCopy {
             return "Something went wrong. Please try again."
         }
         let lower = trimmed.lowercased()
+        if looksLikeInvalidSupabaseClientOrKey(trimmed) {
+            return "We couldn’t connect to PulseFill. Please try again shortly."
+        }
         if lower.contains("http://") || lower.contains("https://") || lower.contains("api.") || lower.contains(".com/")
             || lower.contains("hostname") || lower.contains("could not connect") || lower.contains("connection refused")
         {
@@ -347,5 +362,18 @@ enum PFCustomerFacingErrorCopy {
     static func claimFailureMessage(from error: Error) -> String {
         let base = APIErrorCopy.message(for: error)
         return sanitizeCustomerMessage(base)
+    }
+
+    /// Supabase misconfiguration (wrong anon key, wrong project URL) and similar — never show verbatim to customers.
+    private static func looksLikeInvalidSupabaseClientOrKey(_ raw: String) -> Bool {
+        let lower = raw.lowercased()
+        if lower.contains("invalid api key") { return true }
+        if lower.contains("service_role") || lower.contains("service role") { return true }
+        if lower.contains("`anon`") || lower.contains("anon key") || lower.contains("anon`") { return true }
+        if lower.contains("double check your supabase") { return true }
+        if lower.contains("\"message\""), lower.contains("invalid") { return true }
+        if lower.contains("http 401"), lower.contains("api key") { return true }
+        if lower.contains("http 401"), lower.contains("\"message\"") { return true }
+        return false
     }
 }
