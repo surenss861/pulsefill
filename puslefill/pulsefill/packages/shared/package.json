@@ -17,6 +17,7 @@
     "test": "vitest run -c vitest.config.ts"
   },
   "devDependencies": {
+    "@types/node": "^22.14.0",
     "typescript": "^5.8.2",
     "vitest": "^3.0.5"
   }

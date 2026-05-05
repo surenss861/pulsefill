@@ -55,7 +55,7 @@ enum CustomerEventCopy {
         case .claimSubmitted:
             return "You picked an earlier time"
         case .claimPendingConfirmation:
-            return "Waiting on the clinic"
+            return "Waiting on the business"
         case .bookingConfirmed:
             return "Appointment booked"
         case .claimUnavailable:

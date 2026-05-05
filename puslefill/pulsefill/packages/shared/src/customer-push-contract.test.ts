@@ -33,11 +33,11 @@ describe("customer push payload contract", () => {
     expect(root.aps.alert.body).toContain("Yorkville Clinic");
   });
 
-  it("defaults clinic label when business name missing", () => {
+  it("defaults business label when business name missing", () => {
     const root = buildCustomerPushFromCustomerEvent({
       kind: "offer_received",
       offerId: "o1",
     });
-    expect(root.aps.alert.body).toContain("Clinic has a matching opening");
+    expect(root.aps.alert.body).toContain("This business has a matching opening");
   });
 });

@@ -366,7 +366,9 @@ struct ProfileView: View {
     private func profileDestinationView(for destination: CustomerDestination) -> some View {
         switch destination {
         case .standbyStatus:
-            StandbyStatusView(api: env.apiClient)
+            StandbyStatusView(api: env.apiClient, onGoToProfileTab: {
+                env.customerNavigation.selectedTab = .profile
+            })
 
         case .notificationSettings:
             NotificationPreferencesView(api: env.apiClient)

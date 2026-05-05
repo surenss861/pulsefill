@@ -1,7 +1,7 @@
 /// One row of signed-out pass rotation — no operator language.
 struct AuthAppointmentPreview: Equatable {
     let service: String
-    let clinic: String
+    let businessName: String
     /// Top-right capsule (e.g. Today, Tomorrow, Friday).
     let pillDay: String
     /// Small caps above the time (e.g. TODAY, TOMORROW, FRI).
@@ -13,7 +13,7 @@ struct AuthAppointmentPreview: Equatable {
     static let rotationExamples: [AuthAppointmentPreview] = [
         AuthAppointmentPreview(
             service: "Dental cleaning",
-            clinic: "Yorkville Clinic",
+            businessName: "Yorkville Wellness",
             pillDay: "Today",
             scheduleEyebrow: "TODAY",
             time: "2:30 PM",
@@ -21,7 +21,7 @@ struct AuthAppointmentPreview: Equatable {
         ),
         AuthAppointmentPreview(
             service: "Physio consult",
-            clinic: "Midtown Wellness",
+            businessName: "Midtown Wellness",
             pillDay: "Tomorrow",
             scheduleEyebrow: "TOMORROW",
             time: "11:15 AM",
@@ -29,7 +29,7 @@ struct AuthAppointmentPreview: Equatable {
         ),
         AuthAppointmentPreview(
             service: "Skin treatment",
-            clinic: "Queen West Studio",
+            businessName: "Queen West Studio",
             pillDay: "Friday",
             scheduleEyebrow: "FRI",
             time: "4:00 PM",

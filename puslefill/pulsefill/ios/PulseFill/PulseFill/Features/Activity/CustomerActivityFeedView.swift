@@ -168,7 +168,9 @@ struct CustomerActivityFeedView: View {
             MissedOpportunitiesView(api: env.apiClient)
 
         case .standbyStatus:
-            StandbyStatusView(api: env.apiClient)
+            StandbyStatusView(api: env.apiClient, onGoToProfileTab: {
+                env.customerNavigation.selectedTab = .profile
+            })
 
         case .notificationSettings:
             NotificationPreferencesView(api: env.apiClient)

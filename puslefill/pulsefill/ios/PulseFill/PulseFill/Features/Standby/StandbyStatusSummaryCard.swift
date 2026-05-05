@@ -4,25 +4,17 @@ struct StandbyStatusSummaryCard: View {
     let summary: StandbyStatusSummary
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("COVERAGE")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(PFColor.textSecondary)
+        PFCustomerSectionCard(variant: .elevated, padding: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                PFTypography.Customer.label("Your standby")
 
-            HStack(spacing: 16) {
-                metric(title: "Active", value: summary.activePreferences)
-                metric(title: "Paused", value: summary.pausedPreferences)
-                metric(title: "Clinics", value: summary.businessesCovered)
+                HStack(spacing: 16) {
+                    metric(title: "Active", value: summary.activePreferences)
+                    metric(title: "Paused", value: summary.pausedPreferences)
+                    metric(title: "Businesses", value: summary.businessesCovered)
+                }
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFSurface.card)
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
-        )
     }
 
     private func metric(title: String, value: Int) -> some View {

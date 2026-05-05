@@ -20,10 +20,12 @@ struct PulseFillApp: App {
                 }
                 .task {
                     AppDelegate.pushCoordinator = env.pushCoordinator
+                    guard env.clientConfigurationBlockingMessage == nil else { return }
                     await env.authManager.restoreSessionIfNeeded()
                     await env.pushCoordinator.bootstrapIfSignedIn(sessionStore: env.sessionStore)
                 }
                 .onChange(of: env.sessionStore.accessToken) { _, newValue in
+                    guard env.clientConfigurationBlockingMessage == nil else { return }
                     guard newValue != nil else { return }
                     Task {
                         await env.authManager.refreshStaffAccess()

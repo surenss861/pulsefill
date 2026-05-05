@@ -96,4 +96,92 @@ enum PulseFillBuildConfiguration {
         }
         return Defaults.supabaseAnonPlaceholder
     }
+
+    // MARK: - Launch validation (customer-safe; details DEBUG-only)
+
+    struct LaunchConfigurationResult: Equatable {
+        /// When set, the app should block the main shell and only show this copy (never raw reasons).
+        let blockingCustomerMessage: String?
+        /// Technical summary for `#if DEBUG` logging only.
+        let debugSummary: String?
+    }
+
+    /// Validates URLs and keys **before** networking so misbuilt TestFlight/local builds don’t leak Supabase hints in auth errors.
+    static func evaluateLaunchConfiguration(
+        apiBaseURL: URL,
+        supabaseURL: URL,
+        supabaseAnonKey: String,
+        deploymentTier: PulseFillDeploymentTier = deploymentTier
+    ) -> LaunchConfigurationResult {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return LaunchConfigurationResult(blockingCustomerMessage: nil, debugSummary: nil)
+        }
+        #endif
+
+        var reasons: [String] = []
+
+        let key = supabaseAnonKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        if key.isEmpty {
+            reasons.append("Supabase anon key is empty.")
+        } else if key == Defaults.supabaseAnonPlaceholder || key.localizedCaseInsensitiveContains("YOUR_PUBLISHABLE")
+            || key.localizedCaseInsensitiveContains("YOUR_ANON")
+        {
+            reasons.append("Supabase anon key is still the placeholder.")
+        } else if key.lowercased().hasPrefix("sb_secret_") {
+            reasons.append("Supabase key looks like a secret (sb_secret_) — never ship in the app.")
+        } else if key.localizedCaseInsensitiveContains("service_role") {
+            reasons.append("Supabase key string mentions service_role.")
+        } else if key.hasPrefix("eyJ") {
+            if jwtPayloadContainsServiceRole(key) {
+                reasons.append("JWT role is service_role (use anon/publishable key only).")
+            }
+        } else if key.lowercased().hasPrefix("sb_publishable_") {
+            if key.count < 16 {
+                reasons.append("Supabase publishable key looks truncated.")
+            }
+        } else if key.count < 32 {
+            reasons.append("Supabase key format unrecognized (too short).")
+        }
+
+        if supabaseURL.scheme?.lowercased() != "https" {
+            reasons.append("Supabase URL must use https.")
+        }
+        if (supabaseURL.host ?? "").isEmpty {
+            reasons.append("Supabase URL has no host.")
+        }
+
+        switch deploymentTier {
+        case .staging:
+            let api = apiBaseURL.absoluteString
+            if api.localizedCaseInsensitiveContains("YOUR_STAGING") || api.localizedCaseInsensitiveContains("YOUR_") {
+                reasons.append("Staging API URL is still a placeholder.")
+            }
+        case .local, .production:
+            break
+        }
+
+        guard reasons.isEmpty else {
+            let summary = reasons.joined(separator: " ")
+            return LaunchConfigurationResult(
+                blockingCustomerMessage: "We couldn’t connect to PulseFill. Please try again shortly.",
+                debugSummary: summary
+            )
+        }
+        return LaunchConfigurationResult(blockingCustomerMessage: nil, debugSummary: nil)
+    }
+
+    private static func jwtPayloadContainsServiceRole(_ jwt: String) -> Bool {
+        let parts = jwt.split(separator: ".")
+        guard parts.count >= 2 else { return false }
+        var b64 = String(parts[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        let pad = (4 - b64.count % 4) % 4
+        if pad > 0 { b64 += String(repeating: "=", count: pad) }
+        guard let data = Data(base64Encoded: b64),
+              let json = String(data: data, encoding: .utf8)?.lowercased()
+        else { return false }
+        return json.contains("\"role\":\"service_role\"") || json.contains("\"role\": \"service_role\"")
+    }
 }

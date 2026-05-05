@@ -10,38 +10,38 @@ export function getCustomerPushCopy(
   kind: CustomerPushEventType,
   ctx: CustomerPushCopyContext = {},
 ): { title: string; body: string } {
-  const clinic = ctx.businessName?.trim() || "Clinic";
+  const businessLabel = ctx.businessName?.trim() || "This business";
 
   switch (kind) {
     case "offer_received":
       return {
         title: "New opening available",
-        body: `${clinic} has a matching opening for you.`,
+        body: `${businessLabel} has a matching opening for you.`,
       };
     case "offer_expiring_soon":
       return {
-        title: "Offer expiring soon",
+        title: "Opening expiring soon",
         body: "This opening may not be available for long.",
       };
     case "offer_expired":
       return {
-        title: "Offer expired",
+        title: "Opening expired",
         body: "This opening is no longer available.",
       };
     case "claim_submitted":
       return {
         title: "Claim submitted",
-        body: "We sent your claim to the clinic.",
+        body: "We sent your claim to the business.",
       };
     case "claim_pending_confirmation":
       return {
         title: "Claim received",
-        body: "Your claim is in. The clinic still needs to confirm it.",
+        body: "Your claim is in. The business still needs to confirm it.",
       };
     case "booking_confirmed":
       return {
         title: "Booking confirmed",
-        body: `${clinic} confirmed your opening.`,
+        body: `${businessLabel} confirmed your opening.`,
       };
     case "claim_unavailable":
       return {

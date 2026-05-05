@@ -82,7 +82,7 @@ enum PFTypography {
                 .foregroundStyle(PFColor.textPrimary)
         }
 
-        /// Secondary meta on a card (clinic, supporting line).
+        /// Secondary meta on a card (business name, supporting line).
         static func cardMeta(_ text: String) -> some View {
             Text(text)
                 .font(.system(size: 16, weight: .semibold, design: .default))

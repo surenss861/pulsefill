@@ -21,7 +21,7 @@ struct ClaimSlotView: View {
                 .foregroundStyle(PFColor.primary)
             PFTypography.title("Ready to claim?")
             PFTypography.caption(
-                "If the slot is still available, PulseFill will lock it for you right away."
+                "If this opening is still available, PulseFill will hold it for you right away."
             )
             .multilineTextAlignment(.center)
 
@@ -47,6 +47,7 @@ struct ClaimSlotView: View {
             }
             .buttonStyle(PFPrimaryButtonStyle())
             .disabled(loading)
+            .allowsHitTesting(!loading)
             .padding(.horizontal, PFSpacing.lg)
         }
         .padding(PFSpacing.xl)
@@ -59,6 +60,7 @@ struct ClaimSlotView: View {
     }
 
     private func claim() async {
+        guard !loading else { return }
         loading = true
         errorMessage = nil
         PFHaptics.mediumImpact()
@@ -84,7 +86,7 @@ struct ClaimSlotView: View {
             outcomeNav = ClaimOutcomeNav(id: id)
             PFHaptics.success()
         } catch {
-            errorMessage = APIErrorCopy.message(for: error)
+            errorMessage = PFCustomerFacingErrorCopy.claimFailureMessage(from: error)
             PFHaptics.warning()
         }
     }

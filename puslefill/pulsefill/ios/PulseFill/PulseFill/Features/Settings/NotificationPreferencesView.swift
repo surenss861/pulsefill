@@ -11,32 +11,37 @@ struct NotificationPreferencesView: View {
         Group {
             switch viewModel.loadState {
             case .idle, .loading:
-                VStack {
-                    Spacer()
-                    ProgressView()
-                    Spacer()
+                ZStack {
+                    PFScreenBackground()
+                    PFCustomerLoadingState(
+                        title: "Loading notification settings…",
+                        message: "Getting how you want to hear about openings and updates.",
+                        compact: false
+                    )
                 }
 
             case let .failed(message):
-                VStack(spacing: 12) {
-                    Spacer()
-                    PFTypography.section("Couldn’t load notification settings")
-                    PFTypography.caption(message)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                    Button("Retry") {
-                        Task { await viewModel.load() }
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        PFCustomerErrorState(
+                            title: "We couldn’t load notification settings",
+                            message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(message),
+                            primaryTitle: "Try again",
+                            primaryAction: { Task { await viewModel.load() } },
+                            secondaryTitle: nil,
+                            secondaryAction: nil
+                        )
                     }
-                    .buttonStyle(PFPrimaryButtonStyle())
-                    .padding(.horizontal, 24)
-                    Spacer()
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
                 }
+                .background(PFScreenBackground())
 
             case .loaded:
                 content
             }
         }
-        .background(PFColor.background.ignoresSafeArea())
+        .background(PFScreenBackground())
         .navigationTitle("Notification settings")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -55,82 +60,88 @@ struct NotificationPreferencesView: View {
                 Button("OK", role: .cancel) {}
             },
             message: {
-                Text(viewModel.flashMessage ?? "")
+                Text(sanitizedFlash)
             }
         )
+    }
+
+    private var sanitizedFlash: String {
+        guard let m = viewModel.flashMessage else { return "" }
+        return PFCustomerFacingErrorCopy.sanitizeCustomerMessage(m)
     }
 
     @ViewBuilder
     private var content: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 20) {
+                PFCustomerInfoCallout(
+                    title: "Why notifications matter",
+                    message:
+                        "Openings can move quickly. Alerts help you see a match in time. You stay in control of style, quiet hours, and what kinds of updates you receive.",
+                    variant: .neutral
+                )
+
                 NotificationReadinessStatusCard(readiness: viewModel.response?.readiness)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Toggle("Quiet hours", isOn: $viewModel.quietHoursEnabled)
-                        .tint(PFColor.primary)
+                PFCustomerSectionCard(variant: .default, padding: 18) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        PFTypography.Customer.label("Quiet hours")
+                        Toggle("Pause non-urgent alerts overnight", isOn: $viewModel.quietHoursEnabled)
+                            .tint(PFColor.ember)
 
-                    if viewModel.quietHoursEnabled {
-                        Text("Start: \(viewModel.quietHoursStartLocal)")
-                            .font(.system(size: 13))
-                            .foregroundStyle(PFColor.textSecondary)
-                        Text("End: \(viewModel.quietHoursEndLocal)")
-                            .font(.system(size: 13))
-                            .foregroundStyle(PFColor.textSecondary)
+                        if viewModel.quietHoursEnabled {
+                            Text("Starts: \(viewModel.quietHoursStartLocal)")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(PFColor.textSecondary)
+                            Text("Ends: \(viewModel.quietHoursEndLocal)")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(PFColor.textSecondary)
+                        }
                     }
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(PFSurface.card)
-                .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("NOTIFICATION STYLE")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(PFColor.textSecondary)
-
-                    Picker("Notification style", selection: $viewModel.cadencePreference) {
-                        Text("All opportunities").tag("all_opportunities")
-                        Text("Only the best matches").tag("best_matches")
-                        Text("Important updates only").tag("important_only")
+                PFCustomerSectionCard(variant: .default, padding: 18) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        PFTypography.Customer.label("How often we reach out")
+                        Picker("Notification style", selection: $viewModel.cadencePreference) {
+                            Text("All matching openings").tag("all_opportunities")
+                            Text("Only the best matches").tag("best_matches")
+                            Text("Important updates only").tag("important_only")
+                        }
+                        .pickerStyle(.menu)
+                        .tint(PFColor.ember)
                     }
-                    .pickerStyle(.menu)
-                    .tint(PFColor.primary)
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(PFSurface.card)
-                .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("ALERT TYPES")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(PFColor.textSecondary)
-
-                    Toggle("New openings", isOn: $viewModel.notifyNewOffers)
-                    Toggle("Claim updates", isOn: $viewModel.notifyClaimUpdates)
-                    Toggle("Booking confirmations", isOn: $viewModel.notifyBookingConfirmations)
-                    Toggle("Standby tips", isOn: $viewModel.notifyStandbyTips)
+                PFCustomerSectionCard(variant: .default, padding: 18) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        PFTypography.Customer.label("What you want to hear about")
+                        Toggle("New openings", isOn: $viewModel.notifyNewOffers)
+                        Toggle("Waiting for confirmation", isOn: $viewModel.notifyClaimUpdates)
+                        Toggle("Confirmed bookings", isOn: $viewModel.notifyBookingConfirmations)
+                        Toggle("Standby tips", isOn: $viewModel.notifyStandbyTips)
+                    }
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(PFSurface.card)
-                .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
 
-                Text(
-                    "Urgent new-opening alerts are designed to reach you quickly. Quiet hours apply best to reminders and non-urgent tips."
+                PFCustomerInfoCallout(
+                    title: "A note on urgency",
+                    message:
+                        "Time-sensitive openings try to reach you quickly. Quiet hours mainly affect reminders and softer tips — not the only way the business may contact you.",
+                    variant: .neutral
                 )
-                .font(.system(size: 12))
-                .foregroundStyle(PFColor.textSecondary)
 
-                Button(viewModel.isSaving ? "Saving…" : "Save settings") {
-                    Task { await viewModel.save() }
-                }
-                .buttonStyle(PFPrimaryButtonStyle())
-                .disabled(viewModel.isSaving)
+                PFCustomerPrimaryButton(
+                    title: viewModel.isSaving ? "Saving…" : "Save settings",
+                    isEnabled: !viewModel.isSaving,
+                    isLoading: viewModel.isSaving,
+                    hapticImpact: .medium,
+                    onDisabledTap: nil,
+                    action: { Task { await viewModel.save() } }
+                )
             }
-            .padding(20)
-            .padding(.bottom, 28)
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 32)
         }
     }
 }

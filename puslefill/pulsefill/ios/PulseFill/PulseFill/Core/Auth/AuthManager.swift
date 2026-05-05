@@ -120,6 +120,27 @@ final class AuthManager: ObservableObject {
         banner = nil
     }
 
+    /// Password reset email via Supabase Auth (`/auth/v1/recover`). Errors are customer-sanitized on `banner`.
+    func requestPasswordReset(email: String) async {
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            banner = "Enter the email you use with PulseFill."
+            return
+        }
+        banner = nil
+        isBusy = true
+        defer { isBusy = false }
+        do {
+            try await authClient.requestPasswordRecovery(email: trimmed)
+            banner = "If we find an account for that email, we’ll send reset instructions."
+        } catch {
+            #if DEBUG
+            print("AuthManager.requestPasswordReset error: \(error)")
+            #endif
+            banner = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
+        }
+    }
+
     /// Call after sign-in / restore to detect staff JWT (`GET /v1/businesses/mine`).
     func refreshStaffAccess() async {
         guard sessionStore.isSignedIn else {
@@ -170,7 +191,7 @@ final class AuthManager: ObservableObject {
     /// Call when the user pastes a token while already signed in (Profile).
     func acceptInviteTokenNow(_ token: String) async -> InviteAcceptResult {
         let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return .failure("Enter the invite code from your clinic.") }
+        guard !trimmed.isEmpty else { return .failure("Enter the invite code from the business.") }
         banner = nil
         isBusy = true
         defer { isBusy = false }

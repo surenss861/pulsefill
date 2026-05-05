@@ -7,7 +7,7 @@ enum StandbyOnboardingCopy {
             "Tell us the kinds of appointments you’d take, and PulseFill will watch for matching openings for you."
 
         static let bullet1Title = "Pick what works for you"
-        static let bullet1Body = "Choose the clinics, services, timing, and notice you’re comfortable with."
+        static let bullet1Body = "Choose the businesses, services, timing, and notice you’re comfortable with."
 
         static let bullet2Title = "Get alerted fast"
         static let bullet2Body = "When an opening matches your setup, you’ll hear about it right away."

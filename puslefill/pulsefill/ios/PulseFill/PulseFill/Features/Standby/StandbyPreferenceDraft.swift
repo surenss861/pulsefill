@@ -2,7 +2,7 @@ import Foundation
 
 /// Local editor state for `POST /v1/customers/me/preferences` (aligned to API body).
 struct StandbyPreferenceDraft: Equatable {
-    /// Required by API — paste the business UUID your clinic shared (pilot / until discovery list exists).
+    /// Required by API — paste the UUID they shared with you (pilot / until discovery list exists).
     var businessId: String = ""
 
     var locationId: String = ""

@@ -5,6 +5,27 @@ Use before and after promoting API, worker, dashboard, or iOS builds that depend
 **Env template:** `env.railway.example` at repo root  
 **Railway notes:** [railway.md](./railway.md)
 
+### Automated API smoke (health, ready, CORS, optional 429)
+
+From the **repo root** (`pulsefill/`), after setting a real API base URL:
+
+```bash
+export PULSEFILL_API_BASE_URL="https://YOUR_API.up.railway.app"
+export PULSEFILL_DASHBOARD_ORIGIN="https://pulsefill.vercel.app"   # optional; this is the default
+
+pnpm smoke:api
+# or: bash scripts/smoke-api.sh
+```
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `PULSEFILL_API_BASE_URL` | **Yes** | API root (no trailing slash required). |
+| `PULSEFILL_DASHBOARD_ORIGIN` | No | Browser `Origin` for the CORS preflight; defaults to `https://pulsefill.vercel.app`. Must match an entry in `API_CORS_ORIGINS` on the API. |
+| `SMOKE_RATE_LIMIT_CHECK` | No | Set to `true` to hammer `GET /v1/businesses/mine` (no auth → `401`) until **`429`** and assert JSON contains `rate_limited` and `request_id`. **Off by default** so routine deploy checks do not spam the API. |
+| `SMOKE_RATE_LIMIT_MAX_ATTEMPTS` | No | Max loops for the optional check (default **420**). Global limit is **360 / 5 min** per IP; if you never see `429`, see §8. |
+
+The script exits non-zero on the first failure and prints `PASS:` / `FAIL:` lines for each step.
+
 ---
 
 ## 1. Deploy order

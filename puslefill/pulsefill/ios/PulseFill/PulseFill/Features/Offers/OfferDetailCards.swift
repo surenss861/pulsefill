@@ -5,7 +5,7 @@ struct OfferHeroCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(offer.businessName ?? "Clinic")
+            Text(offer.businessName ?? "This business")
                 .font(.system(size: 26, weight: .semibold))
                 .foregroundStyle(PFColor.textPrimary)
 
@@ -148,7 +148,7 @@ struct OfferClaimConfidenceCard: View {
 
             Text(
                 guidance?.detail
-                    ?? "Claiming sends your intent right away. The clinic may still need to confirm the booking."
+                    ?? "Claiming sends your intent right away. The business may still need to confirm the booking."
             )
             .font(.system(size: 13))
             .foregroundStyle(PFColor.textSecondary)

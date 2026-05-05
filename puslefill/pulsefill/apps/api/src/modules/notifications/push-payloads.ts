@@ -1,4 +1,7 @@
+import { buildCustomerOfferSentPushFields, formatPushSlotTime } from "@pulsefill/shared";
 import type { CustomerPushEventType } from "@pulsefill/shared";
+
+export { formatPushSlotTime } from "@pulsefill/shared";
 
 export type LegacyCustomerPushType =
   | "customer_offer_sent"
@@ -37,18 +40,6 @@ function dayKey(iso: string): string {
   return iso.slice(0, 10);
 }
 
-export function formatPushSlotTime(startsAt: string): string {
-  const date = new Date(startsAt);
-  if (Number.isNaN(date.getTime())) return "soon";
-  return new Intl.DateTimeFormat("en-CA", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "America/Toronto",
-  }).format(date);
-}
-
 export function buildCustomerOfferSentPush(input: {
   businessId: string;
   customerId: string;
@@ -58,26 +49,19 @@ export function buildCustomerOfferSentPush(input: {
   startsAt?: string | null;
   createdAt: string;
 }): PulseFillPushPayload {
-  const service = normalizeServiceName(input.serviceName);
-  const when = input.startsAt ? formatPushSlotTime(input.startsAt) : "soon";
+  const f = buildCustomerOfferSentPushFields(input);
   return {
-    type: "offer_received",
-    title: "New opening available",
-    body: `${service} is available ${when}.`,
-    deep_link: `/customer/offers/${input.offerId}`,
-    dedupe_key: `offer_received:${input.offerId}`,
-    created_at: input.createdAt,
-    business_id: input.businessId,
-    customer_id: input.customerId,
-    open_slot_id: input.openSlotId,
+    type: f.type,
+    title: f.title,
+    body: f.body,
+    deep_link: f.deep_link,
+    dedupe_key: f.dedupe_key,
+    created_at: f.created_at,
+    business_id: f.business_id,
+    customer_id: f.customer_id,
+    open_slot_id: f.open_slot_id,
     actor: "system",
-    data: {
-      type: "offer_received",
-      business_id: input.businessId,
-      customer_id: input.customerId,
-      open_slot_id: input.openSlotId,
-      offer_id: input.offerId,
-    },
+    data: f.data,
   };
 }
 

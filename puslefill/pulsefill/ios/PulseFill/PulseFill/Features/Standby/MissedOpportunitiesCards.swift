@@ -55,7 +55,7 @@ struct MissedOpportunityCard: View {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(PFColor.warning)
 
-            Text(item.businessName ?? "Clinic")
+            Text(item.businessName ?? "This business")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(PFColor.textPrimary)
 

@@ -1,38 +1,44 @@
 import SwiftUI
 
+/// Summary of whether this phone can receive PulseFill alerts (no “device registered” / token wording).
 struct NotificationReadinessStatusCard: View {
     let readiness: NotificationReadinessSummary?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("NOTIFICATION READINESS")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(PFColor.textSecondary)
+        PFCustomerSectionCard(variant: .attention, padding: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                PFTypography.Customer.label("PulseFill on this phone")
 
-            Text("Push permission: \(pushPermissionText)")
-                .font(.system(size: 17))
-                .foregroundStyle(PFColor.textPrimary)
+                Text(CustomerNotificationPermissionCopy.phoneAlertsExplainer(permissionRaw))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            Text("Device registered: \(deviceRegisteredText)")
-                .font(.system(size: 13))
-                .foregroundStyle(PFColor.textSecondary)
+                Text(
+                    CustomerNotificationPermissionCopy.thisAppReceivesAlertsLine(
+                        hasRegistered: readiness?.hasPushDevice == true,
+                        permissionRaw: permissionRaw
+                    )
+                )
+                .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(PFColor.customerMutedText)
+                    .lineSpacing(3)
+
+                HStack {
+                    Text("Phone alerts")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(PFColor.textSecondary)
+                    Spacer()
+                    Text(CustomerNotificationPermissionCopy.phoneAlertsShortLabel(permissionRaw))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(PFColor.textPrimary)
+                }
+            }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFSurface.card)
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
     }
 
-    private var pushPermissionText: String {
-        switch readiness?.pushPermissionStatus {
-        case "authorized": "On"
-        case "denied": "Off"
-        case "not_determined": "Not set"
-        default: "Unknown"
-        }
-    }
-
-    private var deviceRegisteredText: String {
-        readiness?.hasPushDevice == true ? "Yes" : "No"
+    private var permissionRaw: String {
+        readiness?.pushPermissionStatus ?? "not_determined"
     }
 }

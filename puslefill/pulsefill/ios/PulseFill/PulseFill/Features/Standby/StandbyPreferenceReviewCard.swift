@@ -38,7 +38,7 @@ struct StandbyPreferenceReviewCard: View {
                         label: "Notice",
                         value: StandbySetupCustomerCopy.noticeSummaryLabel(hours: draft.maxNoticeHours)
                     )
-                    ReviewRow(label: "Distance", value: "Up to \(draft.maxDistanceKm) km")
+                    ReviewRow(label: "Distance", value: "Within about \(draft.maxDistanceKm) km")
                     ReviewRow(label: "Deposit", value: draft.depositOk ? "OK with a deposit" : "Prefer no deposit")
                     ReviewRow(
                         label: "Alerts",

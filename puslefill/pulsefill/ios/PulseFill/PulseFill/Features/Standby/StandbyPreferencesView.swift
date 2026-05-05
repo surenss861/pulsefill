@@ -81,18 +81,21 @@ struct StandbyPreferencesView: View {
                     }
 
                     if viewModel.isEditingExistingPreference {
-                        PFCustomerSectionCard(variant: .attention, padding: 14) {
-                            HStack(alignment: .center, spacing: 12) {
+                        PFCustomerSectionCard(variant: .attention, padding: 16) {
+                            VStack(alignment: .leading, spacing: 10) {
                                 Text("You’re editing a saved preference")
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundStyle(PFColor.textPrimary)
-                                Spacer(minLength: 0)
+
                                 Button("Cancel") {
+                                    PFHaptics.lightImpact()
                                     viewModel.cancelEditing()
                                 }
                                 .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(PFColor.ember)
+                                .foregroundStyle(PFColor.customerMutedText)
+                                .buttonStyle(.plain)
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
 
@@ -302,9 +305,7 @@ struct StandbyPreferencesView: View {
     @ViewBuilder
     private var savedPreferencesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Your standby preferences")
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(PFColor.textPrimary)
+            PFTypography.Customer.label("Your standby preferences")
 
             if viewModel.loadingExisting {
                 PFCustomerLoadingState(
@@ -313,9 +314,14 @@ struct StandbyPreferencesView: View {
                     compact: true
                 )
             } else if let loadError = viewModel.loadError {
-                Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(loadError))
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(PFColor.error)
+                PFCustomerErrorState(
+                    title: "Couldn’t load saved preferences",
+                    message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(loadError),
+                    primaryTitle: "Try again",
+                    primaryAction: { Task { await viewModel.loadExistingPreferences() } },
+                    secondaryTitle: nil,
+                    secondaryAction: nil
+                )
             } else if viewModel.existingPreferences.isEmpty {
                 Text("Once you save, your preferences appear here so you can pause or remove them later.")
                     .font(.system(size: 14, weight: .medium))

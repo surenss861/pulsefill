@@ -16,14 +16,17 @@ enum StandbySetupCustomerCopy {
     static let businessMissingTitle = "Choose a business"
     static let businessMissingBody = "Pick a business before setting your standby preferences."
 
-    static let businessIdInvalid = "Enter the business identifier your clinic shared with you."
+    static let businessIdInvalid = "Enter the connection code the business shared with you."
+
+    /// Text field placeholder — never imply we show raw UUIDs elsewhere in the form.
+    static let businessFieldPlaceholder = "Connection code from the business"
 
     static let servicesEmpty = "No services listed yet"
     static let servicesEmptyBody = "This business has not listed services for standby. You can still choose “Any service” below."
 
     static let advancedOptionsTitle = "More matching options (optional)"
     static let advancedOptionsCaption =
-        "Only fill these in if your clinic gave you a location or provider reference to use."
+        "Only fill these in if the business gave you a location or provider reference to use."
 
     static let locationFieldLabel = "Location reference (optional)"
     static let providerFieldLabel = "Provider reference (optional)"

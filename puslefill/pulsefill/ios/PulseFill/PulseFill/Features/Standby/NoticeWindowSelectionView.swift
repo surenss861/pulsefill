@@ -20,7 +20,7 @@ struct NoticeWindowSelectionView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Stepper(value: $draft.maxDistanceKm, in: 1 ... 200) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Up to \(draft.maxDistanceKm) km away")
+                            Text("Within about \(draft.maxDistanceKm) km")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(PFColor.textPrimary)
                             Text(StandbySetupCustomerCopy.distanceCaption)

@@ -31,7 +31,7 @@ final class PushNotificationCoordinator: NSObject {
         let key = payload.routeKey?.lowercased() ?? ""
 
         switch key {
-        case "offer_received", "offer_expiring_soon", "offer":
+        case "offer_received", "offer_expiring_soon", "offer", "opening_available":
             customerNavigation.routeToOffersTab(offerId: payload.offerId, openSlotId: payload.openSlotId)
             return
         default:

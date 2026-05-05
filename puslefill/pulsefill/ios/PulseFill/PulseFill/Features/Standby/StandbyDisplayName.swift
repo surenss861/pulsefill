@@ -6,16 +6,18 @@ enum StandbyDisplayName {
         if let name = resolvedName?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
             return name
         }
-        return shortRef(businessId)
+        let bid = businessId.trimmingCharacters(in: .whitespacesAndNewlines)
+        if bid.isEmpty { return "—" }
+        return "This business"
     }
 
     static func service(serviceId: String?, resolvedName: String?) -> String {
         let sid = serviceId?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if sid.isEmpty { return "—" }
+        if sid.isEmpty { return "Any service" }
         if let name = resolvedName?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
             return name
         }
-        return shortRef(sid)
+        return "Selected visit type"
     }
 
     static func shortRef(_ uuid: String) -> String {

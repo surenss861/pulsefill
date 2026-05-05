@@ -56,7 +56,7 @@ struct AuthAppointmentPassCard: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.86)
 
-                        Text(current.clinic)
+                        Text(current.businessName)
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(PFColor.customerTextSecondary)
                             .lineLimit(1)

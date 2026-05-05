@@ -9,11 +9,17 @@ struct HomeView: View {
 
     @State private var loadedOffers: [OfferInboxItem] = []
     @State private var activityPreview: [CustomerActivityItem] = []
+    @State private var standbySummary: StandbyStatusSummary?
     @State private var loading = true
     @State private var loadError: String?
 
-    private var standbyActive: Bool {
+    private var standbyActiveLocal: Bool {
         standbyOnboardingCompleted || legacyStandbyComplete
+    }
+
+    /// Server or local onboarding: any active standby signal.
+    private var standbyConfigured: Bool {
+        standbyActiveLocal || (standbySummary?.hasAnyActivePreference ?? false)
     }
 
     private var greetingLine: String {
@@ -32,10 +38,12 @@ struct HomeView: View {
     private var homeActivityRows: [CustomerHomeActivityRowModel] {
         activityPreview.map { item in
             let kind = customerActivityDisplayKind(rawKind: item.kind)
+            let rawDetail = customerActivityDetailLine(for: item)
+            let detail = rawDetail.map { PFCustomerFacingErrorCopy.sanitizeCustomerMessage($0) }
             return CustomerHomeActivityRowModel(
                 id: item.id,
                 title: kind.title,
-                detail: customerActivityDetailLine(for: item),
+                detail: detail,
                 relativeTime: DateFormatterPF.relative(item.occurredAt)
             )
         }
@@ -44,56 +52,19 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                    VStack(alignment: .leading, spacing: 22) {
-                        CustomerHomeHeader(greeting: greetingLine)
-                            .customerAppearAnimation(staggerIndex: 0)
+                VStack(alignment: .leading, spacing: 22) {
+                    CustomerHomeHeader(greeting: greetingLine, isSignedIn: env.sessionStore.isSignedIn)
+                        .customerAppearAnimation(staggerIndex: 0)
 
-                        if loading {
-                            ProgressView()
-                                .tint(PFColor.ember)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.vertical, 8)
-                        } else if let loadError {
-                            loadErrorCard(loadError)
-                        } else if let pick = homeSpotlight {
-                            CustomerOfferSpotlightCard(offer: pick.offer, displayStatus: pick.status) {
-                                env.customerNavigation.routeToOffersTab(offerId: pick.offer.id, openSlotId: nil)
-                            }
-                            .customerAppearAnimation(staggerIndex: 0)
-                        } else {
-                            EmptyOfferStateCard(
-                                onNotificationSettings: {
-                                    env.customerNavigation.open(.notificationSettings)
-                                },
-                                onStandbyPreferences: {
-                                    env.customerNavigation.open(.standbyStatus)
-                                }
-                            )
-                            .customerAppearAnimation(staggerIndex: 0)
-                        }
-
-                        CustomerStandbyStatusCard(
-                            isActive: standbyActive,
-                            onSetup: {
-                                env.customerNavigation.open(.standbyStatus)
-                            }
-                        )
-                        .customerAppearAnimation(staggerIndex: 1)
-
-                        CustomerRecentActivityCard(
-                            rows: homeActivityRows,
-                            onSeeAll: {
-                                PFHaptics.lightImpact()
-                                env.customerNavigation.open(.activity)
-                            }
-                        )
-                        .customerAppearAnimation(staggerIndex: 2)
+                    if env.sessionStore.isSignedIn {
+                        signedInContent
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 24)
-                    .padding(.bottom, 32)
                 }
-                .background(CustomerScreenBackground())
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 32)
+            }
+            .background(PFScreenBackground())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
         }
@@ -103,42 +74,84 @@ struct HomeView: View {
         }
     }
 
-    private func loadErrorCard(_ message: String) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Something went wrong")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(PFColor.textPrimary)
-            Text(message)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(PFColor.textSecondary)
-                .lineSpacing(3)
-            Button("Try again") {
-                Task { await refresh() }
+    @ViewBuilder
+    private var signedInContent: some View {
+        if loading && loadedOffers.isEmpty {
+            PFCustomerLoadingState(
+                title: "Loading your home…",
+                message: "Checking openings and standby status.",
+                compact: false
+            )
+            .padding(.top, 8)
+            .customerAppearAnimation(staggerIndex: 1)
+        } else if let loadError {
+            PFCustomerErrorState(
+                title: "We couldn’t load everything",
+                message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(loadError),
+                primaryTitle: "Try again",
+                primaryAction: { Task { await refresh() } },
+                secondaryTitle: nil,
+                secondaryAction: nil
+            )
+            .customerAppearAnimation(staggerIndex: 1)
+        } else {
+            homeHeroBlock
+                .customerAppearAnimation(staggerIndex: 1)
+
+            CustomerStandbyStatusCard(
+                isActive: standbyConfigured,
+                onSetup: {
+                    env.customerNavigation.open(.standbyStatus)
+                }
+            )
+            .customerAppearAnimation(staggerIndex: 2)
+
+            CustomerRecentActivityCard(
+                rows: homeActivityRows,
+                onSeeAll: {
+                    PFHaptics.lightImpact()
+                    env.customerNavigation.open(.activity)
+                }
+            )
+            .customerAppearAnimation(staggerIndex: 3)
+        }
+    }
+
+    @ViewBuilder
+    private var homeHeroBlock: some View {
+        if let summary = standbySummary, summary.businessesCovered == 0 {
+            CustomerHomeNextStepCard(
+                kind: .findBusinesses,
+                onFindBusinesses: { env.customerNavigation.selectedTab = .find },
+                onStandbyStatus: { env.customerNavigation.open(.standbyStatus) },
+                onNotificationSettings: { env.customerNavigation.open(.notificationSettings) }
+            )
+        } else if !standbyConfigured {
+            CustomerHomeNextStepCard(
+                kind: .setupStandby,
+                onFindBusinesses: { env.customerNavigation.selectedTab = .find },
+                onStandbyStatus: { env.customerNavigation.open(.standbyStatus) },
+                onNotificationSettings: { env.customerNavigation.open(.notificationSettings) }
+            )
+        } else if let pick = homeSpotlight {
+            CustomerOfferSpotlightCard(offer: pick.offer, displayStatus: pick.status) {
+                env.customerNavigation.routeToOffersTab(offerId: pick.offer.id, openSlotId: nil)
             }
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(PFColor.primaryText)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 11)
-            .background(Color.clear)
-            .overlay(
-                Capsule()
-                    .stroke(PFColor.primaryBorder, lineWidth: 1)
+        } else {
+            CustomerHomeNextStepCard(
+                kind: .watchingForOpenings,
+                onFindBusinesses: { env.customerNavigation.selectedTab = .find },
+                onStandbyStatus: { env.customerNavigation.open(.standbyStatus) },
+                onNotificationSettings: { env.customerNavigation.open(.notificationSettings) }
             )
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFColor.surface1)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
     }
 
     private func refresh() async {
         guard env.sessionStore.isSignedIn else {
             loadedOffers = []
             activityPreview = []
+            standbySummary = nil
             loading = false
             loadError = nil
             return
@@ -156,6 +169,13 @@ struct HomeView: View {
         } catch {
             loadError = APIErrorCopy.message(for: error)
             loadedOffers = []
+        }
+
+        do {
+            let status = try await env.apiClient.getStandbyStatus(pushPermissionStatus: push)
+            standbySummary = status.summary
+        } catch {
+            standbySummary = nil
         }
 
         if let activity = try? await env.apiClient.getCustomerActivityFeed(pushPermissionStatus: push) {

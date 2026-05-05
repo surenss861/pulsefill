@@ -73,7 +73,7 @@ final class NotificationPreferencesViewModel {
             apply(result.preferences)
             flashMessage = "Notification settings updated."
         } catch {
-            flashMessage = APIErrorCopy.message(for: error)
+            flashMessage = PFCustomerFacingErrorCopy.sanitizeCustomerMessage(APIErrorCopy.message(for: error))
         }
     }
 

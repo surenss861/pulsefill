@@ -61,6 +61,12 @@ See `env.railway.example`. Minimum for API + worker:
 
 The API does **not** need `SUPABASE_ANON_KEY` unless you add anon-key-based features; JWT verification uses the service role client.
 
+### Customer offer pushes (worker)
+
+The **`send-offer-notification`** job delivers customer **push** notifications when `PUSH_PROVIDER=apns` and the same **`APNS_*`** secrets as the API are set on the **worker** service. If APNS is not configured, the job still marks the offer **delivered** and logs `metadata.delivery_mode: simulated` / `apns_not_configured` so the send-offers transaction is not blocked.
+
+Per-device APNs host (**sandbox** vs **production**) is chosen from each row’s `customer_push_devices.environment` (`development` → sandbox, `production` → production).
+
 ## Dashboard (Next.js)
 
 Copy `apps/dashboard-web/.env.example` → `.env.local`:

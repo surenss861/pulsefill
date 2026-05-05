@@ -4,29 +4,21 @@ struct StandbyRecentActivityCard: View {
     let activity: StandbyRecentActivity
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("RECENT ACTIVITY")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(PFColor.textSecondary)
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                PFTypography.Customer.label("Recent activity")
 
-            Text("Last \(activity.windowDays) days")
-                .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(PFColor.textSecondary)
+                Text("Last \(activity.windowDays) days")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
 
-            HStack(spacing: 16) {
-                metric(title: "Openings", value: activity.recentOffers)
-                metric(title: "Claims", value: activity.recentClaims)
-                metric(title: "Missed", value: activity.recentMissed)
+                HStack(spacing: 16) {
+                    metric(title: "Openings", value: activity.recentOffers)
+                    metric(title: "Claims", value: activity.recentClaims)
+                    metric(title: "Passed openings", value: activity.recentMissed)
+                }
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFSurface.card)
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
-        )
     }
 
     private func metric(title: String, value: Int) -> some View {

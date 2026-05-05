@@ -21,7 +21,7 @@ struct ClaimOutcomeView: View {
                 VStack(spacing: 12) {
                     Spacer()
                     PFTypography.section("Couldn’t load claim status")
-                    PFTypography.caption(message)
+                    PFTypography.caption(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(message))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
                     Button("Retry") {

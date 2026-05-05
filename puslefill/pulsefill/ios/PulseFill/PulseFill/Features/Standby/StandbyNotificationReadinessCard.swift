@@ -1,59 +1,76 @@
 import SwiftUI
 import UIKit
 
+/// How PulseFill can reach the customer about openings (customer-safe; no APNs / token jargon).
 struct StandbyNotificationReadinessCard: View {
     let readiness: StandbyNotificationReadiness
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("NOTIFICATION READINESS")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(PFColor.textSecondary)
+        PFCustomerSectionCard(variant: .default, padding: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                PFTypography.Customer.label("How we reach you")
 
-            row(label: "Push permission", value: permissionLabel, good: readiness.pushPermissionStatus != "denied")
-            row(label: "Device registered", value: readiness.hasPushDevice ? "Yes" : "No", good: readiness.hasPushDevice)
-            row(label: "Email on file", value: readiness.hasEmail ? "Yes" : "No", good: readiness.hasEmail)
-            row(label: "SMS reachable", value: readiness.hasSms ? "Yes" : "No", good: readiness.hasSms)
-            row(label: "Reachable overall", value: readiness.hasAnyReachableChannel ? "Yes" : "No", good: readiness.hasAnyReachableChannel)
+                Text(CustomerNotificationPermissionCopy.phoneAlertsExplainer(readiness.pushPermissionStatus))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            if readiness.pushPermissionStatus == "denied" {
-                Button("Open Settings") {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(url)
+                Text(
+                    CustomerNotificationPermissionCopy.thisAppReceivesAlertsLine(
+                        hasRegistered: readiness.hasPushDevice,
+                        permissionRaw: readiness.pushPermissionStatus
+                    )
+                )
+                .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(PFColor.customerMutedText)
+                    .lineSpacing(3)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    readinessRow(
+                        title: "Phone alerts",
+                        value: CustomerNotificationPermissionCopy.phoneAlertsShortLabel(readiness.pushPermissionStatus),
+                        positiveHint: readiness.pushPermissionStatus.lowercased() == "authorized"
+                    )
+                    readinessRow(
+                        title: "Email on your account",
+                        value: readiness.hasEmail ? "Yes" : "Not on file",
+                        positiveHint: readiness.hasEmail
+                    )
+                    readinessRow(
+                        title: "Text messages (SMS)",
+                        value: readiness.hasSms ? "Yes" : "Not on file",
+                        positiveHint: readiness.hasSms
+                    )
+                    readinessRow(
+                        title: "We can reach you about openings",
+                        value: readiness.hasAnyReachableChannel ? "Yes" : "Limited",
+                        positiveHint: readiness.hasAnyReachableChannel
+                    )
+                }
+                .padding(.top, 4)
+
+                if readiness.pushPermissionStatus.lowercased() == "denied" {
+                    PFCustomerSecondaryButton(title: "Open Settings app") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
                     }
                 }
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(PFColor.primary)
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PFSurface.card)
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
-        )
     }
 
-    private var permissionLabel: String {
-        switch readiness.pushPermissionStatus {
-        case "authorized": return "Authorized"
-        case "denied": return "Denied"
-        case "not_determined": return "Not determined"
-        default: return "Unknown"
-        }
-    }
-
-    private func row(label: String, value: String, good: Bool) -> some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 15, weight: .regular))
+    private func readinessRow(title: String, value: String, positiveHint: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(PFColor.textSecondary)
-            Spacer()
+            Spacer(minLength: 12)
             Text(value)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(good ? PFColor.textPrimary : PFColor.warning)
+                .foregroundStyle(positiveHint ? PFColor.textPrimary : PFColor.warning)
+                .multilineTextAlignment(.trailing)
         }
     }
 }

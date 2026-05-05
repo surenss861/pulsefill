@@ -99,7 +99,8 @@ func customerOfferDisplayStatus(
     case "":
         return .unknown
     default:
-        return .offerAvailable
+        // Unmapped server statuses must not imply “claimable” — safer to show generic status than wrong CTA.
+        return .unknown
     }
 }
 

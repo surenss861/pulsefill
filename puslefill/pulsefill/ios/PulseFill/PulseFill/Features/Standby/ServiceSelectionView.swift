@@ -40,7 +40,7 @@ struct ServiceSelectionView: View {
                             .lineSpacing(3)
                     }
 
-                    TextField("Business identifier from your clinic", text: $viewModel.draft.businessId)
+                    TextField(StandbySetupCustomerCopy.businessFieldPlaceholder, text: $viewModel.draft.businessId)
                         .textContentType(.none)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()

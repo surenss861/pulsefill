@@ -166,21 +166,42 @@ struct AuthFormView: View {
                     keyboardType: .default,
                     isSecure: true
                 )
+
+                if mode == .signIn {
+                    HStack {
+                        Spacer(minLength: 0)
+                        Button {
+                            PFHaptics.lightImpact()
+                            Task { await authManager.requestPasswordReset(email: email) }
+                        } label: {
+                            Text("Forgot password?")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(PFColor.ember)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(authManager.isBusy)
+                        .opacity(authManager.isBusy ? 0.45 : 1)
+                    }
+                    .padding(.top, 2)
+                }
             }
 
             if let banner = authManager.banner, !banner.isEmpty {
+                let isPositiveAuthHint =
+                    banner.contains("If we find an account")
+                    || banner.contains("Check your inbox to verify")
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: "exclamationmark.circle.fill")
+                    Image(systemName: isPositiveAuthHint ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(PFColor.error)
+                        .foregroundStyle(isPositiveAuthHint ? PFColor.success : PFColor.error)
 
                     Text(banner)
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(PFColor.error)
+                        .foregroundStyle(isPositiveAuthHint ? PFColor.success : PFColor.error)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(13)
-                .background(PFColor.error.opacity(0.11))
+                .background((isPositiveAuthHint ? PFColor.success : PFColor.error).opacity(0.11))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }

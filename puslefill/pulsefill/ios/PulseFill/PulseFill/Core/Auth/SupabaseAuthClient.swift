@@ -23,6 +23,24 @@ struct SupabaseAuthClient {
         try await passwordGrant(email: email, password: password)
     }
 
+    /// Sends Supabase’s password-recovery email (same as `resetPasswordForEmail` in the JS client).
+    func requestPasswordRecovery(email: String) async throws {
+        guard let url = URL(string: "auth/v1/recover", relativeTo: supabaseURL)?.absoluteURL else {
+            throw APIError.invalidURL
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(anonKey, forHTTPHeaderField: "apikey")
+        let body = ["email": email]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.status(code: -1, body: nil) }
+        guard (200 ..< 300).contains(http.statusCode) else {
+            throw APIError.status(code: http.statusCode, body: String(data: data, encoding: .utf8))
+        }
+    }
+
     func signUpWithPassword(email: String, password: String) async throws -> AuthSessionBundle? {
         guard let url = URL(string: "auth/v1/signup", relativeTo: supabaseURL)?.absoluteURL else {
             throw APIError.invalidURL

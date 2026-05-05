@@ -374,6 +374,7 @@ enum PFCustomerFacingErrorCopy {
         if lower.contains("\"message\""), lower.contains("invalid") { return true }
         if lower.contains("http 401"), lower.contains("api key") { return true }
         if lower.contains("http 401"), lower.contains("\"message\"") { return true }
+        if lower.contains("supabase.co") { return true }
         return false
     }
 }

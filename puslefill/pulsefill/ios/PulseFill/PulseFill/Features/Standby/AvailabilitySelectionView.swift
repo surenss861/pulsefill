@@ -17,6 +17,22 @@ struct AvailabilitySelectionView: View {
 
                 DayOfWeekPillSelector(selectedDays: $draft.daysOfWeek)
 
+                if draft.isBasicSetupComplete, draft.daysOfWeek.isEmpty {
+                    PFCustomerInfoCallout(
+                        title: "Pick at least one day",
+                        message: "Choose at least one day so PulseFill knows when to show matching openings.",
+                        variant: .warning
+                    )
+                }
+
+                if !draft.daysOfWeek.isEmpty, !draft.isTimeWindowValid {
+                    PFCustomerInfoCallout(
+                        title: "Check your times",
+                        message: StandbySetupCustomerCopy.validationTimeOrder,
+                        variant: .warning
+                    )
+                }
+
                 TimeWindowCard(earliest: $draft.earliestTime, latest: $draft.latestTime)
             }
         }

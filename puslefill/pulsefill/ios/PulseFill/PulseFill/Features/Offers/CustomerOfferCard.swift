@@ -13,7 +13,7 @@ enum CustomerOfferDetailCopy {
         return "Earlier opening"
     }
 
-    static func clinicLine(for offer: CustomerOfferDetail) -> String {
+    static func businessSubtitleLine(for offer: CustomerOfferDetail) -> String {
         let service = serviceLine(for: offer)
         if let b = offer.businessName?.trimmingCharacters(in: .whitespacesAndNewlines), !b.isEmpty,
            service.caseInsensitiveCompare(b) != .orderedSame {
@@ -52,7 +52,7 @@ enum CustomerOfferInboxCopy {
         return "Earlier opening"
     }
 
-    static func clinicLine(for offer: OfferInboxItem) -> String {
+    static func businessSubtitleLine(for offer: OfferInboxItem) -> String {
         let service = serviceLine(for: offer)
         if let name = offer.openSlot?.providerNameSnapshot?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
             if service.caseInsensitiveCompare(name) == .orderedSame {
@@ -60,7 +60,7 @@ enum CustomerOfferInboxCopy {
             }
             return name
         }
-        return "Your clinic"
+        return "This business"
     }
 
     static func timeLine(for offer: OfferInboxItem) -> String {
@@ -122,7 +122,7 @@ struct CustomerOfferCard: View {
                             .lineLimit(2)
                             .minimumScaleFactor(0.82)
 
-                        Text(CustomerOfferInboxCopy.clinicLine(for: offer))
+                        Text(CustomerOfferInboxCopy.businessSubtitleLine(for: offer))
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(PFColor.customerTextSecondary)
 
@@ -164,7 +164,7 @@ struct CustomerOfferPastCard: View {
                     PFCustomerStatusChip(kind: .fromInboxDisplayStatus(displayStatus))
                 }
 
-                Text(CustomerOfferInboxCopy.clinicLine(for: offer))
+                Text(CustomerOfferInboxCopy.businessSubtitleLine(for: offer))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(PFColor.textMuted)
                     .lineLimit(2)

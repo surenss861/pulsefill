@@ -4,6 +4,7 @@ import SwiftUI
 
 struct CustomerHomeHeader: View {
     let greeting: String
+    var isSignedIn: Bool = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -12,31 +13,83 @@ struct CustomerHomeHeader: View {
 
                 Spacer(minLength: 12)
 
-                HStack(spacing: 7) {
-                    Circle()
-                        .fill(PFColor.success)
-                        .frame(width: 7, height: 7)
-                        .shadow(color: PFColor.success.opacity(0.45), radius: 8)
+                if isSignedIn {
+                    HStack(spacing: 7) {
+                        Circle()
+                            .fill(PFColor.success)
+                            .frame(width: 7, height: 7)
+                            .shadow(color: PFColor.success.opacity(0.45), radius: 8)
 
-                    Text("Watching")
-                        .font(.system(size: 12, weight: .bold, design: .default))
-                        .foregroundStyle(PFColor.customerTextSecondary)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(Color.white.opacity(0.055))
-                .clipShape(Capsule())
-                .overlay {
-                    Capsule()
-                        .stroke(PFColor.customerHairline, lineWidth: 1)
+                        Text("Watching")
+                            .font(.system(size: 12, weight: .bold, design: .default))
+                            .foregroundStyle(PFColor.customerTextSecondary)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(Color.white.opacity(0.055))
+                    .clipShape(Capsule())
+                    .overlay {
+                        Capsule()
+                            .stroke(PFColor.customerHairline, lineWidth: 1)
+                    }
                 }
             }
 
-            PFTypography.Customer.screenTitle("Your appointment updates,\nall in one place.")
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
+            if isSignedIn {
+                PFTypography.Customer.screenTitle("Your appointment updates,\nall in one place.")
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                PFTypography.Customer.screenTitle("Stay ready for openings")
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                PFTypography.Customer.screenLead(
+                    "Create an account or sign in from the welcome screen to connect with businesses and receive openings."
+                )
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Spotlight copy (customer language — openings, standby, claim; no raw API statuses)
+
+enum CustomerHomeSpotlightCopy {
+    static func headline(for status: CustomerOfferDisplayStatus) -> String {
+        switch status {
+        case .readyToClaim, .offerAvailable:
+            return "Opening available"
+        case .expiresSoon:
+            return "Ends soon"
+        case .claimed:
+            return "Waiting for confirmation"
+        case .confirmed:
+            return "Confirmed"
+        case .expired, .unavailable:
+            return "No longer available"
+        case .unknown:
+            return "Status unavailable"
+        }
+    }
+
+    static func message(for status: CustomerOfferDisplayStatus) -> String {
+        switch status {
+        case .readyToClaim, .offerAvailable:
+            return "A matching opening is ready to review."
+        case .expiresSoon:
+            return "This opening ends soon — review it when you can."
+        case .claimed:
+            return "Your claim was sent. Check the opening for updates."
+        case .confirmed:
+            return "You’re booked for this opening."
+        case .expired:
+            return "This opening expired or was filled before you could claim it."
+        case .unavailable:
+            return "This opening is not available anymore."
+        case .unknown:
+            return "Pull to refresh or check back shortly."
+        }
     }
 }
 
@@ -52,7 +105,7 @@ struct CustomerOfferSpotlightCard: View {
     private var primaryEnabled: Bool { homeSpotlightCanOpenOfferDetails(for: displayStatus) }
 
     private var service: String { CustomerOfferInboxCopy.serviceLine(for: offer) }
-    private var clinic: String { CustomerOfferInboxCopy.clinicLine(for: offer) }
+    private var businessSubtitleLine: String { CustomerOfferInboxCopy.businessSubtitleLine(for: offer) }
     private var timeLabel: String { CustomerOfferInboxCopy.timeLine(for: offer) }
 
     var body: some View {
@@ -80,7 +133,7 @@ struct CustomerOfferSpotlightCard: View {
                         }
                         .frame(width: 34, height: 34)
 
-                        Text("Opening available")
+                        Text(CustomerHomeSpotlightCopy.headline(for: displayStatus))
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(PFColor.passOpeningLabel)
                     }
@@ -89,6 +142,12 @@ struct CustomerOfferSpotlightCard: View {
 
                     CustomerStatusPill(text: displayStatus.label, tone: displayStatus.pillToneOnPass)
                 }
+
+                Text(CustomerHomeSpotlightCopy.message(for: displayStatus))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.customerTextSecondary)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(service)
@@ -102,13 +161,13 @@ struct CustomerOfferSpotlightCard: View {
                         .foregroundStyle(PFColor.passTimeBlock)
                         .padding(.top, 6)
 
-                    Text(clinic)
+                    Text(businessSubtitleLine)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(PFColor.customerTextSecondary)
                         .padding(.top, 2)
                 }
 
-                CustomerPrimaryButton(
+                PFCustomerPrimaryButton(
                     title: primaryTitle,
                     isEnabled: primaryEnabled,
                     hapticImpact: .light,
@@ -120,32 +179,41 @@ struct CustomerOfferSpotlightCard: View {
     }
 
     private var secondarySpotlightBody: some View {
-        CustomerSectionCard(padding: 18, elevated: true) {
+        PFCustomerSectionCard(variant: .elevated, padding: 20) {
             VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    PFTypography.Customer.label("Opening update")
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(CustomerHomeSpotlightCopy.headline(for: displayStatus))
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(PFColor.textPrimary)
 
-                    Spacer()
+                        Text(CustomerHomeSpotlightCopy.message(for: displayStatus))
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .lineSpacing(3)
+                    }
 
-                    CustomerStatusPill(text: displayStatus.label, tone: displayStatus.pillToneOnDark)
+                    Spacer(minLength: 10)
+
+                    PFCustomerStatusChip(kind: .fromInboxDisplayStatus(displayStatus))
                 }
 
                 Text(service)
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(PFColor.textPrimary)
                     .lineLimit(2)
                     .minimumScaleFactor(0.86)
 
                 Text(timeLabel)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(PFColor.textSecondary)
 
-                Text(clinic)
-                    .font(.system(size: 15, weight: .medium))
+                Text(businessSubtitleLine)
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(PFColor.customerMutedText)
                     .lineLimit(2)
 
-                CustomerPrimaryButton(
+                PFCustomerPrimaryButton(
                     title: primaryTitle,
                     isEnabled: primaryEnabled,
                     hapticImpact: .light,
@@ -153,6 +221,73 @@ struct CustomerOfferSpotlightCard: View {
                     action: onPrimary
                 )
             }
+        }
+    }
+}
+
+// MARK: - Home guidance (find businesses / setup standby / watching)
+
+struct CustomerHomeNextStepCard: View {
+    enum Kind: Equatable {
+        case findBusinesses
+        case setupStandby
+        case watchingForOpenings
+    }
+
+    let kind: Kind
+    let onFindBusinesses: () -> Void
+    let onStandbyStatus: () -> Void
+    let onNotificationSettings: () -> Void
+
+    var body: some View {
+        PFCustomerSectionCard(variant: .attention, padding: 20) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(title)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
+
+                Text(message)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(spacing: 10) {
+                    switch kind {
+                    case .findBusinesses:
+                        PFCustomerPrimaryButton(title: "Find businesses", action: onFindBusinesses)
+                    case .setupStandby:
+                        PFCustomerPrimaryButton(title: "Set up standby", action: onStandbyStatus)
+                    case .watchingForOpenings:
+                        PFCustomerSecondaryButton(title: "View standby status", action: onStandbyStatus)
+                        PFCustomerPrimaryButton(title: "Find businesses", action: onFindBusinesses)
+                        PFCustomerSecondaryButton(title: "Check notification settings", action: onNotificationSettings)
+                    }
+                }
+                .padding(.top, 4)
+            }
+        }
+    }
+
+    private var title: String {
+        switch kind {
+        case .findBusinesses:
+            return "Find businesses"
+        case .setupStandby:
+            return "Set up standby"
+        case .watchingForOpenings:
+            return "You’re on standby"
+        }
+    }
+
+    private var message: String {
+        switch kind {
+        case .findBusinesses:
+            return "Join businesses using PulseFill so openings can appear when they match your standby preferences."
+        case .setupStandby:
+            return "Choose the openings you want to hear about."
+        case .watchingForOpenings:
+            return "We’ll show openings here when they match your preferences."
         }
     }
 }
@@ -184,7 +319,7 @@ struct CustomerStandbyStatusCard: View {
     let onSetup: () -> Void
 
     var body: some View {
-        CustomerSectionCard(padding: 16, elevated: isActive) {
+        PFCustomerSectionCard(variant: isActive ? .elevated : .default, padding: 16) {
             HStack(alignment: .center, spacing: 14) {
                 ZStack {
                     Circle()
@@ -250,7 +385,7 @@ struct CustomerRecentActivityCard: View {
     let onSeeAll: () -> Void
 
     var body: some View {
-        CustomerSectionCard(padding: 18) {
+        PFCustomerSectionCard(variant: .default, padding: 18) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
                     Text("Recent activity")

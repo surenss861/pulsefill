@@ -11,7 +11,7 @@ struct NotificationPreferenceView: View {
                     .foregroundStyle(PFColor.textPrimary)
 
                 Text(
-                    "PulseFill notifies you when a matching earlier time opens. First valid claim wins — if you’re slow to respond, someone else may get it."
+                    "PulseFill can alert you when a matching opening becomes available. Some openings move quickly, so timely alerts help you respond sooner."
                 )
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(PFColor.textSecondary)
@@ -22,7 +22,7 @@ struct NotificationPreferenceView: View {
                     .tint(PFColor.ember)
 
                 Text(
-                    "Turn on iOS notifications for PulseFill in Settings so you don’t miss a match. Your clinic may still reach you separately when needed."
+                    "Turn on iOS notifications for PulseFill in Settings so you don’t miss matching openings. The business may still contact you separately when needed."
                 )
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(PFColor.textMuted)

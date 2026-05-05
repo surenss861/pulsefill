@@ -74,6 +74,9 @@ test("createApnsPushProvider builds sandbox URL, headers, and body", async () =>
   assert.equal((parsed.aps as { alert: { body: string } }).alert.body, "Dental cleaning is available soon.");
   assert.equal(parsed.deep_link, "/customer/offers/offer_1");
   assert.equal(parsed.type, "offer_received");
+  assert.equal(parsed.offer_id, "offer_1");
+  assert.equal(parsed.open_slot_id, "22222222-2222-4222-8222-222222222222");
+  assert.equal(parsed.business_id, "11111111-1111-4111-8111-111111111111");
   assert.equal(out.ok, true);
   if (out.ok) {
     assert.equal(out.provider_message_id, "apns-id-1");

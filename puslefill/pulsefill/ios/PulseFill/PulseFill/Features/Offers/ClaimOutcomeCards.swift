@@ -26,7 +26,20 @@ struct ClaimOutcomeHeroCard: View {
     }
 
     private var stateLabel: String {
-        outcome.state.replacingOccurrences(of: "_", with: " ")
+        switch outcome.state.lowercased() {
+        case "confirmed":
+            return "Confirmed"
+        case "pending_confirmation":
+            return "Waiting for confirmation"
+        case "expired", "lost", "unavailable":
+            return "No longer available"
+        default:
+            return outcome.state
+                .replacingOccurrences(of: "_", with: " ")
+                .split(separator: " ")
+                .map(\.capitalized)
+                .joined(separator: " ")
+        }
     }
 
     private var stateColor: Color {
@@ -52,7 +65,7 @@ struct ClaimOutcomeBookingCard: View {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(PFColor.textSecondary)
 
-            Text(claim.businessName ?? "Clinic")
+            Text(claim.businessName ?? "This business")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(PFColor.textPrimary)
 
@@ -144,7 +157,7 @@ struct BookingConfirmedCard: View {
             Divider()
                 .overlay(PFColor.divider)
 
-            Text(claim.businessName ?? "Clinic")
+            Text(claim.businessName ?? "This business")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(PFColor.textPrimary)
 

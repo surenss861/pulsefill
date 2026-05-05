@@ -85,7 +85,7 @@ struct OfferDetailView: View {
                         .padding(.horizontal, 4)
                 }
                 if let err = viewModel.errorBanner, !err.isEmpty {
-                    Text(err)
+                    Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(err))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(PFColor.error)
                         .padding(.horizontal, 4)
@@ -189,7 +189,7 @@ struct OfferDetailView: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.82)
 
-                Text(CustomerOfferDetailCopy.clinicLine(for: offer))
+                Text(CustomerOfferDetailCopy.businessSubtitleLine(for: offer))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(PFColor.customerTextSecondary)
 
@@ -214,7 +214,7 @@ struct OfferDetailView: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(PFColor.textPrimary)
                 } else {
-                    Text("See details from your clinic")
+                    Text("See details from the business")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(PFColor.textSecondary)
                 }

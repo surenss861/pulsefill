@@ -34,7 +34,7 @@ final class StandbyPreferencesViewModel: ObservableObject {
 
     @Published var actionError: String?
 
-    /// When set, the business UUID field is fixed (directory / deep link) and shown as a clinic name.
+    /// When set, the business UUID field is fixed (directory / deep link) and shown as the business name.
     var businessSelectionLocked: Bool = false
     var lockedBusinessDisplayName: String?
 
@@ -118,7 +118,7 @@ final class StandbyPreferencesViewModel: ObservableObject {
             businessServices = try await api.getCustomerBusinessServices(businessId: bid)
         } catch {
             businessServices = []
-            businessServicesError = APIErrorCopy.message(for: error)
+            businessServicesError = PFCustomerFacingErrorCopy.sanitizeCustomerMessage(APIErrorCopy.message(for: error))
         }
 
         await refreshDraftLabels()
@@ -179,7 +179,7 @@ final class StandbyPreferencesViewModel: ObservableObject {
             existingPreferences = rows
             await refreshSavedLabels()
         } catch {
-            loadError = APIErrorCopy.message(for: error)
+            loadError = PFCustomerFacingErrorCopy.sanitizeCustomerMessage(APIErrorCopy.message(for: error))
         }
     }
 
@@ -213,6 +213,10 @@ final class StandbyPreferencesViewModel: ObservableObject {
 
     @discardableResult
     func savePreference() async -> Bool {
+        if case .saving = saveState {
+            return false
+        }
+
         guard draft.canReview else {
             let msg: String
             if draft.isBasicSetupComplete, draft.hasAvailabilityWindow, !draft.isTimeWindowValid {
@@ -306,7 +310,7 @@ final class StandbyPreferencesViewModel: ObservableObject {
                 editingActiveSnapshot = active
             }
         } catch {
-            actionError = APIErrorCopy.message(for: error)
+            actionError = PFCustomerFacingErrorCopy.sanitizeCustomerMessage(APIErrorCopy.message(for: error))
         }
     }
 
@@ -320,7 +324,7 @@ final class StandbyPreferencesViewModel: ObservableObject {
                 cancelEditing()
             }
         } catch {
-            actionError = APIErrorCopy.message(for: error)
+            actionError = PFCustomerFacingErrorCopy.sanitizeCustomerMessage(APIErrorCopy.message(for: error))
         }
     }
 

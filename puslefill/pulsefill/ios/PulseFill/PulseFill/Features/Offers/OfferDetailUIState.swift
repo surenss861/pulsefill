@@ -114,8 +114,10 @@ enum OfferDetailUIState: Equatable {
         case .taken:
             return "Stay on standby and we’ll let you know when another matching opening becomes available."
         case .unknown:
-            return fallbackGuidance?.detail
-                ?? "Refresh this screen or check back shortly."
+            if let raw = fallbackGuidance?.detail?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty {
+                return PFCustomerFacingErrorCopy.sanitizeCustomerMessage(raw)
+            }
+            return "Refresh this screen or check back shortly."
         }
     }
 
