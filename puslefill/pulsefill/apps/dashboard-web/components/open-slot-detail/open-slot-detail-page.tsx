@@ -7,6 +7,7 @@ import { OpenSlotDetailSection } from "@/components/open-slot-detail/open-slot-d
 import { OpenSlotDetailToolbar } from "@/components/open-slot-detail/open-slot-detail-toolbar";
 import { OpenSlotLogsPanel } from "@/components/open-slot-detail/open-slot-logs-panel";
 import { NotificationAttemptsPanel } from "@/components/open-slot-detail/notification-attempts-panel";
+import { NotificationDeliveryStatusSection } from "@/components/open-slot-detail/notification-delivery-status-section";
 import { NotificationLogsInspector } from "@/components/slots/notification-logs-inspector";
 import { SlotDeliverySummary } from "@/components/slots/slot-delivery-summary";
 import { OperatorInternalNoteCard } from "@/components/slots/operator-internal-note-card";
@@ -25,6 +26,7 @@ import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import type { OperatorStatusKind } from "@/components/operator/operator-status-chip";
 import { OperatorCustomerContextSection } from "@/components/customers/operator-customer-context-section";
+import { useNotificationDelivery } from "@/hooks/useNotificationDelivery";
 import { useNotificationLogs } from "@/hooks/useNotificationLogs";
 import { useNotificationAttempts } from "@/hooks/useNotificationAttempts";
 import { useOpenSlotDetail } from "@/hooks/useOpenSlotDetail";
@@ -94,6 +96,12 @@ export function OpenSlotDetailPage() {
     reload: reloadNotificationLogs,
   } = useNotificationLogs(slotId);
   const {
+    data: notificationDelivery,
+    loading: notificationDeliveryLoading,
+    error: notificationDeliveryError,
+    reload: reloadNotificationDelivery,
+  } = useNotificationDelivery(slotId);
+  const {
     attempts: notificationAttempts,
     loading: notificationAttemptsLoading,
     error: notificationAttemptsError,
@@ -128,23 +136,33 @@ export function OpenSlotDetailPage() {
       reload(),
       reloadTimeline(),
       reloadNotificationLogs(),
+      reloadNotificationDelivery(),
       reloadNotificationAttempts(),
       options.reload(),
       customerCtx.reload(),
     ]);
     setRefreshedAt(new Date());
-  }, [reload, reloadTimeline, reloadNotificationLogs, reloadNotificationAttempts, options.reload, customerCtx.reload]);
+  }, [
+    reload,
+    reloadTimeline,
+    reloadNotificationLogs,
+    reloadNotificationDelivery,
+    reloadNotificationAttempts,
+    options.reload,
+    customerCtx.reload,
+  ]);
 
   const silentRefresh = useCallback(async () => {
     await Promise.all([
       reload({ silent: true }),
       reloadTimeline({ silent: true }),
       reloadNotificationLogs({ silent: true }),
+      reloadNotificationDelivery({ silent: true }),
       reloadNotificationAttempts({ silent: true }),
       customerCtx.reload(),
     ]);
     setRefreshedAt(new Date());
-  }, [reload, reloadTimeline, reloadNotificationLogs, reloadNotificationAttempts, customerCtx.reload]);
+  }, [reload, reloadTimeline, reloadNotificationLogs, reloadNotificationDelivery, reloadNotificationAttempts, customerCtx.reload]);
 
   useEffect(() => {
     if (!loading && slot) setRefreshedAt(new Date());
@@ -425,7 +443,7 @@ export function OpenSlotDetailPage() {
               ) : null}
             </OpenSlotDetailSection>
 
-            {/* 9 — Raw logs */}
+            {/* 10 — Raw logs */}
             <div id="operator-slot-notification-logs">
             <OpenSlotDetailSection
               eyebrow="Messages"
@@ -500,14 +518,15 @@ export function OpenSlotDetailPage() {
               </div>
             ) : null}
 
-            {!notificationLogsLoading && notificationLogs.length > 0 ? (
-              <div style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
-                <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
-                  Delivery
-                </p>
-                <SlotDeliverySummary logs={notificationLogs} />
-              </div>
-            ) : null}
+            <div style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
+              <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
+                Delivery
+              </p>
+              <SlotDeliverySummary
+                summary={notificationDelivery?.summary ?? null}
+                loading={notificationDeliveryLoading}
+              />
+            </div>
           </aside>
         </div>
       ) : null}

@@ -4,9 +4,23 @@ struct OperatorSlotDeliverySummaryCard: View {
     let logs: [OperatorNotificationLogRow]
 
     var body: some View {
-        let delivered = logs.filter { $0.status == "delivered" }.count
+        let sent = logs.filter { log in
+            guard log.status == "delivered" else { return false }
+            let mode = log.metadata?.deliveryMode?.lowercased()
+            if mode == "simulated" { return false }
+            if mode == "skipped" { return false }
+            if log.metadata?.skipReason == "customer_push_disabled" { return false }
+            return true
+        }.count
+        let skipped = logs.filter { log in
+            guard log.status == "delivered" else { return false }
+            let mode = log.metadata?.deliveryMode?.lowercased()
+            return mode == "skipped" || log.metadata?.skipReason == "customer_push_disabled"
+        }.count
         let failed = logs.filter { $0.status == "failed" }.count
-        let simulated = logs.filter { $0.status == "simulated" }.count
+        let simulated = logs.filter { log in
+            log.status == "delivered" && log.metadata?.deliveryMode?.lowercased() == "simulated"
+        }.count
         let latestFailure = logs.first(where: { $0.status == "failed" })
 
         VStack(alignment: .leading, spacing: 12) {
@@ -14,7 +28,7 @@ struct OperatorSlotDeliverySummaryCard: View {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(PFColor.textSecondary)
 
-            Text("\(delivered) delivered · \(failed) failed · \(simulated) simulated")
+            Text("\(sent) sent · \(skipped) skipped · \(failed) failed · \(simulated) simulated")
                 .font(.system(size: 15))
                 .foregroundStyle(PFColor.textPrimary)
 

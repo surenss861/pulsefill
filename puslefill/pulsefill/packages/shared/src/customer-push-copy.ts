@@ -63,5 +63,20 @@ export function getCustomerPushCopy(
         title: "Improve your standby setup",
         body: "A few small changes could help you catch more openings.",
       };
+    case "opening_alert_sent":
+      return {
+        title: "Opening alert",
+        body: `${businessLabel} sent you an opening alert.`,
+      };
+    case "claim_update_sent":
+      return {
+        title: "Claim update",
+        body: `${businessLabel} sent an update about your claim.`,
+      };
+    case "confirmation_update_sent":
+      return {
+        title: "Confirmation update",
+        body: `${businessLabel} sent an update about your booking.`,
+      };
   }
 }

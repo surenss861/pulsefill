@@ -1,4 +1,4 @@
-import { getCustomerPushCopy } from "@pulsefill/shared";
+import { getCustomerPushCopy, type CustomerPushEventType } from "@pulsefill/shared";
 
 import type { CustomerEventKind } from "./customer-event-taxonomy.js";
 
@@ -20,7 +20,8 @@ export type CustomerEventCopy = {
 export function getCustomerEventCopy(input: CustomerEventCopyInput): CustomerEventCopy {
   const clinic = input.businessName?.trim() || "Clinic";
   const service = input.serviceName?.trim() || "Opening";
-  const push = getCustomerPushCopy(input.kind, {
+  /** Activity kinds mirror push vocabulary; cast keeps copy helper single-sourced from `@pulsefill/shared`. */
+  const push = getCustomerPushCopy(input.kind as CustomerPushEventType, {
     businessName: input.businessName,
     serviceName: input.serviceName,
   });
@@ -105,6 +106,30 @@ export function getCustomerEventCopy(input: CustomerEventCopyInput): CustomerEve
         pushTitle: push.title,
         pushBody: push.body,
         stateLabel: "Suggestion",
+      };
+    case "opening_alert_sent":
+      return {
+        title: "Opening alert sent",
+        detail: `${clinic} · ${service}`,
+        pushTitle: push.title,
+        pushBody: push.body,
+        stateLabel: "Alert sent",
+      };
+    case "claim_update_sent":
+      return {
+        title: "Claim update sent",
+        detail: `${clinic} sent an update about your claim.`,
+        pushTitle: push.title,
+        pushBody: push.body,
+        stateLabel: "Update sent",
+      };
+    case "confirmation_update_sent":
+      return {
+        title: "Confirmation update sent",
+        detail: `${clinic} sent an update about your booking.`,
+        pushTitle: push.title,
+        pushBody: push.body,
+        stateLabel: "Update sent",
       };
   }
 }

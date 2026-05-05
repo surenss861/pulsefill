@@ -10,6 +10,9 @@ enum CustomerActivityDisplayKind: Equatable {
     case openingNoLongerAvailable
     case standbyUpdated
     case notificationSent
+    case openingAlertSent
+    case claimUpdateSent
+    case confirmationUpdateSent
     case preferencesChanged
     case businessJoined
     case unknown
@@ -23,6 +26,9 @@ enum CustomerActivityDisplayKind: Equatable {
         case .openingNoLongerAvailable: return "Opening no longer available"
         case .standbyUpdated: return "Standby updated"
         case .notificationSent: return "Notification sent"
+        case .openingAlertSent: return "Opening alert sent"
+        case .claimUpdateSent: return "Claim update sent"
+        case .confirmationUpdateSent: return "Confirmation update sent"
         case .preferencesChanged: return "Preferences updated"
         case .businessJoined: return "Joined business"
         case .unknown: return "Update"
@@ -39,6 +45,7 @@ enum CustomerActivityDisplayKind: Equatable {
         case .openingNoLongerAvailable: return .unavailable
         case .standbyUpdated: return .active
         case .notificationSent: return .pending
+        case .openingAlertSent, .claimUpdateSent, .confirmationUpdateSent: return .pending
         case .preferencesChanged: return .active
         case .businessJoined: return .active
         case .unknown: return .unknown
@@ -55,6 +62,7 @@ enum CustomerActivityDisplayKind: Equatable {
         case .openingNoLongerAvailable: return "Unavailable"
         case .standbyUpdated: return "Standby"
         case .notificationSent: return "Alert"
+        case .openingAlertSent, .claimUpdateSent, .confirmationUpdateSent: return "Alert"
         case .preferencesChanged: return "Preferences"
         case .businessJoined: return "Joined"
         case .unknown: return "Update"
@@ -80,6 +88,12 @@ func customerActivityDisplayKind(rawKind: String) -> CustomerActivityDisplayKind
         return .standbyUpdated
     case "notification_sent", "push_sent":
         return .notificationSent
+    case "opening_alert_sent":
+        return .openingAlertSent
+    case "claim_update_sent":
+        return .claimUpdateSent
+    case "confirmation_update_sent":
+        return .confirmationUpdateSent
     case "preferences_updated", "notification_preferences_updated":
         return .preferencesChanged
     case "business_joined", "customer_joined_business", "membership_activated", "joined_business",

@@ -9,7 +9,10 @@ export type CustomerPushEventType =
   | "offer_expired"
   | "missed_opportunity"
   | "standby_status_reminder"
-  | "standby_setup_suggestion";
+  | "standby_setup_suggestion"
+  | "opening_alert_sent"
+  | "claim_update_sent"
+  | "confirmation_update_sent";
 
 export type CustomerPushPayloadArgs = {
   type: CustomerPushEventType;

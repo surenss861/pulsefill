@@ -138,6 +138,103 @@ export function offerRowStatusToFeedKind(status: string): "offer_received" | "of
   return isExpired ? "offer_expired" : "offer_received";
 }
 
+/** True when a push notification log should appear in the customer activity feed (no simulated or suppressed rows). */
+export function isCustomerVisiblePushDelivery(status: string, metadata: unknown): boolean {
+  if (String(status ?? "").toLowerCase() !== "delivered") return false;
+  const m = (metadata && typeof metadata === "object" ? metadata : null) as Record<string, unknown> | null;
+  const mode = typeof m?.delivery_mode === "string" ? m.delivery_mode.toLowerCase() : null;
+  if (mode === "skipped") return false;
+  if (typeof m?.skip_reason === "string" && m.skip_reason === "customer_push_disabled") return false;
+  if (mode === "simulated") return false;
+  return true;
+}
+
+async function buildPushDeliveredAlertActivity(admin: SupabaseClient, customerId: string): Promise<FeedItem[]> {
+  const { data: rows, error } = await admin
+    .from("notification_logs")
+    .select("id, open_slot_id, slot_offer_id, created_at, status, metadata")
+    .eq("customer_id", customerId)
+    .eq("channel", "push")
+    .order("created_at", { ascending: false })
+    .limit(60);
+
+  if (error) throw new Error("push_notification_activity_failed");
+
+  type LogShape = {
+    id: string;
+    open_slot_id: string | null;
+    slot_offer_id: string | null;
+    created_at: string;
+    status: string;
+    metadata: Record<string, unknown> | null;
+  };
+
+  const filtered = (rows ?? []).filter((raw) =>
+    isCustomerVisiblePushDelivery(String((raw as LogShape).status ?? ""), (raw as LogShape).metadata),
+  ) as LogShape[];
+
+  const slotIds = [...new Set(filtered.map((r) => r.open_slot_id).filter(Boolean))] as string[];
+  if (slotIds.length === 0) return [];
+
+  const { data: slots, error: sErr } = await admin
+    .from("open_slots")
+    .select(
+      "id, business_id, location_id, provider_id, service_id, provider_name_snapshot, starts_at, ends_at, status",
+    )
+    .in("id", slotIds);
+
+  if (sErr) throw new Error("push_notification_activity_slots_failed");
+
+  const slotById = new Map<string, Record<string, unknown>>();
+  for (const s of slots ?? []) {
+    slotById.set(String((s as { id: string }).id), s as Record<string, unknown>);
+  }
+
+  const labelCache = new Map<string, Awaited<ReturnType<typeof slotLabels>>>();
+  for (const slot of slotById.values()) {
+    const id = String(slot.id ?? "");
+    if (!id) continue;
+    labelCache.set(id, await slotLabels(admin, slot));
+  }
+
+  const items: FeedItem[] = [];
+  for (const row of filtered) {
+    const sid = row.open_slot_id;
+    if (!sid) continue;
+    const slot = slotById.get(sid);
+    if (!slot) continue;
+    const labels = labelCache.get(sid);
+    if (!labels) continue;
+
+    const kind: CustomerEventKind = "opening_alert_sent";
+    const copy = getCustomerEventCopy({
+      kind,
+      businessName: labels.business_name,
+      serviceName: labels.service_name,
+      startsAt: slot.starts_at as string,
+    });
+
+    items.push({
+      id: `push_alert_${row.id}`,
+      kind,
+      title: copy.title,
+      detail: copy.detail ?? null,
+      occurred_at: String(row.created_at ?? ""),
+      state: "delivered",
+      offer_id: row.slot_offer_id ? String(row.slot_offer_id) : null,
+      claim_id: null,
+      open_slot_id: String(slot.id ?? sid),
+      business_name: labels.business_name,
+      service_name: labels.service_name,
+      provider_name: labels.provider_name,
+      location_name: labels.location_name,
+      starts_at: (slot.starts_at as string | null) ?? null,
+      ends_at: (slot.ends_at as string | null) ?? null,
+    });
+  }
+  return items;
+}
+
 async function buildClaimActivity(admin: SupabaseClient, customerId: string): Promise<FeedItem[]> {
   const { data: claims, error: cErr } = await admin
     .from("slot_claims")
@@ -284,10 +381,11 @@ export async function fetchCustomerActivityFeed(
   const pushPermissionStatus = opts.pushPermissionStatus ?? "unknown";
 
   try {
-    const [offerItems, claimItems, prereqs] = await Promise.all([
+    const [offerItems, claimItems, prereqs, pushAlertItems] = await Promise.all([
       buildOfferActivity(admin, customerId),
       buildClaimActivity(admin, customerId),
       fetchCustomerStandbyPrereqs(admin, customerId),
+      buildPushDeliveredAlertActivity(admin, customerId),
     ]);
 
     const input = buildStandbyReadinessInputFromLoaded({
@@ -304,7 +402,7 @@ export async function fetchCustomerActivityFeed(
     });
     const systemItems = appendStandbySystemRows(readiness, touchIso);
 
-    const merged = dedupeAndSort([...offerItems, ...claimItems, ...systemItems]);
+    const merged = dedupeAndSort([...offerItems, ...claimItems, ...pushAlertItems, ...systemItems]);
     return { items: merged.slice(0, 100) };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

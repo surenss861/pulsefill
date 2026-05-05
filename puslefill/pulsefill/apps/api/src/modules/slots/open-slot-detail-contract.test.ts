@@ -37,6 +37,18 @@ test("GET /v1/open-slots/:id returns 401 without auth", async () => {
   assert.equal((res.json() as { error: string }).error, "unauthorized");
 });
 
+test("GET /v1/open-slots/:id/notification-delivery returns 401 without auth", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  const res = await app.inject({
+    method: "GET",
+    url: `/v1/open-slots/${SLOT_ID}/notification-delivery`,
+  });
+
+  assert.equal(res.statusCode, 401);
+  assert.equal((res.json() as { error: string }).error, "unauthorized");
+});
+
 test("GET /v1/open-slots/:id returns 404 for missing or wrong-tenant slot", async () => {
   if (process.env.PULSEFILL_API_TEST !== "1") return;
 

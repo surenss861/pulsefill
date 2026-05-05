@@ -129,12 +129,23 @@ struct NotificationLogsAPIResponse: Codable {
     let logs: [OperatorNotificationLogRow]
 }
 
+struct OperatorNotificationLogMetadata: Codable, Hashable {
+    let deliveryMode: String?
+    let skipReason: String?
+
+    enum CodingKeys: String, CodingKey {
+        case deliveryMode = "delivery_mode"
+        case skipReason = "skip_reason"
+    }
+}
+
 struct OperatorNotificationLogRow: Codable, Identifiable, Hashable {
     let id: String
     let status: String
     let customerId: String?
     let error: String?
     let createdAt: String
+    let metadata: OperatorNotificationLogMetadata?
 }
 
 // MARK: - POST bodies / responses

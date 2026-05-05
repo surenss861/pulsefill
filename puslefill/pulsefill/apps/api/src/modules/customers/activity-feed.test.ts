@@ -5,6 +5,7 @@ import {
   appendStandbySystemRows,
   claimStatusToEventKind,
   dedupeAndSort,
+  isCustomerVisiblePushDelivery,
   offerRowStatusToFeedKind,
   type FeedItem,
 } from "./activity-feed.js";
@@ -133,6 +134,22 @@ test("appendStandbySystemRows emits status reminder when shouldRemindStatus", ()
   assert.equal(rows.length, 1);
   assert.equal(rows[0]?.kind, "standby_status_reminder");
   assert.equal(rows[0]?.id, "system_standby_status_reminder");
+});
+
+test("isCustomerVisiblePushDelivery accepts real APNs delivery", () => {
+  assert.equal(
+    isCustomerVisiblePushDelivery("delivered", { delivery_mode: "apns" }),
+    true,
+  );
+});
+
+test("isCustomerVisiblePushDelivery rejects simulated and skipped rows", () => {
+  assert.equal(isCustomerVisiblePushDelivery("delivered", { delivery_mode: "simulated" }), false);
+  assert.equal(
+    isCustomerVisiblePushDelivery("delivered", { delivery_mode: "skipped", skip_reason: "customer_push_disabled" }),
+    false,
+  );
+  assert.equal(isCustomerVisiblePushDelivery("failed", { delivery_mode: "failed", reason: "no_push_device" }), false);
 });
 
 test("appendStandbySystemRows emits setup only when push denied (not reminder)", () => {

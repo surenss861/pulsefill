@@ -28,6 +28,7 @@ import {
   getExpireOpenSlotMutationTestDelegate,
 } from "./open-slots-route-test-seams.js";
 import { notifyCustomerBookingConfirmed } from "./notification-hooks.js";
+import { loadOpenSlotNotificationDelivery } from "./open-slot-notification-delivery.js";
 import { sendOpenSlotOffersRouteHandler } from "./send-offers-route.js";
 import {
   loadStaffActorLabels,
@@ -321,6 +322,26 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       }
 
       return reply.send({ logs: data ?? [] });
+    },
+  );
+
+  app.get(
+    "/v1/open-slots/:id/notification-delivery",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const slotId = z.string().uuid().parse((req.params as { id?: string }).id);
+
+      const ok = await assertSlotInBusiness(admin, slotId, req.staff!.business_id);
+      if (!ok) return sendJson(req, reply, 404, { error: "not_found" });
+
+      try {
+        const body = await loadOpenSlotNotificationDelivery(admin, slotId);
+        return reply.send(body);
+      } catch (e) {
+        req.log.error({ err: e }, "notification delivery failed");
+        return sendJson(req, reply, 500, { error: "notification_delivery_failed" });
+      }
     },
   );
 

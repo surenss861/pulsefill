@@ -1,16 +1,36 @@
 "use client";
 
-import type { NotificationLogRow } from "@/types/notification-log";
-
-type Props = {
-  logs: NotificationLogRow[];
+type DeliverySummary = {
+  sent: number;
+  failed: number;
+  skipped: number;
+  simulated: number;
 };
 
-export function SlotDeliverySummary({ logs }: Props) {
-  const delivered = logs.filter((x) => x.status === "delivered").length;
-  const failed = logs.filter((x) => x.status === "failed").length;
-  const simulated = logs.filter((x) => x.status === "simulated").length;
-  const latestFailure = logs.find((x) => x.status === "failed");
+type Props = {
+  summary: DeliverySummary | null;
+  loading?: boolean;
+};
+
+export function SlotDeliverySummary({ summary, loading }: Props) {
+  if (loading) {
+    return (
+      <div
+        style={{
+          padding: 16,
+          borderRadius: 18,
+          border: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(255,255,255,0.03)",
+          fontSize: 13,
+          opacity: 0.75,
+        }}
+      >
+        Loading delivery summary…
+      </div>
+    );
+  }
+
+  const s = summary ?? { sent: 0, failed: 0, skipped: 0, simulated: 0 };
 
   return (
     <div
@@ -26,12 +46,8 @@ export function SlotDeliverySummary({ logs }: Props) {
       <div style={{ fontSize: 12, opacity: 0.72, fontWeight: 700 }}>DELIVERY SUMMARY</div>
 
       <div style={{ fontSize: 14 }}>
-        {delivered} delivered · {failed} failed · {simulated} simulated
+        {s.sent} sent · {s.skipped} skipped · {s.failed} failed · {s.simulated} simulated
       </div>
-
-      {latestFailure?.error ? (
-        <div style={{ fontSize: 13, opacity: 0.8 }}>Latest issue: {latestFailure.error}</div>
-      ) : null}
     </div>
   );
 }

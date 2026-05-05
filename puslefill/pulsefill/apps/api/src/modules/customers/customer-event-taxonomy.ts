@@ -9,4 +9,7 @@ export type CustomerEventKind =
   | "claim_unavailable"
   | "missed_opportunity"
   | "standby_status_reminder"
-  | "standby_setup_suggestion";
+  | "standby_setup_suggestion"
+  | "opening_alert_sent"
+  | "claim_update_sent"
+  | "confirmation_update_sent";
