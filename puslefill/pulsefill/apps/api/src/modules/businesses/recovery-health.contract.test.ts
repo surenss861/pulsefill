@@ -25,6 +25,8 @@ afterEach(() => {
 
 const EVAL_AT = "2026-04-30T18:00:00.000Z";
 
+const emptyReadiness: RecoveryHealthResponse["readiness"] = { fixes: [] };
+
 function baseSignals(overrides: Partial<RecoveryHealthResponse["signals"]> = {}): RecoveryHealthResponse["signals"] {
   const defaults: RecoveryHealthResponse["signals"] = {
     setup: {
@@ -76,6 +78,9 @@ test("GET /v1/businesses/mine/recovery-health returns setup_required (delegate)"
     status: "setup_required",
     headline: "Workspace setup required",
     message: "Add locations, providers, and services.",
+    readiness: {
+      fixes: [{ key: "locations", title: "Add your first location", href: "/locations" }],
+    },
     signals: baseSignals({
       setup: {
         status: "setup_required",
@@ -96,6 +101,7 @@ test("GET /v1/businesses/mine/recovery-health returns setup_required (delegate)"
   const body = res.json() as RecoveryHealthResponse;
   assert.equal(body.status, "setup_required");
   assert.equal(body.signals.setup.status, "setup_required");
+  assert.equal(body.readiness.fixes[0]?.key, "locations");
 });
 
 test("GET /v1/businesses/mine/recovery-health returns low_coverage standby (delegate)", async () => {
@@ -106,6 +112,9 @@ test("GET /v1/businesses/mine/recovery-health returns low_coverage standby (dele
     status: "low_coverage",
     headline: "Low standby coverage",
     message: "Invite more customers.",
+    readiness: {
+      fixes: [{ key: "standby_pool", title: "Invite customers to standby", href: "/customers" }],
+    },
     signals: baseSignals({
       standby_pool: {
         status: "low_coverage",
@@ -134,6 +143,7 @@ test("GET /v1/businesses/mine/recovery-health returns needs_attention (delegate)
     status: "needs_attention",
     headline: "Recovery needs attention",
     message: "Review confirmations.",
+    readiness: emptyReadiness,
     signals: baseSignals({
       claims: {
         status: "needs_attention",
@@ -162,6 +172,7 @@ test("GET /v1/businesses/mine/recovery-health returns ready (delegate)", async (
     status: "ready",
     headline: "Recovery system ready",
     message: "All signals look healthy.",
+    readiness: emptyReadiness,
     signals: baseSignals(),
     next_actions: [],
   }));
@@ -181,6 +192,7 @@ test("GET /v1/businesses/mine/recovery-health returns ready (delegate)", async (
   assert.ok(body.signals.recent_matching);
   assert.ok(body.signals.claims);
   assert.ok(Array.isArray(body.next_actions));
+  assert.ok(Array.isArray(body.readiness.fixes));
 });
 
 test("GET /v1/businesses/mine/recovery-health returns 500 with request_id when delegate throws", async () => {

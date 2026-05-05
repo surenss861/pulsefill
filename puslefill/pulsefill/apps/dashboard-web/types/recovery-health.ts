@@ -15,12 +15,19 @@ export type RecoveryHealthNextAction = {
   priority: "primary" | "secondary";
 };
 
+export type RecoveryReadinessFix = {
+  key: "locations" | "providers" | "services" | "standby_pool" | "notification_reach";
+  title: string;
+  href: string;
+};
+
 export type RecoveryHealthResponse = {
   /** ISO timestamp when the API computed this snapshot. */
   evaluated_at: string;
   status: RecoveryHealthOverallStatus;
   headline: string;
   message: string;
+  readiness: { fixes: RecoveryReadinessFix[] };
   signals: {
     setup: RecoveryHealthSignal;
     standby_pool: RecoveryHealthSignal;

@@ -19,12 +19,20 @@ export type RecoveryHealthNextAction = {
   priority: "primary" | "secondary";
 };
 
+/** Compact Command Center checklist — only incomplete items, in priority order. */
+export type RecoveryReadinessFix = {
+  key: "locations" | "providers" | "services" | "standby_pool" | "notification_reach";
+  title: string;
+  href: string;
+};
+
 export type RecoveryHealthResponse = {
   /** ISO timestamp when this snapshot was computed (server clock). */
   evaluated_at: string;
   status: RecoveryHealthOverallStatus;
   headline: string;
   message: string;
+  readiness: { fixes: RecoveryReadinessFix[] };
   signals: {
     setup: RecoveryHealthSignal;
     standby_pool: RecoveryHealthSignal;
@@ -41,6 +49,44 @@ const NO_MATCH_HEAVY = 3;
 
 function sinceIso(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+/** Exported for unit tests — deterministic ordering for Command Center “Fix readiness”. */
+export function computeRecoveryReadinessFixes(input: {
+  setupComplete: boolean;
+  locCount: number;
+  provCount: number;
+  svcCount: number;
+  standbyCount: number;
+  reachableCount: number;
+  reachRatio: number;
+}): RecoveryReadinessFix[] {
+  const { setupComplete, locCount, provCount, svcCount, standbyCount, reachableCount, reachRatio } = input;
+  const fixes: RecoveryReadinessFix[] = [];
+  if (locCount === 0) {
+    fixes.push({ key: "locations", title: "Add your first location", href: "/locations" });
+  }
+  if (provCount === 0) {
+    fixes.push({ key: "providers", title: "Add your first provider", href: "/providers" });
+  }
+  if (svcCount === 0) {
+    fixes.push({ key: "services", title: "Add your first service", href: "/services" });
+  }
+  if (setupComplete && standbyCount < STANDBY_LOW_CUSTOMERS) {
+    fixes.push({
+      key: "standby_pool",
+      title: standbyCount === 0 ? "Invite customers to standby" : "Grow your standby pool",
+      href: "/customers",
+    });
+  }
+  if (setupComplete && standbyCount > 0 && (reachableCount === 0 || reachRatio < 0.5)) {
+    fixes.push({
+      key: "notification_reach",
+      title: "Improve notification reach for standby customers",
+      href: "/customers",
+    });
+  }
+  return fixes.slice(0, 5);
 }
 
 let buildRecoveryHealthTestDelegate:
@@ -88,18 +134,25 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
   const svcCount = svcRes.count ?? 0;
 
   const setupComplete = locCount > 0 && provCount > 0 && svcCount > 0;
+  const setupDetails = (() => {
+    if (setupComplete) return "Locations, providers, and services are configured.";
+    if (locCount === 0) return "Add at least one active location, then provider and service.";
+    if (provCount === 0) return "Add at least one active provider so openings can be attributed.";
+    if (svcCount === 0) return "Add at least one active service so standby can match openings.";
+    return "Complete the missing workspace items.";
+  })();
   const setupSignal: RecoveryHealthSignal = setupComplete
     ? {
         status: "ready",
         label: "Workspace setup",
         value: "Ready",
-        details: "Locations, providers, and services are configured.",
+        details: setupDetails,
       }
     : {
         status: "setup_required",
         label: "Workspace setup",
         value: "Needs setup",
-        details: "Add at least one active location, provider, and service before openings can match correctly.",
+        details: setupDetails,
       };
 
   if (prefsRes.error) throw new Error("recovery_health_standby_failed");
@@ -166,6 +219,16 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
           };
 
   const reachRatio = standbyCount > 0 ? reachableCount / standbyCount : 0;
+  const readinessFixes = computeRecoveryReadinessFixes({
+    setupComplete,
+    locCount,
+    provCount,
+    svcCount,
+    standbyCount,
+    reachableCount,
+    reachRatio,
+  });
+
   const notificationReachSignal: RecoveryHealthSignal =
     standbyCount === 0
       ? {
@@ -267,9 +330,8 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
   const nextActions: RecoveryHealthNextAction[] = [];
   if (!setupComplete) {
     if (locCount === 0) nextActions.push({ label: "Add a location", href: "/locations", priority: "primary" });
-    else if (provCount === 0) nextActions.push({ label: "Add a provider", href: "/providers", priority: "primary" });
-    else if (svcCount === 0) nextActions.push({ label: "Add a service", href: "/services", priority: "primary" });
-    else nextActions.push({ label: "Finish workspace setup", href: "/locations", priority: "primary" });
+    if (provCount === 0) nextActions.push({ label: "Add a provider", href: "/providers", priority: "primary" });
+    if (svcCount === 0) nextActions.push({ label: "Add a service", href: "/services", priority: "primary" });
   } else if (standbyCount < STANDBY_LOW_CUSTOMERS) {
     nextActions.push({ label: "Invite customers", href: "/customers", priority: "primary" });
   } else if (reachableCount < standbyCount && standbyCount > 0) {
@@ -324,6 +386,7 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
     status: overall,
     headline,
     message,
+    readiness: { fixes: readinessFixes.slice(0, 5) },
     signals: {
       setup: setupSignal,
       standby_pool: standbySignal,

@@ -149,6 +149,36 @@ export function RecoveryHealthPanel({ data, loading, error }: Props) {
         ))}
       </div>
 
+      {data.readiness.fixes.length > 0 ? (
+        <div style={{ marginTop: 12 }}>
+          <div className="pf-meta-row" style={{ fontSize: 11, opacity: 0.72, fontWeight: 600, marginBottom: 8 }}>
+            Fix readiness
+          </div>
+          <div style={{ display: "grid", gap: 6 }}>
+            {data.readiness.fixes.map((fix) => (
+              <MotionAction key={fix.key}>
+                <Link
+                  href={fix.href}
+                  style={{
+                    ...actionLinkStyle("secondary"),
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
+                  <span aria-hidden style={{ opacity: 0.55 }}>
+                    →
+                  </span>
+                  {fix.title}
+                </Link>
+              </MotionAction>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {data.next_actions.length > 0 ? (
         <div
           className="pf-operator-action-panel__actions"
