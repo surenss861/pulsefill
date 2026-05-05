@@ -34,8 +34,10 @@ import { useSetupOverviewData } from "@/hooks/useSetupOverviewData";
 import { OperatorMorningRecoveryDigestPanel } from "@/components/workflow/operator-morning-recovery-digest-panel";
 import { CommandCenterRecentActivity } from "@/components/overview/command-center-recent-activity";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
+import { useRecoveryHealth } from "@/hooks/useRecoveryHealth";
 import { FadeUp } from "@/components/motion/operator-motion";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
+import { RecoveryHealthPanel } from "@/components/overview/recovery-health-panel";
 import { NextBestActionCard } from "@/components/operator/next-best-action-card";
 import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
@@ -71,6 +73,7 @@ export function OverviewPageContent({
   const actionQueue = useActionQueue(30_000);
   const liveCounts = useLiveCounts(30_000);
   const standbyRequests = usePendingStandbyRequests(60_000);
+  const recoveryHealth = useRecoveryHealth();
   const setup = useSetupOverviewData();
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
 
@@ -282,6 +285,7 @@ export function OverviewPageContent({
       opsBreakdown.reload({ silent: true }),
       deliveryReliability.reload({ silent: true }),
       standbyRequests.reload({ silent: true }),
+      recoveryHealth.reload({ silent: true }),
     ]);
     setRefreshedAt(new Date());
   }, [
@@ -293,6 +297,7 @@ export function OverviewPageContent({
     opsBreakdown.reload,
     deliveryReliability.reload,
     standbyRequests.reload,
+    recoveryHealth.reload,
   ]);
 
   useOperatorRefreshSubscription({
@@ -330,6 +335,12 @@ export function OverviewPageContent({
           </div>
         </FadeUp>
       ) : null}
+
+      <FadeUp delay={0.055}>
+        <div style={{ marginTop: nextBest ? 12 : 16 }}>
+          <RecoveryHealthPanel data={recoveryHealth.data} loading={recoveryHealth.loading} error={recoveryHealth.error} />
+        </div>
+      </FadeUp>
 
       <FadeUp delay={0.06}>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>

@@ -12,6 +12,7 @@ import { buildMorningRecoveryDigest } from "./morning-recovery-digest.js";
 import { buildOperatorActivityFeed } from "./activity-feed.js";
 import { buildOperatorCustomerContext } from "./operator-customer-context.js";
 import { buildOutcomesPage } from "./outcomes-page.js";
+import { buildRecoveryHealth } from "./recovery-health.js";
 
 
 
@@ -272,6 +273,21 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
       } catch (e) {
         req.log.error({ e }, "outcomes_page_failed");
         return sendJson(req, reply, 500, { error: "outcomes_page_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/recovery-health",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = await buildRecoveryHealth(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "recovery_health_failed");
+        return sendJson(req, reply, 500, { error: "recovery_health_failed" });
       }
     },
   );
