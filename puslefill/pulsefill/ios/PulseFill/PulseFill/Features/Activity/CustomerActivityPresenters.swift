@@ -133,7 +133,7 @@ func customerActivityRowDot(for kind: CustomerActivityDisplayKind) -> CustomerAc
     switch kind {
     case .confirmed:
         return .success
-    case .openingReceived, .claimSent, .waitingForConfirmation:
+    case .openingReceived, .claimSent, .waitingForConfirmation, .openingAlertSent, .claimUpdateSent, .confirmationUpdateSent:
         return .ember
     default:
         return .muted
