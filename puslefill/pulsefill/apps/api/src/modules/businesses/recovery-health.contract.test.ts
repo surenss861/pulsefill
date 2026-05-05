@@ -23,6 +23,8 @@ afterEach(() => {
   setBuildRecoveryHealthTestDelegate(null);
 });
 
+const EVAL_AT = "2026-04-30T18:00:00.000Z";
+
 function baseSignals(overrides: Partial<RecoveryHealthResponse["signals"]> = {}): RecoveryHealthResponse["signals"] {
   const defaults: RecoveryHealthResponse["signals"] = {
     setup: {
@@ -70,6 +72,7 @@ test("GET /v1/businesses/mine/recovery-health returns setup_required (delegate)"
   if (process.env.PULSEFILL_API_TEST !== "1") return;
 
   setBuildRecoveryHealthTestDelegate(async () => ({
+    evaluated_at: EVAL_AT,
     status: "setup_required",
     headline: "Workspace setup required",
     message: "Add locations, providers, and services.",
@@ -99,6 +102,7 @@ test("GET /v1/businesses/mine/recovery-health returns low_coverage standby (dele
   if (process.env.PULSEFILL_API_TEST !== "1") return;
 
   setBuildRecoveryHealthTestDelegate(async () => ({
+    evaluated_at: EVAL_AT,
     status: "low_coverage",
     headline: "Low standby coverage",
     message: "Invite more customers.",
@@ -126,6 +130,7 @@ test("GET /v1/businesses/mine/recovery-health returns needs_attention (delegate)
   if (process.env.PULSEFILL_API_TEST !== "1") return;
 
   setBuildRecoveryHealthTestDelegate(async () => ({
+    evaluated_at: EVAL_AT,
     status: "needs_attention",
     headline: "Recovery needs attention",
     message: "Review confirmations.",
@@ -137,7 +142,7 @@ test("GET /v1/businesses/mine/recovery-health returns needs_attention (delegate)
         details: "Claims waiting for clinic confirmation.",
       },
     }),
-    next_actions: [{ label: "Review claims", href: "/claims", priority: "primary" }],
+    next_actions: [{ label: "Review claims", href: "/claims", priority: "secondary" }],
   }));
 
   const res = await app.inject({
@@ -153,6 +158,7 @@ test("GET /v1/businesses/mine/recovery-health returns ready (delegate)", async (
   if (process.env.PULSEFILL_API_TEST !== "1") return;
 
   setBuildRecoveryHealthTestDelegate(async () => ({
+    evaluated_at: EVAL_AT,
     status: "ready",
     headline: "Recovery system ready",
     message: "All signals look healthy.",
@@ -168,6 +174,7 @@ test("GET /v1/businesses/mine/recovery-health returns ready (delegate)", async (
   assert.equal(res.statusCode, 200);
   const body = res.json() as RecoveryHealthResponse;
   assert.equal(body.status, "ready");
+  assert.ok(body.evaluated_at);
   assert.ok(body.signals.setup);
   assert.ok(body.signals.standby_pool);
   assert.ok(body.signals.notification_reach);

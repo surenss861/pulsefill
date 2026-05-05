@@ -16,6 +16,8 @@ export type RecoveryHealthNextAction = {
 };
 
 export type RecoveryHealthResponse = {
+  /** ISO timestamp when the API computed this snapshot. */
+  evaluated_at: string;
   status: RecoveryHealthOverallStatus;
   headline: string;
   message: string;

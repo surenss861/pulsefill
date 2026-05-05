@@ -20,6 +20,8 @@ export type RecoveryHealthNextAction = {
 };
 
 export type RecoveryHealthResponse = {
+  /** ISO timestamp when this snapshot was computed (server clock). */
+  evaluated_at: string;
   status: RecoveryHealthOverallStatus;
   headline: string;
   message: string;
@@ -261,7 +263,6 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
         };
 
   const deliveryFailuresToday = dailyOps.metrics.delivery_failures_today;
-  const awaitingToday = dailyOps.metrics.awaiting_confirmation_count;
 
   const nextActions: RecoveryHealthNextAction[] = [];
   if (!setupComplete) {
@@ -275,7 +276,8 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
     nextActions.push({ label: "Review standby customers", href: "/customers", priority: "secondary" });
   }
   if (waitingClaims > 0) {
-    nextActions.push({ label: "Review claims", href: "/claims", priority: "primary" });
+    /** Secondary so Command Center NBA can stay the primary “do this now” for claims. */
+    nextActions.push({ label: "Review claims", href: "/claims", priority: "secondary" });
   } else if (deliveryFailuresToday > 0) {
     nextActions.push({ label: "Review delivery on openings", href: "/open-slots", priority: "primary" });
   } else if (offersSent7d === 0 && setupComplete) {
@@ -315,7 +317,10 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
     message = "No offers were sent recently — when cancellations land, create openings and send offers to stay ahead.";
   }
 
+  const evaluatedAt = new Date().toISOString();
+
   return {
+    evaluated_at: evaluatedAt,
     status: overall,
     headline,
     message,

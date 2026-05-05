@@ -9,6 +9,14 @@ import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 import type { RecoveryHealthOverallStatus, RecoveryHealthResponse, RecoveryHealthSignal } from "@/types/recovery-health";
 
+function formatEvaluatedAt(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const diffMs = Date.now() - d.getTime();
+  if (diffMs >= 0 && diffMs < 90_000) return "just now";
+  return new Intl.DateTimeFormat("en-CA", { dateStyle: "medium", timeStyle: "short" }).format(d);
+}
+
 function overallChipKind(status: RecoveryHealthOverallStatus): OperatorStatusKind {
   if (status === "ready") return "confirmed";
   if (status === "setup_required") return "setup";
@@ -76,8 +84,13 @@ export function RecoveryHealthPanel({ data, loading, error }: Props) {
     data.signals.claims,
   ];
 
-  const primary = data.next_actions.find((a) => a.priority === "primary");
-  const secondary = data.next_actions.find((a) => a.priority === "secondary");
+  const evaluatedWhen =
+    data.evaluated_at.trim().length > 0
+      ? (() => {
+          const ev = formatEvaluatedAt(data.evaluated_at);
+          return ev === "just now" ? "just now" : `at ${ev}`;
+        })()
+      : null;
 
   const shell = panelPriorityShell(data.status);
   const borderAccent =
@@ -136,26 +149,31 @@ export function RecoveryHealthPanel({ data, loading, error }: Props) {
         ))}
       </div>
 
-      {primary || secondary ? (
+      {data.next_actions.length > 0 ? (
         <div
           className="pf-operator-action-panel__actions"
           style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}
         >
-          {primary ? (
-            <MotionAction>
-              <Link href={primary.href} style={actionLinkStyle("primary")}>
-                {primary.label}
+          {data.next_actions.slice(0, 2).map((a, i) => (
+            <MotionAction key={`${a.href}:${a.label}`}>
+              <Link href={a.href} style={actionLinkStyle(i === 0 ? "primary" : "secondary")}>
+                {a.label}
               </Link>
             </MotionAction>
-          ) : null}
-          {secondary ? (
-            <MotionAction>
-              <Link href={secondary.href} style={actionLinkStyle("secondary")}>
-                {secondary.label}
-              </Link>
-            </MotionAction>
-          ) : null}
+          ))}
         </div>
+      ) : null}
+
+      {data.status === "ready" ? (
+        <p className="pf-muted-copy" style={{ marginTop: 12, fontSize: 12, lineHeight: 1.45 }}>
+          No urgent flags in this snapshot — use Next best action above for what to do right now.
+        </p>
+      ) : null}
+
+      {evaluatedWhen ? (
+        <p className="pf-muted-copy" style={{ marginTop: 10, fontSize: 11, opacity: 0.72, lineHeight: 1.45 }}>
+          Last evaluated {evaluatedWhen} · Updates when you refresh the Command Center.
+        </p>
       ) : null}
     </section>
   );
