@@ -141,3 +141,26 @@ export async function loadOpenSlotNotificationDelivery(
     items,
   };
 }
+
+/** When set (API tests only), bypasses Supabase for `GET .../notification-delivery` and returns a controlled payload. */
+export type NotificationDeliveryRouteTestDelegate = (input: {
+  slotId: string;
+  businessId: string;
+}) => Promise<
+  | { mode: "ok"; body: NotificationDeliveryResponse }
+  | { mode: "not_found" }
+  | { mode: "server_error" }
+>;
+
+let notificationDeliveryRouteTestDelegate: NotificationDeliveryRouteTestDelegate | null = null;
+
+export function setNotificationDeliveryRouteTestDelegate(delegate: NotificationDeliveryRouteTestDelegate | null): void {
+  if (delegate != null && process.env.PULSEFILL_API_TEST !== "1") {
+    throw new Error("notification delivery route test delegate is only available when PULSEFILL_API_TEST=1");
+  }
+  notificationDeliveryRouteTestDelegate = delegate;
+}
+
+export function getNotificationDeliveryRouteTestDelegate(): NotificationDeliveryRouteTestDelegate | null {
+  return notificationDeliveryRouteTestDelegate;
+}
