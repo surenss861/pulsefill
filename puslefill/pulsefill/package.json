@@ -22,6 +22,7 @@
     "railway:build:worker": "pnpm run railway:install && pnpm run build:worker",
     "typecheck": "pnpm -r typecheck",
     "typecheck:api": "pnpm --filter @pulsefill/api typecheck",
-    "smoke:api": "bash scripts/smoke-api.sh"
+    "smoke:api": "bash scripts/smoke-api.sh",
+    "seed:demo": "pnpm --filter @pulsefill/api seed:demo"
   }
 }

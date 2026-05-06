@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Env } from "../../config/env.js";
+import { computeBillingEntitlements, type BillingEntitlements } from "./billing-entitlements.js";
 
 export type BillingSubscriptionPlan = "starter" | "growth" | "multi_location";
 export type BillingSubscriptionStatus = "trialing" | "active" | "past_due" | "canceled" | "incomplete";
@@ -21,12 +22,15 @@ export type BillingSummaryResponse = {
   /** Stripe Checkout for subscription is implemented. */
   subscription_checkout_available: boolean;
   subscription: BillingSummarySubscription | null;
+  entitlements: BillingEntitlements;
 };
 
-let getBillingSummaryTestDelegate: null | ((businessId: string) => Promise<BillingSummaryResponse>) = null;
+export type BillingSummaryPayload = Omit<BillingSummaryResponse, "entitlements">;
+
+let getBillingSummaryTestDelegate: null | ((businessId: string) => Promise<BillingSummaryPayload>) = null;
 
 export function setGetBillingSummaryTestDelegate(
-  d: ((businessId: string) => Promise<BillingSummaryResponse>) | null,
+  d: ((businessId: string) => Promise<BillingSummaryPayload>) | null,
 ): void {
   if (d != null && process.env.PULSEFILL_API_TEST !== "1") {
     throw new Error("billing summary test delegate only when PULSEFILL_API_TEST=1");
@@ -34,14 +38,31 @@ export function setGetBillingSummaryTestDelegate(
   getBillingSummaryTestDelegate = d;
 }
 
+function withEntitlements(env: Env, base: Omit<BillingSummaryResponse, "entitlements">): BillingSummaryResponse {
+  return {
+    ...base,
+    entitlements: computeBillingEntitlements({
+      stripe_billing_available: base.stripe_billing_available,
+      subscription: base.subscription,
+      nodeEnv: env.NODE_ENV,
+    }),
+  };
+}
+
 export async function getBillingSummary(admin: SupabaseClient, businessId: string, env: Env): Promise<BillingSummaryResponse> {
   if (getBillingSummaryTestDelegate) {
-    return getBillingSummaryTestDelegate(businessId);
+    const base = await getBillingSummaryTestDelegate(businessId);
+    return withEntitlements(env, base);
   }
 
   const stripe_billing_available = Boolean(env.STRIPE_SECRET_KEY?.trim());
-  const billing_portal_available = false;
-  const subscription_checkout_available = false;
+  const billingRoutesOn = Boolean(env.ENABLE_BILLING_ROUTES);
+  const dashboardOrigin = env.DASHBOARD_URL?.trim();
+  const priceConfigured = Boolean(env.STRIPE_SUBSCRIPTION_PRICE_ID?.trim());
+
+  const subscription_checkout_available = Boolean(
+    billingRoutesOn && stripe_billing_available && priceConfigured && dashboardOrigin,
+  );
 
   const { data: rows, error } = await admin
     .from("subscriptions")
@@ -65,18 +86,22 @@ export async function getBillingSummary(admin: SupabaseClient, businessId: strin
     | undefined;
 
   if (!row) {
-    return {
+    return withEntitlements(env, {
       stripe_billing_available,
-      billing_portal_available,
+      billing_portal_available: false,
       subscription_checkout_available,
       subscription: null,
-    };
+    });
   }
 
   const plan = row.plan as BillingSubscriptionPlan;
   const status = row.status as BillingSubscriptionStatus;
+  const stripe_customer_linked = Boolean(row.stripe_customer_id?.trim());
+  const billing_portal_available = Boolean(
+    billingRoutesOn && stripe_billing_available && stripe_customer_linked && dashboardOrigin,
+  );
 
-  return {
+  return withEntitlements(env, {
     stripe_billing_available,
     billing_portal_available,
     subscription_checkout_available,
@@ -84,8 +109,8 @@ export async function getBillingSummary(admin: SupabaseClient, businessId: strin
       plan,
       status,
       current_period_end: row.current_period_end ?? null,
-      stripe_customer_linked: Boolean(row.stripe_customer_id?.trim()),
+      stripe_customer_linked,
       stripe_subscription_linked: Boolean(row.stripe_subscription_id?.trim()),
     },
-  };
+  });
 }

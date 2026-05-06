@@ -6,12 +6,12 @@ import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
 import { routeTestHeaders } from "../../test/helpers/app.js";
 import { createTestEnv } from "../../test/helpers/env.js";
-import type { BillingSummaryResponse } from "./billing-summary.js";
+import type { BillingSummaryPayload, BillingSummaryResponse } from "./billing-summary.js";
 import { setGetBillingSummaryTestDelegate } from "./billing-summary.js";
 
 let app: FastifyInstance;
 
-const SAMPLE: BillingSummaryResponse = {
+const SAMPLE: BillingSummaryPayload = {
   stripe_billing_available: true,
   billing_portal_available: false,
   subscription_checkout_available: false,
@@ -61,6 +61,12 @@ test("GET /v1/billing/summary returns stable shape and no Stripe id leakage", as
   const raw = res.body.toLowerCase();
   assert.ok(!raw.includes("cus_"));
   assert.ok(!raw.includes("sub_"));
+  assert.ok(body.entitlements);
+  assert.equal(body.entitlements.billing_notice_required, false);
+  assert.equal(body.entitlements.status_reason, "trialing");
+  assert.equal(body.entitlements.can_create_openings, true);
+  assert.equal(body.entitlements.can_send_offers, true);
+  assert.equal(body.entitlements.can_invite_customers, true);
 });
 
 test("GET /v1/billing/summary allows null subscription", async () => {
@@ -77,6 +83,32 @@ test("GET /v1/billing/summary allows null subscription", async () => {
   assert.equal(res.statusCode, 200);
   const body = res.json() as BillingSummaryResponse;
   assert.equal(body.subscription, null);
+  assert.ok(body.entitlements);
+  assert.equal(body.entitlements.status_reason, "billing_unavailable");
+  assert.equal(body.entitlements.billing_notice_required, false);
+});
+
+test("GET /v1/billing/summary entitlements require notice for past_due", async () => {
+  if (process.env.PULSEFILL_API_TEST !== "1") return;
+
+  setGetBillingSummaryTestDelegate(async () => ({
+    stripe_billing_available: true,
+    billing_portal_available: true,
+    subscription_checkout_available: false,
+    subscription: {
+      plan: "starter",
+      status: "past_due",
+      current_period_end: "2026-06-01T12:00:00.000Z",
+      stripe_customer_linked: true,
+      stripe_subscription_linked: true,
+    },
+  }));
+
+  const res = await app.inject({ method: "GET", url: "/v1/billing/summary", headers: routeTestHeaders() });
+  assert.equal(res.statusCode, 200);
+  const body = res.json() as BillingSummaryResponse;
+  assert.equal(body.entitlements.billing_notice_required, true);
+  assert.equal(body.entitlements.status_reason, "past_due");
 });
 
 test("GET /v1/billing/summary returns 500 with request_id when summary fails", async () => {

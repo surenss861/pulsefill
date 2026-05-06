@@ -41,6 +41,18 @@ const schema = z.object({
   REDIS_URL: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  /** Default subscription price for Checkout (e.g. price_…). */
+  STRIPE_SUBSCRIPTION_PRICE_ID: z.string().optional(),
+  /** Dashboard origin for Checkout/Portal return URLs (no trailing slash). */
+  DASHBOARD_URL: z
+    .union([z.string().url(), z.literal("")])
+    .optional()
+    .transform((v) => {
+      if (!v || typeof v !== "string" || !v.trim()) return undefined;
+      return v.replace(/\/$/, "");
+    }),
+  /** Optional trial length (days) passed to Checkout subscription_data. */
+  STRIPE_TRIAL_PERIOD_DAYS: z.coerce.number().int().min(0).max(730).optional(),
   ENABLE_BILLING_ROUTES: featureFlag,
   ENABLE_STRIPE_WEBHOOK_ROUTES: featureFlag,
   /** When true, skips registering @fastify/rate-limit (used by API route tests). */

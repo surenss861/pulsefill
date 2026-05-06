@@ -12,6 +12,7 @@ import type { OperatorStatusKind } from "@/components/operator/operator-status-c
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { apiFetch } from "@/lib/api";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
+import { BillingNoticeBanner } from "@/components/billing/billing-notice-banner";
 import type {
   BillingSubscriptionStatus,
   BillingSummaryResponse,
@@ -19,6 +20,10 @@ import type {
 } from "@/types/billing";
 
 const BILLING_SUMMARY = "/v1/billing/summary";
+const BILLING_CHECKOUT = "/v1/billing/checkout";
+const BILLING_PORTAL = "/v1/billing/portal";
+
+const BILLING_ACTION_ERROR = "We couldn't open billing right now. Try again shortly.";
 
 function planLabel(plan: BillingSummarySubscription["plan"]): string {
   if (plan === "starter") return "Starter";
@@ -103,10 +108,14 @@ export default function BillingPage() {
   const [data, setData] = useState<BillingSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       setError(null);
+      setActionError(null);
       setLoading(true);
       const res = await apiFetch<BillingSummaryResponse>(BILLING_SUMMARY);
       setData(res);
@@ -115,6 +124,34 @@ export default function BillingPage() {
       setError(e instanceof Error ? e.message : "Couldn’t load billing.");
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const startCheckout = useCallback(async () => {
+    try {
+      setActionError(null);
+      setCheckoutLoading(true);
+      const res = await apiFetch<{ url: string }>(BILLING_CHECKOUT, { method: "POST", body: "{}" });
+      if (res.url) window.location.assign(res.url);
+      else setActionError(BILLING_ACTION_ERROR);
+    } catch {
+      setActionError(BILLING_ACTION_ERROR);
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }, []);
+
+  const openPortal = useCallback(async () => {
+    try {
+      setActionError(null);
+      setPortalLoading(true);
+      const res = await apiFetch<{ url: string }>(BILLING_PORTAL, { method: "POST", body: "{}" });
+      if (res.url) window.location.assign(res.url);
+      else setActionError(BILLING_ACTION_ERROR);
+    } catch {
+      setActionError(BILLING_ACTION_ERROR);
+    } finally {
+      setPortalLoading(false);
     }
   }, []);
 
@@ -144,6 +181,15 @@ export default function BillingPage() {
       />
       <OperatorPageTransition>
         <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
+          {!loading && !error && data ? (
+            <BillingNoticeBanner
+              summary={data}
+              onStartCheckout={() => void startCheckout()}
+              onOpenPortal={() => void openPortal()}
+              checkoutLoading={checkoutLoading}
+              portalLoading={portalLoading}
+            />
+          ) : null}
           {loading ? <OperatorLoadingState variant="section" skeleton="rows" title="Loading billing…" /> : null}
 
           {!loading && error ? (
@@ -194,8 +240,8 @@ export default function BillingPage() {
                     No subscription on file
                   </p>
                   <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.5 }}>
-                    When your workspace has an active Stripe subscription, plan and renewal dates will appear here.
-                    Self-serve checkout from PulseFill is not enabled yet.
+                    When your workspace has an active Stripe subscription, plan and renewal dates will appear here. Use
+                    Start subscription when your operator has enabled Stripe checkout for this environment.
                   </p>
                 </div>
               ) : (
@@ -211,7 +257,7 @@ export default function BillingPage() {
                       <span style={{ color: "rgba(245,247,250,0.55)" }}>Not linked</span>
                     )}
                   </BillingDetailRow>
-                  <BillingDetailRow label="Subscription ID">
+                  <BillingDetailRow label="Stripe subscription">
                     {sub.stripe_subscription_linked ? (
                       <span style={{ color: "rgba(74,222,128,0.9)" }}>Synced</span>
                     ) : (
@@ -238,48 +284,65 @@ export default function BillingPage() {
                 }}
               >
                 <p className="pf-muted-copy" style={{ margin: 0, fontSize: 11, lineHeight: 1.45 }}>
-                  Manage payment methods, invoices, and cancellation in Stripe when checkout and the billing portal are
-                  wired for this product.
+                  Manage payment methods, invoices, and cancellation in Stripe using the billing portal when it is
+                  available for this workspace.
                 </p>
+                {actionError ? (
+                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, color: "rgba(248,113,113,0.92)" }}>
+                    {actionError}
+                  </p>
+                ) : null}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                   <button
                     type="button"
-                    disabled
-                    title="Not implemented yet"
+                    disabled={!data.billing_portal_available || portalLoading}
+                    title={!data.billing_portal_available ? "Billing portal is not available yet" : undefined}
+                    onClick={() => void openPortal()}
                     style={{
                       borderRadius: 10,
                       border: "1px solid rgba(255,255,255,0.12)",
-                      background: "rgba(255,255,255,0.04)",
-                      color: "rgba(245,247,250,0.45)",
+                      background:
+                        data.billing_portal_available && !portalLoading ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+                      color:
+                        data.billing_portal_available && !portalLoading ? "var(--pf-text-primary)" : "rgba(245,247,250,0.45)",
                       padding: "9px 14px",
                       fontSize: 12,
                       fontWeight: 600,
-                      cursor: "not-allowed",
+                      cursor: data.billing_portal_available && !portalLoading ? "pointer" : "not-allowed",
                     }}
                   >
-                    Open billing portal
+                    {portalLoading ? "Opening…" : "Open billing portal"}
                   </button>
                   <button
                     type="button"
-                    disabled
-                    title="Not implemented yet"
+                    disabled={!data.subscription_checkout_available || checkoutLoading}
+                    title={!data.subscription_checkout_available ? "Subscription checkout is not available yet" : undefined}
+                    onClick={() => void startCheckout()}
                     style={{
                       borderRadius: 10,
                       border: "1px solid rgba(255,255,255,0.12)",
-                      background: "rgba(255,255,255,0.04)",
-                      color: "rgba(245,247,250,0.45)",
+                      background:
+                        data.subscription_checkout_available && !checkoutLoading
+                          ? "rgba(255,255,255,0.08)"
+                          : "rgba(255,255,255,0.04)",
+                      color:
+                        data.subscription_checkout_available && !checkoutLoading
+                          ? "var(--pf-text-primary)"
+                          : "rgba(245,247,250,0.45)",
                       padding: "9px 14px",
                       fontSize: 12,
                       fontWeight: 600,
-                      cursor: "not-allowed",
+                      cursor:
+                        data.subscription_checkout_available && !checkoutLoading ? "pointer" : "not-allowed",
                     }}
                   >
-                    Start checkout
+                    {checkoutLoading ? "Starting…" : "Start subscription"}
                   </button>
                 </div>
                 {data.billing_portal_available || data.subscription_checkout_available ? null : (
                   <p className="pf-muted-copy" style={{ margin: 0, fontSize: 11 }}>
-                    Portal and checkout buttons will activate when the API implements Stripe session creation.
+                    Portal and subscription checkout activate when the API has Stripe keys, a dashboard URL, and billing
+                    routes enabled.
                   </p>
                 )}
               </div>

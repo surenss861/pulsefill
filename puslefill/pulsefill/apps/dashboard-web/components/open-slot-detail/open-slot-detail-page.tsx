@@ -37,6 +37,8 @@ import { usePollingEffect } from "@/hooks/usePollingEffect";
 import { useSlotFormOptions } from "@/hooks/useSlotFormOptions";
 import { useOperatorCustomerContext } from "@/hooks/useOperatorCustomerContext";
 import { useSlotTimeline } from "@/hooks/useSlotTimeline";
+import { useBillingSummary } from "@/hooks/useBillingSummary";
+import { BillingInlineGuardrail } from "@/components/billing/billing-inline-guardrail";
 import type { OperatorSlotQueueCategory, OperatorSlotQueueContext } from "@/types/open-slot-detail";
 import { isSlotRecoveryTerminalStatus, slotStatusToRecoveryPipelineActiveStep } from "@/lib/slot-recovery-pipeline";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
@@ -113,6 +115,7 @@ export function OpenSlotDetailPage() {
   const claimId = slot?.winning_claim?.id;
   const winningCustomerId = slot?.winning_claim?.customer_id;
   const customerCtx = useOperatorCustomerContext(winningCustomerId);
+  const billingSummary = useBillingSummary();
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
 
   const { serviceLabel, locationLabel, namesLoading } = useMemo(() => {
@@ -144,6 +147,7 @@ export function OpenSlotDetailPage() {
       options.reload(),
       customerCtx.reload(),
       noMatch.reload(),
+      billingSummary.reload(),
     ]);
     setRefreshedAt(new Date());
   }, [
@@ -155,6 +159,7 @@ export function OpenSlotDetailPage() {
     options.reload,
     customerCtx.reload,
     noMatch.reload,
+    billingSummary.reload,
   ]);
 
   const silentRefresh = useCallback(async () => {
@@ -166,6 +171,7 @@ export function OpenSlotDetailPage() {
       reloadNotificationAttempts({ silent: true }),
       customerCtx.reload(),
       noMatch.reload(),
+      billingSummary.reload(),
     ]);
     setRefreshedAt(new Date());
   }, [
@@ -176,6 +182,7 @@ export function OpenSlotDetailPage() {
     reloadNotificationAttempts,
     customerCtx.reload,
     noMatch.reload,
+    billingSummary.reload,
   ]);
 
   useEffect(() => {
@@ -334,6 +341,11 @@ export function OpenSlotDetailPage() {
                 </div>
               ) : null}
               <div style={{ marginTop: 20 }}>
+                {!billingSummary.loading && billingSummary.data ? (
+                  <div style={{ marginBottom: 10 }}>
+                    <BillingInlineGuardrail summary={billingSummary.data} />
+                  </div>
+                ) : null}
                 <OperatorSlotActionBar
                   openSlotId={slot.id}
                   slotStatus={slot.status}

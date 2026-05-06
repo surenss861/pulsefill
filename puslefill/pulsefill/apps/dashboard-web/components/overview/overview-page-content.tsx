@@ -35,12 +35,14 @@ import { OperatorMorningRecoveryDigestPanel } from "@/components/workflow/operat
 import { CommandCenterRecentActivity } from "@/components/overview/command-center-recent-activity";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { useRecoveryHealth } from "@/hooks/useRecoveryHealth";
+import { useBillingSummary } from "@/hooks/useBillingSummary";
 import { FadeUp } from "@/components/motion/operator-motion";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
 import { RecoveryHealthPanel } from "@/components/overview/recovery-health-panel";
 import { NextBestActionCard } from "@/components/operator/next-best-action-card";
 import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
+import { BillingNoticeBanner } from "@/components/billing/billing-notice-banner";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import type { SetupChecklistState } from "@/hooks/useSetupChecklistState";
 function nextSetupHref(state: SetupChecklistState): string {
@@ -75,6 +77,7 @@ export function OverviewPageContent({
   const standbyRequests = usePendingStandbyRequests(60_000);
   const recoveryHealth = useRecoveryHealth();
   const setup = useSetupOverviewData();
+  const billingSummary = useBillingSummary();
   const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
 
   const checklist = useSetupChecklistState({
@@ -286,6 +289,7 @@ export function OverviewPageContent({
       deliveryReliability.reload({ silent: true }),
       standbyRequests.reload({ silent: true }),
       recoveryHealth.reload({ silent: true }),
+      billingSummary.reload(),
     ]);
     setRefreshedAt(new Date());
   }, [
@@ -298,6 +302,7 @@ export function OverviewPageContent({
     deliveryReliability.reload,
     standbyRequests.reload,
     recoveryHealth.reload,
+    billingSummary.reload,
   ]);
 
   useOperatorRefreshSubscription({
@@ -316,6 +321,14 @@ export function OverviewPageContent({
       <FadeUp>
         <OverviewOperatorHero />
       </FadeUp>
+
+      {!billingSummary.loading && billingSummary.data ? (
+        <FadeUp delay={0.02}>
+          <div style={{ marginTop: 14 }}>
+            <BillingNoticeBanner summary={billingSummary.data} />
+          </div>
+        </FadeUp>
+      ) : null}
 
       {nextBest ? (
         <FadeUp delay={0.05}>

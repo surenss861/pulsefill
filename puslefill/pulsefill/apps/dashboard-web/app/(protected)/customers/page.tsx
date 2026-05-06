@@ -16,6 +16,8 @@ import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { StandbyCoveragePanel } from "@/components/customers/standby-coverage-panel";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { useStandbyCoverage } from "@/hooks/useStandbyCoverage";
+import { useBillingSummary } from "@/hooks/useBillingSummary";
+import { BillingInlineGuardrail } from "@/components/billing/billing-inline-guardrail";
 import { apiFetch } from "@/lib/api";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 import type {
@@ -223,6 +225,7 @@ export default function CustomersPage() {
   const [rowCopyId, setRowCopyId] = useState<string | null>(null);
   const [inviteFilter, setInviteFilter] = useState<InviteListFilter>("all");
   const standbyPending = usePendingStandbyRequests(60_000);
+  const billingSummary = useBillingSummary();
   const { data: standbyCoverage, loading: coverageLoading, error: coverageError, reload: reloadCoverage } =
     useStandbyCoverage();
   const reduceMotion = useReducedMotion();
@@ -440,6 +443,9 @@ export default function CustomersPage() {
               <h2 className="pf-section-title" style={{ fontSize: 16 }}>
                 Invite customer
               </h2>
+              {!billingSummary.loading && billingSummary.data ? (
+                <BillingInlineGuardrail summary={billingSummary.data} />
+              ) : null}
               <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
                 Create an invite link for a customer to join your standby pool. Only staff in this workspace can create
                 or revoke invites.

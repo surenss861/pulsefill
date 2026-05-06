@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { Suspense, useState } from "react";
+import { useBillingSummary } from "@/hooks/useBillingSummary";
 import type { OpenSlotCreatedSummary } from "@/components/slots/open-slot-created-summary";
 import { OpenSlotCreatedPanel } from "@/components/slots/open-slot-created-panel";
 import { OpenSlotForm } from "@/components/slots/open-slot-form";
+import { BillingInlineGuardrail } from "@/components/billing/billing-inline-guardrail";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
@@ -13,6 +15,7 @@ import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 
 export default function CreateOpenSlotPage() {
   const [created, setCreated] = useState<OpenSlotCreatedSummary | null>(null);
+  const billingSummary = useBillingSummary();
 
   return (
     <main className="pf-page-open-slot-create" style={{ padding: "clamp(16px, 3vw, 24px) 0 32px" }}>
@@ -36,13 +39,20 @@ export default function CreateOpenSlotPage() {
         {created ? (
           <OpenSlotCreatedPanel summary={created} onCreateAnother={() => setCreated(null)} />
         ) : (
-          <Suspense
-            fallback={
-              <OperatorLoadingState variant="section" skeleton="form" title="Loading form…" description="Reading link preferences." />
-            }
-          >
-            <OpenSlotForm onCreated={setCreated} />
-          </Suspense>
+          <>
+            {!billingSummary.loading && billingSummary.data ? (
+              <div style={{ marginBottom: 14 }}>
+                <BillingInlineGuardrail summary={billingSummary.data} />
+              </div>
+            ) : null}
+            <Suspense
+              fallback={
+                <OperatorLoadingState variant="section" skeleton="form" title="Loading form…" description="Reading link preferences." />
+              }
+            >
+              <OpenSlotForm onCreated={setCreated} />
+            </Suspense>
+          </>
         )}
       </OperatorPageTransition>
     </main>

@@ -1,0 +1,20 @@
+Billing-related API environment variables:
+
+- STRIPE_SECRET_KEY — Stripe secret API key (required for Checkout/Portal and webhook subscription retrieval).
+- STRIPE_WEBHOOK_SECRET — Signing secret from the Stripe Dashboard webhook endpoint (required to verify POST /v1/webhooks/stripe).
+- STRIPE_SUBSCRIPTION_PRICE_ID — Default recurring price id (price_…) for subscription Checkout.
+- DASHBOARD_URL — Origin of the staff dashboard, no trailing slash (used for Checkout success/cancel URLs and Portal return_url).
+- ENABLE_BILLING_ROUTES — When true, registers POST /v1/billing/checkout and POST /v1/billing/portal.
+- ENABLE_STRIPE_WEBHOOK_ROUTES — When true, registers POST /v1/webhooks/stripe with raw-body signature verification.
+- STRIPE_TRIAL_PERIOD_DAYS — Optional integer; when > 0, passed as subscription_data.trial_period_days on Checkout.
+
+See apps/api/.env.example for a minimal template.
+
+---
+
+Demo workspace seed (`pnpm seed:demo` from repo root; runs `apps/api/scripts/seed-demo-workspace.ts`):
+
+- DEMO_STAFF_AUTH_USER_ID — required; `auth.users.id` of the operator who should receive a `staff_users` row for the demo business (same user you use to sign into the dashboard).
+- DEMO_BUSINESS_ID — optional; if set, data is inserted into that existing business (may duplicate rows on repeat runs). If unset, a new business is created (`slug` prefix `pf-demo-`).
+- DEMO_SEED_ALLOW_PRODUCTION — must be `true` to allow the script when `NODE_ENV=production`.
+- Same non-local guard as customer-flow seed: set `PULSEFILL_ALLOW_CUSTOMER_FLOW_SEED=1` when `SUPABASE_URL` is not local.

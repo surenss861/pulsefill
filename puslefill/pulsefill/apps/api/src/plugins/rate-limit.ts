@@ -19,6 +19,11 @@ function isHealthPath(req: FastifyRequest): boolean {
   return path === "/health" || path === "/ready";
 }
 
+function isStripeWebhookPath(req: FastifyRequest): boolean {
+  const path = (req.url ?? "").split("?")[0] ?? "";
+  return path === "/v1/webhooks/stripe";
+}
+
 /** Stricter caps for high-abuse or high-cost mutations (merged with global by @fastify/rate-limit). */
 export const rateLimitTier = {
   /** Claim opening, invite accept, standby intent submit */
@@ -54,7 +59,7 @@ export default fp<RateLimitOpts>(async (app: FastifyInstance, opts: RateLimitOpt
     hook: "preHandler",
     max: 360,
     timeWindow: 5 * 60 * 1000,
-    allowList: (req) => isHealthPath(req),
+    allowList: (req) => isHealthPath(req) || isStripeWebhookPath(req),
     keyGenerator: rateLimitKey,
     ...(redis
       ? {
