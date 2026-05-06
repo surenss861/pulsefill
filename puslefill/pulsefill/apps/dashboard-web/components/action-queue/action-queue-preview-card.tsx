@@ -20,13 +20,17 @@ export function ActionQueuePreviewCard({
   hierarchy?: "default" | "secondary";
 }) {
   const top = items.slice(0, 5);
+  const followUps = summary?.customer_follow_up_due_count ?? 0;
   const totalIssues =
     (summary?.needs_action_count ?? 0) +
     (summary?.awaiting_confirmation_count ?? 0) +
-    (summary?.delivery_failed_count ?? 0);
+    (summary?.delivery_failed_count ?? 0) +
+    followUps;
   const summaryLine =
     summary != null && totalIssues > 0
-      ? `${summary.needs_action_count} need action · ${summary.awaiting_confirmation_count} awaiting confirmation · ${summary.delivery_failed_count} delivery issues`
+      ? `${summary.needs_action_count} need action · ${summary.awaiting_confirmation_count} awaiting confirmation · ${summary.delivery_failed_count} delivery issues${
+          followUps > 0 ? ` · ${followUps} customer follow-up${followUps === 1 ? "" : "s"}` : ""
+        }`
       : null;
 
   const secondary = hierarchy === "secondary";

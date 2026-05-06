@@ -19,6 +19,12 @@ type CustomerInviteRow = {
   accepted_by_customer_id: string | null;
 };
 
+function isMissingInviteTokenColumn(error: unknown): boolean {
+  const msg = String((error as { message?: string })?.message ?? "").toLowerCase();
+  const code = String((error as { code?: string })?.code ?? "");
+  return code === "42703" || msg.includes("invite_token");
+}
+
 function errPayload(req: FastifyRequest, code: string, message: string) {
   return { error: { code, message }, request_id: req.requestId };
 }
@@ -98,11 +104,15 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
 
       const row = invite as CustomerInviteRow;
       if (row.status === "pending" && new Date(row.expires_at) < new Date()) {
-        await admin
+        let ex = await admin
           .from("customer_invites")
-          .update({ status: "expired" })
+          .update({ status: "expired", invite_token: null })
           .eq("id", row.id)
           .eq("status", "pending");
+        if (ex.error && isMissingInviteTokenColumn(ex.error)) {
+          ex = await admin.from("customer_invites").update({ status: "expired" }).eq("id", row.id).eq("status", "pending");
+        }
+        if (ex.error) req.log.warn({ error: ex.error }, "invite expire stamp");
         return reply
           .status(410)
           .send(errPayload(req, "invite_expired", "This invite has expired. Ask the business to send a new one."));
@@ -164,17 +174,34 @@ export async function registerCustomerInviteAcceptRoute(app: FastifyInstance) {
           );
       }
 
-      const { data: updated, error: upErr } = await admin
+      let { data: updated, error: upErr } = await admin
         .from("customer_invites")
         .update({
           status: "accepted",
           accepted_at: now,
           accepted_by_customer_id: customer.id,
+          invite_token: null,
         })
         .eq("id", row.id)
         .eq("status", "pending")
         .select("id")
         .maybeSingle();
+
+      if (upErr && isMissingInviteTokenColumn(upErr)) {
+        const retry = await admin
+          .from("customer_invites")
+          .update({
+            status: "accepted",
+            accepted_at: now,
+            accepted_by_customer_id: customer.id,
+          })
+          .eq("id", row.id)
+          .eq("status", "pending")
+          .select("id")
+          .maybeSingle();
+        updated = retry.data;
+        upErr = retry.error;
+      }
 
       if (upErr) {
         req.log.error({ error: upErr }, "invite accept update");

@@ -14,6 +14,7 @@ import { OperatorInternalNoteCard } from "@/components/slots/operator-internal-n
 import { SlotAttentionCues } from "@/components/slots/slot-attention-cues";
 import { OperatorSlotActionBar } from "@/components/slots/operator-slot-action-bar";
 import { OperatorSlotOffersSummary } from "@/components/slots/operator-slot-offers-summary";
+import { NoMatchExplanationPanel } from "@/components/open-slot-detail/no-match-explanation-panel";
 import { OperatorSlotReasonBanner } from "@/components/slots/operator-slot-reason-banner";
 import { SlotOffersInspector } from "@/components/slots/slot-offers-inspector";
 import { SlotTimeline } from "@/components/slots/slot-timeline";
@@ -29,6 +30,7 @@ import { OperatorCustomerContextSection } from "@/components/customers/operator-
 import { useNotificationDelivery } from "@/hooks/useNotificationDelivery";
 import { useNotificationLogs } from "@/hooks/useNotificationLogs";
 import { useNotificationAttempts } from "@/hooks/useNotificationAttempts";
+import { useNoMatchExplanation } from "@/hooks/useNoMatchExplanation";
 import { useOpenSlotDetail } from "@/hooks/useOpenSlotDetail";
 import { useOpenSlotRealtime } from "@/hooks/useOpenSlotRealtime";
 import { usePollingEffect } from "@/hooks/usePollingEffect";
@@ -82,6 +84,7 @@ export function OpenSlotDetailPage() {
   const searchParams = useSearchParams();
   const slotId = params?.id;
   const { slot, queueContext, availableActions, loading, error, reload } = useOpenSlotDetail(slotId);
+  const noMatch = useNoMatchExplanation(slot?.id);
   const options = useSlotFormOptions();
   const {
     events: timelineEvents,
@@ -140,6 +143,7 @@ export function OpenSlotDetailPage() {
       reloadNotificationAttempts(),
       options.reload(),
       customerCtx.reload(),
+      noMatch.reload(),
     ]);
     setRefreshedAt(new Date());
   }, [
@@ -150,6 +154,7 @@ export function OpenSlotDetailPage() {
     reloadNotificationAttempts,
     options.reload,
     customerCtx.reload,
+    noMatch.reload,
   ]);
 
   const silentRefresh = useCallback(async () => {
@@ -160,9 +165,18 @@ export function OpenSlotDetailPage() {
       reloadNotificationDelivery({ silent: true }),
       reloadNotificationAttempts({ silent: true }),
       customerCtx.reload(),
+      noMatch.reload(),
     ]);
     setRefreshedAt(new Date());
-  }, [reload, reloadTimeline, reloadNotificationLogs, reloadNotificationDelivery, reloadNotificationAttempts, customerCtx.reload]);
+  }, [
+    reload,
+    reloadTimeline,
+    reloadNotificationLogs,
+    reloadNotificationDelivery,
+    reloadNotificationAttempts,
+    customerCtx.reload,
+    noMatch.reload,
+  ]);
 
   useEffect(() => {
     if (!loading && slot) setRefreshedAt(new Date());
@@ -337,6 +351,16 @@ export function OpenSlotDetailPage() {
 
             {/* 2 — Guidance */}
             <OperatorSlotReasonBanner queueContext={queueContext} />
+
+            <NoMatchExplanationPanel
+              visible={
+                queueContext?.current_category === "no_matches" || Boolean(noMatch.data?.has_explanation)
+              }
+              data={noMatch.data}
+              loading={noMatch.loading}
+              error={noMatch.error}
+              onRetry={() => void noMatch.reload()}
+            />
 
             {/* 3 — Attention cues */}
             <SlotAttentionCues slot={slot} logs={notificationLogs} />

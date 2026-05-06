@@ -43,6 +43,20 @@ export type ActionQueueSummary = {
   awaiting_confirmation_count: number;
   delivery_failed_count: number;
   retry_recommended_count: number;
+  /** Due or overdue internal customer note follow-ups (staff workspace). */
+  customer_follow_up_due_count: number;
+};
+
+/** Staff-only reminder from `customer_notes`; not slot-based. */
+export type CustomerFollowUpQueueItem = {
+  kind: "customer_follow_up_due";
+  note_id: string;
+  customer_id: string;
+  customer_label: string;
+  note_preview: string;
+  follow_up_at: string;
+  created_at: string;
+  created_by_name: string;
 };
 
 export type ActionQueueResponse = {
@@ -52,6 +66,7 @@ export type ActionQueueResponse = {
     review: ActionQueueItem[];
     resolved: ActionQueueItem[];
   };
+  customer_follow_ups: CustomerFollowUpQueueItem[];
 };
 
 type SlotRow = {
@@ -442,6 +457,56 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
   const delivery_failed_count = needsAction.filter((i) => i.kind === "delivery_failed").length;
   const retry_recommended_count = needsAction.filter((i) => i.kind === "retry_recommended").length;
 
+  const nowIso = new Date().toISOString();
+  const { data: followRows, error: followErr } = await admin
+    .from("customer_notes")
+    .select(
+      "id, body, follow_up_at, created_at, customer_id, customers ( full_name, email, phone ), staff_users ( full_name )",
+    )
+    .eq("business_id", businessId)
+    .is("deleted_at", null)
+    .not("follow_up_at", "is", null)
+    .is("follow_up_completed_at", null)
+    .lte("follow_up_at", nowIso)
+    .order("follow_up_at", { ascending: true })
+    .limit(50);
+
+  const customer_follow_ups: CustomerFollowUpQueueItem[] = !followErr
+    ? (followRows ?? []).map((raw) => {
+    const row = raw as {
+      id: string;
+      body: string;
+      follow_up_at: string;
+      created_at: string;
+      customer_id: string;
+      customers?: { full_name?: string | null; email?: string | null; phone?: string | null } | null;
+      staff_users?: { full_name?: string | null } | { full_name?: string | null }[] | null;
+    };
+    const cust = Array.isArray(row.customers) ? row.customers[0] : row.customers;
+    const label = customerLabel(row.customer_id, cust ?? null);
+    const prev = row.body.trim();
+    const note_preview = prev.length > 120 ? `${prev.slice(0, 117)}…` : prev;
+    const creatorRel = row.staff_users;
+    const creator = Array.isArray(creatorRel) ? creatorRel[0] : creatorRel;
+    const created_by_name =
+      creator && typeof creator === "object" && "full_name" in creator
+        ? String((creator as { full_name?: string | null }).full_name ?? "").trim() || "Staff member"
+        : "Staff member";
+        return {
+          kind: "customer_follow_up_due" as const,
+          note_id: row.id,
+          customer_id: row.customer_id,
+          customer_label: label,
+          note_preview,
+          follow_up_at: row.follow_up_at,
+          created_at: row.created_at,
+          created_by_name,
+        };
+      })
+    : [];
+
+  const customer_follow_up_due_count = customer_follow_ups.length;
+
   return {
     summary: {
       needs_action_count: needsAction.length,
@@ -450,11 +515,13 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
       awaiting_confirmation_count,
       delivery_failed_count,
       retry_recommended_count,
+      customer_follow_up_due_count,
     },
     sections: {
       needs_action: needsAction,
       review,
       resolved,
     },
+    customer_follow_ups,
   };
 }

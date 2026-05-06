@@ -191,6 +191,13 @@ export default function ServicesPage() {
                 title={s.name}
                 meta={typeof s.duration_minutes === "number" ? `${s.duration_minutes} min` : "Duration not set"}
                 status={<OperatorStatusChip kind="live" label="Listed" />}
+                action={
+                  <MotionAction>
+                    <Link href={`/services/coverage/${s.id}`} style={actionLinkStyle("secondary")}>
+                      Coverage
+                    </Link>
+                  </MotionAction>
+                }
               />
             ))}
           </OperatorRowList>

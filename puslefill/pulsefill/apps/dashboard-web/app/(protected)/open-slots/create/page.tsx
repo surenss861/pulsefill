@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import type { OpenSlotCreatedSummary } from "@/components/slots/open-slot-created-summary";
 import { OpenSlotCreatedPanel } from "@/components/slots/open-slot-created-panel";
 import { OpenSlotForm } from "@/components/slots/open-slot-form";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
@@ -35,7 +36,13 @@ export default function CreateOpenSlotPage() {
         {created ? (
           <OpenSlotCreatedPanel summary={created} onCreateAnother={() => setCreated(null)} />
         ) : (
-          <OpenSlotForm onCreated={setCreated} />
+          <Suspense
+            fallback={
+              <OperatorLoadingState variant="section" skeleton="form" title="Loading form…" description="Reading link preferences." />
+            }
+          >
+            <OpenSlotForm onCreated={setCreated} />
+          </Suspense>
         )}
       </OperatorPageTransition>
     </main>

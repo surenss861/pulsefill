@@ -7,9 +7,11 @@ import { OperatorLoadingState } from "@/components/operator/operator-loading-sta
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { ActionButton } from "@/components/ui/action-button";
 import { useOutcomesPage } from "@/hooks/useOutcomesPage";
+import { useRecoveryInsights } from "@/hooks/useRecoveryInsights";
 
 export function OutcomesPageClient() {
   const { data, loading, error, reload } = useOutcomesPage();
+  const insights = useRecoveryInsights();
 
   if (error) {
     return (
@@ -40,5 +42,12 @@ export function OutcomesPageClient() {
     );
   }
 
-  return <OutcomesPageContent data={data} />;
+  return (
+    <OutcomesPageContent
+      data={data}
+      insights={insights.data}
+      insightsError={insights.error}
+      onInsightsRetry={() => void insights.reload({ silent: true })}
+    />
+  );
 }

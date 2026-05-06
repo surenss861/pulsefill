@@ -32,6 +32,8 @@ import {
   getNotificationDeliveryRouteTestDelegate,
   loadOpenSlotNotificationDelivery,
 } from "./open-slot-notification-delivery.js";
+import { buildOpenSlotCreateDefaults } from "./open-slot-create-defaults.js";
+import { buildNoMatchExplanation, isNoMatchExplanationTestDelegateActive } from "./no-match-explanation.js";
 import { sendOpenSlotOffersRouteHandler } from "./send-offers-route.js";
 import {
   loadStaffActorLabels,
@@ -225,6 +227,21 @@ async function listOpenSlots(req: FastifyRequest, reply: FastifyReply) {
 export async function registerOpenSlotRoutes(app: FastifyInstance) {
   app.get("/v1/open-slots", { preHandler: requireStaff }, listOpenSlots);
   app.get("/v1/open-slots/mine", { preHandler: requireStaff }, listOpenSlots);
+
+  app.get(
+    "/v1/open-slots/create-defaults",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const out = await buildOpenSlotCreateDefaults(admin, req.staff!.business_id);
+        return reply.send(out);
+      } catch (err) {
+        req.log.error({ err }, "open_slot_create_defaults_failed");
+        return sendJson(req, reply, 500, { error: "create_defaults_failed" });
+      }
+    },
+  );
 
   app.post(
     "/v1/open-slots/bulk-action",
@@ -439,6 +456,28 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       });
       if (error) return sendJson(req, reply, 500, { error: "list_failed" });
       return reply.send(data ?? []);
+    },
+  );
+
+  app.get(
+    "/v1/open-slots/:id/no-match-explanation",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const id = z.string().uuid().parse((req.params as { id?: string }).id);
+
+      if (!isNoMatchExplanationTestDelegateActive()) {
+        const ok = await assertSlotInBusiness(admin, id, req.staff!.business_id);
+        if (!ok) return sendJson(req, reply, 404, { error: "not_found" });
+      }
+
+      try {
+        const payload = await buildNoMatchExplanation(admin, id, req.staff!.business_id);
+        return reply.send(payload);
+      } catch (err) {
+        req.log.error({ err }, "no_match_explanation_failed");
+        return sendJson(req, reply, 500, { error: "no_match_explanation_failed" });
+      }
     },
   );
 

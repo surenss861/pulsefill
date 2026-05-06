@@ -10,6 +10,7 @@ import { ActionQueueItemCard } from "@/components/action-queue/action-queue-item
 import { ActionQueueSection } from "@/components/action-queue/action-queue-section";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { ActionQueueSummaryBar } from "@/components/action-queue/action-queue-summary-bar";
+import { ActionQueueCustomerFollowUps } from "@/components/action-queue/action-queue-customer-follow-ups";
 import { OperatorFilterBar } from "@/components/operator/operator-filter-bar";
 import { OperatorSavedViews } from "@/components/operator/operator-saved-views";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
@@ -220,6 +221,12 @@ function ActionQueuePageContent() {
       {data ? (
         <>
           <ActionQueueSummaryBar summary={data.summary} />
+
+          {(filter === "all" || filter === "needs_action") && data.customer_follow_ups.length > 0 ? (
+            <div style={{ marginBottom: 16 }}>
+              <ActionQueueCustomerFollowUps items={data.customer_follow_ups} onChanged={() => void reload({ silent: true })} />
+            </div>
+          ) : null}
 
           {show.needs ? (
             <ActionQueueSection

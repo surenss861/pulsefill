@@ -80,7 +80,11 @@ function pickName(rel: unknown): string | null {
   return null;
 }
 
-async function customerHasBusinessContext(
+/**
+ * Staff may load customer context when the customer is tied to this business via
+ * preferences, membership, standby request, claim, or offer.
+ */
+export async function customerBelongsToStaffBusiness(
   admin: SupabaseClient,
   businessId: string,
   customerId: string,
@@ -93,6 +97,24 @@ async function customerHasBusinessContext(
     .limit(1)
     .maybeSingle();
   if (pref) return true;
+
+  const { data: mem } = await admin
+    .from("customer_business_memberships")
+    .select("id")
+    .eq("customer_id", customerId)
+    .eq("business_id", businessId)
+    .limit(1)
+    .maybeSingle();
+  if (mem) return true;
+
+  const { data: reqRow } = await admin
+    .from("customer_standby_requests")
+    .select("id")
+    .eq("customer_id", customerId)
+    .eq("business_id", businessId)
+    .limit(1)
+    .maybeSingle();
+  if (reqRow) return true;
 
   const { data: claimRows } = await admin
     .from("slot_claims")
@@ -126,7 +148,7 @@ export async function buildOperatorCustomerContext(
     return { error: "not_found" };
   }
 
-  const ok = await customerHasBusinessContext(admin, businessId, customerId);
+  const ok = await customerBelongsToStaffBusiness(admin, businessId, customerId);
   if (!ok) {
     return { error: "forbidden" };
   }

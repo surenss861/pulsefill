@@ -18,10 +18,12 @@ export function buildTodayRecoverySubtitle(
   const money = formatOverviewMoneyCents(m.recovered_revenue_cents_today);
   const head = `${m.recovered_bookings_today} recovered today (${money})`;
   const need = queueSummary?.needs_action_count;
+  const follow = queueSummary?.customer_follow_up_due_count ?? 0;
   if (typeof need === "number") {
+    const total = need + follow;
     const tail =
-      need > 0
-        ? `${need} queue item${need === 1 ? "" : "s"} need action`
+      total > 0
+        ? `${total} queue item${total === 1 ? "" : "s"} need attention${follow > 0 ? ` (${follow} customer follow-up${follow === 1 ? "" : "s"})` : ""}`
         : "queue clear for urgent work";
     const ac = m.awaiting_confirmation_count;
     const acBit =

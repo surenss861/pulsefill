@@ -45,6 +45,9 @@ export function ActionQueueSummaryBar({ summary }: { summary: ActionQueueSummary
       >
         Awaiting confirm: {summary.awaiting_confirmation_count} · Failed delivery: {summary.delivery_failed_count} · Retry:{" "}
         {summary.retry_recommended_count}
+        {summary.customer_follow_up_due_count > 0
+          ? ` · Customer follow-ups: ${summary.customer_follow_up_due_count}`
+          : ""}
       </div>
     </div>
   );

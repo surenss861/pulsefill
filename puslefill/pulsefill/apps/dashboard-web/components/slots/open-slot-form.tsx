@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import type { CSSProperties, FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { OpenSlotCreatedSummary } from "@/components/slots/open-slot-created-summary";
 import { type CreateOpenSlotPayload, useCreateOpenSlot } from "@/hooks/useCreateOpenSlot";
+import type { OpenSlotCreateDefaultsCombo } from "@/hooks/useOpenSlotCreateDefaults";
+import { useOpenSlotCreateDefaults } from "@/hooks/useOpenSlotCreateDefaults";
 import { useSlotFormOptions } from "@/hooks/useSlotFormOptions";
 import { RecoveryPipeline } from "@/components/operator/recovery-pipeline";
 import { OperatorFormShell } from "@/components/operator/operator-form-shell";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { MotionTapSurface } from "@/components/operator/operator-motion-primitives";
-import { pressableHandlers, pressablePrimary } from "@/lib/pressable";
+import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
 
 export type { OpenSlotCreatedSummary };
 
@@ -42,6 +45,27 @@ function minutesBetween(startLocal: string, endLocal: string): number | null {
   return Math.round((b - a) / 60000);
 }
 
+function startOfLocalDay(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+/** Short label for when an opening combo was last used (from API `last_used_at`). */
+function formatLastUsedLabel(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Used recently";
+  const now = new Date();
+  const days = Math.round((startOfLocalDay(now) - startOfLocalDay(d)) / 86400000);
+  if (days === 0) return "Last used today";
+  if (days === 1) return "Last used yesterday";
+  const sameYear = d.getFullYear() === now.getFullYear();
+  const datePart = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(sameYear ? {} : { year: "numeric" as const }),
+  }).format(d);
+  return `Last used ${datePart}`;
+}
+
 const inputStyle: CSSProperties = {
   borderRadius: 12,
   border: "1px solid rgba(255,255,255,0.11)",
@@ -59,6 +83,7 @@ type Props = {
 };
 
 export function OpenSlotForm({ onCreated }: Props) {
+  const searchParams = useSearchParams();
   const defaults = useMemo(() => defaultRange(), []);
   const {
     locations,
@@ -68,7 +93,18 @@ export function OpenSlotForm({ onCreated }: Props) {
     error: optionsError,
     reload: reloadOptions,
   } = useSlotFormOptions();
+  const createDefaultsEnabled = !optionsLoading && !optionsError;
+  const {
+    data: createDefaults,
+    loading: createDefaultsLoading,
+    error: createDefaultsError,
+    reload: reloadCreateDefaults,
+  } = useOpenSlotCreateDefaults(createDefaultsEnabled);
   const { create, loading: submitting, error: createError, setError } = useCreateOpenSlot();
+
+  const prefillFromDefaultsDone = useRef(false);
+  const prefillFromQueryDone = useRef(false);
+  const [queryPrefillBanner, setQueryPrefillBanner] = useState<string | null>(null);
 
   const [locationId, setLocationId] = useState("");
   const [providerId, setProviderId] = useState("");
@@ -112,10 +148,74 @@ export function OpenSlotForm({ onCreated }: Props) {
     setEndsLocal(toDatetimeLocalValue(end));
   }, [serviceId, startsLocal, services]);
 
-  function onProviderChange(id: string) {
+  const onProviderChange = useCallback((id: string) => {
     setProviderId(id);
     const p = providers.find((x) => x.id === id);
     setProviderNameSnapshot(p?.name ?? "");
+  }, [providers]);
+
+  /** Deep link: `/open-slots/create?service_id=…&location_id=…&provider_id=…` — only IDs present in loaded catalog. */
+  useEffect(() => {
+    if (optionsLoading || optionsError || prefillFromQueryDone.current) return;
+    if (locations.length === 0 && providers.length === 0 && services.length === 0) {
+      prefillFromQueryDone.current = true;
+      return;
+    }
+    prefillFromQueryDone.current = true;
+
+    const qLoc = searchParams.get("location_id")?.trim();
+    const qProv = searchParams.get("provider_id")?.trim();
+    const qSvc = searchParams.get("service_id")?.trim();
+
+    const parts: string[] = [];
+    if (qLoc && locations.some((l) => l.id === qLoc)) {
+      setLocationId(qLoc);
+      parts.push("location");
+    }
+    if (qProv && providers.some((p) => p.id === qProv)) {
+      onProviderChange(qProv);
+      parts.push("provider");
+    }
+    if (qSvc && services.some((s) => s.id === qSvc)) {
+      setServiceId(qSvc);
+      parts.push("service");
+    }
+
+    if (parts.length > 0) {
+      setQueryPrefillBanner(`Pre-filled ${parts.join(", ")} from link.`);
+    }
+  }, [optionsLoading, optionsError, locations, providers, services, searchParams, onProviderChange]);
+
+  useEffect(() => {
+    if (!createDefaultsEnabled || !createDefaults || prefillFromDefaultsDone.current) return;
+    prefillFromDefaultsDone.current = true;
+    const d = createDefaults.defaults;
+    if (!locationId && d.location_id && locations.some((l) => l.id === d.location_id)) {
+      setLocationId(d.location_id);
+    }
+    if (!providerId && d.provider_id && providers.some((p) => p.id === d.provider_id)) {
+      onProviderChange(d.provider_id);
+    }
+    if (!serviceId && d.service_id && services.some((s) => s.id === d.service_id)) {
+      setServiceId(d.service_id);
+    }
+  }, [
+    createDefaults,
+    createDefaultsEnabled,
+    locationId,
+    providerId,
+    serviceId,
+    locations,
+    providers,
+    services,
+    onProviderChange,
+  ]);
+
+  function applyRecentCombo(c: OpenSlotCreateDefaultsCombo) {
+    setFieldError(null);
+    if (locations.some((l) => l.id === c.location_id)) setLocationId(c.location_id);
+    if (providers.some((p) => p.id === c.provider_id)) onProviderChange(c.provider_id);
+    if (services.some((s) => s.id === c.service_id)) setServiceId(c.service_id);
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -329,6 +429,21 @@ export function OpenSlotForm({ onCreated }: Props) {
       {!optionsLoading && !optionsError ? (
         <OperatorFormShell mode="withRail" rail={rail}>
           <div style={{ display: "grid", gap: 16 }}>
+          {queryPrefillBanner ? (
+            <p
+              className="pf-muted-copy"
+              style={{
+                margin: 0,
+                fontSize: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid rgba(99,102,241,0.25)",
+                background: "rgba(99,102,241,0.08)",
+              }}
+            >
+              {queryPrefillBanner}
+            </p>
+          ) : null}
           {setupIncomplete ? (
             <div
               style={{
@@ -362,6 +477,137 @@ export function OpenSlotForm({ onCreated }: Props) {
               </div>
             </div>
           ) : null}
+
+          {createDefaultsLoading ||
+          createDefaultsError ||
+          (createDefaults && createDefaults.setup_warnings.length > 0) ||
+          (createDefaults && createDefaults.recent_combinations.length > 0) ? (
+            <section
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.06)",
+                background: "rgba(0,0,0,0.12)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 8,
+                  rowGap: 4,
+                }}
+              >
+                <p
+                  className="pf-muted-copy"
+                  style={{
+                    margin: 0,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    letterSpacing: "0.02em",
+                    textTransform: "uppercase",
+                    color: "rgba(245,247,250,0.45)",
+                  }}
+                >
+                  Suggested setup
+                </p>
+                {createDefaultsLoading ? (
+                  <span className="pf-muted-copy" style={{ fontSize: 11 }}>
+                    Loading…
+                  </span>
+                ) : null}
+                {createDefaultsError ? (
+                  <button
+                    type="button"
+                    onClick={() => void reloadCreateDefaults()}
+                    style={{
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: "transparent",
+                      padding: "3px 8px",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      color: "rgba(245,247,250,0.55)",
+                      fontSize: 11,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Retry
+                  </button>
+                ) : null}
+              </div>
+              {createDefaultsError ? (
+                <p className="pf-muted-copy" style={{ margin: "0 0 8px", fontSize: 11 }}>{createDefaultsError}</p>
+              ) : null}
+              {createDefaults && createDefaults.setup_warnings.length > 0 ? (
+                <ul
+                  className="pf-muted-copy"
+                  style={{
+                    margin: "0 0 10px",
+                    paddingLeft: 16,
+                    fontSize: 12,
+                    lineHeight: 1.45,
+                    display: "grid",
+                    gap: 3,
+                    color: "rgba(245,247,250,0.55)",
+                  }}
+                >
+                  {createDefaults.setup_warnings.map((w) => (
+                    <li key={w}>{w}</li>
+                  ))}
+                </ul>
+              ) : null}
+              {createDefaults && createDefaults.recent_combinations.length > 0 ? (
+                <div style={{ display: "grid", gap: 6 }}>
+                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 11, lineHeight: 1.4 }}>
+                    Recent openings — tap to fill location, provider, and service.
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 6,
+                      overflowX: "auto",
+                      paddingBottom: 2,
+                    }}
+                  >
+                    {createDefaults.recent_combinations.map((c) => (
+                      <MotionTapSurface key={`${c.location_id}-${c.provider_id}-${c.service_id}`}>
+                        <button
+                          type="button"
+                          onClick={() => applyRecentCombo(c)}
+                          style={{
+                            ...pressableSecondary,
+                            borderRadius: 10,
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            background: "rgba(255,255,255,0.04)",
+                            padding: "8px 10px",
+                            maxWidth: 280,
+                            textAlign: "left",
+                            display: "grid",
+                            gap: 4,
+                            alignItems: "start",
+                          }}
+                          {...pressableHandlers(false)}
+                          title={`${c.label} — ${formatLastUsedLabel(c.last_used_at)}`}
+                        >
+                          <span style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.35, color: "var(--text)" }}>
+                            {c.label}
+                          </span>
+                          <span className="pf-muted-copy" style={{ fontSize: 11, lineHeight: 1.3 }}>
+                            {formatLastUsedLabel(c.last_used_at)}
+                          </span>
+                        </button>
+                      </MotionTapSurface>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
           <section style={{ padding: 0 }}>
             <h2 className="pf-section-title" style={{ margin: "0 0 14px", fontSize: 16 }}>
               1. Appointment details

@@ -113,7 +113,7 @@ test("GET /v1/businesses/mine/recovery-health returns low_coverage standby (dele
     headline: "Low standby coverage",
     message: "Invite more customers.",
     readiness: {
-      fixes: [{ key: "standby_pool", title: "Invite customers to standby", href: "/customers" }],
+      fixes: [{ key: "standby_pool", title: "Invite customers to standby", href: "/customers#invite-customer" }],
     },
     signals: baseSignals({
       standby_pool: {
@@ -123,7 +123,7 @@ test("GET /v1/businesses/mine/recovery-health returns low_coverage standby (dele
         details: "No customers have active standby preferences.",
       },
     }),
-    next_actions: [{ label: "Invite customers", href: "/customers", priority: "primary" }],
+    next_actions: [{ label: "Invite customers", href: "/customers#invite-customer", priority: "primary" }],
   }));
 
   const res = await app.inject({

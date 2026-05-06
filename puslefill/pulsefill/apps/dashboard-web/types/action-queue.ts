@@ -40,6 +40,18 @@ export type ActionQueueSummary = {
   awaiting_confirmation_count: number;
   delivery_failed_count: number;
   retry_recommended_count: number;
+  customer_follow_up_due_count: number;
+};
+
+export type CustomerFollowUpQueueItem = {
+  kind: "customer_follow_up_due";
+  note_id: string;
+  customer_id: string;
+  customer_label: string;
+  note_preview: string;
+  follow_up_at: string;
+  created_at: string;
+  created_by_name: string;
 };
 
 export type ActionQueueResponse = {
@@ -49,6 +61,7 @@ export type ActionQueueResponse = {
     review: ActionQueueItem[];
     resolved: ActionQueueItem[];
   };
+  customer_follow_ups: CustomerFollowUpQueueItem[];
 };
 
 export type ActionQueueFilter = "all" | "needs_action" | "review" | "resolved";

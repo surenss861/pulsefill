@@ -76,7 +76,7 @@ export function computeRecoveryReadinessFixes(input: {
     fixes.push({
       key: "standby_pool",
       title: standbyCount === 0 ? "Invite customers to standby" : "Grow your standby pool",
-      href: "/customers",
+      href: "/customers#invite-customer",
     });
   }
   if (setupComplete && standbyCount > 0 && (reachableCount === 0 || reachRatio < 0.5)) {
@@ -333,7 +333,7 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
     if (provCount === 0) nextActions.push({ label: "Add a provider", href: "/providers", priority: "primary" });
     if (svcCount === 0) nextActions.push({ label: "Add a service", href: "/services", priority: "primary" });
   } else if (standbyCount < STANDBY_LOW_CUSTOMERS) {
-    nextActions.push({ label: "Invite customers", href: "/customers", priority: "primary" });
+    nextActions.push({ label: "Invite customers", href: "/customers#invite-customer", priority: "primary" });
   } else if (reachableCount < standbyCount && standbyCount > 0) {
     nextActions.push({ label: "Review standby customers", href: "/customers", priority: "secondary" });
   }

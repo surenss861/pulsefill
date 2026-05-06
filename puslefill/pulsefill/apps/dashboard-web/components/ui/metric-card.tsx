@@ -30,6 +30,12 @@ type MetricCardProps = {
   signal?: "idle" | "live";
   hint?: ReactNode;
   style?: CSSProperties;
+  className?: string;
+  /** Renders as a button with hover/focus affordances (e.g. filter triage). */
+  onClick?: () => void;
+  ariaLabel?: string;
+  /** When used as a filter toggle; pairs with `ariaLabel`. */
+  ariaPressed?: boolean;
 };
 
 const idleOverlay: CSSProperties = {
@@ -46,21 +52,34 @@ export function MetricCard({
   signal = "live",
   hint,
   style,
+  className = "",
+  onClick,
+  ariaLabel,
+  ariaPressed,
 }: MetricCardProps) {
   const compact = size === "compact";
   const idle = signal === "idle";
-  return (
-    <div
-      style={{
-        flex: "1 1 120px",
-        minWidth: compact ? 88 : 110,
-        borderRadius: compact ? "var(--pf-radius-md)" : "var(--pf-radius-xl)",
-        padding: compact ? "10px 12px" : "var(--pf-card-padding)",
-        ...surfaceFor[emphasis],
-        ...(idle ? idleOverlay : {}),
-        ...style,
-      }}
-    >
+  const interactive = typeof onClick === "function";
+  const surface = {
+    flex: "1 1 120px",
+    minWidth: compact ? 88 : 110,
+    borderRadius: compact ? "var(--pf-radius-md)" : "var(--pf-radius-xl)",
+    padding: compact ? "10px 12px" : "var(--pf-card-padding)",
+    ...surfaceFor[emphasis],
+    ...(idle ? idleOverlay : {}),
+    ...style,
+  } satisfies CSSProperties;
+
+  const cls = [
+    className,
+    interactive ? "pf-metric-card--interactive" : "",
+    interactive && ariaPressed ? "pf-metric-card--interactive--selected" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const inner = (
+    <>
       <p className="pf-kicker" style={{ letterSpacing: "0.18em", fontSize: compact ? 9 : 10 }}>
         {label}
       </p>
@@ -80,6 +99,36 @@ export function MetricCard({
           {hint}
         </p>
       ) : null}
+    </>
+  );
+
+  if (interactive) {
+    return (
+      <button
+        type="button"
+        className={cls}
+        onClick={onClick}
+        aria-label={ariaLabel ?? label}
+        aria-pressed={ariaPressed ?? false}
+        style={{
+          ...surface,
+          display: "block",
+          width: "100%",
+          boxSizing: "border-box",
+          cursor: "pointer",
+          font: "inherit",
+          textAlign: "inherit",
+          color: "inherit",
+        }}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return (
+    <div className={cls || undefined} style={surface}>
+      {inner}
     </div>
   );
 }

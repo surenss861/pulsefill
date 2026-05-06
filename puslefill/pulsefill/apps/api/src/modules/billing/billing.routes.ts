@@ -1,7 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { createServiceSupabase } from "../../config/supabase.js";
+import type { Env } from "../../config/env.js";
 import { sendJson } from "../../lib/http-errors.js";
 import { requireCustomer, requireStaff } from "../../plugins/guards.js";
+import { rateLimitTier } from "../../plugins/rate-limit.js";
+import { getBillingSummary } from "./billing-summary.js";
 
 const portalBody = z
   .object({
@@ -18,6 +22,26 @@ const checkoutBody = z
   .strict();
 
 export async function registerBillingRoutes(app: FastifyInstance) {
+  app.get(
+    "/v1/billing/summary",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const env = req.server.env as Env;
+      try {
+        const data = await getBillingSummary(admin, req.staff!.business_id, env);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "billing summary failed");
+        return sendJson(req, reply, 500, { error: "billing_summary_failed" });
+      }
+    },
+  );
+
+  if (!app.env.ENABLE_BILLING_ROUTES) {
+    return;
+  }
+
   app.post(
     "/v1/billing/subscription-checkout",
     { preHandler: requireStaff },

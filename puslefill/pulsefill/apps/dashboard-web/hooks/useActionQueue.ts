@@ -16,7 +16,17 @@ export function useActionQueue(pollMs = 15_000) {
         setError(null);
       }
       const res = await apiFetch<ActionQueueResponse>("/v1/businesses/mine/action-queue");
-      setData(res);
+      setData({
+        ...res,
+        customer_follow_ups: Array.isArray(res.customer_follow_ups) ? res.customer_follow_ups : [],
+        summary: {
+          ...res.summary,
+          customer_follow_up_due_count:
+            typeof res.summary?.customer_follow_up_due_count === "number"
+              ? res.summary.customer_follow_up_due_count
+              : 0,
+        },
+      });
     } catch (err) {
       if (!silent) {
         setError(err instanceof Error ? err.message : "Failed to load Recovery Queue");

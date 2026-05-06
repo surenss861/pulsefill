@@ -10,9 +10,20 @@ import { buildDeliveryReliability } from "./delivery-reliability.js";
 import { buildOpsBreakdown } from "./ops-breakdown.js";
 import { buildMorningRecoveryDigest } from "./morning-recovery-digest.js";
 import { buildOperatorActivityFeed } from "./activity-feed.js";
+import {
+  completeCustomerNoteFollowUp,
+  createCustomerNote,
+  listCustomerNotes,
+  parseCustomerNoteFollowUpAt,
+} from "./customer-notes.js";
+import { buildCustomerProfile } from "./customer-profile.js";
+import { buildCustomerTimeline } from "./customer-timeline.js";
 import { buildOperatorCustomerContext } from "./operator-customer-context.js";
 import { buildOutcomesPage } from "./outcomes-page.js";
 import { buildRecoveryHealth } from "./recovery-health.js";
+import { buildRecoveryInsights, type RecoveryInsightsResponse } from "./recovery-insights.js";
+import { buildServiceCoverageDrilldown, type ServiceCoverageDrilldownResponse } from "./service-coverage-drilldown.js";
+import { buildStandbyCoverage } from "./standby-coverage.js";
 
 
 
@@ -24,6 +35,38 @@ export function setBuildOutcomesPageTestDelegate(
   delegate: ((admin: ReturnType<typeof createServiceSupabase>, businessId: string) => Promise<unknown>) | null,
 ) {
   buildOutcomesPageTestDelegate = delegate;
+}
+
+let buildRecoveryInsightsTestDelegate:
+  | null
+  | ((admin: ReturnType<typeof createServiceSupabase>, businessId: string) => Promise<RecoveryInsightsResponse>) = null;
+
+export function setBuildRecoveryInsightsTestDelegate(
+  delegate:
+    | ((admin: ReturnType<typeof createServiceSupabase>, businessId: string) => Promise<RecoveryInsightsResponse>)
+    | null,
+) {
+  buildRecoveryInsightsTestDelegate = delegate;
+}
+
+let buildServiceCoverageDrilldownTestDelegate:
+  | null
+  | ((
+      admin: ReturnType<typeof createServiceSupabase>,
+      businessId: string,
+      serviceId: string,
+    ) => Promise<ServiceCoverageDrilldownResponse>) = null;
+
+export function setBuildServiceCoverageDrilldownTestDelegate(
+  delegate:
+    | ((
+        admin: ReturnType<typeof createServiceSupabase>,
+        businessId: string,
+        serviceId: string,
+      ) => Promise<ServiceCoverageDrilldownResponse>)
+    | null,
+) {
+  buildServiceCoverageDrilldownTestDelegate = delegate;
 }
 
 type NotificationAttemptFilterInput = {
@@ -293,6 +336,63 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
   );
 
   app.get(
+    "/v1/businesses/mine/recovery-insights",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = buildRecoveryInsightsTestDelegate
+          ? await buildRecoveryInsightsTestDelegate(admin, req.staff!.business_id)
+          : await buildRecoveryInsights(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "recovery_insights_failed");
+        return sendJson(req, reply, 500, { error: "recovery_insights_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/standby-coverage",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      try {
+        const data = await buildStandbyCoverage(admin, req.staff!.business_id);
+        return reply.send(data);
+      } catch (e) {
+        req.log.error({ e }, "standby_coverage_failed");
+        return sendJson(req, reply, 500, { error: "standby_coverage_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/service-coverage/:serviceId",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const parsed = z.string().uuid().safeParse((req.params as { serviceId?: string }).serviceId);
+      if (!parsed.success) {
+        return sendJson(req, reply, 400, { error: "invalid_service_id" });
+      }
+      const serviceId = parsed.data;
+      try {
+        const data = buildServiceCoverageDrilldownTestDelegate
+          ? await buildServiceCoverageDrilldownTestDelegate(admin, req.staff!.business_id, serviceId)
+          : await buildServiceCoverageDrilldown(admin, req.staff!.business_id, serviceId);
+        return reply.send(data);
+      } catch (e) {
+        if (e instanceof Error && e.message === "service_not_found") {
+          return sendJson(req, reply, 404, { error: "service_not_found" });
+        }
+        req.log.error({ e }, "service_coverage_drilldown_failed");
+        return sendJson(req, reply, 500, { error: "service_coverage_drilldown_failed" });
+      }
+    },
+  );
+
+  app.get(
     "/v1/businesses/mine/delivery-reliability",
     { preHandler: requireStaff },
     async (req, reply) => {
@@ -303,6 +403,172 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
       } catch (e) {
         req.log.error({ e }, "delivery_reliability_failed");
         return sendJson(req, reply, 500, { error: "delivery_reliability_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/customers/:customerId/profile",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const parsed = z.string().uuid().safeParse((req.params as { customerId?: string }).customerId);
+      if (!parsed.success) {
+        return sendJson(req, reply, 400, { error: "invalid_customer_id" });
+      }
+      const customerId = parsed.data;
+      try {
+        const data = await buildCustomerProfile(admin, req.staff!.business_id, customerId);
+        return reply.send(data);
+      } catch (e) {
+        if (e instanceof Error && e.message === "customer_profile_not_found") {
+          return sendJson(req, reply, 404, { error: "not_found" });
+        }
+        req.log.error({ e }, "customer_profile_failed");
+        return sendJson(req, reply, 500, { error: "customer_profile_failed" });
+      }
+    },
+  );
+
+  app.get(
+    "/v1/businesses/mine/customers/:customerId/timeline",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const parsed = z.string().uuid().safeParse((req.params as { customerId?: string }).customerId);
+      if (!parsed.success) {
+        return sendJson(req, reply, 400, { error: "invalid_customer_id" });
+      }
+      const customerId = parsed.data;
+      try {
+        const data = await buildCustomerTimeline(admin, req.staff!.business_id, customerId);
+        return reply.send(data);
+      } catch (e) {
+        if (e instanceof Error && e.message === "customer_timeline_not_found") {
+          return sendJson(req, reply, 404, { error: "not_found" });
+        }
+        req.log.error({ e }, "customer_timeline_failed");
+        return sendJson(req, reply, 500, { error: "customer_timeline_failed" });
+      }
+    },
+  );
+
+  const postCustomerNoteBody = z
+    .object({
+      body: z.string(),
+      follow_up_at: z.string().optional(),
+    })
+    .strict();
+
+  app.get(
+    "/v1/businesses/mine/customers/:customerId/notes",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.directoryRead } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const parsed = z.string().uuid().safeParse((req.params as { customerId?: string }).customerId);
+      if (!parsed.success) {
+        return sendJson(req, reply, 400, { error: "invalid_customer_id" });
+      }
+      const customerId = parsed.data;
+      try {
+        const data = await listCustomerNotes(admin, req.staff!.business_id, customerId);
+        return reply.send(data);
+      } catch (e) {
+        if (e instanceof Error && e.message === "customer_notes_not_found") {
+          return sendJson(req, reply, 404, { error: "not_found" });
+        }
+        req.log.error({ e }, "customer_notes_list_failed");
+        return sendJson(req, reply, 500, { error: "customer_notes_list_failed" });
+      }
+    },
+  );
+
+  app.post(
+    "/v1/businesses/mine/customers/:customerId/notes",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const parsed = z.string().uuid().safeParse((req.params as { customerId?: string }).customerId);
+      if (!parsed.success) {
+        return sendJson(req, reply, 400, { error: "invalid_customer_id" });
+      }
+      const customerId = parsed.data;
+
+      let bodyRaw: string;
+      let followUpRaw: string | undefined;
+      try {
+        const parsed = postCustomerNoteBody.parse(req.body ?? {});
+        bodyRaw = parsed.body;
+        followUpRaw = parsed.follow_up_at;
+      } catch {
+        return sendJson(req, reply, 400, { error: "validation_error", message: "Invalid request body." });
+      }
+      const body = bodyRaw.trim();
+      if (!body) {
+        return sendJson(req, reply, 400, { error: "validation_error", message: "Note body cannot be empty." });
+      }
+      if (body.length > 2000) {
+        return sendJson(req, reply, 400, { error: "validation_error", message: "Note body must be at most 2000 characters." });
+      }
+
+      let followUpIso: string | null;
+      try {
+        followUpIso = parseCustomerNoteFollowUpAt(followUpRaw);
+      } catch {
+        return sendJson(req, reply, 400, { error: "validation_error", message: "Invalid follow_up_at date." });
+      }
+
+      try {
+        const data = await createCustomerNote(
+          admin,
+          req.staff!.business_id,
+          customerId,
+          req.staff!.id,
+          body,
+          followUpIso,
+        );
+        return reply.status(201).send(data);
+      } catch (e) {
+        if (e instanceof Error && e.message === "customer_notes_not_found") {
+          return sendJson(req, reply, 404, { error: "not_found" });
+        }
+        req.log.error({ e }, "customer_notes_create_failed");
+        return sendJson(req, reply, 500, { error: "customer_notes_create_failed" });
+      }
+    },
+  );
+
+  app.post(
+    "/v1/businesses/mine/customers/:customerId/notes/:noteId/complete-follow-up",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const customerParsed = z.string().uuid().safeParse((req.params as { customerId?: string }).customerId);
+      const noteParsed = z.string().uuid().safeParse((req.params as { noteId?: string }).noteId);
+      if (!customerParsed.success) {
+        return sendJson(req, reply, 400, { error: "invalid_customer_id" });
+      }
+      if (!noteParsed.success) {
+        return sendJson(req, reply, 400, { error: "invalid_note_id" });
+      }
+      const customerId = customerParsed.data;
+      const noteId = noteParsed.data;
+
+      try {
+        const data = await completeCustomerNoteFollowUp(admin, req.staff!.business_id, customerId, noteId);
+        return reply.send(data);
+      } catch (e) {
+        if (e instanceof Error && e.message === "customer_notes_not_found") {
+          return sendJson(req, reply, 404, { error: "not_found" });
+        }
+        if (e instanceof Error && e.message === "customer_notes_no_follow_up") {
+          return sendJson(req, reply, 400, {
+            error: "validation_error",
+            message: "This note does not have a follow-up reminder.",
+          });
+        }
+        req.log.error({ e }, "customer_notes_complete_failed");
+        return sendJson(req, reply, 500, { error: "customer_notes_complete_failed" });
       }
     },
   );

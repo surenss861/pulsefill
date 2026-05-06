@@ -133,7 +133,7 @@ export default function StandbyRequestsPage() {
                 Requested {new Date(r.requested_at).toLocaleString()}
               </p>
               {r.message ? <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 14 }}>{r.message}</p> : null}
-              <div className="pf-standby-request-actions" style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <div className="pf-standby-request-actions" style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                 <MotionTapSurface disabled={acting === r.id}>
                   <ActionButton variant="primary" disabled={acting === r.id} onClick={() => void review(r.id, "approve")}>
                     Approve
@@ -144,6 +144,13 @@ export default function StandbyRequestsPage() {
                     Decline
                   </ActionButton>
                 </MotionTapSurface>
+                {r.customer_id ? (
+                  <MotionAction>
+                    <Link href={`/customers/${r.customer_id}`} style={actionLinkStyle("secondary")}>
+                      View customer
+                    </Link>
+                  </MotionAction>
+                ) : null}
               </div>
             </li>
           ))}

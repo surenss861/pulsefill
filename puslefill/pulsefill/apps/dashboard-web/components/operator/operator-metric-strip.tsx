@@ -8,6 +8,10 @@ export type OperatorMetricStripItem = {
   /** Muted when zero / idle unless overridden. */
   signal?: "idle" | "live";
   hint?: string;
+  /** When set, the card renders as a control (e.g. apply a list filter). */
+  onClick?: () => void;
+  ariaLabel?: string;
+  ariaPressed?: boolean;
 };
 
 type OperatorMetricStripProps = {
@@ -15,6 +19,8 @@ type OperatorMetricStripProps = {
   /** When true, metrics render in compact mode and the row is slightly de-emphasized. */
   compact?: boolean;
   style?: CSSProperties;
+  /** Merged onto the strip container (e.g. responsive grid layout hooks). */
+  stripClassName?: string;
 };
 
 function defaultSignal(item: OperatorMetricStripItem): "idle" | "live" {
@@ -23,15 +29,23 @@ function defaultSignal(item: OperatorMetricStripItem): "idle" | "live" {
   return "live";
 }
 
-export function OperatorMetricStrip({ items, compact = false, style }: OperatorMetricStripProps) {
+export function OperatorMetricStrip({ items, compact = false, style, stripClassName }: OperatorMetricStripProps) {
+  const sc = stripClassName ?? "";
+  const cssGridLayout =
+    sc.includes("pf-onboarding-metric-strip--customers") || sc.includes("pf-customers-pool-metrics");
+
   return (
     <div
-      className="pf-operator-metric-strip"
+      className={["pf-operator-metric-strip", stripClassName].filter(Boolean).join(" ")}
       style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: compact ? 8 : 10,
-        alignItems: "stretch",
+        ...(cssGridLayout
+          ? {}
+          : {
+              display: "flex",
+              flexWrap: "wrap",
+              gap: compact ? 8 : 10,
+              alignItems: "stretch",
+            }),
         ...style,
       }}
     >
@@ -47,6 +61,9 @@ export function OperatorMetricStrip({ items, compact = false, style }: OperatorM
             signal={sig}
             hint={item.hint}
             size={compact ? "compact" : "default"}
+            onClick={item.onClick}
+            ariaLabel={item.ariaLabel}
+            ariaPressed={item.ariaPressed}
             style={{
               flex: "1 1 min(168px, 100%)",
               minWidth: compact ? 80 : 96,

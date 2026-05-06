@@ -11,7 +11,8 @@ export function useNeedsAttentionCount(pollMs = 30_000) {
   const tick = useCallback(async () => {
     try {
       const res = await apiFetch<ActionQueueResponse>("/v1/businesses/mine/action-queue");
-      setCount(res.summary.needs_action_count);
+      const follow = res.summary.customer_follow_up_due_count ?? 0;
+      setCount(res.summary.needs_action_count + follow);
     } catch {
       setCount(0);
     }

@@ -568,6 +568,257 @@ a:hover {
   }
 }
 
+/* Clickable metric cards (e.g. Customers onboarding triage). */
+.pf-metric-card--interactive {
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.pf-metric-card--interactive:hover {
+  border-color: rgba(249, 115, 22, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.18);
+}
+
+.pf-metric-card--interactive:focus-visible {
+  outline: 2px solid rgba(249, 115, 22, 0.65);
+  outline-offset: 2px;
+}
+
+.pf-metric-card--interactive--selected {
+  border-color: rgba(249, 115, 22, 0.42) !important;
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.14);
+}
+
+/* Customers — onboarding playbook disclosure */
+.pf-onboarding-playbook > summary {
+  list-style: none;
+}
+
+.pf-onboarding-playbook > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pf-onboarding-playbook > summary::marker {
+  content: "";
+}
+
+.pf-onboarding-playbook > summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 8px;
+  opacity: 0.42;
+  font-size: 0.72em;
+  transform: rotate(0deg);
+  transition: transform 0.15s ease;
+}
+
+.pf-onboarding-playbook[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+/* Customers — Invites section density + responsive metrics */
+.pf-customers-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pf-customers-invites {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.pf-onboarding-playbook--subtle .pf-onboarding-playbook__body {
+  padding: 1px 11px 10px !important;
+}
+
+.pf-customers-invites .pf-operator-row-list:has(> .pf-operator-row:only-child) .pf-operator-row {
+  padding-block: 12px;
+}
+
+.pf-customers-invites .pf-operator-row__title {
+  min-width: 0;
+}
+
+.pf-customers-invites__heading {
+  margin: 0 0 6px;
+}
+
+.pf-onboarding-playbook--subtle {
+  margin-bottom: 10px !important;
+  border-color: rgba(255, 255, 255, 0.045) !important;
+  background: linear-gradient(180deg, rgba(18, 17, 15, 0.92), rgba(10, 9, 8, 0.9)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.028),
+    0 2px 12px rgba(0, 0, 0, 0.14) !important;
+}
+
+.pf-onboarding-playbook--subtle > summary {
+  padding: 8px 11px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: rgba(245, 247, 250, 0.72) !important;
+}
+
+.pf-truncate-1 {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Pool metrics (3-up → 2 → 1) */
+.pf-customers-pool-metrics.pf-operator-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pf-customers-pool-metrics.pf-operator-metric-strip > * {
+  min-width: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .pf-customers-pool-metrics.pf-operator-metric-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .pf-customers-pool-metrics.pf-operator-metric-strip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Onboarding triage metrics (4 → 2×2 → 1) */
+.pf-onboarding-metric-strip--customers.pf-operator-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px !important;
+}
+
+.pf-onboarding-metric-strip--customers.pf-operator-metric-strip > * {
+  min-width: 0 !important;
+}
+
+@media (max-width: 1024px) {
+  .pf-onboarding-metric-strip--customers.pf-operator-metric-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .pf-onboarding-metric-strip--customers.pf-operator-metric-strip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.pf-invite-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 2px;
+  margin-bottom: 8px;
+  row-gap: 8px;
+}
+
+.pf-invite-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .pf-customers-invites .pf-operator-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: flex-start;
+    gap: 10px 12px;
+  }
+
+  .pf-customers-invites .pf-operator-row__status {
+    justify-self: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .pf-customers-invites .pf-operator-row__status > div {
+    align-items: flex-start !important;
+  }
+
+  .pf-customers-invites .pf-operator-row__action {
+    justify-self: stretch;
+  }
+
+  .pf-invite-row-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .pf-invite-row-actions {
+    gap: 8px;
+  }
+
+  .pf-invite-row-actions > button {
+    flex: 1 1 calc(50% - 4px);
+    min-width: min(100%, 140px);
+    box-sizing: border-box;
+  }
+
+  .pf-invite-row-actions > span {
+    flex: 1 1 calc(50% - 4px);
+    min-width: min(100%, 140px);
+    box-sizing: border-box;
+    display: flex !important;
+  }
+
+  .pf-invite-row-actions > span > a {
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .pf-invite-row-actions > span > button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.pf-customers-invites-empty {
+  padding: 12px 14px !important;
+  border-radius: var(--pf-radius-md) !important;
+}
+
+.pf-customers-invites-empty__title {
+  margin: 0;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+}
+
+.pf-customers-invites-empty__copy {
+  margin: 5px 0 0 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.pf-customers-invites__filter-empty {
+  margin: 2px 0 6px;
+  font-size: 12px;
+}
+
 .pf-operator-metric-strip {
   min-width: 0;
 }
