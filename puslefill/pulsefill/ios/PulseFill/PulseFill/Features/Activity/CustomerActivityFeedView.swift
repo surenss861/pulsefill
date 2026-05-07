@@ -26,13 +26,15 @@ struct CustomerActivityFeedView: View {
                         }
                         .customerAppearAnimation(staggerIndex: 0)
 
-                        PFCustomerInfoCallout(
-                            title: "About Activity",
-                            message:
-                                "We show what changed in plain language — not technical codes. Tap a row when there’s something you can open or review.",
-                            variant: .neutral
-                        )
-                        .customerAppearAnimation(staggerIndex: 1)
+                        if !activityAboutCalloutSuppressed {
+                            PFCustomerInfoCallout(
+                                title: "About Activity",
+                                message:
+                                    "We show what changed in plain language — not technical codes. Tap a row when there’s something you can open or review.",
+                                variant: .neutral
+                            )
+                            .customerAppearAnimation(staggerIndex: 1)
+                        }
 
                         if env.sessionStore.isStaffUser {
                             VStack(alignment: .leading, spacing: 8) {
@@ -53,14 +55,19 @@ struct CustomerActivityFeedView: View {
 
                         case let .failed(message):
                             PFCustomerErrorState(
-                                title: "Couldn’t load activity",
+                                title: "We couldn’t load activity",
                                 message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(message),
                                 primaryTitle: "Try again",
                                 primaryAction: { Task { await viewModel.load() } },
                                 secondaryTitle: nil,
-                                secondaryAction: nil
+                                secondaryAction: nil,
+                                hint: "Try again in a moment.",
+                                style: .compact
                             )
                             .padding(.top, 8)
+
+                            activityAboutFootnoteWhenFailed
+                                .padding(.top, 4)
 
                         case .loaded:
                             let groups = customerActivityTimelineGroups(from: viewModel.filteredItems)
@@ -116,6 +123,22 @@ struct CustomerActivityFeedView: View {
             }
         }
         .tint(PFColor.ember)
+    }
+
+    /// Large “About” callout + full error card felt heavy; hide the callout while showing the error.
+    private var activityAboutCalloutSuppressed: Bool {
+        if case .failed = viewModel.loadState { return true }
+        return false
+    }
+
+    private var activityAboutFootnoteWhenFailed: some View {
+        Text(
+            "We show what changed in plain language — tap a row when there’s something you can open or review."
+        )
+        .font(.system(size: 13, weight: .medium))
+        .foregroundStyle(PFColor.customerMutedText)
+        .lineSpacing(3)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder

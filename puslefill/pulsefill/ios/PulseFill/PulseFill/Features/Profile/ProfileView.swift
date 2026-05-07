@@ -4,6 +4,11 @@ private enum ProfileInviteScrollTarget: String {
     case inviteCode = "profileInviteCode"
 }
 
+private enum ProfileInviteCodeIntro {
+    case signedOutPrimary
+    case signedInAdditional
+}
+
 struct ProfileView: View {
     @EnvironmentObject private var env: AppEnvironment
     @AppStorage("pf.preferCustomerTabs") private var preferCustomerTabs = false
@@ -14,6 +19,10 @@ struct ProfileView: View {
     @State private var inviteInlineSuccess: String?
     @FocusState private var inviteCodeFieldFocused: Bool
     @State private var inviteSectionEmphasized = false
+    @State private var inviteConnectExpanded = false
+    #if DEBUG
+    @State private var pushDebugExpanded = false
+    #endif
     @State private var pushDebug = PushDebugSnapshot(
         permission: "Unknown",
         registrationState: .never,
@@ -24,6 +33,7 @@ struct ProfileView: View {
         appBuild: "Unknown",
         maskedToken: nil
     )
+    @State private var confirmCustomerSignOut = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -32,7 +42,7 @@ struct ProfileView: View {
 
                 ScrollViewReader { proxy in
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 22) {
+                        VStack(alignment: .leading, spacing: 18) {
                             if standbyJustCompleted {
                                 onboardingCompletionBanner
                             }
@@ -58,14 +68,14 @@ struct ProfileView: View {
                             notificationsCard
 
                             #if DEBUG
-                            pushDebugCard
+                            pushDebugSection
                             #endif
 
                             accountCard
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
-                        .padding(.bottom, 36)
+                        .padding(.bottom, 88)
                     }
                     .onAppear {
                         clearCompletionBannerLaterIfNeeded()
@@ -98,6 +108,26 @@ struct ProfileView: View {
             .navigationDestination(for: CustomerDestination.self) { destination in
                 profileDestinationView(for: destination)
             }
+            .onChange(of: preferCustomerTabs) { _, isOn in
+                guard env.sessionStore.isStaffUser else { return }
+                if isOn {
+                    env.userRoleContext.chooseCustomerMode()
+                } else {
+                    env.userRoleContext.chooseBusinessMode()
+                }
+            }
+        }
+        .confirmationDialog(
+            "Sign out?",
+            isPresented: $confirmCustomerSignOut,
+            titleVisibility: .visible
+        ) {
+            Button("Sign out", role: .destructive) {
+                Task { await env.authManager.signOut() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You’ll need to sign in again for standby, openings, and business tools.")
         }
     }
 
@@ -119,9 +149,11 @@ struct ProfileView: View {
 
     // MARK: - Invite code
 
-    private var inviteCodeCard: some View {
-        PFCustomerSectionCard(variant: .default, padding: 18) {
-            VStack(alignment: .leading, spacing: 12) {
+    @ViewBuilder
+    private func inviteCodeFields(intro: ProfileInviteCodeIntro) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            switch intro {
+            case .signedOutPrimary:
                 Text("Have an invite code?")
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(PFColor.textPrimary)
@@ -133,56 +165,79 @@ struct ProfileView: View {
                 .foregroundStyle(PFColor.textSecondary)
                 .lineSpacing(3)
 
-                TextField("Invite code", text: $businessInviteToken)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 15, weight: .medium))
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(PFColor.customerCard)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(PFColor.hairline, lineWidth: 1)
-                    )
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .focused($inviteCodeFieldFocused)
-
-                if let success = inviteInlineSuccess {
-                    Text(success)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(PFColor.success)
-                        .lineSpacing(3)
-                }
-                if let err = inviteInlineError {
-                    Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(err))
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(PFColor.error)
-                        .lineSpacing(3)
-                }
-
-                PFCustomerPrimaryButton(
-                    title: env.authManager.isBusy ? "Connecting…" : "Connect with invite code",
-                    isEnabled: !businessInviteToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !env.authManager.isBusy,
-                    isLoading: env.authManager.isBusy,
-                    action: {
-                        Task { await acceptInvite() }
-                    }
-                )
+            case .signedInAdditional:
+                Text("Enter a code from the business if you want to join another location or team.")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary)
+                    .lineSpacing(3)
             }
+
+            TextField("Invite code", text: $businessInviteToken)
+                .textFieldStyle(.plain)
+                .font(.system(size: 15, weight: .medium))
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(PFColor.customerCard)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(PFColor.hairline, lineWidth: 1)
+                )
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .focused($inviteCodeFieldFocused)
+
+            if let success = inviteInlineSuccess {
+                Text(success)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.success)
+                    .lineSpacing(3)
+            }
+            if let err = inviteInlineError {
+                Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(err))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.error)
+                    .lineSpacing(3)
+            }
+
+            PFCustomerPrimaryButton(
+                title: env.authManager.isBusy ? "Connecting…" : "Connect with invite code",
+                isEnabled: !businessInviteToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !env.authManager.isBusy,
+                isLoading: env.authManager.isBusy,
+                action: {
+                    Task { await acceptInvite() }
+                }
+            )
         }
     }
 
     private var inviteCodeSection: some View {
-        inviteCodeCard
-            .id(ProfileInviteScrollTarget.inviteCode.rawValue)
-            .overlay {
-                if inviteSectionEmphasized {
-                    RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous)
-                        .stroke(PFColor.ember.opacity(0.88), lineWidth: 2)
+        Group {
+            if env.sessionStore.isSignedIn {
+                PFCustomerSectionCard(variant: .quiet, padding: 14) {
+                    DisclosureGroup(isExpanded: $inviteConnectExpanded) {
+                        inviteCodeFields(intro: .signedInAdditional)
+                    } label: {
+                        Text("Connect another business")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(PFColor.textPrimary)
+                    }
+                    .tint(PFColor.ember)
+                }
+            } else {
+                PFCustomerSectionCard(variant: .default, padding: 18) {
+                    inviteCodeFields(intro: .signedOutPrimary)
                 }
             }
+        }
+        .id(ProfileInviteScrollTarget.inviteCode.rawValue)
+        .overlay {
+            if inviteSectionEmphasized {
+                RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous)
+                    .stroke(PFColor.ember.opacity(0.88), lineWidth: 2)
+            }
+        }
     }
 
     // MARK: - Your businesses
@@ -295,10 +350,10 @@ struct ProfileView: View {
     // MARK: - Account
 
     private var accountCard: some View {
-        PFCustomerSectionCard(variant: .quiet, padding: 18) {
-            VStack(alignment: .leading, spacing: 14) {
+        PFCustomerSectionCard(variant: .quiet, padding: 16) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Account")
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(PFColor.textPrimary)
 
                 if let email = env.sessionStore.email, !email.isEmpty {
@@ -325,10 +380,21 @@ struct ProfileView: View {
                     Toggle("Customer mode (standby & openings)", isOn: $preferCustomerTabs)
                         .font(.system(size: 15, weight: .medium))
                         .tint(PFColor.ember)
+
+                    if let me = env.userRoleContext.authMe, me.roles.customer, me.roles.staff, preferCustomerTabs {
+                        PFCustomerPrimaryButton(
+                            title: "Switch to Business mode",
+                            isEnabled: true,
+                            action: {
+                                preferCustomerTabs = false
+                            }
+                        )
+                        .padding(.top, 4)
+                    }
                 }
 
-                Button(role: .destructive) {
-                    Task { await env.authManager.signOut() }
+                Button {
+                    confirmCustomerSignOut = true
                 } label: {
                     Text("Sign out")
                         .font(.system(size: 16, weight: .semibold))
@@ -342,22 +408,28 @@ struct ProfileView: View {
     }
 
     #if DEBUG
-    private var pushDebugCard: some View {
-        PFCustomerSectionCard(variant: .default, padding: 18) {
-            VStack(alignment: .leading, spacing: 10) {
-                PFTypography.Customer.label("Push debug")
-
-                LabeledContent("Permission", value: pushDebug.permission)
-                LabeledContent("Registration", value: attemptLabel(state: pushDebug.registrationState, at: pushDebug.registrationAt))
-                LabeledContent("Deactivation", value: attemptLabel(state: pushDebug.deactivationState, at: pushDebug.deactivationAt))
-                LabeledContent("Environment", value: pushDebug.environment)
-                LabeledContent("App build", value: pushDebug.appBuild)
-                if let token = pushDebug.maskedToken {
-                    LabeledContent("Token", value: token)
-                } else {
-                    LabeledContent("Token", value: "—")
+    private var pushDebugSection: some View {
+        PFCustomerSectionCard(variant: .quiet, padding: 12) {
+            DisclosureGroup(isExpanded: $pushDebugExpanded) {
+                VStack(alignment: .leading, spacing: 10) {
+                    LabeledContent("Permission", value: pushDebug.permission)
+                    LabeledContent("Registration", value: attemptLabel(state: pushDebug.registrationState, at: pushDebug.registrationAt))
+                    LabeledContent("Deactivation", value: attemptLabel(state: pushDebug.deactivationState, at: pushDebug.deactivationAt))
+                    LabeledContent("Environment", value: pushDebug.environment)
+                    LabeledContent("App build", value: pushDebug.appBuild)
+                    if let token = pushDebug.maskedToken {
+                        LabeledContent("Token", value: token)
+                    } else {
+                        LabeledContent("Token", value: "—")
+                    }
                 }
+                .padding(.top, 4)
+            } label: {
+                Text("Push debug")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(PFColor.customerMutedText)
             }
+            .tint(PFColor.ember)
         }
     }
     #endif
@@ -405,6 +477,9 @@ struct ProfileView: View {
         env.customerNavigation.acknowledgeProfileInviteFocus()
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 200_000_000)
+            if env.sessionStore.isSignedIn {
+                inviteConnectExpanded = true
+            }
             withAnimation(.easeOut(duration: 0.38)) {
                 proxy.scrollTo(ProfileInviteScrollTarget.inviteCode.rawValue, anchor: .center)
             }

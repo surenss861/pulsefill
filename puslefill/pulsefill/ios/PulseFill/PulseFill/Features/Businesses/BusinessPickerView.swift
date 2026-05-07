@@ -22,12 +22,14 @@ struct BusinessPickerView: View {
                 } else if let loadError {
                     ScrollView {
                         PFCustomerErrorState(
-                            title: "We couldn’t load businesses",
+                            title: "We couldn’t load businesses right now",
                             message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(loadError),
                             primaryTitle: "Try again",
                             primaryAction: { Task { await load() } },
                             secondaryTitle: nil,
-                            secondaryAction: nil
+                            secondaryAction: nil,
+                            hint: "Try again in a moment, or check that PulseFill is connected.",
+                            style: .compact
                         )
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
@@ -121,7 +123,7 @@ struct BusinessPickerView: View {
             let res = try await env.apiClient.getCustomerDirectoryBusinesses()
             businesses = res.businesses
         } catch {
-            loadError = error.localizedDescription
+            loadError = APIErrorCopy.message(for: error)
             businesses = []
         }
     }
@@ -166,7 +168,9 @@ struct CustomerBusinessDetailView: View {
                             primaryTitle: "Try again",
                             primaryAction: { Task { await loadDetail() } },
                             secondaryTitle: nil,
-                            secondaryAction: nil
+                            secondaryAction: nil,
+                            hint: "Try again in a moment, or check that PulseFill is connected.",
+                            style: .compact
                         )
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
@@ -365,7 +369,7 @@ struct CustomerBusinessDetailView: View {
         do {
             detail = try await env.apiClient.getCustomerDirectoryBusinessDetail(businessId: businessId)
         } catch {
-            loadError = error.localizedDescription
+            loadError = APIErrorCopy.message(for: error)
             detail = nil
         }
     }
@@ -385,7 +389,7 @@ struct CustomerBusinessDetailView: View {
                 actionMessage = nil
             }
         } catch {
-            actionError = error.localizedDescription
+            actionError = APIErrorCopy.message(for: error)
         }
     }
 }

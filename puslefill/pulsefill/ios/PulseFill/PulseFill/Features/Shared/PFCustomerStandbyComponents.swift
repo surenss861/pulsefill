@@ -241,28 +241,49 @@ struct PFCustomerLoadingState: View {
 }
 
 struct PFCustomerErrorState: View {
+    enum Style {
+        case standard
+        /// Smaller card for tab surfaces — less dominant when data fails to load.
+        case compact
+    }
+
     let title: String
     let message: String
     var primaryTitle: String = "Try again"
     let primaryAction: () -> Void
     var secondaryTitle: String?
     var secondaryAction: (() -> Void)?
+    var hint: String?
+    var style: Style = .standard
 
     var body: some View {
-        PFCustomerSectionCard(variant: .default, padding: 20) {
-            VStack(alignment: .leading, spacing: 14) {
+        let pad: CGFloat = style == .compact ? 16 : 20
+        let iconSize: CGFloat = style == .compact ? 18 : 22
+        let titleSize: CGFloat = style == .compact ? 17 : 20
+        let messageSize: CGFloat = style == .compact ? 14 : 15
+        let stackSpacing: CGFloat = style == .compact ? 10 : 14
+
+        PFCustomerSectionCard(variant: .default, padding: pad) {
+            VStack(alignment: .leading, spacing: stackSpacing) {
                 Image(systemName: "wifi.exclamationmark")
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.system(size: iconSize, weight: .semibold))
                     .foregroundStyle(PFColor.primaryText)
 
                 Text(title)
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: titleSize, weight: .bold))
                     .foregroundStyle(PFColor.textPrimary)
 
                 Text(message)
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: messageSize, weight: .medium))
                     .foregroundStyle(PFColor.textSecondary)
                     .lineSpacing(3)
+
+                if let hint, !hint.isEmpty {
+                    Text(hint)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(PFColor.customerMutedText)
+                        .lineSpacing(3)
+                }
 
                 VStack(spacing: 10) {
                     PFCustomerSecondaryButton(title: primaryTitle, isEnabled: true, action: primaryAction)
@@ -278,7 +299,7 @@ struct PFCustomerErrorState: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.top, 4)
+                .padding(.top, 2)
             }
         }
     }
@@ -347,6 +368,12 @@ enum PFCustomerFacingErrorCopy {
         let lower = trimmed.lowercased()
         if looksLikeInvalidSupabaseClientOrKey(trimmed) {
             return "We couldn’t connect to PulseFill. Please try again shortly."
+        }
+        if lower.contains("unsupported url") || lower.contains("nsurlerrordomain")
+            || lower.contains("code=-1002") || lower.contains(" error -1002")
+            || (lower.hasPrefix("/v1/") && !lower.contains("http"))
+        {
+            return "We couldn’t connect to PulseFill. Please try again."
         }
         if lower.contains("http://") || lower.contains("https://") || lower.contains("api.") || lower.contains(".com/")
             || lower.contains("hostname") || lower.contains("could not connect") || lower.contains("connection refused")

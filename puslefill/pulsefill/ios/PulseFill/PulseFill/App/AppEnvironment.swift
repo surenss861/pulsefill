@@ -5,12 +5,20 @@ import Foundation
 final class AppEnvironment: ObservableObject {
     /// When non-nil, client URL/key validation failed at launch — show `blockingCustomerMessage` and avoid auth bootstrap.
     @Published private(set) var clientConfigurationBlockingMessage: String?
+    private var cancellables = Set<AnyCancellable>()
+
     let sessionStore: SessionStore
     let apiClient: APIClient
+    let userRoleContext: UserRoleContext
     let authManager: AuthManager
     let customerNavigation: CustomerNavigationCoordinator
     let pushRegistrationManager: PushRegistrationManager
     let pushCoordinator: PushNotificationCoordinator
+
+    /// Staff / Business mode API surface — operator naming, thin wrapper over `apiClient`.
+    var businessOperatorAPI: BusinessOperatorAPIClient {
+        BusinessOperatorAPIClient(underlying: apiClient)
+    }
 
     /// App entry point; all URLs/keys come from `PulseFillBuildConfiguration` (local / staging / Railway).
     static let development: AppEnvironment = {
@@ -38,6 +46,8 @@ final class AppEnvironment: ObservableObject {
         self.sessionStore = sessionStore
         let api = APIClient(baseURL: apiBaseURL, sessionStore: sessionStore)
         self.apiClient = api
+        let userRoleContext = UserRoleContext(apiClient: api, sessionStore: sessionStore)
+        self.userRoleContext = userRoleContext
         let pushRegistrationManager = PushRegistrationManager(apiClient: api)
         self.pushRegistrationManager = pushRegistrationManager
         let authClient = SupabaseAuthClient(supabaseURL: supabaseURL, anonKey: supabaseAnonKey)
@@ -45,14 +55,28 @@ final class AppEnvironment: ObservableObject {
             authClient: authClient,
             sessionStore: sessionStore,
             apiClient: api,
-            pushRegistrationManager: pushRegistrationManager
+            pushRegistrationManager: pushRegistrationManager,
+            userRoleContext: userRoleContext
         )
 
         let customerNavigation = CustomerNavigationCoordinator()
         self.customerNavigation = customerNavigation
+
         self.pushCoordinator = PushNotificationCoordinator(
             customerNavigation: customerNavigation,
             pushRegistration: pushRegistrationManager
         )
+
+        customerNavigation.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+        userRoleContext.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
 }

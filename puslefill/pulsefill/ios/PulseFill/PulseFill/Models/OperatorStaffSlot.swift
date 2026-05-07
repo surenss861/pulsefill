@@ -150,6 +150,45 @@ struct OperatorNotificationLogRow: Codable, Identifiable, Hashable {
 
 // MARK: - POST bodies / responses
 
+/// `POST /v1/open-slots` — staff creates a new opening (cancellation slot).
+struct CreateOpenSlotRequestBody: Encodable {
+    var serviceId: String?
+    var providerId: String?
+    var locationId: String?
+    var providerNameSnapshot: String?
+    var startsAt: String
+    var endsAt: String
+    var estimatedValueCents: Int?
+    /// Customer-visible context when supported by API.
+    var notes: String?
+    var internalNote: String?
+}
+
+/// Create response: prefer full `slot`; otherwise use `open_slot_id` / `id`.
+struct CreateOpenSlotAPIResponse: Decodable {
+    let slot: StaffOpenSlotDetail?
+    let openSlotId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case slot
+        case openSlotId = "open_slot_id"
+        case id
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        slot = try c.decodeIfPresent(StaffOpenSlotDetail.self, forKey: .slot)
+        openSlotId =
+            try c.decodeIfPresent(String.self, forKey: .openSlotId)
+            ?? c.decodeIfPresent(String.self, forKey: .id)
+    }
+
+    var createdSlotId: String? {
+        if let sid = slot?.id { return sid }
+        return openSlotId
+    }
+}
+
 struct SendOffersRequest: Encodable {
     var offerTtlSeconds: Int = 300
     var channel: String = "push"

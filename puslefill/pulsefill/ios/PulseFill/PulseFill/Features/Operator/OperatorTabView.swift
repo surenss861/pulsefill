@@ -17,7 +17,7 @@ struct OperatorTabView: View {
                     Label("Queue", systemImage: "exclamationmark.bubble")
                 }
 
-            OperatorSlotsListView(api: env.apiClient)
+            OperatorSlotsListView(businessAPI: env.businessOperatorAPI)
                 .environmentObject(env)
                 .tabItem {
                     Label("Slots", systemImage: "calendar")

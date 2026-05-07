@@ -21,6 +21,22 @@ struct StatusChipView: View {
         mode = .status(status)
     }
 
+    /// Open-slot row on **operator** surfaces — readable copy + tone from `OperatorOpeningStatusCopy`.
+    init(operatorOpeningStatus raw: String) {
+        mode = .text(
+            OperatorOpeningStatusCopy.label(forRawStatus: raw),
+            tone: OperatorOpeningStatusCopy.tone(forRawStatus: raw)
+        )
+    }
+
+    /// Winning-claim / booking row — distinct from opening lifecycle (`OperatorOpeningStatusCopy`).
+    init(operatorClaimStatus raw: String) {
+        mode = .text(
+            OperatorClaimStatusCopy.label(forRawStatus: raw),
+            tone: OperatorClaimStatusCopy.tone(forRawStatus: raw)
+        )
+    }
+
     var body: some View {
         PFStatusPill(
             text: displayText,

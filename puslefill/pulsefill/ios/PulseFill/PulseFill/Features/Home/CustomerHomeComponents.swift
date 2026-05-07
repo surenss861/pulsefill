@@ -225,6 +225,74 @@ struct CustomerOfferSpotlightCard: View {
     }
 }
 
+// MARK: - Setup checklist (post-sign-in journey)
+
+struct CustomerHomeSetupChecklistCard: View {
+    let businessesConnected: Bool
+    let standbyConfigured: Bool
+    let notificationsReachable: Bool
+    /// Index of the first incomplete step (0…2), or `-1` when all steps are done.
+    let highlightStepIndex: Int
+    let headline: String
+    let primaryActionTitle: String
+    let onPrimary: () -> Void
+
+    var body: some View {
+        PFCustomerSectionCard(variant: .quiet, padding: 16) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Your setup")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(PFColor.customerDimText)
+
+                Text(headline)
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(PFColor.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    setupRow(
+                        done: businessesConnected,
+                        title: "Connect to a business",
+                        stepIndex: 0
+                    )
+                    setupRow(
+                        done: standbyConfigured,
+                        title: "Set standby preferences",
+                        stepIndex: 1
+                    )
+                    setupRow(
+                        done: notificationsReachable,
+                        title: "Enable opening alerts",
+                        stepIndex: 2
+                    )
+                }
+
+                PFCustomerPrimaryButton(title: primaryActionTitle, action: onPrimary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func setupRow(done: Bool, title: String, stepIndex: Int) -> some View {
+        let isNext = stepIndex == highlightStepIndex
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(done ? PFColor.success : PFColor.customerMutedText)
+                .frame(width: 22, alignment: .center)
+
+            Text(title)
+                .font(.system(size: 15, weight: isNext ? .semibold : .medium))
+                .foregroundStyle(isNext ? PFColor.textPrimary : PFColor.textSecondary)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 // MARK: - Home guidance (find businesses / setup standby / watching)
 
 struct CustomerHomeNextStepCard: View {

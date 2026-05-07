@@ -189,7 +189,8 @@ final class OperatorActionQueueViewModel: ObservableObject {
         defer { performingItemId = nil }
 
         do {
-            let msg = try await OperatorInlineActionRunner(api: api).run(derived, openSlotId: item.openSlotId)
+            let msg = try await OperatorInlineActionRunner(businessAPI: BusinessOperatorAPIClient(underlying: api))
+                .run(derived, openSlotId: item.openSlotId)
             flashMessage = msg
             successPulseItemId = item.id
             successPulseTick += 1

@@ -15,14 +15,48 @@ export async function registerAuthRoutes(app: FastifyInstance) {
   app.get(
     "/v1/auth/me",
     { preHandler: requireAuth },
-    async (req) => ({
-      user: {
-        id: req.authUser!.id,
-        email: req.authUser!.email,
-        app_metadata: req.authUser!.app_metadata,
-        user_metadata: req.authUser!.user_metadata,
-      },
-    }),
+    async (req) => {
+      const admin = createServiceSupabase(req.server.env);
+      const uid = req.authUser!.id;
+
+      const [customerRes, staffRes] = await Promise.all([
+        admin.from("customers").select("id").eq("auth_user_id", uid).maybeSingle(),
+        admin
+          .from("staff_users")
+          .select("business_id, role, businesses ( id, name )")
+          .eq("auth_user_id", uid),
+      ]);
+
+      const customerId = customerRes.error ? null : (customerRes.data?.id ?? null);
+      const staffRows = staffRes.error || !staffRes.data ? [] : staffRes.data;
+      const businesses = staffRows.map((row: Record<string, unknown>) => {
+        const rel = row.businesses as { id?: string; name?: string } | { id?: string; name?: string }[] | null;
+        const b = Array.isArray(rel) ? rel[0] : rel;
+        return {
+          business_id: String(row.business_id ?? ""),
+          business_name: b?.name ? String(b.name) : "Business",
+          role: String(row.role ?? "staff"),
+        };
+      });
+
+      const hasCustomer = Boolean(customerId);
+      const hasStaff = businesses.length > 0;
+
+      return {
+        user: {
+          id: req.authUser!.id,
+          email: req.authUser!.email,
+          app_metadata: req.authUser!.app_metadata,
+          user_metadata: req.authUser!.user_metadata,
+        },
+        roles: {
+          customer: hasCustomer,
+          staff: hasStaff,
+        },
+        customer: customerId ? { id: customerId } : null,
+        staff: hasStaff ? { businesses } : null,
+      };
+    },
   );
 
   app.post(

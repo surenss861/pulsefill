@@ -12,7 +12,7 @@ struct OperatorSlotListRow: View {
         PFSectionCard(borderColor: PFColor.textSecondary.opacity(0.18)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .center, spacing: 8) {
-                    StatusChipView(status: slot.status)
+                    StatusChipView(operatorOpeningStatus: slot.status)
                     if let attention = attentionText {
                         PFStatusPill(text: attention, variant: .warning)
                     }

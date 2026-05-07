@@ -1373,6 +1373,18 @@ a:hover {
   align-items: start;
 }
 
+/** Desktop / tablet: hero blocks follow DOM order; mobile overrides to task-first flex + order. */
+.pf-mobile-slot-hero-stack {
+  display: block;
+}
+
+.pf-mobile-recovery-strip {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 1179px) {
   .pf-slot-detail-case-rail {
     width: 100%;
@@ -1391,6 +1403,97 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 14px;
+  }
+}
+
+/* —— Open slot detail: mobile operator case file (≤767px) —— */
+@media (max-width: 767px) {
+  .pf-page-slot-detail {
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(28px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .pf-slot-detail-case-grid {
+    gap: 18px;
+  }
+
+  .pf-slot-detail-case-grid > * {
+    min-width: 0;
+  }
+
+  /** Single-column stack: primary story first, rail follows (diagnostics). */
+  .pf-slot-detail-mobile-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  /** Hero card: task-first order — identity → actions → recovery → queue chip. */
+  .pf-mobile-slot-hero-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pf-mobile-slot-hero-stack .pf-mh-block-header {
+    order: 1;
+  }
+  .pf-mobile-slot-hero-stack .pf-mh-block-actions {
+    order: 2;
+  }
+  .pf-mobile-slot-hero-stack .pf-mh-block-recovery {
+    order: 3;
+  }
+  .pf-mobile-slot-hero-stack .pf-mh-block-queue {
+    order: 4;
+  }
+
+  .pf-mobile-case-hero-card {
+    padding: 16px 16px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .pf-mobile-case-header .pf-kicker {
+    font-size: 10px !important;
+  }
+
+  /** Shown only on small screens: delivery + rows before deep diagnostics. */
+  .pf-mobile-delivery-early {
+    display: block;
+  }
+
+  /** Hide duplicate compact summary in rail when early delivery is shown. */
+  .pf-slot-detail-rail-delivery-desktop-only {
+    display: none;
+  }
+
+  .pf-mobile-secondary-panel {
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.025);
+    padding: 14px 14px 12px;
+    min-width: 0;
+  }
+
+  /** Optional sticky action dock (reserved — non-sticky MVP). */
+  .pf-mobile-action-dock {
+    position: static;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+@media (min-width: 768px) {
+  .pf-mobile-delivery-early {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1179px) {
+  .pf-page-slot-detail {
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
 }
 

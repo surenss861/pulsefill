@@ -1,84 +1,91 @@
 import SwiftUI
 
+/// Task-first claim row for Business **Claims** — opening + claim context separate from slot-only lists.
 struct OperatorClaimCard: View {
-    let claim: OperatorClaimCardModel
+    let item: OperatorClaimListItem
+    let customerLineDisplay: String
     let isConfirming: Bool
-    let onConfirm: () -> Void
-    let onOpen: () -> Void
+    /// When false, only “Open detail” is shown (recently confirmed / closed).
+    let showConfirmPrimary: Bool
+    /// Fired after the operator accepts the confirmation sheet (not a tap-to-confirm).
+    let onRequestConfirm: () -> Void
+    let onOpenDetail: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(OperatorClaimsPresenters.bannerTitle(for: claim))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(OperatorClaimsPresenters.isAwaiting(claim) ? PFColor.warning : PFColor.success)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.primaryTitle)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(PFColor.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                Text("RECOVERY SLOT")
-                    .font(.system(size: 11, weight: .semibold))
+                Text(DateFormatterPF.dateTimeRange(start: item.startsAt, end: item.endsAt))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(PFColor.textSecondary)
 
-                if let providerName = claim.providerName, !providerName.isEmpty {
-                    Text(providerName)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(PFColor.textPrimary)
-                }
-
-                if let sid = claim.serviceId {
-                    Text(shortId(sid))
-                        .font(.system(size: 13))
+                if let prov = item.providerLine {
+                    Text(prov)
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(PFColor.textSecondary)
                 }
 
-                Text(DateFormatterPF.dateTimeRange(start: claim.startsAt, end: claim.endsAt))
-                    .font(.system(size: 13))
-                    .foregroundStyle(PFColor.textSecondary)
+                Text(customerLineDisplay)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(PFColor.textPrimary)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("WINNING CUSTOMER")
-                        .font(.system(size: 11, weight: .semibold))
+                if let claimed = item.claimedRelativeLine {
+                    Text(claimed)
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(PFColor.textSecondary)
-                    Text(claim.customerLabel())
-                        .font(.system(size: 17))
-                        .foregroundStyle(PFColor.textPrimary)
                 }
             }
             .contentShape(Rectangle())
-            .onTapGesture {
-                onOpen()
+            .onTapGesture(perform: onOpenDetail)
+
+            HStack(spacing: 8) {
+                StatusChipView(operatorOpeningStatus: item.slotStatus)
+                StatusChipView(operatorClaimStatus: item.claim.status)
             }
 
             HStack(spacing: 10) {
-                StatusChipView(status: claim.claimStatus)
-
-                if OperatorClaimsPresenters.isAwaiting(claim) {
-                    Button(isConfirming ? "Confirming…" : "Confirm") {
-                        onConfirm()
+                if showConfirmPrimary {
+                    Button {
+                        onRequestConfirm()
+                    } label: {
+                        Text(isConfirming ? "Confirming…" : "Confirm booking")
+                            .font(.system(size: 15, weight: .bold))
+                            .frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(PFColor.primaryDark)
                     .disabled(isConfirming)
+
+                    Button("Open detail") {
+                        onOpenDetail()
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .buttonStyle(.bordered)
+                } else {
+                    Button("Open detail") {
+                        onOpenDetail()
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .buttonStyle(.bordered)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                Button("Open") {
-                    onOpen()
-                }
-                .buttonStyle(.bordered)
+                Spacer(minLength: 0)
             }
         }
         .padding(16)
         .background(PFSurface.card)
+        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
                 .stroke(
-                    (OperatorClaimsPresenters.isAwaiting(claim) ? PFColor.warning : PFColor.success).opacity(0.2),
+                    showConfirmPrimary ? PFColor.warning.opacity(0.28) : PFColor.textSecondary.opacity(0.14),
                     lineWidth: 1
                 )
         )
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-    }
-
-    private func shortId(_ id: String) -> String {
-        if id.count <= 14 { return id }
-        return "\(id.prefix(4))…\(id.suffix(4))"
     }
 }

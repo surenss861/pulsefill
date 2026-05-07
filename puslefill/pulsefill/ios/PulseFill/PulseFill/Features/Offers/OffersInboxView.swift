@@ -89,13 +89,15 @@ struct OffersInboxView: View {
                                 primaryAction: { Task { await load() } },
                                 secondaryTitle: nil,
                                 secondaryAction: nil,
+                                hint: "Try again in a moment.",
+                                style: .compact
                             )
                         } else if offers.isEmpty {
                             CustomerEmptyStateCard(
                                 systemImage: "bell.badge",
                                 title: "No openings yet",
                                 message:
-                                    "Openings from businesses you’ve joined will appear here when they match your standby preferences.",
+                                    "When businesses you’ve joined have matching openings, they’ll appear here.",
                                 footnote: nil,
                                 primaryActionTitle: "Find businesses",
                                 primaryAction: {

@@ -5,9 +5,16 @@ struct OperatorSlotDetailView: View {
     @State private var showFlash = false
     @State private var confirmExpire = false
     @State private var confirmCancel = false
+    @State private var showCreatedSuccessBanner: Bool
+    @State private var confirmBookingPrompt = false
 
-    init(api: APIClient, slotId: String) {
-        _viewModel = StateObject(wrappedValue: OperatorSlotDetailViewModel(api: api, slotId: slotId))
+    init(
+        businessAPI: BusinessOperatorAPIClient,
+        slotId: String,
+        showCreatedSuccessBanner: Bool = false
+    ) {
+        _viewModel = StateObject(wrappedValue: OperatorSlotDetailViewModel(businessAPI: businessAPI, slotId: slotId))
+        _showCreatedSuccessBanner = State(initialValue: showCreatedSuccessBanner)
     }
 
     var body: some View {
@@ -59,31 +66,75 @@ struct OperatorSlotDetailView: View {
         } message: {
             Text("This cannot be undone from the app.")
         }
+        .confirmationDialog("Confirm booking?", isPresented: $confirmBookingPrompt, titleVisibility: .visible) {
+            Button("Confirm booking") {
+                Task { await viewModel.confirmBooking() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(
+                """
+                This marks the opening as booked. The standby customer who claimed \
+                it will be treated as confirmed for this appointment.
+                """
+            )
+        }
     }
 
     private var loadingView: some View {
-        VStack {
-            Spacer()
-            ProgressView().tint(PFColor.primary)
-            Spacer()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                OperatorListLoadingPlaceholder(
+                    title: "Loading opening…",
+                    subtitle: "Fetching slot detail, timeline, and delivery context.",
+                    skeletonCount: 3
+                )
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
         }
+    }
+
+    private var createdOpeningBanner: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Opening created")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(PFColor.textPrimary)
+                    Text("Next step: send offers so standby customers can claim this slot.")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(PFColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                Button("OK") {
+                    showCreatedSuccessBanner = false
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(PFColor.primary)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PFColor.ember.opacity(0.12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(PFColor.ember.opacity(0.35), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 12) {
             Spacer()
-            Text("Couldn’t load slot")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(PFColor.textPrimary)
-            Text(message)
-                .font(.system(size: 13))
-                .foregroundStyle(PFColor.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-            Button("Retry") {
-                Task { await viewModel.load() }
-            }
-            .buttonStyle(PFPrimaryButtonStyle())
+            OperatorErrorStateCard(
+                title: "Couldn’t load this opening",
+                message: "Go back to the list and try again, or pull to refresh if you’re already on the latest build.",
+                technicalMessage: message,
+                onRetry: { await viewModel.load() }
+            )
+            .padding(.horizontal, 20)
             Spacer()
         }
     }
@@ -95,15 +146,21 @@ struct OperatorSlotDetailView: View {
                     PFPageHeader(
                         overline: "Slot detail",
                         title: slot.providerNameSnapshot ?? "Open slot",
-                        subtitle: "Action-first execution: confirm, retry, or resolve with full context."
+                        subtitle: slot.status == "claimed"
+                            ? OperatorOpeningStatusCopy.label(forRawStatus: slot.status)
+                            : "Action-first execution: confirm, retry, or resolve with full context."
                     )
+
+                    if showCreatedSuccessBanner {
+                        createdOpeningBanner
+                    }
 
                     recentActivityBar(slot)
                     if viewModel.usesServerActionMatrix {
                         queueContextBanner
                         serverActionBar(slot: slot, scroll: scroll)
                     } else {
-                        legacyNextActionCard(slot)
+                        legacyNextActionCard(slot, scroll: scroll)
                     }
                     heroCard(slot)
 
@@ -126,17 +183,21 @@ struct OperatorSlotDetailView: View {
                     }
                     .id("operatorNotificationLogs")
 
-                    if let ctx = viewModel.customerContext {
-                        OperatorCustomerSummaryCard(customer: ctx.customer, delivery: ctx.deliveryContext)
-                        OperatorStandbyPreferencesSection(preferences: ctx.standbyPreferences)
+                    if let claim = slot.winningClaim {
+                        winningClaimCard(claim, context: viewModel.customerContext)
+                            .id("operatorWinningClaimAnchor")
                     }
+
+                    Group {
+                        if let ctx = viewModel.customerContext {
+                            OperatorCustomerSummaryCard(customer: ctx.customer, delivery: ctx.deliveryContext)
+                            OperatorStandbyPreferencesSection(preferences: ctx.standbyPreferences)
+                        }
+                    }
+                    .id("operatorCustomerContextAnchor")
 
                     if viewModel.hasAttentionCues {
                         attentionCard(slot)
-                    }
-
-                    if let claim = slot.winningClaim {
-                        winningClaimCard(claim, context: viewModel.customerContext)
                     }
 
                     offerOutcomesCard(slot.slotOffers ?? [])
@@ -228,11 +289,11 @@ struct OperatorSlotDetailView: View {
         switch action {
         case .confirmBooking:
             Button(viewModel.isConfirming ? "Confirming…" : action.title) {
-                Task { await viewModel.runAvailableAction(action) }
+                confirmBookingPrompt = true
             }
             .buttonStyle(.borderedProminent)
             .tint(PFColor.primaryDark)
-            .disabled(isMutatingBusy)
+            .disabled(isMutatingBusy || viewModel.isConfirming)
 
         case .sendOffers, .retryOffers:
             Button(viewModel.isRetrying ? "Sending…" : action.title) {
@@ -272,10 +333,13 @@ struct OperatorSlotDetailView: View {
                 }
             }
             .buttonStyle(.bordered)
+
+        case .unknown:
+            EmptyView()
         }
     }
 
-    private func legacyNextActionCard(_ slot: StaffOpenSlotDetail) -> some View {
+    private func legacyNextActionCard(_ slot: StaffOpenSlotDetail, scroll: ScrollViewProxy) -> some View {
         PFSectionCard(
             eyebrow: OperatorSlotDetailPresenters.nextActionTitle(for: slot.status),
             title: "Action guidance",
@@ -285,10 +349,21 @@ struct OperatorSlotDetailView: View {
             HStack(spacing: 10) {
                 if slot.status == "claimed" {
                     Button(viewModel.isConfirming ? "Confirming…" : "Confirm booking") {
-                        Task { await viewModel.confirmBooking() }
+                        confirmBookingPrompt = true
                     }
                     .buttonStyle(PFPrimaryButtonStyle())
                     .disabled(viewModel.isConfirming)
+
+                    Button("Customer context") {
+                        withAnimation {
+                            if viewModel.customerContext != nil {
+                                scroll.scrollTo("operatorCustomerContextAnchor", anchor: .top)
+                            } else {
+                                scroll.scrollTo("operatorWinningClaimAnchor", anchor: .top)
+                            }
+                        }
+                    }
+                    .buttonStyle(.bordered)
                 } else if slot.status == "open" || slot.status == "offered" {
                     Button(viewModel.isRetrying ? "Sending…" : (slot.status == "open" ? "Send offers" : "Retry offers")) {
                         Task { await viewModel.retryOffers() }
@@ -343,7 +418,7 @@ struct OperatorSlotDetailView: View {
                 .font(.system(size: 17))
                 .foregroundStyle(PFColor.textSecondary)
 
-            StatusChipView(status: slot.status)
+            StatusChipView(operatorOpeningStatus: slot.status)
 
             VStack(alignment: .leading, spacing: 10) {
                 metricRow("Service", slot.serviceId.map(shortId) ?? "—")
@@ -424,7 +499,7 @@ struct OperatorSlotDetailView: View {
                     .foregroundStyle(PFColor.textPrimary)
             }
 
-            StatusChipView(status: claim.status)
+            StatusChipView(operatorClaimStatus: claim.status)
         }
         .padding(16)
         .background(PFSurface.card)

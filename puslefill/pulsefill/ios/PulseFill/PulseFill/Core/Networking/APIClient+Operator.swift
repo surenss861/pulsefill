@@ -20,6 +20,10 @@ extension APIClient {
         try await get("/v1/open-slots/mine", as: OpenSlotsListAPIResponse.self)
     }
 
+    func createOpenSlot(body: CreateOpenSlotRequestBody) async throws -> CreateOpenSlotAPIResponse {
+        try await post("/v1/open-slots", body: body, as: CreateOpenSlotAPIResponse.self)
+    }
+
     func getOpenSlotDetail(slotId: String) async throws -> OpenSlotDetailAPIResponse {
         try await get("/v1/open-slots/\(slotId)", as: OpenSlotDetailAPIResponse.self)
     }

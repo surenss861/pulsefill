@@ -3,6 +3,9 @@ import Foundation
 enum APIErrorCopy {
     /// Operator- and customer-facing copy; prefers stable `error.code` when present.
     static func message(for error: Error) -> String {
+        if let urlErr = error as? URLError {
+            return message(forURLError: urlErr)
+        }
         if let api = error as? APIError {
             if case let .structured(_, code, message, _) = api {
                 if let code, let mapped = mapOperatorActionCode(code) {
@@ -14,6 +17,12 @@ enum APIErrorCopy {
         }
 
         let text = error.localizedDescription.lowercased()
+
+        if text.contains("unsupported url") || text.contains("nsurlerrordomain")
+            || text.contains("urlsession") && text.contains("error") && text.contains("-1002")
+            || text.contains("error -1002") {
+            return "We couldn’t connect to PulseFill. Please try again."
+        }
 
         if text.contains("slot already claimed") || text.contains("lost_race") || text.contains("claim_rejected") {
             return "Someone else claimed this opening first."
@@ -33,6 +42,22 @@ enum APIErrorCopy {
         }
 
         return "Something went wrong. Please try again."
+    }
+
+    private static func message(forURLError err: URLError) -> String {
+        switch err.code {
+        case .unsupportedURL, .userAuthenticationRequired:
+            return "We couldn’t connect to PulseFill. Please try again."
+        case .notConnectedToInternet, .networkConnectionLost, .cannotFindHost, .cannotConnectToHost,
+             .dnsLookupFailed, .timedOut, .dataNotAllowed:
+            return "We couldn’t reach PulseFill right now. Try again."
+        case .cancelled:
+            return "The request was cancelled."
+        default:
+            let t = err.localizedDescription.lowercased()
+            if t.contains("unsupported") { return "We couldn’t connect to PulseFill. Please try again." }
+            return "We couldn’t reach PulseFill right now. Try again."
+        }
     }
 
     private static func mapOperatorActionCode(_ code: String) -> String? {

@@ -41,7 +41,7 @@ struct OperatorActionQueueView: View {
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationDestination(for: String.self) { slotId in
-                OperatorSlotDetailView(api: env.apiClient, slotId: slotId)
+                OperatorSlotDetailView(businessAPI: env.businessOperatorAPI, slotId: slotId)
             }
             .task {
                 await viewModel.load()
@@ -64,7 +64,7 @@ struct OperatorActionQueueView: View {
             )
             .sheet(item: $digestSlotsSheet) { route in
                 OperatorSlotsListView(
-                    api: env.apiClient,
+                    businessAPI: env.businessOperatorAPI,
                     digestContext: OperatorSlotsDigestContext(
                         slotIds: route.slotIds,
                         title: route.title,

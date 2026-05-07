@@ -6,10 +6,17 @@ struct OperatorSlotsListView: View {
     @StateObject private var viewModel: OperatorSlotsListViewModel
     @State private var path = NavigationPath()
     private let digestContext: OperatorSlotsDigestContext?
+    /// When set (Business shell only), toolbar can jump to the Create tab.
+    private let businessShellSelectedTab: Binding<BusinessShellTab>?
 
-    init(api: APIClient, digestContext: OperatorSlotsDigestContext? = nil) {
+    init(
+        businessAPI: BusinessOperatorAPIClient,
+        digestContext: OperatorSlotsDigestContext? = nil,
+        businessShellSelectedTab: Binding<BusinessShellTab>? = nil
+    ) {
         self.digestContext = digestContext
-        _viewModel = StateObject(wrappedValue: OperatorSlotsListViewModel(api: api, digestContext: digestContext))
+        self.businessShellSelectedTab = businessShellSelectedTab
+        _viewModel = StateObject(wrappedValue: OperatorSlotsListViewModel(businessAPI: businessAPI, digestContext: digestContext))
     }
 
     var body: some View {
@@ -29,8 +36,20 @@ struct OperatorSlotsListView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar {
+                if let tabBinding = businessShellSelectedTab {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            tabBinding.wrappedValue = .create
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                        }
+                        .accessibilityLabel("Create opening")
+                    }
+                }
+            }
             .navigationDestination(for: String.self) { slotId in
-                OperatorSlotDetailView(api: env.apiClient, slotId: slotId)
+                OperatorSlotDetailView(businessAPI: env.businessOperatorAPI, slotId: slotId)
             }
             .task {
                 await viewModel.load()
@@ -62,7 +81,11 @@ struct OperatorSlotsListView: View {
                     title: "Open Slots",
                     subtitle: "Inventory view across all openings and their recovery state."
                 )
-                PFLoadingSkeleton(count: 4)
+                OperatorListLoadingPlaceholder(
+                    title: "Loading openings…",
+                    subtitle: "Fetching slots and filter options.",
+                    skeletonCount: 4
+                )
             }
             .padding(.top, 16)
             .padding(.horizontal, 20)
@@ -72,19 +95,13 @@ struct OperatorSlotsListView: View {
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 12) {
             Spacer()
-            Text("Couldn’t load slots")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(PFColor.textPrimary)
-            Text(message)
-                .font(.system(size: 13))
-                .foregroundStyle(PFColor.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-            Button("Retry") {
-                Task { await viewModel.load() }
-            }
-            .buttonStyle(PFPrimaryButtonStyle())
-            .padding(.horizontal, 24)
+            OperatorErrorStateCard(
+                title: "Couldn’t load openings",
+                message: "Refresh and try again.",
+                technicalMessage: message,
+                onRetry: { await viewModel.load() }
+            )
+            .padding(.horizontal, 20)
             Spacer()
         }
     }
@@ -92,6 +109,11 @@ struct OperatorSlotsListView: View {
     private var contentView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                if businessShellSelectedTab != nil {
+                    BusinessWorkspaceStrip()
+                        .environmentObject(env)
+                }
+
                 PFPageHeader(
                     overline: "Slots",
                     title: "Open Slots",
@@ -146,10 +168,27 @@ struct OperatorSlotsListView: View {
                 }
 
                 if viewModel.filteredSlots.isEmpty {
-                    Text(emptyCopy)
-                        .font(.system(size: 13))
-                        .foregroundStyle(PFColor.textSecondary)
-                        .padding(.top, 4)
+                    if viewModel.slots.isEmpty {
+                        OperatorEmptyStateCard(
+                            systemImage: "calendar.badge.plus",
+                            title: "No openings posted",
+                            message: "Create an opening so standby customers can receive offers when you cancel or free a slot.",
+                            primaryButtonTitle: businessShellSelectedTab != nil ? "Create opening" : nil,
+                            primaryAction: businessShellSelectedTab != nil
+                                ? { businessShellSelectedTab?.wrappedValue = .create }
+                                : nil
+                        )
+                        .padding(.top, 8)
+                    } else {
+                        OperatorEmptyStateCard(
+                            systemImage: "line.3.horizontal.decrease.circle",
+                            title: "Nothing matches this view",
+                            message: emptyCopy,
+                            primaryButtonTitle: nil,
+                            primaryAction: nil
+                        )
+                        .padding(.top, 8)
+                    }
                 } else {
                     VStack(spacing: 12) {
                         ForEach(viewModel.filteredSlots) { slot in

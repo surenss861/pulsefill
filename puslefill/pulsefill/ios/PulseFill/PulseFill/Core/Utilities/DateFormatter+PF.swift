@@ -17,7 +17,7 @@ enum DateFormatterPF {
         return f
     }()
 
-    private static func parse(_ string: String) -> Date? {
+    fileprivate static func parse(_ string: String) -> Date? {
         if let d = isoFrac.date(from: string) { return d }
         if let d = iso.date(from: string) { return d }
         let f = DateFormatter()
@@ -25,6 +25,11 @@ enum DateFormatterPF {
         f.timeZone = TimeZone(secondsFromGMT: 0)
         f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX"
         return f.date(from: string)
+    }
+
+    /// Parses common API timestamp strings (`claimed_at`, `starts_at`, etc.).
+    static func parseToDate(_ string: String) -> Date? {
+        parse(string.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
     static func short(_ iso: String) -> String {
@@ -56,6 +61,14 @@ enum DateFormatterPF {
         let f = RelativeDateTimeFormatter()
         f.unitsStyle = .short
         return f.localizedString(for: date, relativeTo: Date())
+    }
+
+    /// Wall-clock instant with local timezone offset for `POST /v1/open-slots` style payloads.
+    static func openSlotAPIInstant(from date: Date) -> String {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        f.timeZone = .current
+        return f.string(from: date)
     }
 
     /// Same-day range for operator lists (local timezone).

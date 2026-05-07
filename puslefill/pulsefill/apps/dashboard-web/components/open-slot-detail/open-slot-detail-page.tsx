@@ -295,9 +295,10 @@ export function OpenSlotDetailPage() {
 
       {slot ? (
         <div className="pf-slot-detail-case-grid" style={{ marginTop: 18 }}>
-          <div style={{ display: "grid", gap: 22, minWidth: 0 }}>
-            {/* 1 — Case header + recovery path + actions */}
+          <div className="pf-slot-detail-mobile-stack" style={{ display: "grid", gap: 22, minWidth: 0 }}>
+            {/* 1 — Case header + recovery path + actions (mobile: actions before recovery) */}
             <div
+              className="pf-mobile-case-hero-card pf-mobile-case-header"
               style={{
                 borderRadius: 22,
                 border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -307,57 +308,63 @@ export function OpenSlotDetailPage() {
                 boxShadow: "0 24px 70px rgba(0,0,0,0.35)",
               }}
             >
-              <SlotDetailIdentityHeader
-                slot={slot}
-                serviceLabel={serviceLabel}
-                locationLabel={locationLabel}
-                namesLoading={namesLoading}
-              />
-              <div style={{ marginTop: 14 }}>
-                <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
-                  Recovery path
-                </p>
-                {isSlotRecoveryTerminalStatus(slot.status) ? (
-                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
-                    {terminalRecoveryCopy(slot.status)}
-                  </p>
-                ) : (
-                  <RecoveryPipeline
-                    activeStep={slotStatusToRecoveryPipelineActiveStep(slot.status)}
-                    compact
-                    animated
-                    showFlowLabel={false}
-                    interactive={false}
-                  />
-                )}
-              </div>
-              {queueChip ? (
-                <div style={{ marginTop: 14 }}>
-                  <OperatorStatusChip
-                    kind={queueCategoryToStatusKind(queueContext?.current_category ?? null) ?? "pending"}
-                    label={queueChip}
-                    caps
+              <div className="pf-mobile-slot-hero-stack">
+                <div className="pf-mh-block-header">
+                  <SlotDetailIdentityHeader
+                    slot={slot}
+                    serviceLabel={serviceLabel}
+                    locationLabel={locationLabel}
+                    namesLoading={namesLoading}
                   />
                 </div>
-              ) : null}
-              <div style={{ marginTop: 20 }}>
-                {!billingSummary.loading && billingSummary.data ? (
-                  <div style={{ marginBottom: 10 }}>
-                    <BillingInlineGuardrail summary={billingSummary.data} />
+                <div className="pf-mh-block-recovery" style={{ marginTop: 14 }}>
+                  <p className="pf-kicker pf-mobile-case-header" style={{ margin: "0 0 8px" }}>
+                    Recovery path
+                  </p>
+                  {isSlotRecoveryTerminalStatus(slot.status) ? (
+                    <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
+                      {terminalRecoveryCopy(slot.status)}
+                    </p>
+                  ) : (
+                    <div className="pf-mobile-recovery-strip">
+                      <RecoveryPipeline
+                        activeStep={slotStatusToRecoveryPipelineActiveStep(slot.status)}
+                        compact
+                        animated
+                        showFlowLabel={false}
+                        interactive={false}
+                      />
+                    </div>
+                  )}
+                </div>
+                {queueChip ? (
+                  <div className="pf-mh-block-queue" style={{ marginTop: 14 }}>
+                    <OperatorStatusChip
+                      kind={queueCategoryToStatusKind(queueContext?.current_category ?? null) ?? "pending"}
+                      label={queueChip}
+                      caps
+                    />
                   </div>
                 ) : null}
-                <OperatorSlotActionBar
-                  openSlotId={slot.id}
-                  slotStatus={slot.status}
-                  queueCategory={queueContext?.current_category ?? null}
-                  claimId={claimId}
-                  availableActions={availableActions}
-                  onMutationsDone={() => void refreshAll()}
-                  onAddNote={() => document.getElementById("operator-slot-internal-note")?.scrollIntoView({ behavior: "smooth" })}
-                  onInspectLogs={() =>
-                    document.getElementById("operator-slot-notification-logs")?.scrollIntoView({ behavior: "smooth" })
-                  }
-                />
+                <div className="pf-mh-block-actions pf-mobile-action-dock" style={{ marginTop: 20 }}>
+                  {!billingSummary.loading && billingSummary.data ? (
+                    <div style={{ marginBottom: 10 }}>
+                      <BillingInlineGuardrail summary={billingSummary.data} />
+                    </div>
+                  ) : null}
+                  <OperatorSlotActionBar
+                    openSlotId={slot.id}
+                    slotStatus={slot.status}
+                    queueCategory={queueContext?.current_category ?? null}
+                    claimId={claimId}
+                    availableActions={availableActions}
+                    onMutationsDone={() => void refreshAll()}
+                    onAddNote={() => document.getElementById("operator-slot-internal-note")?.scrollIntoView({ behavior: "smooth" })}
+                    onInspectLogs={() =>
+                      document.getElementById("operator-slot-notification-logs")?.scrollIntoView({ behavior: "smooth" })
+                    }
+                  />
+                </div>
               </div>
             </div>
 
@@ -429,6 +436,24 @@ export function OpenSlotDetailPage() {
               <SlotOffersInspector slot={slot} />
             </div>
             </OpenSlotDetailSection>
+
+            {/* Mobile-first: delivery status before deep notification diagnostics */}
+            <div className="pf-mobile-delivery-early">
+              <OpenSlotDetailSection
+                eyebrow="Messages"
+                title="Delivery status"
+                description="Who was reached and whether pushes were skipped or failed."
+              >
+                <div className="pf-mobile-secondary-panel">
+                  <NotificationDeliveryStatusSection
+                    loading={notificationDeliveryLoading}
+                    error={notificationDeliveryError}
+                    items={notificationDelivery?.items ?? []}
+                    summary={notificationDelivery?.summary ?? null}
+                  />
+                </div>
+              </OpenSlotDetailSection>
+            </div>
 
             {/* 6 — Internal notes */}
             <div id="operator-slot-internal-note">
@@ -554,7 +579,10 @@ export function OpenSlotDetailPage() {
               </div>
             ) : null}
 
-            <div style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
+            <div
+              className="pf-slot-detail-rail-delivery-desktop-only"
+              style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}
+            >
               <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
                 Delivery
               </p>

@@ -43,6 +43,21 @@ enum PulseFillBuildConfiguration {
         return (v?.isEmpty == false) ? v : nil
     }
 
+    /// Ensures `PULSEFILL_API_BASE_URL` is usable with `URL(relativeTo:)`: adds `https://` when the host
+    /// was given without a scheme (a common Xcode scheme mistake that yields NSURLError -1002 / relative `/v1/...` URLs).
+    static func normalizedAPIBaseURLString(_ raw: String) -> String {
+        var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        while s.hasSuffix("/") { s.removeLast() }
+        guard !s.isEmpty else { return s }
+        if s.range(of: "^[a-zA-Z][a-zA-Z0-9+.-]*://", options: .regularExpression) != nil {
+            return s
+        }
+        if s.hasPrefix("//") {
+            return "https:\(s)"
+        }
+        return "https://\(s)"
+    }
+
     /// Active tier: explicit `PULSEFILL_TIER`, else Debug → **simulator** uses local API, **device** uses production (Railway).
     /// Release builds always use production unless `PULSEFILL_TIER` / `PULSEFILL_API_BASE_URL` overrides.
     static var deploymentTier: PulseFillDeploymentTier {
@@ -65,8 +80,11 @@ enum PulseFillBuildConfiguration {
 
     /// Fastify `v1` API base URL (no trailing slash).
     static var apiBaseURL: URL {
-        if let s = env("PULSEFILL_API_BASE_URL"), let url = URL(string: s) {
-            return url
+        if let s = env("PULSEFILL_API_BASE_URL") {
+            let normalized = normalizedAPIBaseURLString(s)
+            if let url = URL(string: normalized) {
+                return url
+            }
         }
         switch deploymentTier {
         case .local:
@@ -151,6 +169,14 @@ enum PulseFillBuildConfiguration {
             reasons.append("Supabase URL has no host.")
         }
 
+        let apiScheme = apiBaseURL.scheme?.lowercased() ?? ""
+        if deploymentTier != .local, apiScheme != "https" {
+            reasons.append("API base URL must use https in non-local tiers.")
+        }
+        if (apiBaseURL.host ?? "").isEmpty {
+            reasons.append("API base URL has no host — check PULSEFILL_API_BASE_URL (include https://).")
+        }
+
         switch deploymentTier {
         case .staging:
             let api = apiBaseURL.absoluteString
@@ -169,6 +195,13 @@ enum PulseFillBuildConfiguration {
             )
         }
         return LaunchConfigurationResult(blockingCustomerMessage: nil, debugSummary: nil)
+    }
+
+    /// One line for operator-facing Account / debug (tier + marketing version + build).
+    static var operatorClientBuildLine: String {
+        let marketing = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"
+        return "\(deploymentTier.rawValue) · \(marketing) (\(build))"
     }
 
     private static func jwtPayloadContainsServiceRole(_ jwt: String) -> Bool {

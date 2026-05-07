@@ -35,12 +35,23 @@ final class OperatorSlotDetailViewModel: ObservableObject {
     @Published var pendingAction: PendingAction?
     @Published var successPulseToken = UUID()
 
-    private let api: APIClient
+    private let businessAPI: BusinessOperatorAPIClient
     private let slotId: String
+    private var cancellables = Set<AnyCancellable>()
 
-    init(api: APIClient, slotId: String) {
-        self.api = api
+    init(businessAPI: BusinessOperatorAPIClient, slotId: String) {
+        self.businessAPI = businessAPI
         self.slotId = slotId
+
+        NotificationCenter.default.publisher(for: OperatorRefreshNotifications.slotUpdated)
+            .compactMap { $0.object as? OperatorMutationNotifier.SlotMutationPayload }
+            .filter { [slotId] payload in payload.slotId == slotId }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await self.load() }
+            }
+            .store(in: &cancellables)
     }
 
     var sortedActions: [OperatorSlotAvailableAction] {
@@ -71,9 +82,9 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             loadState = .loading
         }
         do {
-            async let detail = api.getOpenSlotDetail(slotId: slotId)
-            async let tl = api.getSlotTimeline(slotId: slotId)
-            async let logs = api.getSlotNotificationLogs(slotId: slotId)
+            async let detail = businessAPI.openSlotDetail(slotId: slotId)
+            async let tl = businessAPI.openSlotTimeline(slotId: slotId)
+            async let logs = businessAPI.openSlotNotificationLogs(slotId: slotId)
             let (d, t, l) = try await (detail, tl, logs)
             slot = d.slot
             queueContext = d.queueContext
@@ -82,7 +93,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             notificationLogs = l.logs
 
             if let cid = d.slot.winningClaim?.customerId {
-                customerContext = try? await api.getOperatorCustomerContext(customerId: cid)
+                customerContext = try? await businessAPI.operatorCustomerContext(customerId: cid)
             } else {
                 customerContext = nil
             }
@@ -102,7 +113,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
     }
 
     func runAvailableAction(_ action: OperatorSlotAvailableAction) async {
-        guard let slot else { return }
+        guard slot != nil else { return }
         switch action {
         case .confirmBooking:
             await confirmBooking()
@@ -112,7 +123,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             await expireSlot()
         case .cancelSlot:
             await cancelSlot()
-        case .addNote, .inspectNotificationLogs:
+        case .addNote, .inspectNotificationLogs, .unknown:
             break
         }
     }
@@ -135,7 +146,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             end()
         }
         do {
-            let res = try await api.sendOffers(slotId: slot.id)
+            let res = try await businessAPI.sendOffers(slotId: slot.id)
             let refresh: OperatorMutationRefreshAction = action == .retryOffers ? .retryOffers : .sendOffers
             let trimmed = res.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let msg: String
@@ -161,7 +172,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             end()
         }
         do {
-            let res = try await api.updateOperatorSlotNote(
+            let res = try await businessAPI.updateOpenSlotInternalNote(
                 slotId: slot.id,
                 internalNote: note,
                 resolutionStatus: resolutionStatus
@@ -171,8 +182,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             let msg = trimmed.isEmpty ? "Internal note saved." : trimmed
             await markSuccess(message: msg, slotId: slot.id, noteUpdated: true)
         } catch {
-            errorMessage = APIErrorCopy.message(for: error)
-            flashMessage = errorMessage
+            await handleMutationError(error)
         }
     }
 
@@ -185,7 +195,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             end()
         }
         do {
-            let res = try await api.confirmOpenSlotClaim(slotId: slot.id, claimId: claimId)
+            let res = try await businessAPI.confirmOpenSlotClaim(slotId: slot.id, claimId: claimId)
             let trimmed = res.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let msg: String
             if trimmed.isEmpty {
@@ -208,7 +218,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             end()
         }
         do {
-            _ = try await api.expireOpenSlot(slotId: slot.id)
+            _ = try await businessAPI.expireOpenSlot(slotId: slot.id)
             await markSuccess(message: "Slot expired.", slotId: slot.id, refreshAction: .expireSlot)
         } catch {
             await handleMutationError(error)
@@ -224,7 +234,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             end()
         }
         do {
-            _ = try await api.cancelOpenSlot(slotId: slot.id)
+            _ = try await businessAPI.cancelOpenSlot(slotId: slot.id)
             await markSuccess(message: "Slot cancelled.", slotId: slot.id, refreshAction: .cancelSlot)
         } catch {
             await handleMutationError(error)
@@ -244,8 +254,23 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             errorMessage = flashMessage
             await load()
         } else {
-            errorMessage = APIErrorCopy.message(for: error)
-            flashMessage = errorMessage
+            let technical = APIErrorCopy.message(for: error)
+            errorMessage = technical
+            flashMessage = OperatorMutationFriendlyCopy.slotMutationUserMessage(
+                for: error,
+                mutation: pendingAction.flatMap(Self.mapPendingToFriendlyMutation)
+            )
+        }
+    }
+
+    private static func mapPendingToFriendlyMutation(_ pending: PendingAction) -> OperatorMutationFriendlyCopy.SlotMutation? {
+        switch pending {
+        case .confirmBooking: return .confirmBooking
+        case .sendOffers: return .sendOffers
+        case .retryOffers: return .retryOffers
+        case .expireSlot: return .expireSlot
+        case .cancelSlot: return .cancelSlot
+        case .saveNote: return .saveNote
         }
     }
 

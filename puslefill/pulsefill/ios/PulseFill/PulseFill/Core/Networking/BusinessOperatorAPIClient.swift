@@ -1,0 +1,121 @@
+import Foundation
+
+/// Typed entry point for **staff / Business mode** HTTP calls.
+/// Customer surfaces should keep using `APIClient` + `APIClient+Customer` directly.
+@MainActor
+struct BusinessOperatorAPIClient {
+    let underlying: APIClient
+
+    /// Parallel bundle for the Business **Today** tab.
+    func loadBusinessTodayDashboard() async throws -> BusinessTodayDashboardPayload {
+        async let daily = underlying.getOperatorDailyOpsSummary()
+        async let queue = underlying.getOperatorActionQueue()
+        async let slots = underlying.getStaffOpenSlots()
+        async let digest = underlying.getMorningRecoveryDigestIfAvailable()
+        async let recoveryHealth = underlying.getOperatorRecoveryHealthIfAvailable()
+
+        let dailyRes = try await daily
+        let queueRes = try await queue
+        let slotsRes = try await slots
+        let digestRes = await digest
+        let recoveryRes = await recoveryHealth
+
+        return BusinessTodayDashboardPayload(
+            daily: dailyRes,
+            queue: queueRes,
+            openSlots: slotsRes.openSlots,
+            morningDigest: digestRes,
+            recoveryHealth: recoveryRes
+        )
+    }
+
+    // MARK: - Openings / slot actions (used beyond Today; keeps operator naming in one place)
+
+    func listMyOpenSlots() async throws -> OpenSlotsListAPIResponse {
+        try await underlying.getStaffOpenSlots()
+    }
+
+    func openSlotDetail(slotId: String) async throws -> OpenSlotDetailAPIResponse {
+        try await underlying.getOpenSlotDetail(slotId: slotId)
+    }
+
+    func sendOffers(slotId: String) async throws -> SendOffersAPIResponse {
+        try await underlying.sendOffers(slotId: slotId)
+    }
+
+    func confirmOpenSlotClaim(slotId: String, claimId: String) async throws -> ConfirmOpenSlotResponse {
+        try await underlying.confirmOpenSlotClaim(slotId: slotId, claimId: claimId)
+    }
+
+    func expireOpenSlot(slotId: String) async throws -> SimpleOkResponse {
+        try await underlying.expireOpenSlot(slotId: slotId)
+    }
+
+    func cancelOpenSlot(slotId: String) async throws -> SimpleOkResponse {
+        try await underlying.cancelOpenSlot(slotId: slotId)
+    }
+
+    func openSlotTimeline(slotId: String) async throws -> TimelineAPIResponse {
+        try await underlying.getSlotTimeline(slotId: slotId)
+    }
+
+    func openSlotNotificationLogs(slotId: String) async throws -> NotificationLogsAPIResponse {
+        try await underlying.getSlotNotificationLogs(slotId: slotId)
+    }
+
+    func updateOpenSlotInternalNote(
+        slotId: String,
+        internalNote: String,
+        resolutionStatus: String
+    ) async throws -> UpdateOperatorSlotNoteResponse {
+        try await underlying.updateOperatorSlotNote(
+            slotId: slotId,
+            internalNote: internalNote,
+            resolutionStatus: resolutionStatus
+        )
+    }
+
+    func operatorCustomerContext(customerId: String) async throws -> OperatorCustomerContextResponse {
+        try await underlying.getOperatorCustomerContext(customerId: customerId)
+    }
+
+    // MARK: - Customers / invites (staff)
+
+    func listOperatorCustomerInvites() async throws -> StaffCustomerInvitesListResponse {
+        try await underlying.listStaffCustomerInvites()
+    }
+
+    func createCustomerInvite(_ body: CreateStaffCustomerInviteBody) async throws -> StaffCustomerInviteListItemDTO {
+        try await underlying.createStaffCustomerInvite(body: body)
+    }
+
+    func revokeCustomerInvite(inviteId: String) async throws -> StaffCustomerInviteListItemDTO {
+        try await underlying.revokeStaffCustomerInvite(inviteId: inviteId)
+    }
+
+    // MARK: - Reference data (filters)
+
+    func namedProviders() async throws -> [BusinessNamedRow] {
+        try await underlying.getBusinessNamedProviders()
+    }
+
+    func namedLocations() async throws -> [BusinessNamedRow] {
+        try await underlying.getBusinessNamedLocations()
+    }
+
+    func namedServices() async throws -> [BusinessNamedRow] {
+        try await underlying.getBusinessNamedServices()
+    }
+
+    func createOpenSlot(_ body: CreateOpenSlotRequestBody) async throws -> CreateOpenSlotAPIResponse {
+        try await underlying.createOpenSlot(body: body)
+    }
+}
+
+struct BusinessTodayDashboardPayload: Sendable {
+    let daily: OperatorDailyOpsSummaryResponse
+    let queue: OperatorActionQueueResponse
+    let openSlots: [StaffOpenSlotListRow]
+    let morningDigest: MorningRecoveryDigestResponse?
+    let recoveryHealth: OperatorRecoveryHealthResponse?
+}

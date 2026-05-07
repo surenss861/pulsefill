@@ -10,6 +10,7 @@ final class AuthManager: ObservableObject {
     private let sessionStore: SessionStore
     private let apiClient: APIClient
     private let pushRegistrationManager: PushRegistrationManager
+    private let userRoleContext: UserRoleContext
 
     enum InviteAcceptResult {
         case success
@@ -20,12 +21,14 @@ final class AuthManager: ObservableObject {
         authClient: SupabaseAuthClient,
         sessionStore: SessionStore,
         apiClient: APIClient,
-        pushRegistrationManager: PushRegistrationManager
+        pushRegistrationManager: PushRegistrationManager,
+        userRoleContext: UserRoleContext
     ) {
         self.authClient = authClient
         self.sessionStore = sessionStore
         self.apiClient = apiClient
         self.pushRegistrationManager = pushRegistrationManager
+        self.userRoleContext = userRoleContext
     }
 
     func restoreSessionIfNeeded() async {
@@ -44,11 +47,13 @@ final class AuthManager: ObservableObject {
             )
             try await syncCustomerSession()
             await refreshStaffAccess()
+            await userRoleContext.refreshFromServer(legacyMigrationHint: true)
         } catch {
             #if DEBUG
             print("AuthManager.restoreSessionIfNeeded error: \(error)")
             #endif
             sessionStore.clear()
+            userRoleContext.resetForSignOut()
             banner = nil
         }
     }
@@ -81,6 +86,7 @@ final class AuthManager: ObservableObject {
             )
             try await syncCustomerSession()
             await refreshStaffAccess()
+            await userRoleContext.refreshFromServer(legacyMigrationHint: false)
         } catch {
             #if DEBUG
             print("AuthManager.signIn error: \(error)")
@@ -103,6 +109,7 @@ final class AuthManager: ObservableObject {
                 )
                 try await syncCustomerSession()
                 await refreshStaffAccess()
+                await userRoleContext.refreshFromServer(legacyMigrationHint: false)
             } else {
                 banner = "Check your inbox to verify your email, then sign in."
             }
@@ -117,6 +124,7 @@ final class AuthManager: ObservableObject {
     func signOut() async {
         await pushRegistrationManager.deactivateCurrentDeviceIfNeeded()
         sessionStore.clear()
+        userRoleContext.resetForSignOut()
         banner = nil
     }
 

@@ -1,108 +1,140 @@
-import SwiftUI
+import Foundation
 
+/// Copy + summaries for slot detail timelines and guidance (operator-only).
 enum OperatorSlotDetailPresenters {
     static func nextActionTitle(for status: String) -> String {
-        switch status {
-        case "claimed": "Confirm booking"
-        case "open": "Send offers"
-        case "offered": "Retry offers"
-        case "booked": "Booking confirmed"
-        case "expired": "Slot expired"
-        case "cancelled": "Slot cancelled"
-        default: "Review slot"
+        switch status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "claimed":
+            return "Booking confirmation"
+        case "open":
+            return "Send offers"
+        case "offered":
+            return "Retry or wait"
+        case "booked":
+            return "Recovered"
+        case "expired":
+            return "Expired"
+        case "cancelled", "canceled":
+            return "Cancelled"
+        default:
+            return "Next step"
         }
     }
 
     static func nextActionDescription(for status: String) -> String {
-        switch status {
+        switch status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
         case "claimed":
-            "A customer claimed this opening. Confirm it to finalize recovery."
+            return "Verify the claimant and confirm the booking once you’re satisfied."
         case "open":
-            "This opening is ready to send to standby customers."
+            return "PulseFill can ping standby customers with this cancellation slot."
         case "offered":
-            "Offers are active or can be retried if the slot still needs filling."
+            return "Offers are live; widen coverage or retry if delivery looks weak."
         case "booked":
-            "This slot has already been confirmed."
-        case "expired":
-            "This opening expired without being filled."
-        case "cancelled":
-            "This opening was cancelled."
+            return "This opening is recovered. Review notes if you need clinic context."
+        case "expired", "cancelled", "canceled":
+            return "No further automation actions are available."
         default:
-            "Review the slot details and take the next best action."
+            return OperatorOpeningStatusCopy.label(forRawStatus: status)
         }
     }
 
+    static func latestMilestone(_ events: [OperatorTimelineEvent]) -> String? {
+        guard let first = events.first else { return nil }
+        let when = DateFormatterPF.medium(first.createdAt)
+        let title = timelineEventTitle(for: first.eventType)
+        return "\(title) · \(when)"
+    }
+
+    static func lastTouchedSummary(for slot: StaffOpenSlotDetail) -> String? {
+        guard let touched = slot.lastTouchedAt?.trimmingCharacters(in: .whitespacesAndNewlines), !touched.isEmpty
+        else {
+            return nil
+        }
+
+        let when = DateFormatterPF.relative(touched)
+        if when.isEmpty { return nil }
+
+        let actor = slot.lastTouchedBy?.fullName?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let suffix: String = {
+            if let actor, !actor.isEmpty { return actor }
+            let idTail = slot.lastTouchedByStaffId.map(Self.shortId(_:))
+            return idTail ?? "Staff"
+        }()
+
+        return "Last updated \(when) · \(suffix)"
+    }
+
+    static func offerOutcomeSummary(_ offers: [StaffSlotOfferRow]) -> String {
+        guard !offers.isEmpty else {
+            return "Offers will appear once you send to standby customers."
+        }
+
+        var counts: [String: Int] = [:]
+        for o in offers {
+            let k = o.status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            counts[k, default: 0] += 1
+        }
+
+        func label(_ raw: String) -> String {
+            switch raw.lowercased() {
+            case "sent", "queued": return "Queued"
+            case "delivered": return "Delivered"
+            case "failed": return "Delivery failed"
+            case "opened", "viewed": return "Viewed"
+            case "expired": return "Expired offer"
+            case "skipped": return "Skipped"
+            default:
+                return raw.replacingOccurrences(of: "_", with: " ").capitalized
+            }
+        }
+
+        let chunks = counts.keys.sorted().map { key in
+            "\(counts[key] ?? 0) \(label(key))"
+        }
+        return chunks.joined(separator: " · ")
+    }
+
     static func timelineEventTitle(for eventType: String) -> String {
-        switch eventType {
-        case "open_slot_created", "slot_created": "Slot created"
-        case "offers_sent": "Offers sent to standby customers"
-        case "offers_no_match": "No matching standby customers"
-        case "slot_reopened": "Slot reopened"
-        case "slot_expired": "Slot expired"
-        case "slot_cancelled": "Slot cancelled"
-        case "slot_confirmed": "Booking confirmed"
-        case "claim_won": "Customer claimed this opening"
-        case "notification_delivered": "Push / notification delivered"
-        case "notification_failed": "Notification delivery failed"
-        case "operator_internal_note_updated": "Internal note updated"
+        switch eventType.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "slot.created", "open_slot.created":
+            return "Opening posted"
+        case "offers.sent", "send_offers":
+            return "Offers sent"
+        case "offers.retry", "offers.retried":
+            return "Offers retried"
+        case "offer.delivered":
+            return "Delivery updated"
+        case "offer.failed":
+            return "Delivery issue"
+        case "claim.created", "claim.submitted":
+            return "Customer claimed"
+        case "booking.confirmed", "claim.confirmed", "confirmed":
+            return "Booking confirmed"
+        case "slot.expired":
+            return "Opening expired"
+        case "slot.cancelled", "slot.canceled":
+            return "Opening cancelled"
         default:
-            eventType.replacingOccurrences(of: "_", with: " ")
+            return eventType.replacingOccurrences(of: ".", with: " ").replacingOccurrences(of: "_", with: " ").capitalized
         }
     }
 
     static func timelineActorLine(for event: OperatorTimelineEvent) -> String? {
-        if let label = event.actorLabel?.trimmingCharacters(in: .whitespacesAndNewlines), !label.isEmpty {
-            return label
+        if let actor = event.actorLabel?.trimmingCharacters(in: .whitespacesAndNewlines), !actor.isEmpty {
+            return actor
         }
-        guard let t = event.actorType?.lowercased() else { return nil }
-        if t == "staff" {
-            if let aid = event.actorId, aid.count >= 8 {
-                return "Staff · \(aid.prefix(4))…\(aid.suffix(4))"
-            }
-            return "Staff"
+        if let actorType = event.actorType?.trimmingCharacters(in: .whitespacesAndNewlines), !actorType.isEmpty {
+            let kind = actorType.replacingOccurrences(of: "_", with: " ").capitalized
+            if let id = event.actorId { return "\(kind) · \(Self.shortId(id))" }
+            return kind
         }
-        if t == "system" { return "System" }
-        if t == "customer" { return "Customer" }
+        if let id = event.actorId { return Self.shortId(id) }
         return nil
     }
 
-    static func lastTouchedSummary(for slot: StaffOpenSlotDetail) -> String? {
-        guard let at = slot.lastTouchedAt, !at.isEmpty else { return nil }
-        let who: String? = {
-            if let n = slot.lastTouchedBy?.fullName?.trimmingCharacters(in: .whitespacesAndNewlines), !n.isEmpty {
-                return n
-            }
-            if let e = slot.lastTouchedBy?.email, let local = e.split(separator: "@").first {
-                return String(local)
-            }
-            if let id = slot.lastTouchedByStaffId {
-                return "Staff \(shortId(id))"
-            }
-            return nil
-        }()
-        let time = DateFormatterPF.medium(at)
-        if let who, !who.isEmpty {
-            return "Last touched by \(who) · \(time)"
-        }
-        return "Last touched · \(time)"
-    }
-
-    private static func shortId(_ id: String) -> String {
+    nonisolated private static func shortId(_ id: String) -> String {
         if id.count <= 14 { return id }
         return "\(id.prefix(4))…\(id.suffix(4))"
-    }
-
-    static func offerOutcomeSummary(_ offers: [StaffSlotOfferRow]) -> String {
-        let total = offers.count
-        let claimed = offers.filter { $0.status == "claimed" }.count
-        let delivered = offers.filter { $0.status == "delivered" }.count
-        let failed = offers.filter { $0.status == "failed" }.count
-        let expired = offers.filter { $0.status == "expired" }.count
-        return "\(total) total · \(delivered) delivered · \(failed) failed · \(expired) expired · \(claimed) claimed"
-    }
-
-    static func latestMilestone(_ events: [OperatorTimelineEvent]) -> String? {
-        guard let e = events.sorted(by: { $0.createdAt > $1.createdAt }).first else { return nil }
-        return timelineEventTitle(for: e.eventType)
     }
 }

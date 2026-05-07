@@ -1,41 +1,45 @@
 import Foundation
 
-/// Cross-surface refresh parity with dashboard `operator-refresh-events` (NotificationCenter instead of `window`).
+/// Refresh hints after operator mutations — list/detail observers can reconcile without tight coupling.
+enum OperatorMutationRefreshAction: Hashable, Sendable {
+    case confirmBooking
+    case sendOffers
+    case retryOffers
+    case expireSlot
+    case cancelSlot
+    case createSlot
+}
+
+extension Notification.Name {
+    static let pulsefillSlotMutated = Notification.Name("pulsefill.slot.mutated")
+    static let pulsefillSlotInternalNoteSaved = Notification.Name("pulsefill.slot.internal_note.saved")
+    static let pulsefillCustomerInvitesChanged = Notification.Name("pulsefill.customer_invites.changed")
+}
+
+/// Names referenced by dashboards / queues / feeds (alias for `pulsefillSlot*` lifecycle posts).
 enum OperatorRefreshNotifications {
-    static let slotUpdated = Notification.Name("pulsefill.operator.slotUpdated")
-    static let slotNoteUpdated = Notification.Name("pulsefill.operator.slotNoteUpdated")
-
-    static let slotIdKey = "slotId"
-    static let actionKey = "action"
+    static let slotUpdated: Notification.Name = .pulsefillSlotMutated
+    static let slotNoteUpdated: Notification.Name = .pulsefillSlotInternalNoteSaved
+    static let customerInvitesChanged: Notification.Name = .pulsefillCustomerInvitesChanged
 }
 
-/// Raw `action` strings match web `OperatorRefreshAction` for debugging / future filtering.
-enum OperatorMutationRefreshAction: String {
-    case confirmBooking = "confirm_booking"
-    case retryOffers = "retry_offers"
-    case sendOffers = "send_offers"
-    case expireSlot = "expire_slot"
-    case cancelSlot = "cancel_slot"
-    case addNote = "add_note"
-}
-
+/// Posts cross-screen refresh signals after operator-facing slot actions.
 enum OperatorMutationNotifier {
+    struct SlotMutationPayload {
+        let slotId: String
+        let action: OperatorMutationRefreshAction?
+    }
+
     static func postSlotUpdated(slotId: String, action: OperatorMutationRefreshAction) {
-        NotificationCenter.default.post(
-            name: OperatorRefreshNotifications.slotUpdated,
-            object: nil,
-            userInfo: [
-                OperatorRefreshNotifications.slotIdKey: slotId,
-                OperatorRefreshNotifications.actionKey: action.rawValue,
-            ]
-        )
+        let payload = SlotMutationPayload(slotId: slotId, action: action)
+        NotificationCenter.default.post(name: .pulsefillSlotMutated, object: payload)
     }
 
     static func postSlotNoteUpdated(slotId: String) {
-        NotificationCenter.default.post(
-            name: OperatorRefreshNotifications.slotNoteUpdated,
-            object: nil,
-            userInfo: [OperatorRefreshNotifications.slotIdKey: slotId]
-        )
+        NotificationCenter.default.post(name: .pulsefillSlotInternalNoteSaved, object: slotId)
+    }
+
+    static func postCustomerInvitesChanged() {
+        NotificationCenter.default.post(name: .pulsefillCustomerInvitesChanged, object: nil)
     }
 }

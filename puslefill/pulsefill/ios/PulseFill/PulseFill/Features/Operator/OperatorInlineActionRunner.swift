@@ -2,13 +2,13 @@ import Foundation
 
 @MainActor
 struct OperatorInlineActionRunner {
-    let api: APIClient
+    let businessAPI: BusinessOperatorAPIClient
 
     /// Returns API `message` when present (parity with web success toasts).
     func run(_ action: OperatorPrimaryAction, openSlotId: String) async throws -> String {
         switch action.kind {
         case .sendOffers, .retryOffers:
-            let r = try await api.sendOffers(slotId: openSlotId)
+            let r = try await businessAPI.sendOffers(slotId: openSlotId)
             let refresh: OperatorMutationRefreshAction = action.kind == .retryOffers ? .retryOffers : .sendOffers
             OperatorMutationNotifier.postSlotUpdated(slotId: openSlotId, action: refresh)
             let trimmed = r.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -23,7 +23,7 @@ struct OperatorInlineActionRunner {
                     userInfo: [NSLocalizedDescriptionKey: "Missing winning claim ID."]
                 )
             }
-            let r = try await api.confirmOpenSlotClaim(slotId: openSlotId, claimId: claimId)
+            let r = try await businessAPI.confirmOpenSlotClaim(slotId: openSlotId, claimId: claimId)
             let trimmed = r.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             OperatorMutationNotifier.postSlotUpdated(slotId: openSlotId, action: .confirmBooking)
             if !trimmed.isEmpty { return trimmed }

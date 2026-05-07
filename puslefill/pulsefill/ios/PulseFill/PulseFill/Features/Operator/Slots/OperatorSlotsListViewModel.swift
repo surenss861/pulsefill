@@ -34,13 +34,13 @@ final class OperatorSlotsListViewModel: ObservableObject {
     @Published var serviceOptions: [BusinessNamedRow] = []
     @Published var filterOptionsLoading = false
 
-    private let api: APIClient
+    private let businessAPI: BusinessOperatorAPIClient
     /// When set, `filteredSlots` is restricted to these open slot ids (digest handoff).
     private let digestContext: OperatorSlotsDigestContext?
     private var operatorRefreshTokens = Set<AnyCancellable>()
 
-    init(api: APIClient, digestContext: OperatorSlotsDigestContext? = nil) {
-        self.api = api
+    init(businessAPI: BusinessOperatorAPIClient, digestContext: OperatorSlotsDigestContext? = nil) {
+        self.businessAPI = businessAPI
         self.digestContext = digestContext
         filterProviderId = UserDefaults.standard.string(forKey: OperatorSlotsFilterStorage.providerId)
         filterLocationId = UserDefaults.standard.string(forKey: OperatorSlotsFilterStorage.locationId)
@@ -93,10 +93,10 @@ final class OperatorSlotsListViewModel: ObservableObject {
         defer { filterOptionsLoading = false }
 
         do {
-            async let slotsTask = api.getStaffOpenSlots()
-            async let providersTask = api.getBusinessNamedProviders()
-            async let locationsTask = api.getBusinessNamedLocations()
-            async let servicesTask = api.getBusinessNamedServices()
+            async let slotsTask = businessAPI.listMyOpenSlots()
+            async let providersTask = businessAPI.namedProviders()
+            async let locationsTask = businessAPI.namedLocations()
+            async let servicesTask = businessAPI.namedServices()
 
             let (response, providers, locations, services) = try await (slotsTask, providersTask, locationsTask, servicesTask)
             slots = response.openSlots.sorted { $0.startsAt < $1.startsAt }
@@ -148,14 +148,14 @@ final class OperatorSlotsListViewModel: ObservableObject {
         defer { performingSlotId = nil }
 
         do {
-            let msg = try await OperatorInlineActionRunner(api: api).run(action, openSlotId: slot.id)
+            let msg = try await OperatorInlineActionRunner(businessAPI: businessAPI).run(action, openSlotId: slot.id)
             flashMessage = msg
             successPulseItemId = slot.id
             successPulseTick += 1
         } catch {
-            let message = APIErrorCopy.message(for: error)
-            errorMessage = message
-            flashMessage = message
+            let technical = APIErrorCopy.message(for: error)
+            errorMessage = technical
+            flashMessage = OperatorMutationFriendlyCopy.listInlineActionFailed(for: error, kind: action.kind)
         }
     }
 }
