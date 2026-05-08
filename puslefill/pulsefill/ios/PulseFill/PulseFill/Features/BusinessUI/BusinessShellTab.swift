@@ -6,6 +6,11 @@ enum BusinessShellTab: Hashable {
     case openings
     case create
     case claims
+    case more
+}
+
+/// Destinations pushed from the **More** hub (customers directory / account).
+enum BusinessMoreRoute: Hashable {
     case customers
     case account
 }

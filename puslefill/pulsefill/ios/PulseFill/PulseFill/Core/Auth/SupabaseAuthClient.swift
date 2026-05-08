@@ -13,6 +13,34 @@ struct SupabaseAuthClient {
     let supabaseURL: URL
     let anonKey: String
 
+    /// Non-2xx from Supabase Auth — preserves existing error surface; DEBUG logs a hint when the host is wrong (HTML 404).
+    private func throwIfAuthHTTPFailed(http: HTTPURLResponse, data: Data) throws {
+        guard (200 ..< 300).contains(http.statusCode) else {
+            #if DEBUG
+            logMisconfiguredSupabaseURLHintIfNeeded(statusCode: http.statusCode, responseBody: data)
+            #endif
+            throw APIError.status(code: http.statusCode, body: String(data: data, encoding: .utf8))
+        }
+    }
+
+    #if DEBUG
+    /// Wrong `PULSEFILL_SUPABASE_URL` (e.g. dashboard/web host) yields `/auth/v1/*` → site 404 HTML instead of Supabase JSON.
+    private func logMisconfiguredSupabaseURLHintIfNeeded(statusCode: Int, responseBody: Data?) {
+        guard statusCode == 404 else { return }
+        let text = String(data: responseBody ?? Data(), encoding: .utf8) ?? ""
+        let normalized = text.lowercased()
+        let looksLikeHTML404 =
+            normalized.contains("<!doctype html") ||
+            normalized.contains("<html") ||
+            normalized.contains("page not found") ||
+            normalized.contains("that route does not exist")
+        guard looksLikeHTML404 else { return }
+        print(
+            "PulseFill: Supabase Auth returned an HTML 404. Check PULSEFILL_SUPABASE_URL — it must be your Supabase project URL (https://<project-ref>.supabase.co), not the PulseFill web/dashboard host."
+        )
+    }
+    #endif
+
     private var jsonDecoder: JSONDecoder {
         let d = JSONDecoder()
         d.keyDecodingStrategy = .convertFromSnakeCase
@@ -36,9 +64,7 @@ struct SupabaseAuthClient {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw APIError.status(code: -1, body: nil) }
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw APIError.status(code: http.statusCode, body: String(data: data, encoding: .utf8))
-        }
+        try throwIfAuthHTTPFailed(http: http, data: data)
     }
 
     func signUpWithPassword(email: String, password: String) async throws -> AuthSessionBundle? {
@@ -53,9 +79,7 @@ struct SupabaseAuthClient {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw APIError.status(code: -1, body: nil) }
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw APIError.status(code: http.statusCode, body: String(data: data, encoding: .utf8))
-        }
+        try throwIfAuthHTTPFailed(http: http, data: data)
         struct SignupEnvelope: Decodable {
             let session: SessionEnvelope?
         }
@@ -88,9 +112,7 @@ struct SupabaseAuthClient {
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw APIError.status(code: -1, body: nil) }
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw APIError.status(code: http.statusCode, body: String(data: data, encoding: .utf8))
-        }
+        try throwIfAuthHTTPFailed(http: http, data: data)
         struct UserOnly: Decodable {
             let id: String
             let email: String?
@@ -116,9 +138,7 @@ struct SupabaseAuthClient {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw APIError.status(code: -1, body: nil) }
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw APIError.status(code: http.statusCode, body: String(data: data, encoding: .utf8))
-        }
+        try throwIfAuthHTTPFailed(http: http, data: data)
 
         struct TokenEnvelope: Decodable {
             let accessToken: String
@@ -156,9 +176,7 @@ struct SupabaseAuthClient {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw APIError.status(code: -1, body: nil) }
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw APIError.status(code: http.statusCode, body: String(data: data, encoding: .utf8))
-        }
+        try throwIfAuthHTTPFailed(http: http, data: data)
 
         struct TokenEnvelope: Decodable {
             let accessToken: String

@@ -145,6 +145,7 @@ final class OperatorCreateOpeningViewModel: ObservableObject {
                 return
             }
             OperatorMutationNotifier.postSlotUpdated(slotId: id, action: .createSlot)
+            PFHaptics.success()
             navigateToCreatedSlotId = id
         } catch {
             banner = OperatorMutationFriendlyCopy.createOpeningFailed(error)

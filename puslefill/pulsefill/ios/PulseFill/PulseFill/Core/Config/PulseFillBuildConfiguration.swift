@@ -115,6 +115,55 @@ enum PulseFillBuildConfiguration {
         return Defaults.supabaseAnonPlaceholder
     }
 
+    #if DEBUG
+    /// Logs resolved URLs and tier at startup. Never prints the anon key — only placeholder / length / source.
+    static func debugLogResolvedConfigurationIfNeeded() {
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" { return }
+
+        let rawEnv = ProcessInfo.processInfo.environment
+        func envNonEmpty(_ key: String) -> Bool {
+            let v = rawEnv[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return !v.isEmpty
+        }
+
+        let sup = supabaseURL
+        let api = apiBaseURL
+        let tier = deploymentTier
+        let key = supabaseAnonKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let anonFromScheme = envNonEmpty("PULSEFILL_SUPABASE_ANON_KEY")
+
+        let anonSummary: String
+        if key.isEmpty {
+            anonSummary = "empty"
+        } else if key == Defaults.supabaseAnonPlaceholder || key.localizedCaseInsensitiveContains("YOUR_PUBLISHABLE")
+            || key.localizedCaseInsensitiveContains("YOUR_ANON")
+        {
+            anonSummary = "PLACEHOLDER — set PULSEFILL_SUPABASE_ANON_KEY in Run scheme"
+        } else if key.lowercased().hasPrefix("sb_secret_") {
+            anonSummary = "invalid (sb_secret_ — use publishable/anon only)"
+        } else if key.localizedCaseInsensitiveContains("service_role") {
+            anonSummary = "invalid (string mentions service_role)"
+        } else if key.hasPrefix("eyJ"), jwtPayloadContainsServiceRole(key) {
+            anonSummary = "invalid (JWT role is service_role)"
+        } else {
+            let src = anonFromScheme ? "scheme" : "compiled default"
+            anonSummary = "set (\(key.count) chars, source: \(src))"
+        }
+
+        let host = (sup.host ?? "").lowercased()
+        let looksLikeSupabase = host.hasSuffix(".supabase.co")
+
+        print("PulseFill DEBUG config — tier=\(tier.rawValue)")
+        print("PulseFill DEBUG config — env set: PULSEFILL_SUPABASE_URL=\(envNonEmpty("PULSEFILL_SUPABASE_URL")) PULSEFILL_SUPABASE_ANON_KEY=\(envNonEmpty("PULSEFILL_SUPABASE_ANON_KEY")) PULSEFILL_API_BASE_URL=\(envNonEmpty("PULSEFILL_API_BASE_URL")) PULSEFILL_TIER=\(envNonEmpty("PULSEFILL_TIER"))")
+        print("PulseFill DEBUG config — supabaseURL=\(sup.absoluteString)")
+        if !looksLikeSupabase {
+            print("PulseFill DEBUG config — WARNING: host is not *.supabase.co. Auth calls go to \(sup.absoluteString)/auth/v1/... — a Next.js/marketing host returns HTML 404; use Project Settings → API → Project URL.")
+        }
+        print("PulseFill DEBUG config — apiBaseURL=\(api.absoluteString)")
+        print("PulseFill DEBUG config — supabaseAnonKey: \(anonSummary)")
+    }
+    #endif
+
     // MARK: - Launch validation (customer-safe; details DEBUG-only)
 
     struct LaunchConfigurationResult: Equatable {

@@ -29,8 +29,8 @@ struct OperatorSlotDetailView: View {
                 loadingView
             }
         }
-        .background(PFColor.background.ignoresSafeArea())
-        .navigationTitle("Slot")
+        .background(PFScreenBackground().ignoresSafeArea())
+        .navigationTitle("Opening")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(PFColor.surface1, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
@@ -95,21 +95,27 @@ struct OperatorSlotDetailView: View {
         }
     }
 
-    private var createdOpeningBanner: some View {
+    private func createdOpeningBanner(scroll: ScrollViewProxy) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Opening created")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(PFColor.textPrimary)
-                    Text("Next step: send offers so standby customers can claim this slot.")
+                    Text("Now send offers to waiting customers.")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(PFColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
-                Button("OK") {
+                Button("Send offers now") {
+                    PFHaptics.mediumImpact()
                     showCreatedSuccessBanner = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            scroll.scrollTo("operatorActionAnchor", anchor: .top)
+                        }
+                    }
                 }
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(PFColor.primary)
@@ -129,9 +135,10 @@ struct OperatorSlotDetailView: View {
         VStack(spacing: 12) {
             Spacer()
             OperatorErrorStateCard(
-                title: "Couldn’t load this opening",
-                message: "Go back to the list and try again, or pull to refresh if you’re already on the latest build.",
+                title: "This opening could not load",
+                message: "Go back and try again, or pull down to refresh.",
                 technicalMessage: message,
+                retryButtonTitle: "Reload opening",
                 onRetry: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -143,25 +150,29 @@ struct OperatorSlotDetailView: View {
         ScrollViewReader { scroll in
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    PFPageHeader(
-                        overline: "Slot detail",
-                        title: slot.providerNameSnapshot ?? "Open slot",
+                    PFOperatorHero(
+                        overline: "Opening",
+                        title: slot.providerNameSnapshot ?? "Empty appointment",
                         subtitle: slot.status == "claimed"
                             ? OperatorOpeningStatusCopy.label(forRawStatus: slot.status)
-                            : "Action-first execution: confirm, retry, or resolve with full context."
+                            : "Send offers, confirm a claim, or close this opening.",
+                        showLivePulse: false
                     )
 
                     if showCreatedSuccessBanner {
-                        createdOpeningBanner
+                        createdOpeningBanner(scroll: scroll)
                     }
 
                     recentActivityBar(slot)
-                    if viewModel.usesServerActionMatrix {
-                        queueContextBanner
-                        serverActionBar(slot: slot, scroll: scroll)
-                    } else {
-                        legacyNextActionCard(slot, scroll: scroll)
+                    Group {
+                        if viewModel.usesServerActionMatrix {
+                            queueContextBanner
+                            serverActionBar(slot: slot, scroll: scroll)
+                        } else {
+                            legacyNextActionCard(slot, scroll: scroll)
+                        }
                     }
+                    .id("operatorActionAnchor")
                     heroCard(slot)
 
                     OperatorInternalNoteCard(

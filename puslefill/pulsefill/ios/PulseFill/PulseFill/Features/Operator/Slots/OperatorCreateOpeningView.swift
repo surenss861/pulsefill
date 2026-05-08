@@ -23,7 +23,7 @@ struct OperatorCreateOpeningView: View {
                 }
             }
             .background(PFScreenBackground())
-            .navigationTitle("Create opening")
+            .navigationTitle("Add opening")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -61,7 +61,7 @@ struct OperatorCreateOpeningView: View {
             VStack(alignment: .leading, spacing: 16) {
                 OperatorListLoadingPlaceholder(
                     title: "Loading form…",
-                    subtitle: "Fetching services, providers, and locations.",
+                    subtitle: "Getting services, providers, and locations.",
                     skeletonCount: 3
                 )
             }
@@ -75,8 +75,9 @@ struct OperatorCreateOpeningView: View {
             Spacer()
             OperatorErrorStateCard(
                 title: "Couldn’t load form",
-                message: "We need roster data before you can post an opening. Try again.",
+                message: "We need your services and locations before you can post an opening. Try again.",
                 technicalMessage: message,
+                retryButtonTitle: "Reload form",
                 onRetry: { await viewModel.loadReferenceData() }
             )
             .padding(.horizontal, 20)
@@ -90,15 +91,11 @@ struct OperatorCreateOpeningView: View {
                 BusinessWorkspaceStrip()
                     .environmentObject(env)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Create opening")
-                        .font(.system(size: 26, weight: .bold))
-                        .foregroundStyle(PFColor.textPrimary)
-                    Text("Post a cancelled appointment so PulseFill can offer it to standby customers.")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(PFColor.textSecondary)
-                        .lineSpacing(3)
-                }
+                PFOperatorHero(
+                    overline: "Create",
+                    title: "Add an empty appointment",
+                    subtitle: "PulseFill can offer it to waiting customers."
+                )
                 .padding(.top, 8)
 
                 PFCustomerSectionCard(variant: .quiet, padding: 18) {
@@ -109,7 +106,7 @@ struct OperatorCreateOpeningView: View {
                         DatePicker("Start time", selection: $viewModel.startTime, displayedComponents: .hourAndMinute)
                             .tint(PFColor.ember)
 
-                        Toggle("Custom end time", isOn: $viewModel.useCustomEnd)
+                        Toggle("Set end time myself", isOn: $viewModel.useCustomEnd)
                             .tint(PFColor.ember)
                             .font(.system(size: 15, weight: .medium))
 
@@ -117,7 +114,7 @@ struct OperatorCreateOpeningView: View {
                             DatePicker("End time", selection: $viewModel.customEndTime, displayedComponents: .hourAndMinute)
                                 .tint(PFColor.ember)
                         } else {
-                            Text("Duration")
+                            Text("How long is it?")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(PFColor.textSecondary)
                             HStack(spacing: 8) {
@@ -140,9 +137,9 @@ struct OperatorCreateOpeningView: View {
 
                 PFCustomerSectionCard(variant: .quiet, padding: 18) {
                     VStack(alignment: .leading, spacing: 14) {
-                        sectionTitle("Recovery info")
+                        sectionTitle("Optional details")
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Estimated value (USD, optional)")
+                            Text("Estimated value (optional)")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(PFColor.textSecondary)
                             TextField("e.g. 85", text: $viewModel.estimatedValueDollarsText)
@@ -157,10 +154,10 @@ struct OperatorCreateOpeningView: View {
                                 )
                         }
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Internal note (optional)")
+                            Text("Staff note (optional)")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(PFColor.textSecondary)
-                            TextField("Staff-only context", text: $viewModel.internalNote, axis: .vertical)
+                            TextField("Note for your team only", text: $viewModel.internalNote, axis: .vertical)
                                 .lineLimit(3 ... 6)
                                 .textFieldStyle(.plain)
                                 .padding(12)

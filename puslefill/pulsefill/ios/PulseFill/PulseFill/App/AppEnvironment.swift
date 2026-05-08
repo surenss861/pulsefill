@@ -30,6 +30,9 @@ final class AppEnvironment: ObservableObject {
     }()
 
     init(apiBaseURL: URL, supabaseURL: URL, supabaseAnonKey: String) {
+        #if DEBUG
+        PulseFillBuildConfiguration.debugLogResolvedConfigurationIfNeeded()
+        #endif
         let launchCheck = PulseFillBuildConfiguration.evaluateLaunchConfiguration(
             apiBaseURL: apiBaseURL,
             supabaseURL: supabaseURL,

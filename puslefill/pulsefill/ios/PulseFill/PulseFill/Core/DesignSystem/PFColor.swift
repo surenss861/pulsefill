@@ -29,6 +29,8 @@ enum PFColor {
     static let customerCardElevated = customerGlassElevated
     /// Bottom tab chrome (opaque; pairs with `.toolbarBackground`).
     static let customerTabBar = Color(red: 0.055, green: 0.048, blue: 0.045)
+    /// Business / operator tab bar — opaque, slightly cooler than customer to read calmer behind content.
+    static let operatorTabBar = Color(red: 0.042, green: 0.048, blue: 0.058)
     /// Sticky footer / action bar on customer flows.
     static let customerStickyBar = Color(red: 0.06, green: 0.052, blue: 0.05)
 

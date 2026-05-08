@@ -4,10 +4,18 @@ import SwiftUI
 struct BusinessTabView: View {
     @EnvironmentObject private var env: AppEnvironment
     @State private var selectedTab: BusinessShellTab = .today
+    @State private var morePath = NavigationPath()
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            BusinessTodayView(businessAPI: env.businessOperatorAPI, selectedTab: $selectedTab)
+            BusinessTodayView(
+                businessAPI: env.businessOperatorAPI,
+                selectedTab: $selectedTab,
+                onNavigateMore: { route in
+                    selectedTab = .more
+                    morePath = NavigationPath([route])
+                }
+            )
                 .environmentObject(env)
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }
                 .tag(BusinessShellTab.today)
@@ -30,17 +38,15 @@ struct BusinessTabView: View {
                 .tabItem { Label("Claims", systemImage: "checkmark.seal") }
                 .tag(BusinessShellTab.claims)
 
-            BusinessOperatorCustomersView(businessAPI: env.businessOperatorAPI)
+            BusinessMoreView(morePath: $morePath)
                 .environmentObject(env)
-                .tabItem { Label("Customers", systemImage: "person.2") }
-                .tag(BusinessShellTab.customers)
-
-            BusinessAccountView()
-                .environmentObject(env)
-                .tabItem { Label("Account", systemImage: "person.crop.circle") }
-                .tag(BusinessShellTab.account)
+                .tabItem { Label("More", systemImage: "ellipsis.circle.fill") }
+                .tag(BusinessShellTab.more)
         }
         .tint(PFColor.primary)
+        .toolbarBackground(PFColor.operatorTabBar, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
     }
 }
 

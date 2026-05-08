@@ -31,8 +31,8 @@ struct OperatorSlotsListView: View {
                     contentView
                 }
             }
-            .background(PFColor.background.ignoresSafeArea())
-            .navigationTitle("Open Slots")
+            .background(PFScreenBackground().ignoresSafeArea())
+            .navigationTitle("Open appointments")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -76,14 +76,18 @@ struct OperatorSlotsListView: View {
     private var loadingView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                PFPageHeader(
-                    overline: "Slots",
-                    title: "Open Slots",
-                    subtitle: "Inventory view across all openings and their recovery state."
+                PFOperatorHero(
+                    overline: "Openings",
+                    title: "Open appointments",
+                    subtitle: "Track empty appointment times and what happened.",
+                    primaryActionTitle: businessShellSelectedTab != nil ? "Add opening" : nil,
+                    primaryAction: businessShellSelectedTab != nil
+                        ? { businessShellSelectedTab?.wrappedValue = .create }
+                        : nil
                 )
                 OperatorListLoadingPlaceholder(
                     title: "Loading openings…",
-                    subtitle: "Fetching slots and filter options.",
+                    subtitle: "Getting your list and filters.",
                     skeletonCount: 4
                 )
             }
@@ -96,9 +100,10 @@ struct OperatorSlotsListView: View {
         VStack(spacing: 12) {
             Spacer()
             OperatorErrorStateCard(
-                title: "Couldn’t load openings",
-                message: "Refresh and try again.",
+                title: "Open appointments could not load",
+                message: "We could not load your openings. Try again.",
                 technicalMessage: message,
+                retryButtonTitle: "Reload openings",
                 onRetry: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -114,10 +119,14 @@ struct OperatorSlotsListView: View {
                         .environmentObject(env)
                 }
 
-                PFPageHeader(
-                    overline: "Slots",
-                    title: "Open Slots",
-                    subtitle: "Inventory view across all openings and their recovery state."
+                PFOperatorHero(
+                    overline: "Openings",
+                    title: "Open appointments",
+                    subtitle: "Track empty appointment times and what happened.",
+                    primaryActionTitle: businessShellSelectedTab != nil ? "Add opening" : nil,
+                    primaryAction: businessShellSelectedTab != nil
+                        ? { businessShellSelectedTab?.wrappedValue = .create }
+                        : nil
                 )
 
                 if let digest = digestContext {
@@ -171,8 +180,8 @@ struct OperatorSlotsListView: View {
                     if viewModel.slots.isEmpty {
                         OperatorEmptyStateCard(
                             systemImage: "calendar.badge.plus",
-                            title: "No openings posted",
-                            message: "Create an opening so standby customers can receive offers when you cancel or free a slot.",
+                            title: "No openings yet",
+                            message: "Add an empty appointment so waiting customers can claim it.",
                             primaryButtonTitle: businessShellSelectedTab != nil ? "Create opening" : nil,
                             primaryAction: businessShellSelectedTab != nil
                                 ? { businessShellSelectedTab?.wrappedValue = .create }
@@ -248,13 +257,13 @@ struct OperatorSlotsListView: View {
 
     private var emptyCopy: String {
         switch viewModel.selectedFilter {
-        case .all: "No slots yet."
-        case .open: "No open slots right now."
-        case .offered: "No offered slots right now."
-        case .claimed: "No claimed slots awaiting confirmation."
-        case .booked: "No booked slots yet."
-        case .expired: "No expired slots yet."
-        case .cancelled: "No cancelled slots."
+        case .all: "No openings match this view."
+        case .open: "No openings are still open with this filter."
+        case .offered: "No openings are waiting on offers with this filter."
+        case .claimed: "No openings are waiting on you to confirm with this filter."
+        case .booked: "No filled appointments with this filter."
+        case .expired: "No finished openings with this filter."
+        case .cancelled: "No cancelled openings with this filter."
         }
     }
 

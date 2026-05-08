@@ -24,7 +24,7 @@ struct BusinessOperatorCustomersView: View {
                     contentList
                 }
             }
-            .background(PFColor.background.ignoresSafeArea())
+            .background(PFScreenBackground().ignoresSafeArea())
             .navigationTitle("Customers")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
@@ -114,9 +114,10 @@ struct BusinessOperatorCustomersView: View {
         VStack(spacing: 14) {
             Spacer()
             OperatorErrorStateCard(
-                title: "Couldn’t load customers",
-                message: "Pull to refresh or try again.",
+                title: "Customers could not load",
+                message: "We could not load your customer list. Try again.",
                 technicalMessage: message,
+                retryButtonTitle: "Reload customers",
                 onRetry: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -130,17 +131,19 @@ struct BusinessOperatorCustomersView: View {
                 BusinessWorkspaceStrip()
                     .environmentObject(env)
 
-                PFPageHeader(
-                    overline: "Pilot directory",
-                    title: "Customers & invites",
-                    subtitle: "Invite by email, track who’s connected, and open safe context before you confirm recoveries."
+                PFOperatorHero(
+                    overline: "Customers",
+                    title: "Waiting customers",
+                    subtitle: "Invite customers so they can receive openings.",
+                    primaryActionTitle: "Invite customer",
+                    primaryAction: { showCreateInvite = true }
                 )
 
                 if viewModel.invites.isEmpty {
                     OperatorEmptyStateCard(
                         systemImage: "person.2",
-                        title: "No standby customers yet",
-                        message: "Send an email invite so customers can connect and set standby for your business.",
+                        title: "No waiting customers yet",
+                        message: "Invite customers by email so they can join your standby list and get offers.",
                         primaryButtonTitle: "Invite customer",
                         primaryAction: { showCreateInvite = true }
                     )
@@ -434,7 +437,7 @@ private struct OperatorInviteCreatedCopySheet: View {
                 }
                 .padding(22)
             }
-            .background(PFColor.background.ignoresSafeArea())
+            .background(PFScreenBackground().ignoresSafeArea())
             .navigationTitle("Share invite")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

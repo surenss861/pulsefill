@@ -77,17 +77,17 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "PULSEFILL_API_BASE_URL"
-            value = "https://YOUR_PULSEFILL_API.up.railway.app"
+            value = "https://pulsefill-production.up.railway.app"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "PULSEFILL_SUPABASE_URL"
-            value = "https://YOUR_PROJECT.supabase.co"
+            value = "https://tlowrfeburobfgpaeins.supabase.co"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "PULSEFILL_SUPABASE_ANON_KEY"
-            value = "YOUR_PUBLISHABLE_OR_ANON_KEY"
+            value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsb3dyZmVidXJvYmZncGFlaW5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTkwNjYsImV4cCI6MjA5MTg5NTA2Nn0.iUGMY0868hlgoEj3Ub6IKqsumYRjDZYVZpaCFqwwZRA"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

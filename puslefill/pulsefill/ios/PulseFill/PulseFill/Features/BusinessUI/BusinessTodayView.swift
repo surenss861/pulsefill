@@ -4,12 +4,19 @@ import SwiftUI
 struct BusinessTodayView: View {
     @EnvironmentObject private var env: AppEnvironment
     @Binding var selectedTab: BusinessShellTab
+    /// Jump to **More** tab and open customers or account.
+    var onNavigateMore: (BusinessMoreRoute) -> Void
 
     @StateObject private var viewModel: BusinessTodayViewModel
     @State private var slotPath = NavigationPath()
 
-    init(businessAPI: BusinessOperatorAPIClient, selectedTab: Binding<BusinessShellTab>) {
+    init(
+        businessAPI: BusinessOperatorAPIClient,
+        selectedTab: Binding<BusinessShellTab>,
+        onNavigateMore: @escaping (BusinessMoreRoute) -> Void = { _ in }
+    ) {
         _selectedTab = selectedTab
+        self.onNavigateMore = onNavigateMore
         _viewModel = StateObject(wrappedValue: BusinessTodayViewModel(businessAPI: businessAPI))
     }
 
@@ -44,7 +51,7 @@ struct BusinessTodayView: View {
             VStack(alignment: .leading, spacing: 16) {
                 OperatorListLoadingPlaceholder(
                     title: "Loading Today…",
-                    subtitle: "Pulling recovery health, queue, and latest openings.",
+                    subtitle: "Getting your recovery summary and latest openings.",
                     skeletonCount: 3
                 )
             }
@@ -57,9 +64,11 @@ struct BusinessTodayView: View {
         VStack {
             Spacer()
             OperatorErrorStateCard(
-                title: "Couldn’t load Today",
-                message: "Refresh and try again. Your connection or the server may have hiccuped.",
+                title: "Today could not load",
+                message: "We could not get your recovery tasks. Try again.",
                 technicalMessage: message,
+                retryButtonTitle: "Reload Today",
+                footerHint: "Openings and claims still work from the tabs below.",
                 onRetry: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -73,7 +82,13 @@ struct BusinessTodayView: View {
                 BusinessWorkspaceStrip()
                     .environmentObject(env)
 
-                workspaceHeader
+                PFOperatorHero(
+                    overline: "Business",
+                    title: "Today",
+                    subtitle: "Fill empty appointments from your waiting list.",
+                    primaryActionTitle: "Add opening",
+                    primaryAction: { selectedTab = .create }
+                )
 
                 if let daily = viewModel.dailySummary, let summary = viewModel.queueSummary {
                     recoveryHealthCard(
@@ -102,22 +117,6 @@ struct BusinessTodayView: View {
         }
     }
 
-    private var workspaceHeader: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Today")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(PFColor.textSecondary)
-                .textCase(.uppercase)
-                .tracking(0.6)
-
-            Text("Recover openings and keep your standby pool moving.")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(PFColor.textSecondary)
-                .lineSpacing(3)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     private func recoveryHealthCard(
         server: OperatorRecoveryHealthResponse?,
         metrics: OperatorDailyOpsMetrics,
@@ -132,7 +131,7 @@ struct BusinessTodayView: View {
         )
         return PFCustomerSectionCard(variant: .attention, padding: 18) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Recovery health")
+                Text("Today’s recovery")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(PFColor.textSecondary)
                     .textCase(.uppercase)
@@ -164,7 +163,7 @@ struct BusinessTodayView: View {
                 HStack(spacing: 10) {
                     compactMetric("\(metrics.recoveredBookingsToday)", label: "Recovered")
                     compactMetric("\(metrics.activeOfferedSlotsCount)", label: "Active")
-                    compactMetric("\(metrics.noMatchesToday)", label: "No match")
+                    compactMetric("\(metrics.noMatchesToday)", label: "No taker")
                 }
                 .padding(.top, 4)
             }
@@ -186,16 +185,16 @@ struct BusinessTodayView: View {
     private func needsActionCard(summary: OperatorActionQueueSummary) -> some View {
         PFCustomerSectionCard(variant: .quiet, padding: 18) {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Needs action")
+                Text("Tasks")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(PFColor.textPrimary)
 
-                needsActionRow(count: summary.awaitingConfirmationCount, title: "Claims waiting on you", subtitle: "Confirm bookings before they time out.")
-                needsActionRow(count: summary.needsActionCount, title: "Openings needing attention", subtitle: "Offers, delivery, or follow-up.")
-                needsActionRow(count: summary.retryRecommendedCount, title: "Retry offers suggested", subtitle: "Widen standby reach or resend.")
+                needsActionRow(count: summary.awaitingConfirmationCount, title: "Claims waiting on you", subtitle: "Confirm the booking before it times out.")
+                needsActionRow(count: summary.needsActionCount, title: "Openings need a step", subtitle: "Send offers, follow up, or fix delivery.")
+                needsActionRow(count: summary.retryRecommendedCount, title: "Try sending offers again", subtitle: "Reach more waiting customers or resend.")
 
                 if summary.deliveryFailedCount > 0 {
-                    needsActionRow(count: summary.deliveryFailedCount, title: "Delivery issues", subtitle: "Push or SMS may need a retry.", emphasize: true)
+                    needsActionRow(count: summary.deliveryFailedCount, title: "Could not reach customer", subtitle: "Retry text or push if it failed.", emphasize: true)
                 }
             }
         }
@@ -223,18 +222,18 @@ struct BusinessTodayView: View {
     private var quickActions: some View {
         PFCustomerSectionCard(variant: .default, padding: 18) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Quick actions")
+                Text("What’s next")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(PFColor.textPrimary)
 
                 PFCustomerPrimaryButton(title: "Create opening") {
                     selectedTab = .create
                 }
-                PFCustomerSecondaryButton(title: "Review claims") {
+                PFCustomerSecondaryButton(title: "View claims") {
                     selectedTab = .claims
                 }
                 PFCustomerSecondaryButton(title: "Invite customer") {
-                    selectedTab = .customers
+                    onNavigateMore(.customers)
                 }
             }
         }
@@ -248,7 +247,7 @@ struct BusinessTodayView: View {
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(PFColor.textPrimary)
                     Spacer()
-                    Button("See all") {
+                    Button("View all openings") {
                         selectedTab = .openings
                     }
                     .font(.system(size: 14, weight: .semibold))
@@ -258,8 +257,8 @@ struct BusinessTodayView: View {
                 if viewModel.recentOpenings.isEmpty {
                     OperatorEmptyStateCard(
                         systemImage: "calendar.badge.plus",
-                        title: "No openings posted",
-                        message: "Post a cancellation opening so standby customers can receive offers.",
+                        title: "No openings yet",
+                        message: "Add an empty appointment so PulseFill can offer it to waiting customers.",
                         primaryButtonTitle: "Create opening",
                         primaryAction: { selectedTab = .create }
                     )
@@ -328,8 +327,8 @@ struct BusinessTodayView: View {
             title: "All quiet right now",
             message:
                 metrics.recoveredBookingsToday > 0
-                    ? "No urgent queue items. You’ve recovered \(metrics.recoveredBookingsToday) booking\(metrics.recoveredBookingsToday == 1 ? "" : "s") today — nice work."
-                    : "When you publish openings, queue items and previews will show up here. You can still use Openings and Claims anytime.",
+                    ? "Nothing urgent in the queue. You filled \(metrics.recoveredBookingsToday) empty appointment\(metrics.recoveredBookingsToday == 1 ? "" : "s") today — nice work."
+                    : "When you add openings, tasks will show up here. Openings and Claims still work from the tabs below.",
             variant: .neutral
         )
     }
@@ -411,7 +410,7 @@ private struct BusinessTodayRecoveryHealthSnapshot {
                 statusVariant: .danger,
                 headline: "Recovery is backing up",
                 message:
-                    "Several openings need attention — confirmations, retries, or delivery. Work the queue to keep standby customers from stalling.",
+                    "A few openings need you — confirm a booking, send offers again, or fix a text that didn’t go through.",
                 topFix: nextStep.map { "Next: \($0.headline)" }
             )
         }
@@ -421,7 +420,7 @@ private struct BusinessTodayRecoveryHealthSnapshot {
                 statusVariant: .warning,
                 headline: "There’s work in the queue",
                 message:
-                    "You have items waiting on confirmations, offers, or retries. Clearing these keeps your pool healthy.",
+                    "You have openings waiting on a confirm, offers, or a resend. Clearing these keeps customers moving.",
                 topFix: nextStep.map { "Next: \($0.headline)" }
             )
         }
@@ -431,7 +430,7 @@ private struct BusinessTodayRecoveryHealthSnapshot {
                 statusVariant: .warning,
                 headline: "Some slots didn’t match standby",
                 message:
-                    "Review no-match openings to adjust timing, services, or standby coverage.",
+                    "Some openings had no waiting customers. Check timing, service, or who’s on your standby list.",
                 topFix: nextStep.map { "Next: \($0.headline)" }
             )
         }
@@ -440,7 +439,7 @@ private struct BusinessTodayRecoveryHealthSnapshot {
             statusVariant: .success,
             headline: "Recovery looks steady",
             message:
-                "No urgent queue pressure right now. Keep publishing openings when cancellations land so standby can fill them.",
+                "Nothing urgent right now. When someone cancels, add the empty appointment so PulseFill can offer it to waiting customers.",
             topFix: nextStep.map { "Suggested: \($0.headline)" }
         )
     }

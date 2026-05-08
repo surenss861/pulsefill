@@ -36,5 +36,8 @@ struct OperatorTabView: View {
                 }
         }
         .tint(PFColor.primary)
+        .toolbarBackground(PFColor.operatorTabBar, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
     }
 }

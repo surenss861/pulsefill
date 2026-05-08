@@ -19,26 +19,27 @@ struct OperatorSlotListRow: View {
                     Spacer(minLength: 0)
                 }
 
-                Text(titleText)
-                    .font(.system(size: 17, weight: .semibold))
+                Text(contextLine)
+                    .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(PFColor.textPrimary)
                     .lineLimit(2)
 
-                Text(contextLine)
-                    .font(.system(size: 13, weight: .medium))
+                Text(titleText)
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(PFColor.textSecondary)
                     .lineLimit(2)
 
                 if let guidance = attentionGuidance {
                     Text(guidance)
-                        .font(.system(size: 13))
-                        .foregroundStyle(PFColor.textSecondary)
-                        .lineLimit(2)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(PFColor.textMuted)
+                        .lineLimit(3)
                 }
 
                 HStack(spacing: 10) {
                     if let primaryAction {
                         Button(isPerforming ? "Working…" : primaryAction.label) {
+                            PFHaptics.lightImpact()
                             onPrimaryAction()
                         }
                         .buttonStyle(PFPrimaryButtonStyle())
@@ -47,12 +48,13 @@ struct OperatorSlotListRow: View {
 
                     Spacer(minLength: 0)
 
-                    Button("Open detail") {
+                    Button("View opening") {
+                        PFHaptics.selection()
                         onOpen()
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(PFColor.textSecondary)
+                    .foregroundStyle(PFColor.emberReadable)
                 }
             }
             .contentShape(Rectangle())
@@ -66,7 +68,7 @@ struct OperatorSlotListRow: View {
 
     private var titleText: String {
         let trimmed = slot.providerNameSnapshot?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return trimmed.isEmpty ? "Open slot" : trimmed
+        return trimmed.isEmpty ? "Empty appointment" : trimmed
     }
 
     private var contextLine: String {

@@ -61,6 +61,10 @@ struct OperatorErrorStateCard: View {
     let title: String
     let message: String
     let technicalMessage: String?
+    /// Action-specific label (e.g. “Reload Today”) — defaults to “Try again”.
+    var retryButtonTitle: String = "Try again"
+    /// Short reassurance below the retry button (e.g. other tabs still work).
+    var footerHint: String?
     let onRetry: () async -> Void
 
     @State private var showTechnical = false
@@ -114,13 +118,21 @@ struct OperatorErrorStateCard: View {
                     await onRetry()
                 }
             } label: {
-                Text(isRetrying ? "Retrying…" : "Try again")
+                Text(isRetrying ? "Loading…" : retryButtonTitle)
                     .font(.system(size: 16, weight: .semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
             }
             .buttonStyle(PFPrimaryButtonStyle())
             .disabled(isRetrying)
+
+            if let footerHint, !footerHint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text(footerHint)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(PFColor.textSecondary.opacity(0.92))
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)

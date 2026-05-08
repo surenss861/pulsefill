@@ -4,6 +4,8 @@ import SwiftUI
 struct BusinessAccountView: View {
     @EnvironmentObject private var env: AppEnvironment
     @State private var confirmSignOut = false
+    /// When `false`, embed inside a parent `NavigationStack` (e.g. **More** hub). Default `true` for standalone use.
+    var wrapsInNavigationStack: Bool = true
 
     private var presentation: BusinessWorkspacePresentation {
         BusinessWorkspacePresentation.resolve(
@@ -18,51 +20,60 @@ struct BusinessAccountView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                PFScreenBackground()
+        let accountBody = ZStack {
+            PFScreenBackground()
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 22) {
-                        workspaceCard
+            ScrollView {
+                VStack(alignment: .leading, spacing: PFOperatorShellMetrics.sectionSpacing) {
+                    BusinessWorkspaceStrip()
+                        .environmentObject(env)
 
-                        PFPageHeader(
-                            overline: "Account",
-                            title: "Business workspace",
-                            subtitle: "You’re signed in for staff actions on this business — create openings, invites, and confirmations."
-                        )
+                    workspaceCard
 
-                        modeCard
+                    PFOperatorHero(
+                        overline: "Account",
+                        title: "Workspace",
+                        subtitle: "Manage business mode, account access, and sign out."
+                    )
 
-                        if dualRole {
-                            customerModeCard
-                        }
+                    modeCard
 
-                        diagnosticsCard
-
-                        signOutCard
+                    if dualRole {
+                        customerModeCard
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 40)
+
+                    diagnosticsCard
+
+                    signOutCard
                 }
+                .pfOperatorHorizontalPadding()
+                .padding(.top, 16)
+                .padding(.bottom, 40)
             }
-            .navigationTitle("Account")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(PFColor.surface1, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .confirmationDialog(
-                "Sign out?",
-                isPresented: $confirmSignOut,
-                titleVisibility: .visible
-            ) {
-                Button("Sign out", role: .destructive) {
-                    Task { await env.authManager.signOut() }
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("You’ll need to sign in again to access this business.")
+        }
+        .navigationTitle("Account")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbarBackground(PFColor.surface1, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .confirmationDialog(
+            "Sign out?",
+            isPresented: $confirmSignOut,
+            titleVisibility: .visible
+        ) {
+            Button("Sign out", role: .destructive) {
+                Task { await env.authManager.signOut() }
             }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You’ll need to sign in again to access this business.")
+        }
+
+        if wrapsInNavigationStack {
+            NavigationStack {
+                accountBody
+            }
+        } else {
+            accountBody
         }
     }
 

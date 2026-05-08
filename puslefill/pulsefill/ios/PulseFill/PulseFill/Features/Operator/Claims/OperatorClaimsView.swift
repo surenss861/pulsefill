@@ -21,7 +21,7 @@ struct OperatorClaimsView: View {
                     contentScroll
                 }
             }
-            .background(PFColor.background.ignoresSafeArea())
+            .background(PFScreenBackground().ignoresSafeArea())
             .navigationTitle("Claims")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
@@ -50,7 +50,7 @@ struct OperatorClaimsView: View {
             get: { viewModel.confirmFailurePrompt != nil },
             set: { if !$0 { viewModel.clearConfirmFailure() } }
         ), actions: {
-            Button("Retry") {
+            Button("Try again") {
                 Task { await viewModel.retryFailedConfirmation() }
             }
             Button("OK", role: .cancel) {
@@ -97,7 +97,7 @@ struct OperatorClaimsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 OperatorListLoadingPlaceholder(
                     title: "Loading claims…",
-                    subtitle: "Fetching openings with standby claims.",
+                    subtitle: "Getting openings where a customer claimed a spot.",
                     skeletonCount: 3
                 )
             }
@@ -110,9 +110,10 @@ struct OperatorClaimsView: View {
         VStack {
             Spacer()
             OperatorErrorStateCard(
-                title: "Couldn’t load claims",
-                message: "Pull to refresh or try again.",
+                title: "Claims could not load",
+                message: "We could not load claims. Try again or pull down to refresh.",
                 technicalMessage: message,
+                retryButtonTitle: "Reload claims",
                 onRetry: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -126,7 +127,11 @@ struct OperatorClaimsView: View {
                 BusinessWorkspaceStrip()
                     .environmentObject(env)
 
-                headerBlock
+                PFOperatorHero(
+                    overline: "Recoveries",
+                    title: "Claims",
+                    subtitle: "When a customer wants an opening, confirm it here."
+                )
 
                 OperatorClaimsOverviewStrip(
                     needsConfirmationCount: viewModel.needsConfirmationCount,
@@ -136,55 +141,37 @@ struct OperatorClaimsView: View {
 
                 claimsSection(
                     title: "Needs confirmation",
-                    subtitle: "Someone claimed — confirm booking so PulseFill counts the recovery.",
+                    subtitle: "A customer wants this spot. Confirm the booking here.",
                     items: viewModel.needsConfirmation,
                     showConfirmPrimary: true,
                     emptySystemImage: "checkmark.seal",
                     emptyTitle: "No claims waiting",
-                    emptyMessage: "When a standby customer claims an opening, it will appear here for you to confirm."
+                    emptyMessage: "Customer claims will show up here."
                 )
 
                 claimsSection(
                     title: "Recently confirmed",
-                    subtitle: "Recovered bookings tied to standby claims.",
+                    subtitle: "Openings you already confirmed.",
                     items: viewModel.recentlyConfirmed,
                     showConfirmPrimary: false,
                     emptySystemImage: "calendar.badge.checkmark",
                     emptyTitle: "No recent confirmations",
-                    emptyMessage: "Confirmed recoveries from standby claims will land in this list."
+                    emptyMessage: "Confirmed bookings will show up here."
                 )
 
                 claimsSection(
-                    title: "Closed",
-                    subtitle: "Lost races, cancellations, expiry, or other terminal states.",
+                    title: "Finished",
+                    subtitle: "Expired, cancelled, or otherwise done.",
                     items: viewModel.closed,
                     showConfirmPrimary: false,
                     emptySystemImage: "archivebox",
-                    emptyTitle: "No closed outcomes yet",
-                    emptyMessage: "Expired, cancelled, or otherwise finished openings show here for reference."
+                    emptyTitle: "Nothing finished yet",
+                    emptyMessage: "Older openings that are done will show here for reference."
                 )
             }
             .padding(.top, 16)
             .padding(.horizontal, 20)
             .padding(.bottom, 28)
-        }
-    }
-
-    private var headerBlock: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Recoveries")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(PFColor.textSecondary)
-                .textCase(.uppercase)
-                .tracking(0.6)
-            Text("Claims awaiting you")
-                .font(.system(size: 26, weight: .bold))
-                .foregroundStyle(PFColor.textPrimary)
-            Text("Stay on top of customer claims until every opening is recovered or cleanly closed.")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(PFColor.textSecondary)
-                .lineSpacing(3)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -238,21 +225,13 @@ private struct OperatorClaimsOverviewStrip: View {
     let closedCount: Int
 
     var body: some View {
-        HStack(spacing: 0) {
+        PFOperatorMetricStrip {
             metricCell(title: "Needs confirmation", value: "\(needsConfirmationCount)", emphasis: needsConfirmationCount > 0)
             Divider().overlay(PFColor.hairline)
             metricCell(title: "Confirmed", value: "\(recentlyConfirmedCount)")
             Divider().overlay(PFColor.hairline)
-            metricCell(title: "Closed", value: "\(closedCount)")
+            metricCell(title: "Finished", value: "\(closedCount)")
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 8)
-        .background(PFSurface.card)
-        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .stroke(PFColor.textSecondary.opacity(0.14), lineWidth: 1)
-        )
     }
 
     private func metricCell(title: String, value: String, emphasis: Bool = false) -> some View {
