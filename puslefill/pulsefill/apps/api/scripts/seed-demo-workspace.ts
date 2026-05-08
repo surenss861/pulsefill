@@ -208,7 +208,13 @@ async function main() {
     .single();
   if (p2 || !prov2) throw new Error(p2?.message ?? "prov2");
 
-  const serviceNames = ["Consultation", "Follow-up visit", "Skin treatment", "Wellness check"];
+  const serviceNames = [
+    "Dental cleaning",
+    "Lash refill",
+    "Physio follow-up",
+    "Hair colour touch-up",
+    "Botox consultation",
+  ];
   const serviceIds: string[] = [];
   for (const name of serviceNames) {
     const { data: svc, error: se } = await admin
@@ -219,13 +225,15 @@ async function main() {
     if (se || !svc) throw new Error(se?.message ?? "service");
     serviceIds.push(svc.id as string);
   }
-  const [svcConsult, svcFollow, svcSkin, svcWell] = serviceIds;
+  const [svcDental, svcLash, svcPhysio, svcHair, svcBotox] = serviceIds;
 
   const cReach = await createAuthCustomer(admin, "Reachable", { push: true });
   const cQuiet = await createAuthCustomer(admin, "QuietPush", { push: false });
   const cBare = await createAuthCustomer(admin, "BareMember", { push: true });
+  const cSms = await createAuthCustomer(admin, "SmsPreferred", { push: false, sms: true, email: true });
+  const cEmail = await createAuthCustomer(admin, "EmailOnly", { push: false, sms: false, email: true });
 
-  for (const cid of [cReach.customerId, cQuiet.customerId, cBare.customerId]) {
+  for (const cid of [cReach.customerId, cQuiet.customerId, cBare.customerId, cSms.customerId, cEmail.customerId]) {
     const { error: memErr } = await admin.from("customer_business_memberships").upsert(
       { customer_id: cid, business_id: businessId, status: "active", source: "invite" },
       { onConflict: "customer_id,business_id", ignoreDuplicates: false },
@@ -237,7 +245,7 @@ async function main() {
     customer_id: cReach.customerId,
     business_id: businessId,
     location_id: loc1.id as string,
-    service_id: svcConsult,
+    service_id: svcDental,
     provider_id: prov1.id as string,
     days_of_week: [1, 2, 3, 4, 5, 6, 0],
     active: true,
@@ -257,11 +265,31 @@ async function main() {
     customer_id: cQuiet.customerId,
     business_id: businessId,
     location_id: loc2.id as string,
-    service_id: svcSkin,
+    service_id: svcLash,
     provider_id: prov2.id as string,
     days_of_week: [1, 3, 5],
     active: true,
     max_notice_hours: 6,
+  });
+  await admin.from("standby_preferences").insert({
+    customer_id: cSms.customerId,
+    business_id: businessId,
+    location_id: loc1.id as string,
+    service_id: svcPhysio,
+    provider_id: null,
+    days_of_week: [2, 4],
+    active: true,
+    max_notice_hours: 12,
+  });
+  await admin.from("standby_preferences").insert({
+    customer_id: cEmail.customerId,
+    business_id: businessId,
+    location_id: loc2.id as string,
+    service_id: svcHair,
+    provider_id: prov2.id as string,
+    days_of_week: [1, 2, 3, 4, 5],
+    active: true,
+    max_notice_hours: 72,
   });
 
   const token = randomBytes(24).toString("hex");
@@ -296,7 +324,7 @@ async function main() {
       business_id: businessId,
       location_id: loc1.id as string,
       provider_id: prov1.id as string,
-      service_id: svcConsult,
+      service_id: svcDental,
       provider_name_snapshot: "Maya Patel",
       starts_at: startsOpen,
       ends_at: endsOpen,
@@ -329,7 +357,7 @@ async function main() {
       business_id: businessId,
       location_id: loc1.id as string,
       provider_id: prov1.id as string,
-      service_id: svcFollow,
+      service_id: svcPhysio,
       provider_name_snapshot: "Maya Patel",
       starts_at: startsOffer,
       ends_at: endsOffer,
@@ -421,7 +449,7 @@ async function main() {
       business_id: businessId,
       location_id: loc2.id as string,
       provider_id: prov2.id as string,
-      service_id: svcWell,
+      service_id: svcHair,
       provider_name_snapshot: "Daniel Kim",
       starts_at: startsClaim,
       ends_at: endsClaim,
@@ -466,7 +494,7 @@ async function main() {
       business_id: businessId,
       location_id: loc1.id as string,
       provider_id: prov1.id as string,
-      service_id: svcSkin,
+      service_id: svcBotox,
       provider_name_snapshot: "Maya Patel",
       starts_at: startsBook,
       ends_at: endsBook,
@@ -519,7 +547,7 @@ async function main() {
       business_id: businessId,
       location_id: loc2.id as string,
       provider_id: prov2.id as string,
-      service_id: svcFollow,
+      service_id: svcLash,
       provider_name_snapshot: "Daniel Kim",
       starts_at: startsPast,
       ends_at: endsPast,
@@ -617,6 +645,8 @@ async function main() {
           reachable: cReach,
           quiet_push: cQuiet,
           bare_membership: cBare,
+          sms_preferred: cSms,
+          email_only: cEmail,
         },
         pending_invite_email: pendingEmail,
         pending_invite_token: token,

@@ -6,6 +6,8 @@ enum PFOperatorShellMetrics {
     static let horizontalPadding: CGFloat = 20
     static let sectionSpacing: CGFloat = 24
     static let stackSpacing: CGFloat = 16
+    /// Extra scroll bottom inset so last CTAs clear the tab bar + home indicator comfortably.
+    static let tabBarContentInset: CGFloat = 48
 }
 
 /// Standard horizontal padding for operator / Business scroll content.
@@ -18,6 +20,11 @@ struct PFOperatorScreenPadding: ViewModifier {
 extension View {
     func pfOperatorHorizontalPadding() -> some View {
         modifier(PFOperatorScreenPadding())
+    }
+
+    /// Standard bottom padding for Business tab root scroll content.
+    func pfOperatorTabBarContentInset() -> some View {
+        padding(.bottom, PFOperatorShellMetrics.tabBarContentInset)
     }
 }
 

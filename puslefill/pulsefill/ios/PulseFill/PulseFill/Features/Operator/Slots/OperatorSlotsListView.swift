@@ -32,8 +32,8 @@ struct OperatorSlotsListView: View {
                 }
             }
             .background(PFScreenBackground().ignoresSafeArea())
-            .navigationTitle("Open appointments")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle("Openings")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
@@ -77,9 +77,9 @@ struct OperatorSlotsListView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 PFOperatorHero(
-                    overline: "Openings",
+                    overline: "List",
                     title: "Open appointments",
-                    subtitle: "Track empty appointment times and what happened.",
+                    subtitle: "Every empty slot and what to do next.",
                     primaryActionTitle: businessShellSelectedTab != nil ? "Add opening" : nil,
                     primaryAction: businessShellSelectedTab != nil
                         ? { businessShellSelectedTab?.wrappedValue = .create }
@@ -101,9 +101,10 @@ struct OperatorSlotsListView: View {
             Spacer()
             OperatorErrorStateCard(
                 title: "Open appointments could not load",
-                message: "We could not load your openings. Try again.",
+                message: "We could not load your openings. Check your connection and try again.",
                 technicalMessage: message,
                 retryButtonTitle: "Reload openings",
+                footerHint: "You can still open Today or Claims from the tabs below.",
                 onRetry: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -120,9 +121,9 @@ struct OperatorSlotsListView: View {
                 }
 
                 PFOperatorHero(
-                    overline: "Openings",
+                    overline: "List",
                     title: "Open appointments",
-                    subtitle: "Track empty appointment times and what happened.",
+                    subtitle: "Every empty slot and what to do next.",
                     primaryActionTitle: businessShellSelectedTab != nil ? "Add opening" : nil,
                     primaryAction: businessShellSelectedTab != nil
                         ? { businessShellSelectedTab?.wrappedValue = .create }
@@ -192,7 +193,7 @@ struct OperatorSlotsListView: View {
                         OperatorEmptyStateCard(
                             systemImage: "line.3.horizontal.decrease.circle",
                             title: "Nothing matches this view",
-                            message: emptyCopy,
+                            message: emptyCopyWithFilterHint,
                             primaryButtonTitle: nil,
                             primaryAction: nil
                         )
@@ -265,6 +266,10 @@ struct OperatorSlotsListView: View {
         case .expired: "No finished openings with this filter."
         case .cancelled: "No cancelled openings with this filter."
         }
+    }
+
+    private var emptyCopyWithFilterHint: String {
+        emptyCopy + " Change filters above, or choose All."
     }
 
     private func entityPicker(

@@ -25,7 +25,7 @@ struct OperatorCreateOpeningView: View {
             .background(PFScreenBackground())
             .navigationTitle("Add opening")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationDestination(for: String.self) { slotId in
                 OperatorSlotDetailView(
@@ -61,7 +61,7 @@ struct OperatorCreateOpeningView: View {
             VStack(alignment: .leading, spacing: 16) {
                 OperatorListLoadingPlaceholder(
                     title: "Loading form…",
-                    subtitle: "Getting services, providers, and locations.",
+                    subtitle: "We need your services and locations before you can add an opening.",
                     skeletonCount: 3
                 )
             }
@@ -78,6 +78,7 @@ struct OperatorCreateOpeningView: View {
                 message: "We need your services and locations before you can post an opening. Try again.",
                 technicalMessage: message,
                 retryButtonTitle: "Reload form",
+                footerHint: "If this keeps failing, check your connection or try again later.",
                 onRetry: { await viewModel.loadReferenceData() }
             )
             .padding(.horizontal, 20)
@@ -94,7 +95,7 @@ struct OperatorCreateOpeningView: View {
                 PFOperatorHero(
                     overline: "Create",
                     title: "Add an empty appointment",
-                    subtitle: "PulseFill can offer it to waiting customers."
+                    subtitle: "Then send offers so waiting customers can claim it. You confirm the booking in Claims."
                 )
                 .padding(.top, 8)
 
@@ -185,9 +186,9 @@ struct OperatorCreateOpeningView: View {
                 ) {
                     Task { await viewModel.submit() }
                 }
-                .padding(.bottom, 28)
             }
             .padding(.horizontal, 20)
+            .pfOperatorTabBarContentInset()
         }
     }
 

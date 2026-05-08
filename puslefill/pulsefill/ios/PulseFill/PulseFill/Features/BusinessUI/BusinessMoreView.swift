@@ -13,9 +13,9 @@ struct BusinessMoreView: View {
                         .environmentObject(env)
 
                     PFOperatorHero(
-                        overline: "More",
-                        title: "Business hub",
-                        subtitle: "Invite waiting customers or manage workspace and sign-in."
+                        overline: "Tools",
+                        title: "Customers & account",
+                        subtitle: "Invite people to your waiting list or manage sign-in and workspace."
                     )
 
                     VStack(spacing: PFOperatorShellMetrics.stackSpacing) {
@@ -36,11 +36,11 @@ struct BusinessMoreView: View {
                 }
                 .pfOperatorHorizontalPadding()
                 .padding(.top, 12)
-                .padding(.bottom, 36)
+                .pfOperatorTabBarContentInset()
             }
             .background(PFScreenBackground().ignoresSafeArea())
             .navigationTitle("More")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationDestination(for: BusinessMoreRoute.self) { route in

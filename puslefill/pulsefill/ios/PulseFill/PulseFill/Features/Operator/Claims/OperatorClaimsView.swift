@@ -23,7 +23,7 @@ struct OperatorClaimsView: View {
             }
             .background(PFScreenBackground().ignoresSafeArea())
             .navigationTitle("Claims")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationDestination(for: String.self) { slotId in
@@ -89,7 +89,7 @@ struct OperatorClaimsView: View {
     }
 
     private var bookingConfirmationMessage: String {
-        "This marks the opening as booked. The standby customer who claimed it will be treated as confirmed for this appointment."
+        "This marks the spot as booked for the customer who claimed it."
     }
 
     private var loadingView: some View {
@@ -97,7 +97,7 @@ struct OperatorClaimsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 OperatorListLoadingPlaceholder(
                     title: "Loading claims…",
-                    subtitle: "Getting openings where a customer claimed a spot.",
+                    subtitle: "Finding openings where someone claimed a spot.",
                     skeletonCount: 3
                 )
             }
@@ -114,6 +114,7 @@ struct OperatorClaimsView: View {
                 message: "We could not load claims. Try again or pull down to refresh.",
                 technicalMessage: message,
                 retryButtonTitle: "Reload claims",
+                footerHint: "Openings and Today still work from the other tabs.",
                 onRetry: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -128,9 +129,9 @@ struct OperatorClaimsView: View {
                     .environmentObject(env)
 
                 PFOperatorHero(
-                    overline: "Recoveries",
-                    title: "Claims",
-                    subtitle: "When a customer wants an opening, confirm it here."
+                    overline: "Confirm",
+                    title: "Customer claims",
+                    subtitle: "Someone claimed an opening? Confirm the booking so the slot counts as filled."
                 )
 
                 OperatorClaimsOverviewStrip(
@@ -146,7 +147,7 @@ struct OperatorClaimsView: View {
                     showConfirmPrimary: true,
                     emptySystemImage: "checkmark.seal",
                     emptyTitle: "No claims waiting",
-                    emptyMessage: "Customer claims will show up here."
+                    emptyMessage: "When a customer claims an opening, it appears here. Post openings from the Create tab."
                 )
 
                 claimsSection(
@@ -171,7 +172,7 @@ struct OperatorClaimsView: View {
             }
             .padding(.top, 16)
             .padding(.horizontal, 20)
-            .padding(.bottom, 28)
+            .pfOperatorTabBarContentInset()
         }
     }
 

@@ -26,7 +26,7 @@ struct BusinessOperatorCustomersView: View {
             }
             .background(PFScreenBackground().ignoresSafeArea())
             .navigationTitle("Customers")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
@@ -118,6 +118,7 @@ struct BusinessOperatorCustomersView: View {
                 message: "We could not load your customer list. Try again.",
                 technicalMessage: message,
                 retryButtonTitle: "Reload customers",
+                footerHint: "Pull down to refresh after you fix your connection.",
                 onRetry: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -132,9 +133,9 @@ struct BusinessOperatorCustomersView: View {
                     .environmentObject(env)
 
                 PFOperatorHero(
-                    overline: "Customers",
-                    title: "Waiting customers",
-                    subtitle: "Invite customers so they can receive openings.",
+                    overline: "Standby",
+                    title: "Your waiting list",
+                    subtitle: "Invite people by email so PulseFill can offer them empty appointments.",
                     primaryActionTitle: "Invite customer",
                     primaryAction: { showCreateInvite = true }
                 )
@@ -143,7 +144,7 @@ struct BusinessOperatorCustomersView: View {
                     OperatorEmptyStateCard(
                         systemImage: "person.2",
                         title: "No waiting customers yet",
-                        message: "Invite customers by email so they can join your standby list and get offers.",
+                        message: "Invite customers by email. They join your list so you can send them openings.",
                         primaryButtonTitle: "Invite customer",
                         primaryAction: { showCreateInvite = true }
                     )
@@ -151,7 +152,7 @@ struct BusinessOperatorCustomersView: View {
                     section(
                         title: "Pending invites",
                         isEmpty: viewModel.pendingInvites.isEmpty,
-                        emptyMessage: "No pending invites."
+                        emptyMessage: "No invites waiting. Tap Invite above to add someone."
                     ) {
                         VStack(spacing: 12) {
                             ForEach(viewModel.pendingInvites) { invite in
@@ -163,7 +164,7 @@ struct BusinessOperatorCustomersView: View {
                     section(
                         title: "Standby spotlight",
                         isEmpty: viewModel.standbySpotlightInvites.isEmpty,
-                        emptyMessage: "No standby or reachability signals yet."
+                        emptyMessage: "No spotlight items yet — connected customers will show here when relevant."
                     ) {
                         VStack(spacing: 12) {
                             ForEach(viewModel.standbySpotlightInvites) { invite in
@@ -175,7 +176,7 @@ struct BusinessOperatorCustomersView: View {
                     section(
                         title: "Connected customers",
                         isEmpty: otherConnectedInvites.isEmpty,
-                        emptyMessage: "No connected customers yet."
+                        emptyMessage: "Nobody connected yet. They appear after they accept an invite."
                     ) {
                         VStack(spacing: 12) {
                             ForEach(otherConnectedInvites) { invite in
@@ -186,7 +187,7 @@ struct BusinessOperatorCustomersView: View {
                 }
             }
             .padding(20)
-            .padding(.bottom, 32)
+            .pfOperatorTabBarContentInset()
         }
     }
 

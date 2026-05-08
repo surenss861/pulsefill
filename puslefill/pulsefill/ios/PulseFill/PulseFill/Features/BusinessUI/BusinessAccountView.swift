@@ -31,9 +31,9 @@ struct BusinessAccountView: View {
                     workspaceCard
 
                     PFOperatorHero(
-                        overline: "Account",
+                        overline: "Signed in",
                         title: "Workspace",
-                        subtitle: "Manage business mode, account access, and sign out."
+                        subtitle: "Switch modes, see who you’re operating as, or sign out."
                     )
 
                     modeCard
@@ -52,7 +52,7 @@ struct BusinessAccountView: View {
             }
         }
         .navigationTitle("Account")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(PFColor.surface1, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .confirmationDialog(

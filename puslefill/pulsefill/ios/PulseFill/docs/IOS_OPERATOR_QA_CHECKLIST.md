@@ -1,5 +1,7 @@
 # PulseFill iOS Operator QA Checklist
 
+See also: `BUSINESS_MODE_LIVE_WORKFLOW_QA.md` for seeded Business-mode loop validation (Today -> Create -> Detail -> Send offers -> Claims confirm -> refresh matrix).
+
 ## Auth
 - [ ] Launch signed out routes to sign-in
 - [ ] Sign in succeeds

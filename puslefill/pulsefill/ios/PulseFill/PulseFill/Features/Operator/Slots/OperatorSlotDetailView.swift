@@ -72,12 +72,7 @@ struct OperatorSlotDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(
-                """
-                This marks the opening as booked. The standby customer who claimed \
-                it will be treated as confirmed for this appointment.
-                """
-            )
+            Text("This marks the spot as booked for the customer who claimed it.")
         }
     }
 
@@ -86,7 +81,7 @@ struct OperatorSlotDetailView: View {
             VStack(alignment: .leading, spacing: 16) {
                 OperatorListLoadingPlaceholder(
                     title: "Loading opening…",
-                    subtitle: "Fetching slot detail, timeline, and delivery context.",
+                    subtitle: "Getting details, timeline, and what you can do next.",
                     skeletonCount: 3
                 )
             }
@@ -139,6 +134,7 @@ struct OperatorSlotDetailView: View {
                 message: "Go back and try again, or pull down to refresh.",
                 technicalMessage: message,
                 retryButtonTitle: "Reload opening",
+                footerHint: "If the opening was deleted, it may no longer be available.",
                 onRetry: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -151,11 +147,11 @@ struct OperatorSlotDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     PFOperatorHero(
-                        overline: "Opening",
+                        overline: "Details",
                         title: slot.providerNameSnapshot ?? "Empty appointment",
                         subtitle: slot.status == "claimed"
                             ? OperatorOpeningStatusCopy.label(forRawStatus: slot.status)
-                            : "Send offers, confirm a claim, or close this opening.",
+                            : "Send offers to your waiting list, then confirm any claim in the Claims tab.",
                         showLivePulse: false
                     )
 
@@ -215,7 +211,7 @@ struct OperatorSlotDetailView: View {
                     timelineCard(viewModel.timeline)
                 }
                 .padding(20)
-                .padding(.bottom, 28)
+                .pfOperatorTabBarContentInset()
             }
         }
     }

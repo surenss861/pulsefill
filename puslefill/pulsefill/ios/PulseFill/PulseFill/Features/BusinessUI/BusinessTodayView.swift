@@ -35,8 +35,8 @@ struct BusinessTodayView: View {
             }
             .background(PFScreenBackground())
             .navigationTitle("Today")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationDestination(for: String.self) { slotId in
                 OperatorSlotDetailView(businessAPI: env.businessOperatorAPI, slotId: slotId)
@@ -83,9 +83,9 @@ struct BusinessTodayView: View {
                     .environmentObject(env)
 
                 PFOperatorHero(
-                    overline: "Business",
-                    title: "Today",
-                    subtitle: "Fill empty appointments from your waiting list.",
+                    overline: "Overview",
+                    title: "What needs you",
+                    subtitle: "Add an empty appointment. PulseFill sends offers to waiting customers. You confirm the claim.",
                     primaryActionTitle: "Add opening",
                     primaryAction: { selectedTab = .create }
                 )
@@ -113,7 +113,7 @@ struct BusinessTodayView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 12)
-            .padding(.bottom, 32)
+            .pfOperatorTabBarContentInset()
         }
     }
 
