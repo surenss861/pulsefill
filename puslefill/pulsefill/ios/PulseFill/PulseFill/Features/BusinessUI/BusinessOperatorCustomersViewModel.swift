@@ -83,11 +83,14 @@ final class BusinessOperatorCustomersViewModel: ObservableObject {
                     inviteJustCreatedForCopy = synced
                 }
             }
+            PFHaptics.success()
             return true
         } catch let err as CreateStaffCustomerInviteBody.ValidationError {
+            PFHaptics.warning()
             flashMessage = err.localizedDescription
             return false
         } catch {
+            PFHaptics.warning()
             flashMessage = OperatorMutationFriendlyCopy.createInviteFailed(error)
             return false
         }
@@ -113,9 +116,11 @@ final class BusinessOperatorCustomersViewModel: ObservableObject {
     func revokePendingInvite(id: String) async {
         do {
             _ = try await businessAPI.revokeCustomerInvite(inviteId: id)
+            PFHaptics.mediumImpact()
             flashMessage = "Invite revoked."
             await load()
         } catch {
+            PFHaptics.warning()
             flashMessage = OperatorMutationFriendlyCopy.revokeInviteFailed(error)
         }
     }

@@ -129,17 +129,24 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: PFCustomerShellMetrics.sectionSpacing) {
                     CustomerHomeHeader(greeting: greetingLine, isSignedIn: env.sessionStore.isSignedIn)
                         .customerAppearAnimation(staggerIndex: 0)
 
                     if env.sessionStore.isSignedIn {
+                        PFEmberHero(
+                            overline: "Home",
+                            title: "Get earlier appointments",
+                            subtitle: "Claim openings from businesses you trust before they are gone."
+                        )
+                        .customerAppearAnimation(staggerIndex: 1)
+
                         signedInContent
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, PFCustomerShellMetrics.horizontalPadding)
                 .padding(.top, 24)
-                .padding(.bottom, 32)
+                .padding(.bottom, PFCustomerShellMetrics.tabBarContentInset)
             }
             .refreshable {
                 await refresh(kind: .userPull)
@@ -175,18 +182,17 @@ struct HomeView: View {
                 compact: false
             )
             .padding(.top, 8)
-            .customerAppearAnimation(staggerIndex: 1)
+            .customerAppearAnimation(staggerIndex: 2)
         } else if let loadError {
-            PFCustomerErrorState(
-                title: "We couldn’t load your latest updates",
+            PFErrorMoment(
+                title: "Couldn’t load your latest updates",
                 message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(loadError),
-                primaryTitle: "Try again",
-                primaryAction: { Task { await refresh(kind: .initial) } },
-                secondaryTitle: nil,
-                secondaryAction: nil,
-                style: .compact
+                actionTitle: "Reload home",
+                action: { Task { await refresh(kind: .initial) } },
+                secondaryTitle: "View openings",
+                secondaryAction: { env.customerNavigation.openOffersInbox() }
             )
-            .customerAppearAnimation(staggerIndex: 1)
+            .customerAppearAnimation(staggerIndex: 2)
         } else {
             CustomerHomeSetupChecklistCard(
                 businessesConnected: homeSetupBusinessConnected,
@@ -197,10 +203,10 @@ struct HomeView: View {
                 primaryActionTitle: homeSetupPrimaryActionTitle,
                 onPrimary: { runHomeSetupPrimaryAction() }
             )
-            .customerAppearAnimation(staggerIndex: 1)
+            .customerAppearAnimation(staggerIndex: 2)
 
             homeHeroBlock
-                .customerAppearAnimation(staggerIndex: 2)
+                .customerAppearAnimation(staggerIndex: 3)
 
             CustomerStandbyStatusCard(
                 isActive: standbyConfigured,
@@ -208,7 +214,7 @@ struct HomeView: View {
                     env.customerNavigation.open(.standbyStatus)
                 }
             )
-            .customerAppearAnimation(staggerIndex: 3)
+            .customerAppearAnimation(staggerIndex: 4)
 
             CustomerRecentActivityCard(
                 rows: homeActivityRows,
@@ -217,7 +223,7 @@ struct HomeView: View {
                     env.customerNavigation.open(.activity)
                 }
             )
-            .customerAppearAnimation(staggerIndex: 4)
+            .customerAppearAnimation(staggerIndex: 5)
         }
     }
 

@@ -454,7 +454,7 @@ struct CustomerEmptyStateCard: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(title)
-                        .font(.system(size: 24, weight: .bold, design: .default))
+                        .font(.system(size: 20, weight: .bold, design: .default))
                         .foregroundStyle(PFColor.textPrimary)
 
                     Text(message)
@@ -480,7 +480,7 @@ struct CustomerEmptyStateCard: View {
                                         .font(.system(size: 15, weight: .semibold))
                                         .foregroundStyle(PFColor.primaryText)
                                         .padding(.horizontal, 18)
-                                        .padding(.vertical, 11)
+                                        .frame(minHeight: PFCustomerShellMetrics.buttonMinHeight)
                                         .background(Color.clear)
                                         .overlay(
                                             Capsule()

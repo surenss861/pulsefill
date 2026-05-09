@@ -48,7 +48,7 @@ struct BusinessAccountView: View {
                 }
                 .pfOperatorHorizontalPadding()
                 .padding(.top, 16)
-                .padding(.bottom, 40)
+                .pfOperatorTabBarContentInset()
             }
         }
         .navigationTitle("Account")
@@ -61,6 +61,7 @@ struct BusinessAccountView: View {
             titleVisibility: .visible
         ) {
             Button("Sign out", role: .destructive) {
+                PFHaptics.mediumImpact()
                 Task { await env.authManager.signOut() }
             }
             Button("Cancel", role: .cancel) {}
@@ -153,7 +154,7 @@ struct BusinessAccountView: View {
                 Text("Switch to Customer mode")
                     .font(.system(size: 16, weight: .bold))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    .frame(minHeight: PFOperatorShellMetrics.buttonMinHeight)
             }
             .buttonStyle(.borderedProminent)
             .tint(PFColor.ember)
@@ -186,12 +187,13 @@ struct BusinessAccountView: View {
 
     private var signOutCard: some View {
         Button {
+            PFHaptics.mediumImpact()
             confirmSignOut = true
         } label: {
             Text("Sign out")
                 .font(.system(size: 16, weight: .semibold))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .frame(minHeight: PFOperatorShellMetrics.buttonMinHeight)
         }
         .buttonStyle(.bordered)
         .tint(PFColor.error)

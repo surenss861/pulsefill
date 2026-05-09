@@ -208,6 +208,7 @@ final class OperatorClaimsViewModel: ObservableObject {
             } else {
                 flashMessage = trimmed
             }
+            PFHaptics.success()
             OperatorMutationNotifier.postSlotUpdated(slotId: item.openSlotId, action: .confirmBooking)
             await reloadSilentlyPreferringSuccess()
         } catch {

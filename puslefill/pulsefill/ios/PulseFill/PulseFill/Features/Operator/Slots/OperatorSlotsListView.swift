@@ -99,13 +99,13 @@ struct OperatorSlotsListView: View {
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 12) {
             Spacer()
-            OperatorErrorStateCard(
+            PFOperatorErrorMoment(
                 title: "Open appointments could not load",
                 message: "We could not load your openings. Check your connection and try again.",
                 technicalMessage: message,
-                retryButtonTitle: "Reload openings",
+                actionTitle: "Reload openings",
                 footerHint: "You can still open Today or Claims from the tabs below.",
-                onRetry: { await viewModel.load() }
+                onAction: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
             Spacer()
@@ -114,7 +114,7 @@ struct OperatorSlotsListView: View {
 
     private var contentView: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: PFOperatorShellMetrics.sectionSpacing) {
                 if businessShellSelectedTab != nil {
                     BusinessWorkspaceStrip()
                         .environmentObject(env)
@@ -179,23 +179,23 @@ struct OperatorSlotsListView: View {
 
                 if viewModel.filteredSlots.isEmpty {
                     if viewModel.slots.isEmpty {
-                        OperatorEmptyStateCard(
+                        PFOperatorEmptyMoment(
                             systemImage: "calendar.badge.plus",
                             title: "No openings yet",
                             message: "Add an empty appointment so waiting customers can claim it.",
-                            primaryButtonTitle: businessShellSelectedTab != nil ? "Create opening" : nil,
-                            primaryAction: businessShellSelectedTab != nil
+                            actionTitle: businessShellSelectedTab != nil ? "Add opening" : nil,
+                            action: businessShellSelectedTab != nil
                                 ? { businessShellSelectedTab?.wrappedValue = .create }
                                 : nil
                         )
                         .padding(.top, 8)
                     } else {
-                        OperatorEmptyStateCard(
+                        PFOperatorEmptyMoment(
                             systemImage: "line.3.horizontal.decrease.circle",
                             title: "Nothing matches this view",
                             message: emptyCopyWithFilterHint,
-                            primaryButtonTitle: nil,
-                            primaryAction: nil
+                            actionTitle: nil,
+                            action: nil
                         )
                         .padding(.top, 8)
                     }
@@ -220,7 +220,8 @@ struct OperatorSlotsListView: View {
                 }
             }
             .padding(.top, 16)
-            .padding(.horizontal, 20)
+            .padding(.horizontal, PFOperatorShellMetrics.horizontalPadding)
+            .pfOperatorTabBarContentInset()
         }
     }
 

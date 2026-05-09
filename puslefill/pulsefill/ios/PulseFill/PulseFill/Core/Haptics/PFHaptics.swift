@@ -39,6 +39,10 @@ enum PFHaptics {
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }
 
+    static func error() {
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+    }
+
     static func selection() {
         UISelectionFeedbackGenerator().selectionChanged()
     }

@@ -7,7 +7,8 @@ enum PFOperatorShellMetrics {
     static let sectionSpacing: CGFloat = 24
     static let stackSpacing: CGFloat = 16
     /// Extra scroll bottom inset so last CTAs clear the tab bar + home indicator comfortably.
-    static let tabBarContentInset: CGFloat = 48
+    static let tabBarContentInset: CGFloat = 52
+    static let buttonMinHeight: CGFloat = 50
 }
 
 /// Standard horizontal padding for operator / Business scroll content.
@@ -48,11 +49,11 @@ struct PFOperatorHero: View {
                     .foregroundStyle(PFColor.textSecondary)
             }
             Text(title)
-                .font(.system(size: 28, weight: .bold))
+                    .font(.system(size: 32, weight: .bold))
                 .foregroundStyle(PFColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Text(subtitle)
-                .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(PFColor.textSecondary)
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
@@ -62,7 +63,7 @@ struct PFOperatorHero: View {
                     .padding(.top, 4)
             }
         }
-        .padding(22)
+        .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
             RoundedRectangle(cornerRadius: PFRadius.sheet, style: .continuous)
@@ -100,7 +101,7 @@ struct PFOperatorPrimaryAction: View {
             Text(title)
                 .font(.system(size: 16, weight: .bold))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .frame(minHeight: PFOperatorShellMetrics.buttonMinHeight)
         }
         .buttonStyle(.borderedProminent)
         .tint(PFColor.ember)
@@ -121,7 +122,7 @@ struct PFOperatorSecondaryAction: View {
             Text(title)
                 .font(.system(size: 15, weight: .semibold))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .frame(minHeight: PFOperatorShellMetrics.buttonMinHeight)
         }
         .buttonStyle(.bordered)
         .tint(PFColor.textSecondary)

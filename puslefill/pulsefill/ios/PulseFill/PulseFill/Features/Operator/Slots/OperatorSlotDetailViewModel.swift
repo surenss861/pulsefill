@@ -249,6 +249,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
     }
 
     private func handleMutationError(_ error: Error) async {
+        PFHaptics.warning()
         if isOperatorActionConflict(error) {
             flashMessage = "This opening changed — refreshed latest state."
             errorMessage = flashMessage
@@ -292,6 +293,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
         refreshAction: OperatorMutationRefreshAction? = nil,
         noteUpdated: Bool = false
     ) async {
+        PFHaptics.success()
         flashMessage = message
         successPulseToken = UUID()
         if noteUpdated {

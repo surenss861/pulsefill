@@ -117,19 +117,20 @@ struct CustomerOfferCard: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(CustomerOfferInboxCopy.serviceLine(for: offer))
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(PFColor.passTitle)
                             .lineLimit(2)
                             .minimumScaleFactor(0.82)
 
+                        Text(CustomerOfferInboxCopy.timeLine(for: offer))
+                            .font(.system(size: 23, weight: .bold))
+                            .foregroundStyle(PFColor.passTimeBlock)
+                            .padding(.top, 8)
+
                         Text(CustomerOfferInboxCopy.businessSubtitleLine(for: offer))
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(PFColor.customerTextSecondary)
-
-                        Text(CustomerOfferInboxCopy.timeLine(for: offer))
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(PFColor.passTimeBlock)
-                            .padding(.top, 8)
+                            .padding(.top, 2)
                     }
 
                     CustomerPrimaryChromeLabel(title: chromeActionTitle)
@@ -152,12 +153,12 @@ struct CustomerOfferPastCard: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(CustomerOfferInboxCopy.serviceLine(for: offer))
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(size: 18, weight: .semibold))
                             .foregroundStyle(PFColor.textPrimary)
                             .lineLimit(2)
 
                         Text(CustomerOfferInboxCopy.timeLine(for: offer))
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(PFColor.customerMutedText)
                     }
                     Spacer()
@@ -170,7 +171,7 @@ struct CustomerOfferPastCard: View {
                     .lineLimit(2)
 
                 HStack(spacing: 6) {
-                    Text("View details")
+                    Text("View opening")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(PFColor.ember)
                     Image(systemName: "chevron.right")

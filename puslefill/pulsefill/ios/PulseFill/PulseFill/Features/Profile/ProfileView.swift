@@ -42,18 +42,16 @@ struct ProfileView: View {
 
                 ScrollViewReader { proxy in
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 18) {
+                        VStack(alignment: .leading, spacing: PFCustomerShellMetrics.sectionSpacing) {
                             if standbyJustCompleted {
                                 onboardingCompletionBanner
                             }
 
-                            VStack(alignment: .leading, spacing: 8) {
-                                PFTypography.Customer.screenTitle("Profile")
-                                    .multilineTextAlignment(.leading)
-                                PFTypography.Customer.screenLead(
-                                    "Manage your businesses, standby preferences, notifications, and account."
-                                )
-                            }
+                            PFEmberHero(
+                                overline: "Profile",
+                                title: "Your setup",
+                                subtitle: "Manage connected businesses, standby alerts, and account access."
+                            )
 
                             PFCustomerInfoCallout(
                                 title: "How Profile fits in",
@@ -73,9 +71,9 @@ struct ProfileView: View {
 
                             accountCard
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, PFCustomerShellMetrics.horizontalPadding)
                         .padding(.top, 24)
-                        .padding(.bottom, 88)
+                        .padding(.bottom, PFCustomerShellMetrics.tabBarContentInset + 36)
                     }
                     .onAppear {
                         clearCompletionBannerLaterIfNeeded()
@@ -123,6 +121,7 @@ struct ProfileView: View {
             titleVisibility: .visible
         ) {
             Button("Sign out", role: .destructive) {
+                PFHaptics.mediumImpact()
                 Task { await env.authManager.signOut() }
             }
             Button("Cancel", role: .cancel) {}
@@ -288,7 +287,7 @@ struct ProfileView: View {
                     Text("Manage standby preferences")
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .frame(minHeight: PFCustomerShellMetrics.buttonMinHeight)
                 }
                 .buttonStyle(.bordered)
                 .tint(PFColor.ember)
@@ -399,7 +398,7 @@ struct ProfileView: View {
                     Text("Sign out")
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .frame(minHeight: PFCustomerShellMetrics.buttonMinHeight)
                 }
                 .buttonStyle(.bordered)
                 .tint(PFColor.error)

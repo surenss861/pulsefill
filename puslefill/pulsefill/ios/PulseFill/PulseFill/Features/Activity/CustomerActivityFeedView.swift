@@ -15,15 +15,12 @@ struct CustomerActivityFeedView: View {
                 PFScreenBackground()
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 22) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            PFTypography.Customer.screenTitle("Activity")
-                                .multilineTextAlignment(.leading)
-
-                            PFTypography.Customer.screenLead(
-                                "A simple timeline of your standby, openings, claims, and confirmations."
-                            )
-                        }
+                    VStack(alignment: .leading, spacing: PFCustomerShellMetrics.sectionSpacing) {
+                        PFEmberHero(
+                            overline: "Updates",
+                            title: "What changed",
+                            subtitle: "Track claims, confirmations, and missed openings in one timeline."
+                        )
                         .customerAppearAnimation(staggerIndex: 0)
 
                         if !activityAboutCalloutSuppressed {
@@ -54,15 +51,13 @@ struct CustomerActivityFeedView: View {
                             .padding(.top, 8)
 
                         case let .failed(message):
-                            PFCustomerErrorState(
-                                title: "We couldn’t load activity",
+                            PFErrorMoment(
+                                title: "Couldn’t load updates",
                                 message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(message),
-                                primaryTitle: "Try again",
-                                primaryAction: { Task { await viewModel.load() } },
-                                secondaryTitle: nil,
-                                secondaryAction: nil,
-                                hint: "Try again in a moment.",
-                                style: .compact
+                                actionTitle: "Reload updates",
+                                action: { Task { await viewModel.load() } },
+                                secondaryTitle: "View openings",
+                                secondaryAction: { env.customerNavigation.openOffersInbox() }
                             )
                             .padding(.top, 8)
 
@@ -72,20 +67,12 @@ struct CustomerActivityFeedView: View {
                         case .loaded:
                             let groups = customerActivityTimelineGroups(from: viewModel.filteredItems)
                             if groups.isEmpty {
-                                CustomerEmptyStateCard(
+                                PFEmptyMoment(
                                     systemImage: "list.bullet.rectangle",
-                                    title: "No activity yet",
-                                    message:
-                                        "When something changes — a new opening, a claim, or a booking update — it’ll show up here.",
-                                    footnote: nil,
-                                    primaryActionTitle: "Browse openings",
-                                    primaryAction: {
-                                        env.customerNavigation.openOffersInbox()
-                                    },
-                                    secondaryActionTitle: "Standby status",
-                                    secondaryAction: {
-                                        env.customerNavigation.open(.standbyStatus)
-                                    }
+                                    title: "No updates yet",
+                                    message: "Claims, confirmations, and missed openings will show up here.",
+                                    actionTitle: "View openings",
+                                    action: { env.customerNavigation.openOffersInbox() }
                                 )
                                 .customerAppearAnimation(staggerIndex: 3)
                             } else {
@@ -96,9 +83,9 @@ struct CustomerActivityFeedView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, PFCustomerShellMetrics.horizontalPadding)
                     .padding(.top, 24)
-                    .padding(.bottom, 36)
+                    .padding(.bottom, PFCustomerShellMetrics.tabBarContentInset)
                 }
             }
             .navigationTitle("Activity")

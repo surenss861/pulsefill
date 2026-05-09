@@ -237,10 +237,14 @@ struct CustomerHomeSetupChecklistCard: View {
     let primaryActionTitle: String
     let onPrimary: () -> Void
 
+    private var sectionTitle: String {
+        highlightStepIndex >= 0 ? "Finish your setup" : "You’re ready"
+    }
+
     var body: some View {
         PFCustomerSectionCard(variant: .quiet, padding: 16) {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Your setup")
+                Text(sectionTitle)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(PFColor.customerDimText)
 

@@ -113,13 +113,13 @@ struct BusinessOperatorCustomersView: View {
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 14) {
             Spacer()
-            OperatorErrorStateCard(
+            PFOperatorErrorMoment(
                 title: "Customers could not load",
                 message: "We could not load your customer list. Try again.",
                 technicalMessage: message,
-                retryButtonTitle: "Reload customers",
+                actionTitle: "Reload customers",
                 footerHint: "Pull down to refresh after you fix your connection.",
-                onRetry: { await viewModel.load() }
+                onAction: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
             Spacer()
@@ -128,7 +128,7 @@ struct BusinessOperatorCustomersView: View {
 
     private var contentList: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: PFOperatorShellMetrics.sectionSpacing) {
                 BusinessWorkspaceStrip()
                     .environmentObject(env)
 
@@ -141,12 +141,12 @@ struct BusinessOperatorCustomersView: View {
                 )
 
                 if viewModel.invites.isEmpty {
-                    OperatorEmptyStateCard(
+                    PFOperatorEmptyMoment(
                         systemImage: "person.2",
                         title: "No waiting customers yet",
                         message: "Invite customers by email. They join your list so you can send them openings.",
-                        primaryButtonTitle: "Invite customer",
-                        primaryAction: { showCreateInvite = true }
+                        actionTitle: "Invite customer",
+                        action: { showCreateInvite = true }
                     )
                 } else {
                     section(
@@ -186,7 +186,8 @@ struct BusinessOperatorCustomersView: View {
                     }
                 }
             }
-            .padding(20)
+            .padding(.horizontal, PFOperatorShellMetrics.horizontalPadding)
+            .padding(.top, 16)
             .pfOperatorTabBarContentInset()
         }
     }
@@ -240,6 +241,7 @@ struct BusinessOperatorCustomersView: View {
             HStack(spacing: 10) {
                 if let url = invite.inviteUrl?.trimmingCharacters(in: .whitespacesAndNewlines), !url.isEmpty {
                     Button("Copy link") {
+                        PFHaptics.selection()
                         UIPasteboard.general.string = url
                         viewModel.flashMessage = "Invite link copied."
                     }
@@ -247,12 +249,14 @@ struct BusinessOperatorCustomersView: View {
                 }
                 if let code = invite.code?.trimmingCharacters(in: .whitespacesAndNewlines), !code.isEmpty {
                     Button("Copy code") {
+                        PFHaptics.selection()
                         UIPasteboard.general.string = code
                         viewModel.flashMessage = "Invite code copied."
                     }
                     .font(.system(size: 14, weight: .semibold))
                 }
                 Button("Revoke", role: .destructive) {
+                    PFHaptics.mediumImpact()
                     revokeTargetId = invite.id
                 }
                 .font(.system(size: 14, weight: .semibold))

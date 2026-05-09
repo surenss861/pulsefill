@@ -1,18 +1,19 @@
-# Business Mode Live Workflow QA
+# PulseFill Real-Data QA + Demo Recovery Loop
 
-Use this after shell/copy polish to validate the real operator loop with realistic data.
+Use this runbook after UI polish to validate the production story with realistic seeded data.
 
 ## Goal
 
-Prove the end-to-end Business loop feels obvious and trustworthy:
+Prove the full recovery loop is trustworthy with real data and real refreshes:
 
-1. Add empty appointment
-2. Send offers
-3. Customer claims
-4. Operator confirms booking
-5. Today/Openings/Claims/Customers refresh correctly
+1. Business creates opening
+2. Business sends offers
+3. Customer sees offer
+4. Customer claims opening
+5. Business confirms booking
+6. Customer + Business surfaces refresh to the correct final state
 
-## Seed realistic data
+## Seed realistic demo data
 
 From repo root:
 
@@ -26,18 +27,33 @@ Required env in `apps/api/.env`:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `DEMO_STAFF_AUTH_USER_ID` (auth user UUID for your operator login)
 
-Notes:
+Seed source: `apps/api/scripts/seed-demo-workspace.ts`
 
-- Script: `apps/api/scripts/seed-demo-workspace.ts`
-- Creates one business workspace with:
-  - 2 locations
-  - 2 providers
-  - 5 realistic services (`Dental cleaning`, `Lash refill`, `Physio follow-up`, `Hair colour touch-up`, `Botox consultation`)
-  - 5 waiting customers
-  - statuses across openings (`open`, `offered`, `claimed`, `booked`, `expired`)
-  - pending invite + customer notes + notifications/delivery attempts for context
+The script prints a JSON summary to stdout. Use `customers.reachable.email` and `customers.reachable.password` to sign in as the seeded customer on iOS (that account owns the pre-seeded offers/claims tied to the demo loop).
 
-## iOS launch config (Business shell)
+### Demo dataset includes
+
+- Business: `Luxe Wellness Studio`
+- 2 locations + 2 providers
+- Services:
+  - `Lash refill`
+  - `Botox consultation`
+  - `Massage therapy`
+  - `Dental cleaning`
+  - `Physio follow-up`
+- 5 customer profiles with varied reachability/preferences
+- Slot states:
+  - `open` (with no-match audit context)
+  - `offered`
+  - `claimed` (pending confirmation)
+  - `booked`
+  - `expired`
+  - `cancelled`
+- Pending invite + invite token/code
+- Delivery/notification attempts
+- Customer notes + follow-up context
+
+## iOS launch config
 
 In Xcode Run scheme env:
 
@@ -45,64 +61,72 @@ In Xcode Run scheme env:
 - `PULSEFILL_SUPABASE_ANON_KEY=<anon/public key>`
 - `PULSEFILL_API_BASE_URL=<Fastify API URL>`
 
-## Smoke steps (manual)
+## Demo recovery loop (manual)
 
-Use one operator account tied to `DEMO_STAFF_AUTH_USER_ID`.
+Use one operator account mapped to `DEMO_STAFF_AUTH_USER_ID` and one seeded customer.
 
-### A) Today
+### A) Auth + role routing
 
-- [ ] Hero tells the workflow in one glance
-- [ ] Metrics/Tasks reflect seeded slot states
-- [ ] Empty/error state explains what happened + what to do next
+- [ ] Operator sign-in succeeds
+- [ ] Operator routes to Business mode (or role picker when dual-role)
+- [ ] Customer sign-in routes to Customer shell
 
-### B) Create -> Opening detail
+### B) Business creates and sends
 
-- [ ] Create an opening in under 30 seconds
-- [ ] Success banner appears on detail
-- [ ] `Send offers now` moves focus to action controls
-- [ ] Success haptic fires once
+- [ ] Business mode -> `Create` -> add opening
+- [ ] Opening detail shows success banner and action controls
+- [ ] `Send offers` succeeds with clear feedback
 
-### C) Openings
+### C) Customer sees and claims
 
-- [ ] Row hierarchy is clear: status -> time -> context -> next action
-- [ ] Primary action is obvious
-- [ ] Filter empty state suggests changing filters
+- [ ] Customer `Openings` shows seeded offers
+- [ ] Customer can open offer detail
+- [ ] `Claim opening` succeeds with success feedback
+- [ ] Offer detail/activity copy reflects waiting-for-business state
 
-### D) Claims
+### D) Business confirms
 
-- [ ] Claimed slot is easy to spot
-- [ ] Confirm dialog copy is plain and clear
-- [ ] Confirm success moves claim to correct section/state
+- [ ] Business `Claims` shows the newly claimed opening
+- [ ] `Confirm booking` succeeds
+- [ ] Claim moves from waiting -> confirmed/finished section correctly
 
-### E) More -> Customers / Account
+### E) Post-confirm consistency
 
-- [ ] More stays branded (no default white list feel)
-- [ ] Customers screen explains why the waiting list matters
-- [ ] Account screen clearly shows workspace + mode + sign-out
+- [ ] Customer sees confirmed state in Offer Detail + Activity
+- [ ] Business Today/Openings/Claims all show correct final status
+- [ ] No stale rows or contradictory statuses remain after pull-to-refresh
 
 ## Refresh correctness matrix
 
-Validate these surface updates after each mutation:
+Validate these updates after each mutation:
 
-- [ ] Create opening -> Openings + Today update
-- [ ] Send offers -> Opening detail + Today update
-- [ ] Claim arrives -> Claims + Today update
-- [ ] Confirm booking -> Claims + Openings + Today update
-- [ ] Expire/cancel -> Openings + Today update
-- [ ] Create/revoke invite -> Customers + Today update
+- [ ] Create opening -> Today + Openings update
+- [ ] Send offers/retry offers -> Detail + Today + Openings update
+- [ ] Customer claim -> Business Claims + Today update
+- [ ] Confirm booking -> Claims + Openings + Today + Customer Activity update
+- [ ] Expire/cancel -> Today + Openings + Detail update
+- [ ] Create/revoke invite -> Customers update and remains coherent after refresh
+
+## Confidence checks
+
+- [ ] Status labels are accurate and human-readable (not backend jargon)
+- [ ] Success/failure messages are clear and action-oriented
+- [ ] Empty/error states always suggest the next step
+- [ ] Haptics/motion feel subtle and confidence-building (no noisy feedback)
 
 ## Pass/fail criteria
 
-Mark FAIL on the first blocker that breaks confidence:
+Fail on the first blocker that breaks operator/customer trust:
 
-- wrong status/state transition
+- incorrect status transition
 - stale data after mutation
-- unclear next action
-- screen feels inconsistent with Business shell
+- missing refresh propagation
+- confusing action outcome
+- conflicting state between Customer and Business views
 
-Capture:
+Capture for each failure:
 
 - action performed
-- expected vs actual result
+- expected vs actual
 - screenshot/log line
 - likely layer (`iOS` / `API` / `DB` / `env`)

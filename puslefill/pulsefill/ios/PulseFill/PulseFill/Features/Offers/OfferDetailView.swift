@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Customer-facing opening detail: patient-safe copy, clear status, inline claim.
 struct OfferDetailView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var env: AppEnvironment
     @State private var viewModel: OfferDetailViewModel
     @State private var previousDetailStatus: CustomerOfferDisplayStatus?
@@ -26,17 +27,17 @@ struct OfferDetailView: View {
 
             case let .failed(message):
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        PFCustomerErrorState(
+                    VStack(alignment: .leading, spacing: PFCustomerShellMetrics.sectionSpacing) {
+                        PFErrorMoment(
                             title: "Opening unavailable",
                             message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(message),
-                            primaryTitle: "Try again",
-                            primaryAction: { Task { await viewModel.load() } },
-                            secondaryTitle: nil,
-                            secondaryAction: nil,
+                            actionTitle: "Reload opening",
+                            action: { Task { await viewModel.load() } },
+                            secondaryTitle: "View other openings",
+                            secondaryAction: { env.customerNavigation.openOffersInbox() }
                         )
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, PFCustomerShellMetrics.horizontalPadding)
                     .padding(.top, 24)
                 }
                 .background(PFScreenBackground())
@@ -74,8 +75,8 @@ struct OfferDetailView: View {
         let pillStatus = customerOfferDisplayStatus(forDetail: offer)
 
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                offerDetailStatusBanner(uiState: ui)
+            VStack(alignment: .leading, spacing: PFCustomerShellMetrics.sectionSpacing) {
+                offerDetailHero(uiState: ui)
                     .customerAppearAnimation(staggerIndex: 0)
 
                 if let msg = viewModel.successBanner, !msg.isEmpty {
@@ -83,12 +84,14 @@ struct OfferDetailView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(PFColor.success)
                         .padding(.horizontal, 4)
+                        .transition(reduceMotion ? .identity : .move(edge: .top).combined(with: .opacity))
                 }
                 if let err = viewModel.errorBanner, !err.isEmpty {
                     Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(err))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(PFColor.error)
                         .padding(.horizontal, 4)
+                        .transition(reduceMotion ? .identity : .move(edge: .top).combined(with: .opacity))
                 }
 
                 offerBusinessServiceCard(offer: offer, pillStatus: pillStatus)
@@ -112,20 +115,25 @@ struct OfferDetailView: View {
                     NavigationLink {
                         ClaimOutcomeView(api: env.apiClient, claimId: claimId)
                     } label: {
-                        Text("View claim status")
+                        Text("Track claim status")
                             .font(.system(size: 16, weight: .semibold))
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .frame(minHeight: PFCustomerShellMetrics.buttonMinHeight)
                     }
                     .buttonStyle(.bordered)
                     .tint(PFColor.ember)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        PFHaptics.selection()
+                    })
                     .customerAppearAnimation(staggerIndex: 5)
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, PFCustomerShellMetrics.horizontalPadding)
             .padding(.top, 20)
-            .padding(.bottom, 120)
+            .padding(.bottom, PFCustomerShellMetrics.tabBarContentInset + 68)
         }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: viewModel.successBanner)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: viewModel.errorBanner)
         .background(PFScreenBackground())
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if let slotId = offer.openSlotId, !slotId.isEmpty, ui.showsClaimButton || viewModel.isClaiming {
@@ -143,34 +151,21 @@ struct OfferDetailView: View {
         }
     }
 
-    private func offerDetailStatusBanner(uiState: OfferDetailUIState) -> some View {
-        PFCustomerSectionCard(variant: statusBannerVariant(uiState), padding: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(uiState.bannerTitle)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(PFColor.textPrimary)
-
-                Text(uiState.bannerMessage)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(PFColor.textSecondary)
-                    .lineSpacing(3)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
+    private func offerDetailHero(uiState: OfferDetailUIState) -> some View {
+        PFEmberHero(
+            overline: "Opening",
+            title: uiState.bannerTitle,
+            subtitle: uiState.bannerMessage,
+            showPulse: shouldShowHeroPulse(uiState)
+        )
     }
 
-    private func statusBannerVariant(_ uiState: OfferDetailUIState) -> PFCustomerSectionVariant {
+    private func shouldShowHeroPulse(_ uiState: OfferDetailUIState) -> Bool {
         switch uiState {
-        case .claiming, .waitingForConfirmation:
-            return .attention
-        case .confirmed:
-            return .elevated
-        case .available:
-            return .default
-        case .expired, .unavailable, .taken:
-            return .quiet
-        case .unknown:
-            return .default
+        case .available, .claiming, .waitingForConfirmation:
+            return true
+        case .confirmed, .expired, .unavailable, .taken, .unknown:
+            return false
         }
     }
 

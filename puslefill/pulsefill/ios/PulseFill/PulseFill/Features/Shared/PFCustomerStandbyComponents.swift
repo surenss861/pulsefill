@@ -135,7 +135,7 @@ struct PFCustomerPrimaryButton: View {
                 ZStack {
                     PFTypography.Customer.button(" ")
                         .frame(maxWidth: .infinity)
-                        .frame(minHeight: 54)
+                        .frame(minHeight: PFCustomerShellMetrics.buttonMinHeight)
                         .opacity(0)
                     HStack(spacing: 10) {
                         ProgressView()

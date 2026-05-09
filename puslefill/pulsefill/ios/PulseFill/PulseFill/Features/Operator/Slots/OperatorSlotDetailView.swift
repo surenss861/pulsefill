@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct OperatorSlotDetailView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var viewModel: OperatorSlotDetailViewModel
     @State private var showFlash = false
     @State private var confirmExpire = false
@@ -52,6 +53,7 @@ struct OperatorSlotDetailView: View {
         }
         .confirmationDialog("Expire this opening?", isPresented: $confirmExpire, titleVisibility: .visible) {
             Button("Expire", role: .destructive) {
+                PFHaptics.mediumImpact()
                 Task { await viewModel.expireSlot() }
             }
             Button("Cancel", role: .cancel) {}
@@ -60,6 +62,7 @@ struct OperatorSlotDetailView: View {
         }
         .confirmationDialog("Cancel this opening for patients?", isPresented: $confirmCancel, titleVisibility: .visible) {
             Button("Cancel slot", role: .destructive) {
+                PFHaptics.mediumImpact()
                 Task { await viewModel.cancelSlot() }
             }
             Button("Go back", role: .cancel) {}
@@ -68,6 +71,7 @@ struct OperatorSlotDetailView: View {
         }
         .confirmationDialog("Confirm booking?", isPresented: $confirmBookingPrompt, titleVisibility: .visible) {
             Button("Confirm booking") {
+                PFHaptics.selection()
                 Task { await viewModel.confirmBooking() }
             }
             Button("Cancel", role: .cancel) {}
@@ -85,7 +89,7 @@ struct OperatorSlotDetailView: View {
                     skeletonCount: 3
                 )
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, PFOperatorShellMetrics.horizontalPadding)
             .padding(.top, 24)
         }
     }
@@ -107,8 +111,12 @@ struct OperatorSlotDetailView: View {
                     PFHaptics.mediumImpact()
                     showCreatedSuccessBanner = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
-                        withAnimation(.easeInOut(duration: 0.35)) {
+                        if reduceMotion {
                             scroll.scrollTo("operatorActionAnchor", anchor: .top)
+                        } else {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                scroll.scrollTo("operatorActionAnchor", anchor: .top)
+                            }
                         }
                     }
                 }
@@ -129,15 +137,15 @@ struct OperatorSlotDetailView: View {
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 12) {
             Spacer()
-            OperatorErrorStateCard(
+            PFOperatorErrorMoment(
                 title: "This opening could not load",
                 message: "Go back and try again, or pull down to refresh.",
                 technicalMessage: message,
-                retryButtonTitle: "Reload opening",
+                actionTitle: "Reload opening",
                 footerHint: "If the opening was deleted, it may no longer be available.",
-                onRetry: { await viewModel.load() }
+                onAction: { await viewModel.load() }
             )
-            .padding(.horizontal, 20)
+            .padding(.horizontal, PFOperatorShellMetrics.horizontalPadding)
             Spacer()
         }
     }
@@ -145,7 +153,7 @@ struct OperatorSlotDetailView: View {
     private func slotContent(_ slot: StaffOpenSlotDetail) -> some View {
         ScrollViewReader { scroll in
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: PFOperatorShellMetrics.stackSpacing) {
                     PFOperatorHero(
                         overline: "Details",
                         title: slot.providerNameSnapshot ?? "Empty appointment",
@@ -157,6 +165,7 @@ struct OperatorSlotDetailView: View {
 
                     if showCreatedSuccessBanner {
                         createdOpeningBanner(scroll: scroll)
+                            .transition(reduceMotion ? .identity : .move(edge: .top).combined(with: .opacity))
                     }
 
                     recentActivityBar(slot)
@@ -210,9 +219,11 @@ struct OperatorSlotDetailView: View {
                     offerOutcomesCard(slot.slotOffers ?? [])
                     timelineCard(viewModel.timeline)
                 }
-                .padding(20)
+                .padding(.horizontal, PFOperatorShellMetrics.horizontalPadding)
+                .padding(.top, 16)
                 .pfOperatorTabBarContentInset()
             }
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.24), value: showCreatedSuccessBanner)
         }
     }
 

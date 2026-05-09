@@ -109,13 +109,13 @@ struct OperatorClaimsView: View {
     private func errorView(_ message: String) -> some View {
         VStack {
             Spacer()
-            OperatorErrorStateCard(
+            PFOperatorErrorMoment(
                 title: "Claims could not load",
                 message: "We could not load claims. Try again or pull down to refresh.",
                 technicalMessage: message,
-                retryButtonTitle: "Reload claims",
+                actionTitle: "Reload claims",
                 footerHint: "Openings and Today still work from the other tabs.",
-                onRetry: { await viewModel.load() }
+                onAction: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
             Spacer()
@@ -124,7 +124,7 @@ struct OperatorClaimsView: View {
 
     private var contentScroll: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: PFOperatorShellMetrics.sectionSpacing) {
                 BusinessWorkspaceStrip()
                     .environmentObject(env)
 
@@ -171,7 +171,7 @@ struct OperatorClaimsView: View {
                 )
             }
             .padding(.top, 16)
-            .padding(.horizontal, 20)
+            .padding(.horizontal, PFOperatorShellMetrics.horizontalPadding)
             .pfOperatorTabBarContentInset()
         }
     }
@@ -189,12 +189,12 @@ struct OperatorClaimsView: View {
             OperatorClaimsSectionHeader(title: title, subtitle: subtitle)
 
             if items.isEmpty {
-                OperatorEmptyStateCard(
+                PFOperatorEmptyMoment(
                     systemImage: emptySystemImage,
                     title: emptyTitle,
                     message: emptyMessage,
-                    primaryButtonTitle: nil,
-                    primaryAction: nil
+                    actionTitle: nil,
+                    action: nil
                 )
             } else {
                 VStack(spacing: 12) {

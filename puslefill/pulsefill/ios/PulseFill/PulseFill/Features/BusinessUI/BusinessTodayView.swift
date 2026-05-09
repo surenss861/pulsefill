@@ -63,13 +63,13 @@ struct BusinessTodayView: View {
     private func errorView(_ message: String) -> some View {
         VStack {
             Spacer()
-            OperatorErrorStateCard(
+            PFOperatorErrorMoment(
                 title: "Today could not load",
                 message: "We could not get your recovery tasks. Try again.",
                 technicalMessage: message,
-                retryButtonTitle: "Reload Today",
+                actionTitle: "Reload Today",
                 footerHint: "Openings and claims still work from the tabs below.",
-                onRetry: { await viewModel.load() }
+                onAction: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
             Spacer()
@@ -78,7 +78,7 @@ struct BusinessTodayView: View {
 
     private var contentScroll: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: PFOperatorShellMetrics.sectionSpacing) {
                 BusinessWorkspaceStrip()
                     .environmentObject(env)
 
@@ -111,8 +111,8 @@ struct BusinessTodayView: View {
                     quietDayCallout(metrics: daily.metrics)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
+            .padding(.horizontal, PFOperatorShellMetrics.horizontalPadding)
+            .padding(.top, 16)
             .pfOperatorTabBarContentInset()
         }
     }
@@ -255,12 +255,12 @@ struct BusinessTodayView: View {
                 }
 
                 if viewModel.recentOpenings.isEmpty {
-                    OperatorEmptyStateCard(
+                    PFOperatorEmptyMoment(
                         systemImage: "calendar.badge.plus",
                         title: "No openings yet",
                         message: "Add an empty appointment so PulseFill can offer it to waiting customers.",
-                        primaryButtonTitle: "Create opening",
-                        primaryAction: { selectedTab = .create }
+                        actionTitle: "Add opening",
+                        action: { selectedTab = .create }
                     )
                 } else {
                     VStack(spacing: 10) {

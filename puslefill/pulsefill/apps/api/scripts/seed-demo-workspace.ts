@@ -16,7 +16,7 @@
  *
  * Optional:
  *   DEMO_BUSINESS_ID — if set, seed into this existing business (must belong to staff
- *     user). Otherwise a new business is created (slug pf-demo-<timestamp>).
+ *     user). Otherwise a new business is created (slug luxe-wellness-studio-demo-<timestamp>).
  *
  * Safety:
  *   Refuses non-local Supabase unless PULSEFILL_ALLOW_CUSTOMER_FLOW_SEED=1 (same as
@@ -160,11 +160,11 @@ async function main() {
     console.error(`Using existing business ${businessId} (${businessSlug})`);
   } else {
     const stamp = Date.now();
-    businessSlug = `pf-demo-${stamp}`;
+    businessSlug = `luxe-wellness-studio-demo-${stamp}`;
     const { data: business, error: bizErr } = await admin
       .from("businesses")
       .insert({
-        name: `PulseFill Demo Workspace`,
+        name: "Luxe Wellness Studio",
         slug: businessSlug,
         timezone: "America/New_York",
         standby_access_mode: "private",
@@ -209,11 +209,11 @@ async function main() {
   if (p2 || !prov2) throw new Error(p2?.message ?? "prov2");
 
   const serviceNames = [
-    "Dental cleaning",
     "Lash refill",
-    "Physio follow-up",
-    "Hair colour touch-up",
     "Botox consultation",
+    "Massage therapy",
+    "Dental cleaning",
+    "Physio follow-up",
   ];
   const serviceIds: string[] = [];
   for (const name of serviceNames) {
@@ -225,7 +225,7 @@ async function main() {
     if (se || !svc) throw new Error(se?.message ?? "service");
     serviceIds.push(svc.id as string);
   }
-  const [svcDental, svcLash, svcPhysio, svcHair, svcBotox] = serviceIds;
+  const [svcLash, svcBotox, svcMassage, svcDental, svcPhysio] = serviceIds;
 
   const cReach = await createAuthCustomer(admin, "Reachable", { push: true });
   const cQuiet = await createAuthCustomer(admin, "QuietPush", { push: false });
@@ -285,7 +285,7 @@ async function main() {
     customer_id: cEmail.customerId,
     business_id: businessId,
     location_id: loc2.id as string,
-    service_id: svcHair,
+    service_id: svcMassage,
     provider_id: prov2.id as string,
     days_of_week: [1, 2, 3, 4, 5],
     active: true,
@@ -449,7 +449,7 @@ async function main() {
       business_id: businessId,
       location_id: loc2.id as string,
       provider_id: prov2.id as string,
-      service_id: svcHair,
+      service_id: svcMassage,
       provider_name_snapshot: "Daniel Kim",
       starts_at: startsClaim,
       ends_at: endsClaim,
@@ -559,6 +559,26 @@ async function main() {
     .single();
   if (sxErr || !slotExpired) throw new Error(sxErr?.message ?? "slotExpired");
 
+  const startsCancelled = hoursFromNowIso(144);
+  const endsCancelled = hoursFromNowIso(145);
+  const { data: slotCancelled, error: canErr } = await admin
+    .from("open_slots")
+    .insert({
+      business_id: businessId,
+      location_id: loc2.id as string,
+      provider_id: prov2.id as string,
+      service_id: svcMassage,
+      provider_name_snapshot: "Daniel Kim",
+      starts_at: startsCancelled,
+      ends_at: endsCancelled,
+      status: "cancelled",
+      notes: "Demo — cancelled by operator",
+      created_by: staffId,
+    })
+    .select("id")
+    .single();
+  if (canErr || !slotCancelled) throw new Error(canErr?.message ?? "slotCancelled");
+
   const followDue = hoursFromNowIso(48);
   const followDone = hoursAgoIso(24);
   const { data: noteOpen, error: n1e } = await admin
@@ -588,7 +608,7 @@ async function main() {
     {
       business_id: businessId,
       metric_date: today,
-      open_slots_count: 5,
+      open_slots_count: 6,
       offers_sent_count: 4,
       recovered_slots_count: 1,
       recovered_revenue_cents: 12_500,
@@ -656,6 +676,7 @@ async function main() {
           claimed_pending_confirm: slotClaimed.id,
           booked: slotBook.id,
           expired: slotExpired.id,
+          cancelled: slotCancelled.id,
         },
         claims: { pending_confirmation: pendingClaimId, booked: bookedClaimId },
         customer_notes: { open_follow_up: noteOpen.id },

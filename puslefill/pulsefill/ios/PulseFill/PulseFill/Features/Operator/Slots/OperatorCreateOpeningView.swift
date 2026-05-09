@@ -73,13 +73,13 @@ struct OperatorCreateOpeningView: View {
     private func errorBody(_ message: String) -> some View {
         VStack(spacing: 16) {
             Spacer()
-            OperatorErrorStateCard(
+            PFOperatorErrorMoment(
                 title: "Couldn’t load form",
                 message: "We need your services and locations before you can post an opening. Try again.",
                 technicalMessage: message,
-                retryButtonTitle: "Reload form",
+                actionTitle: "Reload form",
                 footerHint: "If this keeps failing, check your connection or try again later.",
-                onRetry: { await viewModel.loadReferenceData() }
+                onAction: { await viewModel.loadReferenceData() }
             )
             .padding(.horizontal, 20)
             Spacer()

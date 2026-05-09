@@ -37,7 +37,7 @@ struct OperatorEmptyStateCard: View {
                     Text(primaryButtonTitle)
                         .font(.system(size: 15, weight: .bold))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .frame(minHeight: PFOperatorShellMetrics.buttonMinHeight)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(PFColor.primary)
@@ -121,7 +121,7 @@ struct OperatorErrorStateCard: View {
                 Text(isRetrying ? "Loading…" : retryButtonTitle)
                     .font(.system(size: 16, weight: .semibold))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .frame(minHeight: PFOperatorShellMetrics.buttonMinHeight)
             }
             .buttonStyle(PFPrimaryButtonStyle())
             .disabled(isRetrying)
@@ -166,5 +166,53 @@ struct OperatorListLoadingPlaceholder: View {
             PFLoadingSkeleton(count: skeletonCount)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Shared moment wrappers
+
+/// Unified operator empty moment: one headline, one body, one obvious action.
+struct PFOperatorEmptyMoment: View {
+    let systemImage: String
+    let title: String
+    let message: String
+    var actionTitle: String?
+    var action: (() -> Void)?
+
+    var body: some View {
+        OperatorEmptyStateCard(
+            systemImage: systemImage,
+            title: title,
+            message: message,
+            primaryButtonTitle: actionTitle,
+            primaryAction: {
+                PFHaptics.selection()
+                action?()
+            }
+        )
+    }
+}
+
+/// Unified operator error moment: friendly copy first, technical details secondary.
+struct PFOperatorErrorMoment: View {
+    let title: String
+    let message: String
+    let technicalMessage: String?
+    var actionTitle: String = "Try again"
+    var footerHint: String?
+    let onAction: () async -> Void
+
+    var body: some View {
+        OperatorErrorStateCard(
+            title: title,
+            message: message,
+            technicalMessage: technicalMessage,
+            retryButtonTitle: actionTitle,
+            footerHint: footerHint,
+            onRetry: {
+                PFHaptics.selection()
+                await onAction()
+            }
+        )
     }
 }
