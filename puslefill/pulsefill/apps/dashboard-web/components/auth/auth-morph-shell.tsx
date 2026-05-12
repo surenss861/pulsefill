@@ -83,7 +83,11 @@ export function AuthMorphShell({ children }: AuthMorphShellProps) {
               initial={initial}
               animate={animate}
               exit={exit}
-              transition={{ duration, ease }}
+              transition={{
+                duration,
+                ease,
+                ...(!reduce ? { layout: { duration: 0.28, ease } } : {}),
+              }}
               layout={!reduce}
             >
               {children}

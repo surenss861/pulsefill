@@ -10,6 +10,7 @@ import { AuthWarmCard } from "@/components/auth/auth-warm-card";
 import { AuthWarmSplit } from "@/components/auth/auth-warm-split";
 import { AuthField } from "@/components/auth/auth-field";
 import { PasswordField } from "@/components/auth/password-field";
+import { AuthModeTransitionLink } from "@/components/auth/auth-mode-transition-link";
 
 export function LoginForm() {
   const router = useRouter();
@@ -58,7 +59,7 @@ export function LoginForm() {
         lede="Use the same Supabase credentials your API accepts as staff. Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY locally."
         footer={
           <p className="pf-auth-reassure" style={{ marginTop: 0 }}>
-            Prefer the operator experience? <Link href="/sign-in">Open staff sign in</Link>.
+            Prefer the operator experience? <AuthModeTransitionLink href="/sign-in">Open staff sign in</AuthModeTransitionLink>.
           </p>
         }
       >

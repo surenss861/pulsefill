@@ -679,6 +679,8 @@ main.pf-auth-shell .pf-auth-submit {
 
 .pf-auth-morph-panel {
   width: 100%;
+  /* Reduces subpixel flicker when card height changes between modes */
+  transform: translateZ(0);
 }
 
 @keyframes pf-auth-shell-enter {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AuthWarmCard } from "@/components/auth/auth-warm-card";
 import { AuthWarmSplit } from "@/components/auth/auth-warm-split";
+import { authMorphLinkProps } from "@/lib/auth-morph-nav";
 
 export default function NotFound() {
   return (
@@ -12,7 +13,9 @@ export default function NotFound() {
     >
       <AuthWarmCard eyebrow="404" title="Page not found" lede="The page you requested is not available.">
         <div className="pf-auth-footer" style={{ marginTop: 16, paddingTop: 0, borderTop: "none" }}>
-          <Link href="/sign-in">Sign in</Link>
+          <Link href="/sign-in" {...authMorphLinkProps("/sign-in")}>
+            Sign in
+          </Link>
           <Link href="/">Back to home</Link>
         </div>
       </AuthWarmCard>

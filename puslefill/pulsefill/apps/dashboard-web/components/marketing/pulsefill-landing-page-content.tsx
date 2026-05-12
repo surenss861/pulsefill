@@ -8,6 +8,7 @@ import { HowItWorksPipeline } from "@/components/landing/how-it-works-pipeline";
 import { LANDING_PIPELINE_STEPS } from "@/components/landing/landing-data";
 import { MarketingRecoveryCaseFile } from "./marketing-recovery-case-file";
 import { PayoffProductVisual } from "./marketing-payoff-case-files";
+import { authMorphLinkProps } from "@/lib/auth-morph-nav";
 
 const TOKENS = {
   text: "var(--pf-text-primary)",
@@ -40,6 +41,7 @@ function PrimaryButton({ children, href }: { children: ReactNode; href: string }
   return (
     <Link
       href={href}
+      {...authMorphLinkProps(href)}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -64,6 +66,7 @@ function SecondaryButton({ children, href }: { children: ReactNode; href: string
   return (
     <Link
       href={href}
+      {...authMorphLinkProps(href)}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -87,6 +90,7 @@ function TextLink({ children, href }: { children: ReactNode; href: string }) {
   return (
     <Link
       href={href}
+      {...authMorphLinkProps(href)}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -113,6 +117,7 @@ function MutedTextLink({ children, href, variant = "default" }: { children: Reac
   return (
     <Link
       href={href}
+      {...authMorphLinkProps(href)}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -1097,7 +1102,7 @@ export function PulseFillLandingPageContent() {
             </span>
           </div>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            <Link href="/sign-in" style={{ color: "var(--pf-btn-link-text)", textDecoration: "none", fontWeight: 600 }}>
+            <Link href="/sign-in" style={{ color: "var(--pf-btn-link-text)", textDecoration: "none", fontWeight: 600 }} {...authMorphLinkProps("/sign-in")}>
               Operator sign in
             </Link>
             <a href={demoHref} style={{ color: "var(--pf-btn-link-text)", textDecoration: "none", fontWeight: 600 }}>

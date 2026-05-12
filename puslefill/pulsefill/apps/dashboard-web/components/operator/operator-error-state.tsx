@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { operatorApiErrorUi } from "@/lib/operator-api-error-ui";
 import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
+import { AuthModeTransitionLink } from "@/components/auth/auth-mode-transition-link";
 
 type OperatorErrorStateProps = {
   title?: string;
@@ -36,9 +36,9 @@ export function OperatorErrorState({
   const showSignIn = Boolean(fromRaw?.showSignIn);
 
   const signIn = showSignIn ? (
-    <Link href="/sign-in" style={actionLinkStyle("primary")}>
+    <AuthModeTransitionLink href="/sign-in" style={actionLinkStyle("primary")}>
       Sign in
-    </Link>
+    </AuthModeTransitionLink>
   ) : null;
 
   const retry =

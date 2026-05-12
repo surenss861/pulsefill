@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
 import { resetPasswordAction, type AuthFormState } from "@/app/actions/auth";
 import { AuthWarmCard } from "@/components/auth/auth-warm-card";
 import { AUTH_RECOVERY_BENEFITS, AuthWarmSplit } from "@/components/auth/auth-warm-split";
 import { PasswordField } from "@/components/auth/password-field";
 import { SubmitButton } from "@/components/auth/submit-button";
+import { AuthModeTransitionLink } from "@/components/auth/auth-mode-transition-link";
 
 const initial: AuthFormState = {};
 
@@ -26,7 +26,7 @@ export default function ResetPasswordPage() {
         lede="Choose a new password for your account. This page only works from the link in your email."
         footer={
           <div className="pf-auth-footer" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
-            <Link href="/sign-in">Back to sign in</Link>
+            <AuthModeTransitionLink href="/sign-in">Back to sign in</AuthModeTransitionLink>
           </div>
         }
       >
