@@ -1716,3 +1716,70 @@ a:hover {
     font-size: 22px;
   }
 }
+
+/* Product payoff: operator stack + standby (case-file language, no chrome mocks) */
+.ms-rc-payoff-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(240px, 0.88fr);
+  gap: 18px;
+  width: 100%;
+  max-width: 820px;
+  margin-left: auto;
+  align-items: stretch;
+}
+
+@media (max-width: 800px) {
+  .ms-rc-payoff-layout {
+    grid-template-columns: 1fr;
+    max-width: none;
+    margin-left: 0;
+  }
+}
+
+.ms-rc-payoff-stack {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ms-rc-file.ms-rc-file--compact {
+  max-width: none;
+  margin-left: 0;
+}
+
+.ms-rc-file--compact .ms-rc-file-sheet {
+  padding: 16px 16px 18px 14px;
+}
+
+.ms-rc-file--compact .ms-rc-file-service {
+  font-size: clamp(17px, 2.1vw, 21px);
+}
+
+.ms-rc-file--compact .ms-rc-file-kicker,
+.ms-rc-file--compact .ms-rc-file-urgency {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.ms-rc-file-action--quiet {
+  padding-top: 14px;
+  margin-top: 16px;
+  border-top: 1px solid var(--pf-border-subtle);
+}
+
+.ms-rc-file-foot {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: var(--pf-text-muted);
+}
+
+.ms-rc-file-rail--idle {
+  background: linear-gradient(
+    180deg,
+    rgba(100, 94, 88, 0.75) 0%,
+    rgba(70, 68, 64, 0.55) 45%,
+    rgba(60, 90, 72, 0.35) 100%
+  );
+}

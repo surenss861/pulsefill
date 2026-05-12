@@ -7,6 +7,7 @@ import { HeroEntranceMotion } from "@/components/landing/hero-entrance-motion";
 import { HowItWorksPipeline } from "@/components/landing/how-it-works-pipeline";
 import { LANDING_PIPELINE_STEPS } from "@/components/landing/landing-data";
 import { MarketingRecoveryCaseFile } from "./marketing-recovery-case-file";
+import { PayoffProductVisual } from "./marketing-payoff-case-files";
 
 const TOKENS = {
   text: "var(--pf-text-primary)",
@@ -170,223 +171,6 @@ function HeroEyebrow({ children }: { children: ReactNode }) {
       >
         {children}
       </span>
-    </div>
-  );
-}
-
-function MetricTile({ label, value, accent = false, compact = false }: { label: string; value: string; accent?: boolean; compact?: boolean }) {
-  return (
-    <div
-      style={{
-        background: accent ? "rgba(255,255,255,0.06)" : TOKENS.quiet,
-        border: `1px solid ${accent ? TOKENS.emberBorder : TOKENS.borderSubtle}`,
-        borderRadius: compact ? 16 : 20,
-        padding: compact ? 14 : 18,
-      }}
-    >
-      <div
-        style={{
-          color: TOKENS.tertiary,
-          fontSize: 10,
-          fontWeight: 700,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          marginTop: 8,
-          color: TOKENS.text,
-          fontSize: compact ? 22 : 28,
-          lineHeight: 1,
-          fontWeight: 650,
-          letterSpacing: "-0.04em",
-        }}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function MockBrowserChrome({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <>
-      <div
-        style={{
-          height: 40,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 14px",
-          borderBottom: `1px solid ${TOKENS.borderSubtle}`,
-          background: "rgba(255,255,255,0.025)",
-        }}
-      >
-        <div style={{ display: "flex", gap: 7 }}>
-          <span style={{ width: 7, height: 7, borderRadius: 999, background: "rgba(255,255,255,0.22)" }} />
-          <span style={{ width: 7, height: 7, borderRadius: 999, background: "rgba(255,255,255,0.14)" }} />
-          <span style={{ width: 7, height: 7, borderRadius: 999, background: "rgba(255,255,255,0.08)" }} />
-        </div>
-        <div style={{ color: TOKENS.tertiary, fontSize: 11, fontWeight: 600 }}>{title}</div>
-        <div style={{ width: 40 }} />
-      </div>
-      <div style={{ padding: 14 }}>{children}</div>
-    </>
-  );
-}
-
-/** Product payoff: full browser + richer chrome */
-function OperatorPayoffMock() {
-  return (
-    <div
-      style={{
-        borderRadius: 26,
-        border: `1px solid rgba(255,122,24,0.35)`,
-        background: "rgba(5,5,5,0.97)",
-        overflow: "hidden",
-        boxShadow: "0 40px 100px rgba(0,0,0,0.6), 0 0 140px rgba(255,122,24,0.2)",
-      }}
-    >
-      <MockBrowserChrome title="PulseFill — Operator">
-        <div
-          style={{
-            background: "var(--pf-card-hero-bg)",
-            border: `1px solid ${TOKENS.emberBorder}`,
-            borderRadius: 18,
-            padding: 16,
-            marginBottom: 14,
-            boxShadow: "0 0 0 1px rgba(255,122,24,0.1), 0 20px 52px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
-          }}
-        >
-          <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-            Today&apos;s recovery
-          </div>
-          <div style={{ display: "grid", gap: 12, marginTop: 12, gridTemplateColumns: "repeat(4, minmax(0,1fr))" }}>
-            <MetricTile label="Recovered" value="12" accent />
-            <MetricTile label="Revenue" value="$1.8K" accent />
-            <MetricTile label="Awaiting" value="4" />
-            <MetricTile label="Failed" value="3" />
-          </div>
-        </div>
-        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
-          <div style={{ borderRadius: 16, border: `1px solid rgba(255,122,24,0.25)`, background: "rgba(255,255,255,0.04)", padding: 14 }}>
-            <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 650 }}>What to work first</div>
-            <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-              {[
-                ["Work first", "6"],
-                ["Manual follow-up", "4"],
-                ["Improve coverage", "3"],
-              ].map(([label, count]) => (
-                <div
-                  key={label}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "10px 12px",
-                    borderRadius: 14,
-                    background: "rgba(0,0,0,0.22)",
-                    border: `1px solid rgba(255,255,255,0.06)`,
-                    fontSize: 13,
-                    color: TOKENS.text,
-                  }}
-                >
-                  <span>{label}</span>
-                  <span style={{ color: "rgba(253,186,116,0.95)", fontWeight: 700 }}>{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ borderRadius: 16, border: `1px solid rgba(255,255,255,0.06)`, background: "rgba(255,255,255,0.02)", padding: 14, opacity: 0.84 }}>
-            <div style={{ color: TOKENS.muted, fontSize: 13, fontWeight: 620 }}>Needs attention now</div>
-            <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-              {[
-                ["Botox Consult", "Awaiting confirmation"],
-                ["Hygiene Visit", "Delivery failed"],
-              ].map(([t, reason]) => (
-                <div key={t} style={{ borderRadius: 14, padding: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${TOKENS.borderSubtle}` }}>
-                  <div style={{ color: TOKENS.text, fontSize: 13, fontWeight: 620 }}>{t}</div>
-                  <div style={{ marginTop: 6, color: TOKENS.muted, fontSize: 12 }}>{reason}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </MockBrowserChrome>
-    </div>
-  );
-}
-
-function CustomerPayoffPhone() {
-  return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: 280,
-        borderRadius: 36,
-        border: `1px solid ${TOKENS.border}`,
-        background: "rgba(5,5,5,0.98)",
-        padding: 10,
-        boxShadow: "0 32px 88px rgba(0,0,0,0.58), 0 0 72px rgba(255,122,24,0.14)",
-      }}
-    >
-      <div
-        style={{
-          borderRadius: 28,
-          overflow: "hidden",
-          border: `1px solid ${TOKENS.borderSubtle}`,
-          minHeight: 440,
-          background: "linear-gradient(180deg, rgba(28,23,18,0.96), rgba(12,11,9,0.98))",
-          padding: 18,
-        }}
-      >
-        <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Standby</div>
-        <div style={{ marginTop: 8, color: TOKENS.text, fontSize: 22, fontWeight: 650, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
-          Matched openings, fast.
-        </div>
-        <p style={{ marginTop: 10, color: TOKENS.muted, fontSize: 13, lineHeight: 1.65 }}>
-          Preferences, offers, and status — so customers can act in minutes.
-        </p>
-        <div style={{ marginTop: 20, display: "grid", gap: 10 }}>
-          <div
-            style={{
-              borderRadius: 18,
-              padding: 14,
-              background: "var(--pf-card-hero-bg)",
-              border: `1px solid rgba(255,122,24,0.32)`,
-            }}
-          >
-            <div style={{ color: TOKENS.text, fontSize: 14, fontWeight: 620 }}>Offer available</div>
-            <div style={{ marginTop: 6, color: TOKENS.muted, fontSize: 12 }}>Today · 2:30 PM</div>
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <div
-                style={{
-                  flex: 1,
-                  borderRadius: 12,
-                  padding: "10px",
-                  background: TOKENS.ember,
-                  color: "var(--pf-btn-primary-text)",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  textAlign: "center",
-                }}
-              >
-                Claim
-              </div>
-              <div style={{ flex: 1, borderRadius: 12, padding: "10px", border: `1px solid ${TOKENS.borderSubtle}`, fontSize: 12, fontWeight: 600, textAlign: "center" }}>
-                Detail
-              </div>
-            </div>
-          </div>
-          {["Preferences set", "Standby active"].map((item) => (
-            <div key={item} style={{ borderRadius: 14, padding: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${TOKENS.borderSubtle}`, fontSize: 12, color: TOKENS.text }}>
-              {item}
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
@@ -858,7 +642,7 @@ export function PulseFillLandingPageContent() {
             position: "absolute",
             inset: "2% -18% 0",
             background:
-              "radial-gradient(ellipse 66% 54% at 54% 36%, rgba(255,122,24,0.17), transparent 58%), radial-gradient(ellipse 36% 30% at 92% 88%, rgba(201,59,47,0.1), transparent 52%)",
+              "radial-gradient(ellipse 66% 54% at 54% 36%, rgba(255,122,24,0.07), transparent 58%), radial-gradient(ellipse 36% 30% at 92% 88%, rgba(201,59,47,0.06), transparent 52%)",
             pointerEvents: "none",
           }}
         />
@@ -923,59 +707,14 @@ export function PulseFillLandingPageContent() {
 
             <div
               style={{
-                position: "relative",
                 flex: "1.2 1 300px",
                 minWidth: 0,
-                minHeight: 520,
                 width: "100%",
                 maxWidth: 820,
-                filter: "drop-shadow(0 48px 96px rgba(0,0,0,0.5))",
+                marginLeft: "auto",
               }}
             >
-              <div
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  inset: "-14% -8% 0 0",
-                  background: "radial-gradient(circle at 50% 30%, rgba(255,122,24,0.32), transparent 60%)",
-                  filter: "blur(34px)",
-                  pointerEvents: "none",
-                }}
-              />
-              <div style={{ position: "relative", transform: "scale(1.38)", transformOrigin: "top left" }}>
-                <OperatorPayoffMock />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  right: "clamp(-4px, 0.5vw, 12px)",
-                  bottom: "clamp(-20px, -1vw, 0px)",
-                  zIndex: 4,
-                  transform: "translateX(-28px) scale(0.92)",
-                  filter: "drop-shadow(0 32px 52px rgba(0,0,0,0.65))",
-                }}
-              >
-                <CustomerPayoffPhone />
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  top: "8%",
-                  right: "0%",
-                  zIndex: 5,
-                  padding: "10px 12px",
-                  borderRadius: 11,
-                  border: "1px solid rgba(255,122,24,0.38)",
-                  background: "rgba(8,7,6,0.96)",
-                  backdropFilter: "blur(12px)",
-                  boxShadow: "0 16px 40px rgba(0,0,0,0.55), 0 0 24px rgba(255,122,24,0.12)",
-                }}
-              >
-                <div style={{ fontSize: 8, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" }}>
-                  Recovered revenue
-                </div>
-                <div style={{ marginTop: 3, color: TOKENS.text, fontSize: 15, fontWeight: 650, letterSpacing: "-0.03em" }}>$1.8K</div>
-              </div>
+              <PayoffProductVisual />
             </div>
           </div>
         </Container>
