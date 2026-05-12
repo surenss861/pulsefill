@@ -107,14 +107,14 @@ img {
     gap: 40px;
   }
 
-  .ms-hero-console {
+  .ms-rc-case {
     max-width: none;
     width: 100%;
   }
 }
 
 @media (min-width: 1181px) {
-  .ms-hero-console {
+  .ms-rc-case {
     max-width: 720px;
   }
 }
@@ -227,35 +227,6 @@ h2 {
   transform: translateY(-18px);
 }
 
-.metrics article,
-.workflow {
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: #141210;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.03);
-}
-
-.metrics article {
-  border-radius: 18px;
-  padding: 20px;
-}
-
-.metrics p {
-  margin: 0;
-  color: var(--subtle);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.metrics strong {
-  display: block;
-  margin-top: 10px;
-  color: var(--text);
-  font-size: 34px;
-  line-height: 1;
-}
-
 .workflow {
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
@@ -263,6 +234,9 @@ h2 {
   margin-bottom: 54px;
   border-radius: 24px;
   padding: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #141210;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .workflow ol {
@@ -317,36 +291,16 @@ h2 {
     padding-top: 48px;
   }
 
-  .ms-hero-console {
+  .ms-rc-case {
     min-height: 0;
   }
 
-  .ms-hero-console-body {
-    grid-template-columns: 1fr;
-    padding: 22px 18px 22px;
+  .ms-rc-case-main {
+    padding: 20px 18px 22px 16px;
   }
 
-  .ms-hero-console-prompt {
-    font-size: 15px;
-  }
-
-  .ms-hero-console-divider--v {
-    display: none;
-  }
-
-  .ms-hero-console-col {
-    padding: 0 0 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .ms-hero-console-col:last-of-type {
-    border-bottom: none;
-    padding-bottom: 0;
-    padding-right: 0;
-  }
-
-  .ms-hero-console-col:first-child {
-    padding-left: 0;
+  .ms-rc-case-service {
+    font-size: 22px;
   }
 
   .ms-operator-grid {
@@ -412,198 +366,257 @@ h2 {
   overflow-x: clip;
 }
 
-/* --- Hero operator console (restrained, believable product surface) --- */
-.ms-hero-console {
+/* --- Recovery card system (case file, steps, outcomes) --- */
+.ms-rc-case {
   width: 100%;
   max-width: 640px;
   margin-left: auto;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 122, 24, 0.08);
-  background: #141210;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(165deg, #1c1916 0%, #12100e 48%, #10100d 100%);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   overflow: hidden;
 }
 
-.ms-hero-console-top {
+.ms-rc-case-inner {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 40px;
-  padding: 0 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: #11100e;
-}
-
-.ms-hero-console-dots {
-  display: flex;
-  gap: 6px;
-}
-
-.ms-hero-console-dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.ms-hero-console-app-name {
-  margin: 0 0 0 auto;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.02em;
-  color: rgba(247, 243, 237, 0.45);
-}
-
-.ms-hero-console-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) 1px minmax(0, 1.05fr);
-  gap: 0;
-  padding: 22px 20px 24px;
   align-items: stretch;
+  min-height: 0;
 }
 
-.ms-hero-console-col {
-  padding: 0 14px;
+.ms-rc-case-rail {
+  width: 5px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(80, 72, 64, 0.9) 0%,
+    rgba(120, 90, 64, 0.55) 42%,
+    rgba(255, 122, 24, 0.35) 72%,
+    rgba(90, 209, 138, 0.45) 100%
+  );
+}
+
+.ms-rc-case-main {
+  flex: 1;
   min-width: 0;
+  padding: 24px 22px 26px 20px;
 }
 
-.ms-hero-console-col:first-child {
-  padding-left: 4px;
-}
-
-.ms-hero-console-col:last-of-type {
-  padding-right: 4px;
-}
-
-.ms-hero-console-divider--v {
-  width: 1px;
-  align-self: stretch;
-  min-height: 120px;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.ms-hero-console-col-title {
-  margin: 0 0 14px;
+.ms-rc-case-overline {
+  margin: 0;
   font-size: 10px;
   font-weight: 750;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(247, 243, 237, 0.38);
+  color: rgba(183, 175, 165, 0.85);
 }
 
-.ms-hero-console-muted {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(183, 175, 165, 0.75);
-}
-
-.ms-hero-console-strong {
-  margin: 6px 0 0;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.35;
-  letter-spacing: -0.02em;
-  color: rgba(247, 243, 237, 0.94);
-}
-
-.ms-hero-console-meta {
-  margin: 4px 0 0;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(183, 175, 165, 0.9);
-}
-
-.ms-hero-console-value-label {
-  margin: 16px 0 0;
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(127, 121, 114, 0.95);
-}
-
-.ms-hero-console-value {
-  margin: 4px 0 0;
-  font-size: 18px;
+.ms-rc-case-service {
+  margin: 10px 0 0;
+  font-size: clamp(22px, 2.8vw, 28px);
   font-weight: 750;
-  letter-spacing: -0.02em;
-  color: rgba(247, 243, 237, 0.88);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: rgba(247, 243, 237, 0.96);
 }
 
-.ms-hero-console-line {
-  margin: 0 0 10px;
-  font-size: 13px;
-  line-height: 1.45;
-  font-weight: 500;
+.ms-rc-case-when {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 550;
   color: rgba(215, 208, 198, 0.92);
 }
 
-.ms-hero-console-num {
-  font-weight: 750;
+.ms-rc-case-where {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(127, 121, 114, 0.95);
+}
+
+.ms-rc-case-status {
+  margin-top: 18px;
+  padding: 14px 14px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.ms-rc-case-status p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: rgba(215, 208, 198, 0.93);
+}
+
+.ms-rc-case-status p:last-child {
+  margin-bottom: 0;
+}
+
+.ms-rc-case-stat {
+  font-weight: 700;
   color: rgba(247, 243, 237, 0.95);
   margin-right: 4px;
 }
 
-.ms-hero-console-claim {
-  margin-top: 16px;
-  padding: 12px 12px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.ms-hero-console-claim .ms-hero-console-strong {
-  margin-top: 4px;
-  font-size: 14px;
+.ms-rc-case-claim {
   font-weight: 650;
-  color: rgba(247, 243, 237, 0.9);
+  color: rgba(254, 215, 170, 0.92) !important;
 }
 
-.ms-hero-console-prompt {
-  margin: 0 0 16px;
-  font-size: 14px;
-  line-height: 1.55;
-  font-weight: 500;
-  color: rgba(215, 208, 198, 0.94);
-}
-
-.ms-hero-console-money {
-  font-weight: 700;
-  color: rgba(127, 224, 173, 0.95);
-}
-
-.ms-hero-console-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.ms-rc-case-cta {
+  margin-top: 18px;
   width: 100%;
-  min-height: 42px;
-  padding: 0 16px;
+  min-height: 44px;
   border: none;
   border-radius: 10px;
   cursor: default;
   font-family: inherit;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 750;
   color: #160a02;
   background: var(--ember);
-  box-shadow: none;
 }
 
-.ms-hero-console-foot {
-  margin: 12px 0 0;
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(127, 224, 173, 0.72);
+.ms-rc-case-recover {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(183, 175, 165, 0.88);
 }
 
-.ms-hero-pipeline {
-  padding: 16px 14px 14px;
-  border-radius: 18px;
+.ms-rc-case-money {
+  font-weight: 750;
+  color: rgba(127, 224, 173, 0.98);
+}
+
+.ms-rc-workflow {
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.ms-rc-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 18px 18px 18px 16px;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   background: #161513;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 36px rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.ms-rc-step--active {
+  border-color: rgba(255, 122, 24, 0.22);
+  background: linear-gradient(165deg, rgba(28, 22, 18, 0.98), rgba(14, 12, 10, 0.99));
+  box-shadow: inset 3px 0 0 rgba(255, 122, 24, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ms-rc-step-badge {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(247, 243, 237, 0.88);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ms-rc-step--active .ms-rc-step-badge {
+  background: rgba(255, 122, 24, 0.14);
+  border-color: rgba(255, 122, 24, 0.35);
+  color: #fec89a;
+}
+
+.ms-rc-step-body {
+  min-width: 0;
+}
+
+.ms-rc-step-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: rgba(247, 243, 237, 0.95);
+}
+
+.ms-rc-step-text {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 500;
+  color: rgba(183, 175, 165, 0.95);
+}
+
+.ms-rc-outcomes {
+  align-items: stretch;
+}
+
+.ms-rc-outcome {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 22px 20px 20px;
+  background: #151311;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.ms-rc-outcome-value {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: rgba(127, 224, 173, 0.95);
+}
+
+.ms-rc-outcome-label {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: rgba(215, 208, 198, 0.9);
+}
+
+.ms-rc-outcome-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(127, 121, 114, 0.9);
+}
+
+.ms-rc-outcome-value--muted {
+  color: rgba(247, 243, 237, 0.92);
+}
+
+.ms-rc-panel {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 22px 20px;
+  background: #151311;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.ms-rc-pilot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 32px 28px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: #141210;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ms-rc-pilot h2 {
+  max-width: 520px;
 }
 
 .ms-section {
@@ -638,15 +651,6 @@ h2 {
   scroll-margin-top: 24px;
 }
 
-.ms-section--path .ms-recovery-block {
-  margin-top: 6px;
-  padding: 20px 18px 18px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: #161513;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
 .ms-section--operator {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -654,30 +658,7 @@ h2 {
 .ms-operator-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.ms-operator-card {
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  padding: 22px 20px;
-  background: #141210;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 32px rgba(0, 0, 0, 0.26);
-}
-
-.ms-operator-card h3 {
-  margin: 0 0 10px;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.ms-operator-card p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--muted);
-  font-weight: 600;
+  gap: 12px;
 }
 
 .ms-section--standby {
@@ -691,14 +672,6 @@ h2 {
   align-items: start;
 }
 
-.ms-standby-panel {
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  padding: 22px 20px;
-  background: #141210;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-}
-
 .ms-standby-list {
   margin: 0;
   padding-left: 18px;
@@ -710,23 +683,6 @@ h2 {
 
 .ms-section--pilot {
   padding-bottom: 72px;
-}
-
-.ms-pilot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 32px 28px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 122, 24, 0.12);
-  background: linear-gradient(165deg, rgba(22, 19, 17, 0.98), rgba(10, 9, 8, 0.99));
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.ms-pilot h2 {
-  max-width: 520px;
 }
 
 .ms-pilot-actions {
@@ -752,62 +708,3 @@ h2 {
   color: var(--muted);
   font-weight: 600;
 }
-
-/* Recovery pipeline layout (matches dashboard track) */
-.pf-rp-track {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 2px;
-}
-
-.pf-rp-conn--desktop {
-  display: none;
-}
-
-.pf-rp-conn--mobile {
-  display: block;
-}
-
-@media (min-width: 720px) {
-  .pf-rp-track {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0;
-  }
-
-  .pf-rp-conn--desktop {
-    display: block;
-  }
-
-  .pf-rp-conn--mobile {
-    display: none;
-  }
-}
-
-@keyframes pf-rp-ember-sweep {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .pf-rp-conn.pf-rp-conn--hot.pf-rp-conn--animate {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 122, 24, 0.08),
-      rgba(255, 186, 120, 0.65),
-      rgba(255, 122, 24, 0.12),
-      rgba(255, 122, 24, 0.45)
-    ) !important;
-    background-size: 220% 100% !important;
-    animation: pf-rp-ember-sweep 2.6s linear infinite;
-    box-shadow: 0 0 8px rgba(255, 122, 24, 0.1);
-  }
-}
-

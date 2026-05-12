@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { HeroOperatorConsole } from "../components/hero-operator-console";
-import { MarketingRecoveryBlock } from "../components/marketing-recovery-block";
+import { OutcomeCard } from "../components/outcome-card";
+import { RecoveryCaseCard } from "../components/recovery-case-card";
+import { RecoveryStepCard } from "../components/recovery-step-card";
+import { RecoveryWorkflowSteps } from "../components/recovery-workflow-steps";
 
 const outcomes = [
-  { label: "Bookings recovered (pilot)", value: "127" },
-  { label: "Median time to first claim", value: "6m" },
-  { label: "Revenue retained", value: "$18.6k" },
+  { value: "127", label: "Bookings recovered (pilot)", hint: "Across first practices", valueTone: "success" as const },
+  { value: "6m", label: "Median time to first claim", hint: "From offer to claim", valueTone: "default" as const },
+  { value: "$18.6k", label: "Revenue retained", hint: "Attributed recoveries", valueTone: "success" as const },
 ];
 
 const operatorTiles = [
@@ -64,7 +66,7 @@ export default function HomePage() {
           </div>
 
           <div className="hero-visual-column">
-            <HeroOperatorConsole />
+            <RecoveryCaseCard />
           </div>
         </div>
       </section>
@@ -81,16 +83,19 @@ export default function HomePage() {
               claimed, and leaves the front desk with a single confirmation step before revenue walks out the door.
             </p>
           </div>
-          <MarketingRecoveryBlock activeStep="offers" compact={false} />
+          <RecoveryWorkflowSteps />
         </div>
       </section>
 
-      <section className="metrics" aria-label="Operational outcomes">
+      <section className="metrics ms-rc-outcomes" aria-label="Operational outcomes">
         {outcomes.map((item) => (
-          <article key={item.label}>
-            <p>{item.label}</p>
-            <strong>{item.value}</strong>
-          </article>
+          <OutcomeCard
+            key={item.label}
+            value={item.value}
+            label={item.label}
+            hint={item.hint}
+            valueTone={item.valueTone}
+          />
         ))}
       </section>
 
@@ -105,11 +110,8 @@ export default function HomePage() {
             </p>
           </div>
           <div className="ms-operator-grid">
-            {operatorTiles.map((t) => (
-              <article key={t.title} className="ms-operator-card">
-                <h3>{t.title}</h3>
-                <p>{t.body}</p>
-              </article>
+            {operatorTiles.map((t, i) => (
+              <RecoveryStepCard key={t.title} step={String(i + 1)} title={t.title} body={t.body} />
             ))}
           </div>
         </div>
@@ -125,7 +127,7 @@ export default function HomePage() {
               gets the chair.
             </p>
           </div>
-          <div className="ms-standby-panel">
+          <div className="ms-rc-panel">
             <p className="pf-kicker" style={{ margin: "0 0 10px" }}>
               Patient experience
             </p>
@@ -139,7 +141,7 @@ export default function HomePage() {
       </section>
 
       <section className="ms-section ms-section--pilot" aria-labelledby="pilot-heading">
-        <div className="ms-section-inner ms-pilot">
+        <div className="ms-section-inner ms-rc-pilot">
           <div>
             <h2 id="pilot-heading">Try it on your heaviest cancellation days.</h2>
             <p className="ms-lede" style={{ marginBottom: 0 }}>
