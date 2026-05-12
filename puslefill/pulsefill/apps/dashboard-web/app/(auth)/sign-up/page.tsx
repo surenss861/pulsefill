@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { signUpAction, type AuthFormState } from "@/app/actions/auth";
-import { AuthShell } from "@/components/auth/auth-shell";
-import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
-import { AuthCard } from "@/components/auth/auth-card";
+import { AuthWarmCard } from "@/components/auth/auth-warm-card";
+import { AUTH_RECOVERY_BENEFITS, AuthWarmSplit } from "@/components/auth/auth-warm-split";
 import { AuthField } from "@/components/auth/auth-field";
 import { PasswordField } from "@/components/auth/password-field";
 import { SubmitButton } from "@/components/auth/submit-button";
@@ -16,68 +15,45 @@ export default function SignUpPage() {
   const [state, formAction] = useActionState(signUpAction, initial);
 
   return (
-    <AuthShell
-      variant="split"
-      brandPanel={
-        <AuthBrandPanel
-          eyebrow="Secure workspace setup"
-          title="Create your recovery workspace."
-          body="Set up PulseFill for queue visibility, team access, and recovered bookings."
-          bullets={["Team access", "Recovery workflow", "Revenue visibility"]}
-          recoveryActiveStep="opening"
-          showRecoveryPipeline
-        />
-      }
+    <AuthWarmSplit
+      headline="Create your workspace for recovery."
+      subhead="Set up staff access so your team can turn cancellations into confirmed bookings — with offers, claims, and one calm queue."
+      benefits={AUTH_RECOVERY_BENEFITS}
+      showCasePreview
     >
-      <AuthCard
-        title="Create workspace"
-        description="Set up your operator account and connect your recovery workflow."
+      <AuthWarmCard
+        eyebrow="New workspace"
+        title="Create account"
+        lede="Add your details to start using PulseFill for your business."
         footer={
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <span style={{ fontSize: 13, color: "rgba(169,162,154,0.82)" }}>
-              Already have an account?{" "}
-              <Link href="/sign-in" style={{ color: "rgba(253, 186, 116, 0.78)", fontWeight: 600 }}>
-                Sign in
-              </Link>
-            </span>
-            <span style={{ fontSize: 10, lineHeight: 1.45, color: "rgba(111,104,97,0.95)" }}>
+          <>
+            <div className="pf-auth-footer">
+              <span style={{ color: "var(--pf-text-muted)", fontWeight: 500, fontSize: 13 }}>
+                Already have an account? <Link href="/sign-in">Sign in</Link>
+              </span>
+            </div>
+            <p className="pf-auth-reassure" style={{ marginTop: 4 }}>
               By continuing, you agree to PulseFill&apos;s Terms and Privacy Policy.
-            </span>
-          </div>
+            </p>
+          </>
         }
       >
-        <form action={formAction} style={{ display: "grid", gap: 20 }}>
+        <form action={formAction} style={{ display: "grid", gap: 0 }}>
           <AuthField label="Full name" name="name" type="text" placeholder="Your full name" autoComplete="name" required />
-          <AuthField label="Work email" name="email" type="email" placeholder="name@clinic.com" autoComplete="email" required />
-          <PasswordField
-            label="Password"
-            name="password"
-            placeholder="Create a password"
-            autoComplete="new-password"
-          />
+          <AuthField label="Email" name="email" type="email" placeholder="you@clinic.com" autoComplete="email" required />
+          <PasswordField label="Password" name="password" placeholder="Create a password" autoComplete="new-password" />
           <PasswordField
             label="Confirm password"
             name="confirmPassword"
             placeholder="Confirm your password"
             autoComplete="new-password"
           />
-          {state.error ? (
-            <div
-              style={{
-                borderRadius: 16,
-                border: "1px solid rgba(248, 113, 113, 0.28)",
-                background: "rgba(248, 113, 113, 0.08)",
-                padding: "12px 14px",
-                fontSize: 14,
-                color: "#fecaca",
-              }}
-            >
-              {state.error}
-            </div>
-          ) : null}
-          <SubmitButton pendingText="Creating workspace…">Create workspace</SubmitButton>
+          {state.error ? <div className="pf-auth-error-banner">{state.error}</div> : null}
+          <div style={{ marginTop: 8 }}>
+            <SubmitButton pendingText="Creating workspace…">Create workspace</SubmitButton>
+          </div>
         </form>
-      </AuthCard>
-    </AuthShell>
+      </AuthWarmCard>
+    </AuthWarmSplit>
   );
 }

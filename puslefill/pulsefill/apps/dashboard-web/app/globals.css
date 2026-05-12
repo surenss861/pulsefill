@@ -529,6 +529,97 @@ main.pf-auth-shell {
   color: var(--pf-text-muted);
 }
 
+.pf-auth-inset-note {
+  margin-top: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--pf-brand-border-warm);
+  background: var(--pf-surface-tint-03);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--pf-text-secondary);
+}
+
+.pf-auth-error-banner {
+  margin-top: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--pf-danger-border);
+  background: var(--pf-danger-soft);
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #fecaca;
+}
+
+.pf-auth-outline-button {
+  display: inline-flex;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
+  margin-top: 14px;
+  padding: 11px 16px;
+  border-radius: 9px;
+  border: 1px solid var(--pf-brand-border-warm-mid);
+  background: var(--pf-surface-tint-03);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pf-text-primary);
+  text-decoration: none;
+  text-align: center;
+}
+
+.pf-auth-outline-button:hover {
+  background: var(--pf-surface-tint-05);
+  text-decoration: none;
+}
+
+.pf-auth-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 11px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--pf-auth-input-border);
+  background: var(--pf-auth-input-bg);
+  color: var(--pf-text-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  resize: vertical;
+  min-height: 96px;
+}
+
+.pf-auth-textarea:focus {
+  outline: none;
+  border-color: var(--pf-auth-input-border-focus);
+  box-shadow:
+    0 0 0 3px rgba(255, 122, 24, 0.16),
+    inset 0 1px 0 rgba(255, 226, 190, 0.06);
+}
+
+.pf-auth-ghost-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--pf-brand-border-warm);
+  background: var(--pf-surface-tint-03);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pf-text-primary);
+  cursor: pointer;
+}
+
+.pf-auth-ghost-button:hover {
+  background: var(--pf-surface-tint-05);
+}
+
 .pf-auth-recovery-preview.ms-rc-file {
   background: var(--pf-auth-card-bg);
   border-color: var(--pf-brand-border-warm);

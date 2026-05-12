@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { AuthShell } from "@/components/auth/auth-shell";
 import { SignInClient } from "@/components/auth/sign-in-client";
 
 export const metadata: Metadata = {
@@ -12,11 +11,9 @@ export default function SignInPage() {
   return (
     <Suspense
       fallback={
-        <AuthShell variant="center">
-          <p className="pf-muted-copy" style={{ textAlign: "center", margin: 0 }}>
-            Loading…
-          </p>
-        </AuthShell>
+        <main className="pf-auth-shell" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <p style={{ margin: 0, fontSize: 14, color: "var(--pf-text-muted)" }}>Loading…</p>
+        </main>
       }
     >
       <SignInClient />

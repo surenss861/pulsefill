@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type ChangeEventHandler } from "react";
 
 export type PasswordFieldProps = {
   label: string;
@@ -8,6 +8,9 @@ export type PasswordFieldProps = {
   placeholder?: string;
   error?: string;
   autoComplete?: string;
+  value?: string;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+  required?: boolean;
 };
 
 export function PasswordField({
@@ -16,6 +19,9 @@ export function PasswordField({
   placeholder,
   error,
   autoComplete = "current-password",
+  value,
+  onChange,
+  required,
 }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
   const rawId = useId();
@@ -37,6 +43,9 @@ export function PasswordField({
           placeholder={placeholder}
           autoComplete={autoComplete}
           className={cls}
+          {...(value !== undefined ? { value } : {})}
+          {...(onChange ? { onChange } : {})}
+          {...(required ? { required: true } : {})}
           style={error ? { borderColor: "var(--pf-danger-border)" } : undefined}
         />
         <button

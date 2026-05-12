@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { forgotPasswordAction, type AuthFormState } from "@/app/actions/auth";
-import { AuthShell } from "@/components/auth/auth-shell";
-import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
-import { AuthCard } from "@/components/auth/auth-card";
+import { AuthWarmCard } from "@/components/auth/auth-warm-card";
+import { AUTH_RECOVERY_BENEFITS, AuthWarmSplit } from "@/components/auth/auth-warm-split";
 import { AuthField } from "@/components/auth/auth-field";
 import { SubmitButton } from "@/components/auth/submit-button";
 
@@ -15,48 +14,30 @@ export default function ForgotPasswordPage() {
   const [state, formAction] = useActionState(forgotPasswordAction, initial);
 
   return (
-    <AuthShell
-      variant="split"
-      brandPanel={
-        <AuthBrandPanel
-          eyebrow="Operator access"
-          title="Recover your password."
-          body="We will email a secure reset link. Same recovery infrastructure — identity stays locked down."
-          bullets={[]}
-          recoveryActiveStep="opening"
-          showRecoveryPipeline
-        />
-      }
+    <AuthWarmSplit
+      headline="Get back into your workspace."
+      subhead="We'll email a secure reset link. Nothing changes until you confirm from your inbox."
+      benefits={AUTH_RECOVERY_BENEFITS}
+      showCasePreview
     >
-      <AuthCard
+      <AuthWarmCard
+        eyebrow="Account help"
         title="Forgot password"
-        description="Enter your email and we’ll send a secure reset link."
-        showMobileWordmark
+        lede={"Enter the email you use for PulseFill and we'll send a reset link."}
         footer={
-          <div style={{ fontSize: 14, color: "var(--muted)" }}>
+          <div className="pf-auth-footer" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
             <Link href="/sign-in">Back to sign in</Link>
           </div>
         }
       >
-        <form action={formAction} style={{ display: "grid", gap: 20 }}>
-          <AuthField label="Work email" name="email" type="email" placeholder="name@clinic.com" autoComplete="email" required />
-          {state.error ? (
-            <div
-              style={{
-                borderRadius: 16,
-                border: "1px solid rgba(248, 113, 113, 0.28)",
-                background: "rgba(248, 113, 113, 0.08)",
-                padding: "12px 14px",
-                fontSize: 14,
-                color: "#fecaca",
-              }}
-            >
-              {state.error}
-            </div>
-          ) : null}
-          <SubmitButton pendingText="Sending link…">Send reset link</SubmitButton>
+        <form action={formAction} style={{ display: "grid", gap: 0 }}>
+          <AuthField label="Email" name="email" type="email" placeholder="you@clinic.com" autoComplete="email" required />
+          {state.error ? <div className="pf-auth-error-banner">{state.error}</div> : null}
+          <div style={{ marginTop: 8 }}>
+            <SubmitButton pendingText="Sending link…">Send reset link</SubmitButton>
+          </div>
         </form>
-      </AuthCard>
-    </AuthShell>
+      </AuthWarmCard>
+    </AuthWarmSplit>
   );
 }

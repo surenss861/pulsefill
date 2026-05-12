@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { AuthShell } from "@/components/auth/auth-shell";
-import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
-import { AuthCard } from "@/components/auth/auth-card";
+import { AuthWarmCard } from "@/components/auth/auth-warm-card";
+import { AUTH_RECOVERY_BENEFITS, AuthWarmSplit } from "@/components/auth/auth-warm-split";
 import { CheckEmailResend } from "@/components/auth/check-email-resend";
 
 export default async function CheckEmailPage({
@@ -15,63 +14,30 @@ export default async function CheckEmailPage({
   const displayEmail = email || "your inbox";
 
   return (
-    <AuthShell
-      variant="split"
-      brandPanel={
-        <AuthBrandPanel
-          eyebrow="Verify identity"
-          title="Check your inbox."
-          body="PulseFill keeps operator workspaces gated. Email verification is the handshake before your team enters the OS."
-          bullets={[]}
-          recoveryActiveStep="matched"
-          showRecoveryPipeline
-        />
-      }
+    <AuthWarmSplit
+      headline="Almost there."
+      subhead="We sent a secure link so we know this inbox belongs to your team. Verification keeps your workspace private."
+      benefits={AUTH_RECOVERY_BENEFITS}
+      showCasePreview
     >
-      <AuthCard
-        title="Check your email"
-        description={`We sent a secure link to ${displayEmail}. Open the message and follow the instructions.`}
-        showMobileWordmark
+      <AuthWarmCard
+        eyebrow="Verify email"
+        title="Check your inbox"
+        lede={`We sent a secure link to ${displayEmail}. Open the message and follow the steps to continue.`}
         footer={
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 14, color: "var(--muted)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
             <Link href="/sign-in">Back to sign in</Link>
             <CheckEmailResend email={email} flow={flow} />
           </div>
         }
       >
-        <div
-          style={{
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.08)",
-            background: "rgba(255,255,255,0.02)",
-            padding: "14px 16px",
-            fontSize: 14,
-            lineHeight: 1.55,
-            color: "rgba(245,242,237,0.78)",
-          }}
-        >
+        <p className="pf-auth-inset-note" style={{ marginTop: 0 }}>
           Didn&apos;t get it? Check spam, promotions, or filtered folders first.
-        </div>
-        <Link
-          href="/sign-in"
-          style={{
-            display: "inline-flex",
-            width: "100%",
-            boxSizing: "border-box",
-            justifyContent: "center",
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.1)",
-            padding: "14px 18px",
-            fontSize: 14,
-            fontWeight: 600,
-            color: "rgba(245,242,237,0.9)",
-            background: "rgba(255,255,255,0.03)",
-            textAlign: "center",
-          }}
-        >
+        </p>
+        <Link href="/sign-in" className="pf-auth-outline-button">
           Return to sign in
         </Link>
-      </AuthCard>
-    </AuthShell>
+      </AuthWarmCard>
+    </AuthWarmSplit>
   );
 }

@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { resetPasswordAction, type AuthFormState } from "@/app/actions/auth";
-import { AuthShell } from "@/components/auth/auth-shell";
-import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
-import { AuthCard } from "@/components/auth/auth-card";
+import { AuthWarmCard } from "@/components/auth/auth-warm-card";
+import { AUTH_RECOVERY_BENEFITS, AuthWarmSplit } from "@/components/auth/auth-warm-split";
 import { PasswordField } from "@/components/auth/password-field";
 import { SubmitButton } from "@/components/auth/submit-button";
 
@@ -15,30 +14,23 @@ export default function ResetPasswordPage() {
   const [state, formAction] = useActionState(resetPasswordAction, initial);
 
   return (
-    <AuthShell
-      variant="split"
-      brandPanel={
-        <AuthBrandPanel
-          eyebrow="Secure session"
-          title="Set a new password."
-          body="Use the link from your email so this session stays valid — then you are back on the recovery path."
-          bullets={[]}
-          recoveryActiveStep="claim"
-          showRecoveryPipeline
-        />
-      }
+    <AuthWarmSplit
+      headline="Set a new password."
+      subhead="Use the link from your email so we know it's you — then you can return to openings, claims, and confirmations."
+      benefits={AUTH_RECOVERY_BENEFITS}
+      showCasePreview
     >
-      <AuthCard
+      <AuthWarmCard
+        eyebrow="Secure update"
         title="Reset password"
-        description="Set a new password to regain access to PulseFill. Use the link from your email so this session stays valid."
-        showMobileWordmark
+        lede="Choose a new password for your account. This page only works from the link in your email."
         footer={
-          <div style={{ fontSize: 14, color: "var(--muted)" }}>
+          <div className="pf-auth-footer" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
             <Link href="/sign-in">Back to sign in</Link>
           </div>
         }
       >
-        <form action={formAction} style={{ display: "grid", gap: 20 }}>
+        <form action={formAction} style={{ display: "grid", gap: 0 }}>
           <PasswordField label="New password" name="password" placeholder="Enter a new password" autoComplete="new-password" />
           <PasswordField
             label="Confirm new password"
@@ -46,23 +38,12 @@ export default function ResetPasswordPage() {
             placeholder="Confirm your new password"
             autoComplete="new-password"
           />
-          {state.error ? (
-            <div
-              style={{
-                borderRadius: 16,
-                border: "1px solid rgba(248, 113, 113, 0.28)",
-                background: "rgba(248, 113, 113, 0.08)",
-                padding: "12px 14px",
-                fontSize: 14,
-                color: "#fecaca",
-              }}
-            >
-              {state.error}
-            </div>
-          ) : null}
-          <SubmitButton pendingText="Updating password…">Update password</SubmitButton>
+          {state.error ? <div className="pf-auth-error-banner">{state.error}</div> : null}
+          <div style={{ marginTop: 8 }}>
+            <SubmitButton pendingText="Updating password…">Update password</SubmitButton>
+          </div>
         </form>
-      </AuthCard>
-    </AuthShell>
+      </AuthWarmCard>
+    </AuthWarmSplit>
   );
 }
