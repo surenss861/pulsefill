@@ -105,6 +105,13 @@ img {
   max-width: 590px;
 }
 
+.hero-copy h1 {
+  max-width: 640px;
+  font-size: clamp(34px, 4.8vw, 58px);
+  line-height: 1.05;
+  font-weight: 800;
+}
+
 .eyebrow {
   margin: 0 0 14px;
   color: #ffc494;
@@ -292,32 +299,32 @@ h2 {
     padding-top: 48px;
   }
 
-  .ms-hero-recovery-scene {
-    min-height: 420px;
-  }
-
-  .ms-hero-scene-stack {
-    margin-top: 0;
+  .ms-hero-console {
     min-height: 0;
   }
 
-  .ms-hero-float-card {
-    position: relative;
-    top: auto;
-    left: auto;
-    max-width: 100%;
-    transform: rotate(0deg);
+  .ms-hero-console-body {
+    grid-template-columns: 1fr;
+    padding: 18px 16px 20px;
   }
 
-  .ms-hero-main-card {
-    margin-top: 12px;
+  .ms-hero-console-divider--v {
+    display: none;
   }
 
-  .ms-hero-recovered-badge {
-    position: static;
-    max-width: none;
-    width: fit-content;
-    margin: 0 0 14px auto;
+  .ms-hero-console-col {
+    padding: 0 0 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .ms-hero-console-col:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+    padding-right: 0;
+  }
+
+  .ms-hero-console-col:first-child {
+    padding-left: 0;
   }
 
   .ms-operator-grid {
@@ -378,335 +385,190 @@ h2 {
   overflow-x: clip;
 }
 
-/* --- Hero recovery scene (cinematic product moment) --- */
-.ms-hero-recovery-scene {
-  position: relative;
-  min-height: 500px;
-  padding: 4px 0 28px;
-  overflow-x: clip;
-}
-
-.ms-hero-scene-bg {
-  position: absolute;
-  inset: 8% 2% 6%;
-  border-radius: 32px;
-  background:
-    radial-gradient(ellipse 90% 65% at 62% 8%, rgba(255, 122, 24, 0.11), transparent 52%),
-    radial-gradient(ellipse 70% 50% at 20% 85%, rgba(90, 209, 138, 0.06), transparent 45%),
-    linear-gradient(165deg, rgba(12, 10, 9, 0.5), transparent 60%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.ms-hero-flow-svg {
-  position: absolute;
-  inset: 0;
+/* --- Hero operator console (restrained, believable product surface) --- */
+.ms-hero-console {
   width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.95;
-}
-
-.ms-hero-scene-stack {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  max-width: 520px;
+  max-width: 640px;
   margin-left: auto;
-  margin-right: 0;
-  min-height: 460px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 122, 24, 0.1);
+  background: #141210;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
 }
 
-.ms-hero-float-card {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 3;
-  width: min(240px, 88vw);
-  padding: 16px 16px 14px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(165deg, rgba(24, 21, 18, 0.96), rgba(10, 9, 8, 0.98));
-  box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transform: rotate(-3deg);
-}
-
-.ms-hero-float-kicker {
-  margin: 0 0 8px;
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(245, 242, 237, 0.38);
-}
-
-.ms-hero-float-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text);
-}
-
-.ms-hero-float-meta {
-  margin: 4px 0 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--subtle);
-}
-
-.ms-hero-float-highlight {
-  margin: 12px 0 0;
-  font-size: 13px;
-  line-height: 1.4;
-  font-weight: 700;
-  color: rgba(254, 215, 170, 0.92);
-}
-
-.ms-hero-pill {
-  display: inline-flex;
-  margin-top: 12px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
-.ms-hero-pill--success {
-  border: 1px solid rgba(90, 209, 138, 0.45);
-  background: rgba(90, 209, 138, 0.12);
-  color: #9aebc0;
-}
-
-.ms-hero-main-card {
-  position: relative;
-  z-index: 2;
+.ms-hero-console-top {
   display: flex;
-  flex-direction: column;
-  margin-top: 88px;
-  padding: 26px 24px 22px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 122, 24, 0.38);
-  background: linear-gradient(168deg, rgba(36, 31, 27, 0.99), rgba(14, 12, 10, 0.99));
-  box-shadow:
-    0 0 0 1px rgba(255, 122, 24, 0.1),
-    0 32px 90px rgba(0, 0, 0, 0.55),
-    0 0 48px rgba(255, 122, 24, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
-}
-
-.ms-hero-main-glow {
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: radial-gradient(ellipse 100% 80% at 50% 0%, rgba(255, 122, 24, 0.14), transparent 55%);
-  pointer-events: none;
-  opacity: 0.85;
-  z-index: 0;
-}
-
-.ms-hero-main-card > *:not(.ms-hero-main-glow) {
-  position: relative;
-  z-index: 1;
-}
-
-.ms-hero-main-kicker {
-  margin: 0 0 16px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(253, 186, 116, 0.88);
-}
-
-.ms-hero-main-label {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(245, 242, 237, 0.42);
-}
-
-.ms-hero-main-title {
-  margin: 6px 0 0;
-  font-size: clamp(20px, 2.4vw, 24px);
-  font-weight: 850;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  color: var(--text);
-}
-
-.ms-hero-story-lines {
-  margin: 18px 0 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 8px;
-}
-
-.ms-hero-story-lines li {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(0, 0, 0, 0.22);
-}
-
-.ms-hero-story-key {
-  font-size: 14px;
-  font-weight: 650;
-  line-height: 1.4;
-  color: rgba(247, 243, 237, 0.88);
-}
-
-.ms-hero-story-key--ember {
-  color: #fec89a;
-  font-weight: 750;
-}
-
-.ms-hero-story-key--green {
-  color: #7fe0ad;
-  font-weight: 800;
-}
-
-.ms-hero-flow-dots {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px 12px;
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.ms-hero-flow-dot-wrap {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  flex: 1 1 56px;
-  min-width: 0;
-  max-width: 88px;
+  gap: 12px;
+  height: 40px;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #11100e;
 }
 
-.ms-hero-flow-dot {
-  width: 10px;
-  height: 10px;
+.ms-hero-console-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.ms-hero-console-dots span {
+  width: 6px;
+  height: 6px;
   border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ms-hero-console-app-name {
+  margin: 0 0 0 auto;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: rgba(247, 243, 237, 0.45);
+}
+
+.ms-hero-console-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) 1px minmax(0, 1.05fr);
+  gap: 0;
+  padding: 22px 20px 24px;
+  align-items: stretch;
+}
+
+.ms-hero-console-col {
+  padding: 0 14px;
+  min-width: 0;
+}
+
+.ms-hero-console-col:first-child {
+  padding-left: 4px;
+}
+
+.ms-hero-console-col:last-of-type {
+  padding-right: 4px;
+}
+
+.ms-hero-console-divider--v {
+  width: 1px;
+  align-self: stretch;
+  min-height: 120px;
   background: rgba(255, 255, 255, 0.06);
 }
 
-.ms-hero-flow-dot--0 {
-  border-color: rgba(255, 122, 24, 0.55);
-  background: rgba(255, 122, 24, 0.2);
-  box-shadow: 0 0 12px rgba(255, 122, 24, 0.25);
-}
-
-.ms-hero-flow-dot--1,
-.ms-hero-flow-dot--2 {
-  border-color: rgba(255, 186, 120, 0.45);
-  background: rgba(255, 122, 24, 0.12);
-}
-
-.ms-hero-flow-dot--3 {
-  border-color: rgba(90, 209, 138, 0.55);
-  background: rgba(90, 209, 138, 0.2);
-  box-shadow: 0 0 14px rgba(90, 209, 138, 0.22);
-}
-
-.ms-hero-flow-dot-label {
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(245, 242, 237, 0.45);
-  text-align: center;
-  line-height: 1.2;
-}
-
-.ms-hero-confirm-btn {
-  margin-top: 18px;
-  width: 100%;
-  min-height: 48px;
-  border: none;
-  border-radius: 12px;
-  cursor: default;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  color: #160a02;
-  background: linear-gradient(180deg, #ff8c38, var(--ember));
-  box-shadow: 0 14px 36px rgba(255, 122, 24, 0.35);
-}
-
-.ms-hero-recovered-badge {
-  position: absolute;
-  top: 20px;
-  right: 18px;
-  z-index: 4;
-  min-width: 108px;
-  max-width: calc(100% - 36px);
-  padding: 12px 14px 10px;
-  border-radius: 16px;
-  border: 1px solid rgba(90, 209, 138, 0.42);
-  background: linear-gradient(165deg, rgba(22, 40, 30, 0.95), rgba(10, 14, 12, 0.98));
-  box-shadow:
-    0 0 28px rgba(90, 209, 138, 0.18),
-    0 18px 44px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  text-align: center;
-}
-
-.ms-hero-badge-kicker {
-  margin: 0;
+.ms-hero-console-col-title {
+  margin: 0 0 14px;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 750;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(154, 235, 192, 0.85);
+  color: rgba(247, 243, 237, 0.38);
 }
 
-.ms-hero-badge-amount {
-  margin: 4px 0 0;
-  font-size: 26px;
-  font-weight: 850;
-  letter-spacing: -0.03em;
-  color: #b8f5d3;
-  line-height: 1;
+.ms-hero-console-muted {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(183, 175, 165, 0.75);
 }
 
-.ms-hero-badge-meta {
+.ms-hero-console-strong {
   margin: 6px 0 0;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
-  color: rgba(154, 235, 192, 0.65);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: rgba(247, 243, 237, 0.94);
 }
 
-@keyframes ms-hero-flow-dash {
-  to {
-    stroke-dashoffset: -200;
-  }
+.ms-hero-console-meta {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(183, 175, 165, 0.9);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .ms-hero-flow-path {
-    animation: ms-hero-flow-dash 2.8s linear infinite;
-  }
+.ms-hero-console-value-label {
+  margin: 16px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(127, 121, 114, 0.95);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ms-hero-flow-path {
-    animation: none;
-  }
+.ms-hero-console-value {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: rgba(247, 243, 237, 0.88);
+}
+
+.ms-hero-console-line {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: rgba(215, 208, 198, 0.92);
+}
+
+.ms-hero-console-num {
+  font-weight: 750;
+  color: rgba(247, 243, 237, 0.95);
+  margin-right: 4px;
+}
+
+.ms-hero-console-claim {
+  margin-top: 16px;
+  padding: 12px 12px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.ms-hero-console-claim .ms-hero-console-strong {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 650;
+  color: rgba(247, 243, 237, 0.9);
+}
+
+.ms-hero-console-prompt {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 500;
+  color: rgba(215, 208, 198, 0.94);
+}
+
+.ms-hero-console-money {
+  font-weight: 700;
+  color: rgba(127, 224, 173, 0.95);
+}
+
+.ms-hero-console-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: default;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #160a02;
+  background: var(--ember);
+  box-shadow: none;
+}
+
+.ms-hero-console-foot {
+  margin: 12px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(127, 224, 173, 0.72);
 }
 
 .ms-hero-pipeline {
@@ -739,24 +601,14 @@ h2 {
 }
 
 .ms-section--path {
-  border-top: 1px solid rgba(255, 122, 24, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
   background:
-    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(255, 122, 24, 0.08), transparent 58%),
-    linear-gradient(180deg, rgba(8, 7, 6, 0.65), rgba(255, 122, 24, 0.035));
+    radial-gradient(ellipse 85% 50% at 50% 0%, rgba(255, 122, 24, 0.04), transparent 55%),
+    linear-gradient(180deg, rgba(8, 7, 6, 0.5), rgba(255, 122, 24, 0.02));
 }
 
 #path-heading {
   scroll-margin-top: 24px;
-}
-
-@media (min-width: 901px) {
-  .ms-hero-main-kicker {
-    padding-right: 118px;
-  }
-
-  .ms-hero-main-head {
-    max-width: calc(100% - 124px);
-  }
 }
 
 .ms-section--path .ms-recovery-block {

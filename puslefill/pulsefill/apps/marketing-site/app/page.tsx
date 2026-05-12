@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HeroRecoveryScene } from "../components/hero-recovery-scene";
+import { HeroOperatorConsole } from "../components/hero-operator-console";
 import { MarketingRecoveryBlock } from "../components/marketing-recovery-block";
 
 const outcomes = [
@@ -43,10 +43,10 @@ export default function HomePage() {
 
         <div className="hero-grid ms-hero-grid">
           <div className="hero-copy">
-            <p className="eyebrow">Cancellation recovery infrastructure</p>
-            <h1>Cancellations are inevitable. Lost revenue is not.</h1>
+            <p className="eyebrow">Appointment recovery operating system</p>
+            <h1>Recover cancelled appointments before the day is lost.</h1>
             <p className="hero-lede">
-              PulseFill turns empty appointment times into claimed bookings from your waiting list.
+              PulseFill turns your waiting list into claimed bookings when cancellations happen.
             </p>
             <div className="hero-actions">
               <Link className="button primary" href="/demo">
@@ -64,7 +64,7 @@ export default function HomePage() {
           </div>
 
           <div className="hero-visual-column">
-            <HeroRecoveryScene />
+            <HeroOperatorConsole />
           </div>
         </div>
       </section>
