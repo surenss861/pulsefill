@@ -123,7 +123,7 @@ function MutedTextLink({ children, href, variant = "default" }: { children: Reac
         color: cta ? "rgba(169,162,154,0.92)" : "var(--pf-text-tertiary)",
         textDecoration: "none",
         padding: cta ? "8px 0" : "10px 0",
-        borderBottom: cta ? "1px solid rgba(255,255,255,0.08)" : undefined,
+        borderBottom: cta ? "1px solid rgba(255, 226, 190, 0.1)" : undefined,
       }}
     >
       {children}
@@ -239,7 +239,7 @@ export function PulseFillLandingPageContent() {
             position: "absolute",
             inset: 0,
             opacity: 0.028,
-            backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.06) 1px, rgba(255,255,255,0.06) 2px)",
+            backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255, 226, 190, 0.04) 1px, rgba(255, 226, 190, 0.04) 2px)",
             pointerEvents: "none",
           }}
         />
@@ -383,10 +383,10 @@ export function PulseFillLandingPageContent() {
                   key={row.t}
                   style={{
                     padding: "12px 0 12px 16px",
-                    borderLeft: `3px solid ${i === 0 ? "rgba(255,122,24,0.98)" : "rgba(255,255,255,0.06)"}`,
-                    borderBottom: `1px solid rgba(255,255,255,0.06)`,
+                    borderLeft: `3px solid ${i === 0 ? "rgba(255, 122, 24, 0.55)" : "rgba(255, 226, 190, 0.1)"}`,
+                    borderBottom: `1px solid rgba(255, 226, 190, 0.08)`,
                     opacity: i === 0 ? 1 : 0.78,
-                    boxShadow: i === 0 ? "inset 6px 0 18px rgba(255,122,24,0.06)" : undefined,
+                    boxShadow: i === 0 ? "inset 4px 0 12px rgba(255, 122, 24, 0.04)" : undefined,
                   }}
                 >
                   <div
@@ -469,7 +469,7 @@ export function PulseFillLandingPageContent() {
             style={{
               position: "relative",
               padding: "clamp(20px, 4vw, 36px) 0 clamp(28px, 5vw, 48px)",
-              borderTop: "1px solid rgba(255,255,255,0.07)",
+              borderTop: "1px solid rgba(255, 226, 190, 0.1)",
             }}
           >
             <div
@@ -481,7 +481,7 @@ export function PulseFillLandingPageContent() {
                 top: 0,
                 height: 2,
                 borderRadius: 1,
-                background: "linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,122,24,0.22), rgba(253,186,116,0.2), rgba(255,122,24,0.22), rgba(255,255,255,0.05))",
+                background: "linear-gradient(90deg, rgba(255, 226, 190, 0.06), rgba(255,122,24,0.2), rgba(253,186,116,0.18), rgba(255,122,24,0.2), rgba(255, 226, 190, 0.06))",
                 opacity: 0.55,
                 boxShadow: "none",
               }}
@@ -576,7 +576,7 @@ export function PulseFillLandingPageContent() {
             </div>
           </div>
           <p style={{ marginTop: 24, color: TOKENS.muted, fontSize: 14, lineHeight: 1.62, maxWidth: 480, letterSpacing: "0.01em" }}>
-            From schedule disruption to measurable recovery — in one operational flow.
+            From a cancelled visit to a confirmed chair — with the steps and owners visible the whole way.
           </p>
         </Container>
       </section>
@@ -714,7 +714,7 @@ export function PulseFillLandingPageContent() {
         id="why"
         style={{
           padding: "clamp(80px, 12vw, 132px) 0",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid rgba(255, 226, 190, 0.08)",
           background: "linear-gradient(180deg, rgba(28, 24, 20, 0.35), rgba(18, 15, 12, 0.08))",
         }}
       >
@@ -737,8 +737,8 @@ export function PulseFillLandingPageContent() {
               More than reminders. More than scheduling. A real recovery system.
             </h2>
             <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 14, lineHeight: 1.58, maxWidth: 400 }}>
-              The gap from cancellation to recovered booking is still improvisation for too many teams. PulseFill is the
-              layer that makes it operational.
+              Too many teams still lose the thread between a cancellation and a saved booking. PulseFill keeps that path in
+              one system the desk can run.
             </p>
           </div>
           <div style={{ maxWidth: 600, display: "grid", gap: 0 }}>
@@ -746,17 +746,17 @@ export function PulseFillLandingPageContent() {
               {
                 n: "01",
                 title: "Built for near-term recovery",
-                body: "Same-day and short-window openings need speed and ownership — not admin theater.",
+                body: "Same-day and short-window openings need speed and a clear owner — not another inbox thread.",
               },
               {
                 n: "02",
                 title: "Rules-based and explainable",
-                body: "See why a slot needs action, what happens next, and where recovery stalls.",
+                body: "See why a slot needs action, what happens next, and what is still waiting on the desk.",
               },
               {
                 n: "03",
                 title: "One product across both sides",
-                body: "Standby demand and operator execution in one system — not parallel hacks.",
+                body: "Standby demand and front-desk action share one queue — not parallel spreadsheets.",
               },
             ].map((row, i) => (
               <div
@@ -767,8 +767,8 @@ export function PulseFillLandingPageContent() {
                   alignItems: "baseline",
                   gap: "14px 24px",
                   padding: "16px 0",
-                  borderTop: i === 0 ? `1px solid rgba(255,255,255,0.1)` : undefined,
-                  borderBottom: `1px solid rgba(255,255,255,0.08)`,
+                  borderTop: i === 0 ? `1px solid rgba(255, 226, 190, 0.12)` : undefined,
+                  borderBottom: `1px solid rgba(255, 226, 190, 0.08)`,
                 }}
               >
                 <span
@@ -889,7 +889,7 @@ export function PulseFillLandingPageContent() {
             style={{
               marginTop: 36,
               padding: "28px 0 4px",
-              borderTop: "1px solid rgba(255,255,255,0.1)",
+              borderTop: "1px solid rgba(255, 226, 190, 0.1)",
               maxWidth: 720,
             }}
           >
@@ -910,7 +910,7 @@ export function PulseFillLandingPageContent() {
             </div>
           </div>
           <p style={{ marginTop: 22, color: TOKENS.muted, fontSize: 12, lineHeight: 1.52, maxWidth: 380 }}>
-            Recovery you can read — not desk folklore.
+            The same story in the queue and on the numbers — no side-channel guesswork.
           </p>
         </Container>
       </section>
@@ -921,7 +921,7 @@ export function PulseFillLandingPageContent() {
         style={{
           padding: "clamp(64px, 10vw, 100px) 0 clamp(80px, 12vw, 120px)",
           background: "linear-gradient(180deg, rgba(26, 22, 18, 0.55), rgba(22, 18, 15, 0.92))",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid rgba(255, 226, 190, 0.08)",
         }}
       >
         <Container>
@@ -943,19 +943,19 @@ export function PulseFillLandingPageContent() {
               Understandable. Controllable. Real.
             </h2>
             <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.62, maxWidth: 400 }}>
-              Legible recovery: attention, wait states, failures, confirmations, thin coverage — all explicit.
+              Who was offered, who claimed, what failed to send, what still needs a confirm — all in one place.
             </p>
           </div>
           <div
             style={{
               marginTop: 32,
               maxWidth: 620,
-              border: "1px solid rgba(255,255,255,0.12)",
+              border: "1px solid rgba(255, 226, 190, 0.12)",
               background: "rgba(30, 26, 22, 0.85)",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.02)",
+              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.03)",
             }}
           >
-            {["Clear queue reasons", "Explicit operator actions", "Delivery visibility", "No black-box guessing"].map((item, i, arr) => (
+            {["Clear queue reasons", "Explicit desk actions", "Delivery visibility", "No mystery status"].map((item, i, arr) => (
               <div
                 key={item}
                 style={{
@@ -963,7 +963,7 @@ export function PulseFillLandingPageContent() {
                   alignItems: "center",
                   gap: 0,
                   padding: "14px 20px 14px 0",
-                  borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.08)" : undefined,
+                  borderBottom: i < arr.length - 1 ? "1px solid rgba(255, 226, 190, 0.1)" : undefined,
                   fontSize: 13,
                   fontWeight: 620,
                   color: TOKENS.text,
@@ -978,7 +978,7 @@ export function PulseFillLandingPageContent() {
             ))}
           </div>
           <p style={{ marginTop: 28, color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 360, fontWeight: 500 }}>
-            No ambiguity. No theater.
+            Plain language, clear owners, and states you can defend in a busy afternoon.
           </p>
         </Container>
       </section>
@@ -989,7 +989,7 @@ export function PulseFillLandingPageContent() {
           padding: "clamp(80px, 13vw, 160px) 0 clamp(96px, 14vw, 180px)",
           background:
             "radial-gradient(ellipse 90% 55% at 50% 0%, rgba(32, 26, 20, 0.35), rgba(18, 15, 12, 0.85))",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid rgba(255, 226, 190, 0.08)",
         }}
       >
         <Container>
@@ -1036,7 +1036,7 @@ export function PulseFillLandingPageContent() {
                     textTransform: "uppercase",
                   }}
                 >
-                  Ready to replace the scramble?
+                  Ready to lose fewer openings?
                 </div>
                 <h2
                   data-cta-reveal
@@ -1049,7 +1049,7 @@ export function PulseFillLandingPageContent() {
                     fontWeight: 630,
                   }}
                 >
-                  Run cancellation recovery like infrastructure — not improvisation.
+                  Run cancellation recovery with the same rigor as the rest of the day.
                 </h2>
                 <p
                   data-cta-reveal
