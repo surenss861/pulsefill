@@ -9,6 +9,28 @@ const flowSteps = [
   { id: "confirmed", label: "Confirmed" },
 ] as const;
 
+function RecoveredBadge() {
+  return (
+    <>
+      <p className="ms-hero-badge-kicker">Recovered</p>
+      <p className="ms-hero-badge-amount">$185</p>
+      <p className="ms-hero-badge-meta">in 3 min</p>
+    </>
+  );
+}
+
+function FloatCardBody() {
+  return (
+    <>
+      <p className="ms-hero-float-kicker">Customer update</p>
+      <p className="ms-hero-float-title">Dental cleaning</p>
+      <p className="ms-hero-float-meta">Today · 2:30 PM</p>
+      <p className="ms-hero-float-highlight">Maya claimed this spot</p>
+      <span className="ms-hero-pill ms-hero-pill--success">Claimed</span>
+    </>
+  );
+}
+
 export function HeroRecoveryScene() {
   const reduce = useReducedMotion();
 
@@ -37,18 +59,20 @@ export function HeroRecoveryScene() {
       </svg>
 
       <div className="ms-hero-scene-stack">
-        <motion.div
-          className="ms-hero-float-card"
-          initial={false}
-          animate={reduce ? {} : { y: [0, -5, 0] }}
-          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <p className="ms-hero-float-kicker">Customer update</p>
-          <p className="ms-hero-float-title">Dental cleaning</p>
-          <p className="ms-hero-float-meta">Today · 2:30 PM</p>
-          <p className="ms-hero-float-highlight">Maya claimed this spot</p>
-          <span className="ms-hero-pill ms-hero-pill--success">Claimed</span>
-        </motion.div>
+        {reduce ? (
+          <div className="ms-hero-float-card">
+            <FloatCardBody />
+          </div>
+        ) : (
+          <motion.div
+            className="ms-hero-float-card"
+            initial={false}
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <FloatCardBody />
+          </motion.div>
+        )}
 
         <div className="ms-hero-main-card">
           <div className="ms-hero-main-glow" aria-hidden />
@@ -57,6 +81,20 @@ export function HeroRecoveryScene() {
             <p className="ms-hero-main-label">Cancelled appointment</p>
             <p className="ms-hero-main-title">Dental cleaning · 2:30 PM</p>
           </div>
+          {reduce ? (
+            <div className="ms-hero-recovered-badge">
+              <RecoveredBadge />
+            </div>
+          ) : (
+            <motion.div
+              className="ms-hero-recovered-badge"
+              initial={false}
+              animate={{ scale: [1, 1.02, 1] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <RecoveredBadge />
+            </motion.div>
+          )}
 
           <ul className="ms-hero-story-lines">
             <li>
@@ -86,17 +124,6 @@ export function HeroRecoveryScene() {
             Confirm booking
           </button>
         </div>
-
-        <motion.div
-          className="ms-hero-recovered-badge"
-          initial={false}
-          animate={reduce ? {} : { scale: [1, 1.02, 1] }}
-          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <p className="ms-hero-badge-kicker">Recovered</p>
-          <p className="ms-hero-badge-amount">$185</p>
-          <p className="ms-hero-badge-meta">in 3 min</p>
-        </motion.div>
       </div>
     </div>
   );

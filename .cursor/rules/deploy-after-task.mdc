@@ -1,0 +1,33 @@
+---
+description: Always commit, push, and deploy PulseFill changes after completing a task.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# PulseFill task completion rule
+
+When a task is complete:
+
+1. Work from the correct repo root:
+   `/Volumes/sss/cancellation/puslefill`
+
+2. Before finishing, run the relevant checks:
+   - For iOS changes: run the PulseFill `xcodebuild` simulator build.
+   - For web/API changes: run the relevant lint/build/typecheck command for the touched app or package.
+
+3. Commit the completed work:
+   - `git status`
+   - `git add ...`
+   - `git commit -m "<clear conventional commit message>"`
+
+4. Push to GitHub:
+   - `git push origin main`
+
+5. If the project is connected to Vercel/Railway auto-deploy, verify the deployment completed or clearly state that the push was completed and deployment still needs verification.
+
+6. Never commit from `/Volumes/sss/cancellation`.
+   The real PulseFill monorepo is:
+   `/Volumes/sss/cancellation/puslefill`
+
+7. Do not leave completed work only on the local machine unless the user explicitly asks not to push.
