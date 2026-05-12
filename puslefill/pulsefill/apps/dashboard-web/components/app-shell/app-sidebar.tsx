@@ -78,7 +78,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
         <div className="pf-sidebar-brand__mark" aria-hidden />
         <div style={{ minWidth: 0 }}>
           <p className="pf-sidebar-brand__name">PulseFill</p>
-          <p className="pf-kicker pf-sidebar-brand__tag">Operator OS</p>
+          <p className="pf-kicker pf-sidebar-brand__tag">Staff tools</p>
         </div>
       </div>
 
