@@ -6,35 +6,17 @@ import { useFormStatus } from "react-dom";
 export function SubmitButton({
   children,
   pendingText = "Working…",
+  className,
 }: {
   children: ReactNode;
   pendingText?: string;
+  className?: string;
 }) {
   const { pending } = useFormStatus();
+  const cls = ["pf-auth-submit", className].filter(Boolean).join(" ");
 
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      style={{
-        display: "inline-flex",
-        width: "100%",
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 16,
-        border: "none",
-        padding: "16px 20px",
-        minHeight: 52,
-        fontSize: 14,
-        fontWeight: 650,
-        color: "var(--pf-btn-primary-text)",
-        background: "var(--pf-btn-primary-bg)",
-        boxShadow: "var(--pf-btn-primary-shadow)",
-        cursor: pending ? "not-allowed" : "pointer",
-        opacity: pending ? 0.72 : 1,
-        transition: "filter 140ms ease, transform 140ms ease, opacity 140ms ease",
-      }}
-    >
+    <button type="submit" disabled={pending} className={cls} style={{ opacity: pending ? 0.72 : 1, cursor: pending ? "not-allowed" : "pointer" }}>
       {pending ? pendingText : children}
     </button>
   );

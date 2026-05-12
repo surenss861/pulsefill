@@ -18,74 +18,49 @@ export function PasswordField({
   autoComplete = "current-password",
 }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
-  const id = useId();
-  const border = error ? "1px solid var(--pf-danger-border)" : `1px solid var(--pf-auth-input-border)`;
-  const cls = ["pf-auth-input", error ? "pf-auth-input--error" : ""].join(" ");
+  const rawId = useId();
+  const id = `pf-auth-pw-${rawId.replace(/:/g, "")}`;
+  const cls = ["pf-auth-input", "pf-auth-input--password", error ? "pf-auth-input--error" : ""]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <div>
-      <label htmlFor={id} style={{ display: "block" }}>
-        <span
+    <div className="pf-auth-field">
+      <label className="pf-auth-label" htmlFor={id}>
+        {label}
+      </label>
+      <div style={{ position: "relative" }}>
+        <input
+          id={id}
+          name={name}
+          type={visible ? "text" : "password"}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          className={cls}
+          style={error ? { borderColor: "var(--pf-danger-border)" } : undefined}
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
           style={{
-            display: "block",
-            marginBottom: 10,
-            fontSize: 11,
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.2em",
-            color: "rgba(169,162,154,0.92)",
+            position: "absolute",
+            right: 10,
+            top: "50%",
+            transform: "translateY(-50%)",
+            border: "none",
+            borderRadius: 8,
+            padding: "6px 8px",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "var(--pf-text-muted)",
+            background: "transparent",
+            cursor: "pointer",
           }}
         >
-          {label}
-        </span>
-        <div style={{ position: "relative" }}>
-          <input
-            id={id}
-            name={name}
-            type={visible ? "text" : "password"}
-            placeholder={placeholder}
-            autoComplete={autoComplete}
-            className={cls}
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              borderRadius: 18,
-              border,
-              background: "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(0,0,0,0.2)), var(--pf-auth-input-bg)",
-              padding: "16px 52px 16px 18px",
-              minHeight: 56,
-              fontSize: 15,
-              color: "var(--text)",
-              outline: "none",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => setVisible((v) => !v)}
-            style={{
-              position: "absolute",
-              right: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-              border: "none",
-              borderRadius: 10,
-              padding: "6px 8px",
-              fontSize: 11,
-              fontWeight: 500,
-              letterSpacing: "0.04em",
-              color: "rgba(169,162,154,0.85)",
-              background: "transparent",
-              cursor: "pointer",
-            }}
-          >
-            {visible ? "Hide" : "Show"}
-          </button>
-        </div>
-      </label>
-      {error ? (
-        <p style={{ margin: "8px 0 0", fontSize: 13, color: "#fca5a5" }}>{error}</p>
-      ) : null}
+          {visible ? "Hide" : "Show"}
+        </button>
+      </div>
+      {error ? <p style={{ margin: "6px 0 0", fontSize: 13, color: "#fca5a5" }}>{error}</p> : null}
     </div>
   );
 }

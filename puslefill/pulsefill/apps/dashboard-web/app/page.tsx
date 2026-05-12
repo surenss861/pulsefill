@@ -1,5 +1,5 @@
-import { PulseFillLandingPage } from "@/components/marketing/pulsefill-landing-page";
+import { PulseFillLandingPageContent } from "@/components/marketing/pulsefill-landing-page-content";
 
-export default function Home() {
-  return <PulseFillLandingPage />;
+export default function HomePage() {
+  return <PulseFillLandingPageContent />;
 }
