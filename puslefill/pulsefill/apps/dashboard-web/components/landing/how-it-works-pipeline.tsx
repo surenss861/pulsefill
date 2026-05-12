@@ -77,7 +77,7 @@ export function HowItWorksPipeline({ steps }: { steps: PipelineStep[] }) {
           top: 8,
           height: 2,
           borderRadius: 1,
-          background: "linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,122,24,0.35), rgba(255,255,255,0.06))",
+          background: "linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,122,24,0.2), rgba(255,255,255,0.06))",
           transformOrigin: "left center",
         }}
       />
@@ -106,12 +106,12 @@ export function HowItWorksPipeline({ steps }: { steps: PipelineStep[] }) {
                     placeItems: "center",
                     fontSize: 10,
                     fontWeight: 700,
-                    color: isActive ? TOKENS.text : "rgba(226,232,240,0.5)",
+                    color: isActive ? TOKENS.text : "rgba(201, 192, 180, 0.5)",
                     background: isActive
-                      ? "linear-gradient(145deg, rgba(255,122,24,0.55), rgba(10,12,20,0.98))"
-                      : "rgba(8,10,16,0.96)",
-                    border: isActive ? `1px solid rgba(253,186,116,0.55)` : `1px solid rgba(255,255,255,0.07)`,
-                    boxShadow: isActive ? "0 0 18px rgba(255,122,24,0.22)" : "none",
+                      ? "linear-gradient(145deg, rgba(255,122,24,0.42), rgba(28, 24, 18, 0.98))"
+                      : "rgba(30, 26, 22, 0.92)",
+                    border: isActive ? `1px solid rgba(253,186,116,0.45)` : `1px solid rgba(255, 226, 190, 0.1)`,
+                    boxShadow: isActive ? "0 0 14px rgba(255, 122, 24, 0.12)" : "none",
                     flexShrink: 0,
                     transition: "box-shadow 0.35s ease, border-color 0.35s ease, opacity 0.35s ease",
                   }}
@@ -125,17 +125,17 @@ export function HowItWorksPipeline({ steps }: { steps: PipelineStep[] }) {
                   borderRadius: isOp ? 12 : 8,
                   padding: isOp ? "14px 12px 16px" : "11px 10px 12px",
                   minHeight: isOp ? 96 : isBook ? 76 : 80,
-                  background: isActive ? "rgba(255,122,24,0.1)" : isOp ? "rgba(255,122,24,0.07)" : "rgba(0,0,0,0.38)",
+                  background: isActive ? "rgba(255, 122, 24, 0.08)" : isOp ? "rgba(255, 122, 24, 0.05)" : "rgba(24, 20, 17, 0.45)",
                   border: isActive
-                    ? "1px solid rgba(255,122,24,0.55)"
+                    ? "1px solid rgba(255, 122, 24, 0.38)"
                     : isOp
-                      ? "1px solid rgba(255,122,24,0.42)"
-                      : "1px solid rgba(255,255,255,0.05)",
+                      ? "1px solid rgba(255, 122, 24, 0.22)"
+                      : "1px solid rgba(255, 226, 190, 0.1)",
                   boxShadow: isActive
-                    ? "0 12px 40px rgba(0,0,0,0.45), 0 0 28px rgba(255,122,24,0.12)"
+                    ? "0 10px 28px rgba(0, 0, 0, 0.18), 0 0 16px rgba(255, 122, 24, 0.08)"
                     : isOp
-                      ? "0 10px 32px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.04)"
-                      : "inset 0 1px 0 rgba(255,255,255,0.02)",
+                      ? "0 8px 22px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.03)"
+                      : "inset 0 1px 0 rgba(255, 255, 255, 0.02)",
                   opacity: inactive && !isActive ? 0.62 : 1,
                   transition: "background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, opacity 0.35s ease",
                 }}
@@ -148,7 +148,7 @@ export function HowItWorksPipeline({ steps }: { steps: PipelineStep[] }) {
                     lineHeight: 1.18,
                   }}
                 >
-                  <span style={{ color: "rgba(255,255,255,0.22)", marginRight: 6 }}>—</span>
+                  <span style={{ color: "rgba(255, 226, 190, 0.18)", marginRight: 6 }}>—</span>
                   {title}
                 </div>
                 <p style={{ margin: "5px 0 0 0", color: TOKENS.muted, fontSize: isOp ? 12 : 11, lineHeight: 1.45 }}>{body}</p>

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PulseFill — Operating system for appointment recovery",
+  title: "PulseFill — Appointment recovery",
   description:
-    "Recover near-term openings with standby demand, operator action, and measurable recovery — cancellations are inevitable; lost revenue is not.",
+    "When someone cancels, PulseFill matches your waitlist, sends timed offers, and helps staff confirm the booking so revenue does not walk out the door.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

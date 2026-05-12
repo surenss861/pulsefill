@@ -13,7 +13,7 @@ export function PayoffProductVisual() {
             <div className="ms-rc-file-sheet">
               <header className="ms-rc-file-header">
                 <span className="ms-rc-file-kicker">Recovery queue</span>
-                <span className="ms-rc-file-urgency">Awaiting confirm</span>
+                <span className="ms-rc-file-urgency">Needs confirmation</span>
               </header>
               <div className="ms-rc-file-appointment">
                 <h3 className="ms-rc-file-service">Hygiene visit</h3>

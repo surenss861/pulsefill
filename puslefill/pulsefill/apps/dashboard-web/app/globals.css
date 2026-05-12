@@ -156,6 +156,69 @@
   --primary: var(--pf-accent-primary);
 }
 
+/* —— Public marketing homepage: warm operations desk (scoped; app routes unchanged) —— */
+body:has(> main.pf-marketing-landing) {
+  background-color: #16130e;
+  background-image: linear-gradient(180deg, #14110d 0%, #1a1611 52%, #1e1a15 100%);
+  background-attachment: fixed;
+}
+
+main.pf-marketing-landing {
+  --pf-bg-app: #15110d;
+  --pf-bg-page: #16130e;
+  --pf-bg-surface: #1e1914;
+  --pf-bg-surface-muted: #18140f;
+  --pf-bg-elevated: #252019;
+
+  --pf-border-subtle: rgba(255, 226, 190, 0.1);
+  --pf-border-default: rgba(255, 226, 190, 0.14);
+  --pf-border-strong: rgba(255, 226, 190, 0.2);
+
+  --pf-text-primary: #f4efe6;
+  --pf-text-secondary: #c9bfb3;
+  --pf-text-tertiary: rgba(190, 180, 168, 0.95);
+  --pf-text-muted: #9a8f82;
+
+  --pf-accent-primary-border: rgba(255, 122, 24, 0.22);
+  --pf-accent-primary-soft: rgba(255, 122, 24, 0.1);
+  --pf-accent-primary-glow: rgba(255, 122, 24, 0.12);
+
+  --pf-card-bg: rgba(33, 27, 20, 0.96);
+  --pf-card-border: rgba(255, 226, 190, 0.12);
+  --pf-card-shadow: 0 10px 36px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  --pf-card-quiet-bg: rgba(255, 246, 235, 0.04);
+  --pf-card-quiet-border: rgba(255, 226, 190, 0.1);
+
+  --pf-card-hero-bg: linear-gradient(165deg, rgba(42, 34, 25, 0.55) 0%, rgba(28, 24, 18, 0.98) 100%);
+  --pf-card-hero-border: rgba(255, 226, 190, 0.12);
+
+  --pf-btn-primary-shadow: 0 7px 22px rgba(255, 122, 24, 0.18);
+  --pf-btn-secondary-bg: rgba(255, 246, 235, 0.05);
+  --pf-btn-secondary-border: rgba(255, 226, 190, 0.12);
+  --pf-btn-secondary-border-hover: rgba(255, 122, 24, 0.28);
+
+  --pf-shell-bg: linear-gradient(180deg, #14110d 0%, #1a1611 48%, #201c16 100%);
+
+  --pf-auth-input-bg: #1c1813;
+  --pf-auth-input-border: rgba(255, 226, 190, 0.14);
+
+  background: var(--pf-shell-bg);
+  color: var(--pf-text-primary);
+}
+
+.pf-marketing-landing .ms-rc-file {
+  background: #211b14;
+  border-color: rgba(255, 226, 190, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 12px 36px rgba(0, 0, 0, 0.2);
+}
+
+.pf-marketing-landing .ms-rc-file-rail {
+  opacity: 0.95;
+}
+
 html,
 body {
   margin: 0;
