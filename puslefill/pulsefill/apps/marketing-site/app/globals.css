@@ -92,7 +92,7 @@ img {
   border-radius: 10px;
   background: var(--ember);
   color: #140a03;
-  box-shadow: 0 8px 22px rgba(255, 122, 24, 0.2);
+  box-shadow: 0 5px 14px rgba(255, 122, 24, 0.12);
 }
 
 .nav-links {
@@ -201,7 +201,7 @@ h2 {
 .button.primary {
   background: var(--ember);
   color: #160a02;
-  box-shadow: 0 10px 28px rgba(255, 122, 24, 0.22);
+  box-shadow: 0 7px 20px rgba(255, 122, 24, 0.14);
 }
 
 .button.primary:hover {
