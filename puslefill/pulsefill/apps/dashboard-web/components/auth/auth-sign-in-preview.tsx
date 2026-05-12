@@ -1,27 +1,32 @@
 /**
- * Compact case-file preview for the sign-in route — same story language as marketing hero.
+ * Recovery file preview for sign-in — same structure and story language as the marketing hero case file.
  */
 export function AuthSignInPreview() {
   return (
     <article
-      className="ms-rc-file ms-rc-file--compact pf-auth-recovery-preview pf-auth-shell-enter"
+      className="ms-rc-file pf-auth-recovery-preview pf-auth-shell-enter"
       aria-label="Example cancelled appointment recovery"
     >
       <div className="ms-rc-file-inner">
-        <div className="ms-rc-file-rail ms-rc-file-rail--idle" aria-hidden />
+        <div className="ms-rc-file-rail" aria-hidden />
         <div className="ms-rc-file-sheet">
-          <div className="pf-auth-preview-head">
-            <p className="ms-rc-file-kicker" style={{ margin: 0 }}>
-              Cancelled appointment
-            </p>
-            <p className="pf-auth-preview-title">Dental cleaning · Today 2:30 PM</p>
+          <header className="ms-rc-file-header">
+            <span className="ms-rc-file-kicker">Cancelled appointment</span>
+            <span className="ms-rc-file-urgency">Needs confirmation</span>
+          </header>
+
+          <div className="ms-rc-file-appointment">
+            <h3 className="ms-rc-file-service">Dental cleaning</h3>
+            <p className="ms-rc-file-when">Today · 2:30 PM</p>
+            <p className="ms-rc-file-where">Yorkville Wellness</p>
           </div>
-          <div className="pf-auth-preview-body">
+
+          <div className="ms-rc-file-recovery">
             <p className="ms-rc-file-line">
               <span className="ms-rc-file-num">9</span> matched customers
             </p>
             <p className="ms-rc-file-line ms-rc-file-line--claim">Maya R. claimed 3 min ago</p>
-            <p className="ms-rc-file-line" style={{ marginTop: 10 }}>
+            <p className="ms-rc-file-recover pf-auth-preview-recover-line">
               Recover <span className="ms-rc-file-money">$185</span>
             </p>
           </div>

@@ -24,7 +24,7 @@ export function SignInClient() {
   return (
     <AuthWarmSplit
       headline={"Sign in to run today's recovery."}
-      subhead="Manage openings, claims, and confirmed bookings from one calm workspace."
+      subhead="Manage openings, claims, and confirmed bookings before the day slips away."
       benefits={AUTH_RECOVERY_BENEFITS}
       showCasePreview
     >
