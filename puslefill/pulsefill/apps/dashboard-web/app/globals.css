@@ -1,35 +1,77 @@
 /**
- * PulseFill — design tokens (black-first + FF7A18 ember + C93B2F tension).
- * Orange: action / recovery heat. Red: consequence / depth — used sparingly.
+ * PulseFill — canonical visual system (espresso / walnut / ivory / ember + quiet green).
+ * Ember: primary actions & active heat. Red (C93B2F): consequence — sparingly.
+ * Surfaces & type use warm browns + ivory/taupe (no cold pure black, no blue-grey SaaS chrome).
  */
 
 :root {
   color-scheme: dark;
 
-  /* —— Core neutrals (charcoal / ember command center — no navy) —— */
-  --pf-bg-app: #030303;
-  --pf-bg-page: #050505;
-  --pf-bg-surface: #10100f;
-  --pf-bg-surface-muted: #080807;
-  --pf-bg-elevated: #171410;
+  /* —— Canonical brand ladder (source of truth — mirror in iOS `PFBrandColor`) —— */
+  --pf-brand-ink-950: #0b0907;
+  --pf-brand-ink-925: #100d0a;
+  --pf-brand-brown-900: #14100d;
+  --pf-brand-brown-850: #1a1510;
+  --pf-brand-brown-800: #211b14;
+  --pf-brand-brown-750: #2a2219;
 
-  --pf-border-subtle: rgba(255, 255, 255, 0.055);
-  --pf-border-default: rgba(255, 255, 255, 0.085);
-  --pf-border-strong: rgba(255, 255, 255, 0.14);
+  --pf-brand-text-strong: #f4eee7;
+  --pf-brand-text: #e8ded2;
+  --pf-brand-text-muted: #a99d90;
+  --pf-brand-text-faint: #746b62;
 
-  --pf-text-primary: #f7f4ef;
-  --pf-text-secondary: #bcb4ab;
-  --pf-text-tertiary: rgba(188, 180, 171, 0.95);
-  --pf-text-muted: #7a726a;
-  --pf-text-inverse: #0a0908;
+  --pf-brand-ember: #ff7a18;
+  --pf-brand-ember-soft: rgba(255, 122, 24, 0.14);
+
+  --pf-brand-success: #7bd99a;
+  --pf-brand-success-soft: rgba(123, 217, 154, 0.12);
+
+  --pf-brand-border-warm: rgba(255, 226, 190, 0.1);
+  --pf-brand-border-warm-mid: rgba(255, 226, 190, 0.14);
+  --pf-brand-border-warm-strong: rgba(255, 226, 190, 0.2);
+
+  /* Warm lift on surfaces (replaces cold white-alpha tints on rows / quiet cards) */
+  --pf-surface-tint-03: rgba(255, 246, 235, 0.03);
+  --pf-surface-tint-04: rgba(255, 246, 235, 0.04);
+  --pf-surface-tint-05: rgba(255, 246, 235, 0.05);
+  --pf-surface-tint-06: rgba(255, 246, 235, 0.06);
+  --pf-surface-tint-07: rgba(255, 246, 235, 0.07);
+  --pf-surface-tint-10: rgba(255, 246, 235, 0.1);
+  --pf-surface-tint-12: rgba(255, 246, 235, 0.12);
+  --pf-surface-tint-14: rgba(255, 246, 235, 0.14);
+  --pf-surface-highlight: rgba(255, 255, 255, 0.045);
+
+  --pf-body-gradient: linear-gradient(
+    180deg,
+    var(--pf-brand-ink-925) 0%,
+    var(--pf-brand-brown-850) 46%,
+    var(--pf-brand-brown-800) 100%
+  );
+
+  /* —— Core neutrals (mapped from brand ladder) —— */
+  --pf-bg-app: var(--pf-brand-ink-950);
+  --pf-bg-page: var(--pf-brand-ink-925);
+  --pf-bg-surface: var(--pf-brand-brown-900);
+  --pf-bg-surface-muted: #12100c;
+  --pf-bg-elevated: var(--pf-brand-brown-850);
+
+  --pf-border-subtle: var(--pf-brand-border-warm);
+  --pf-border-default: var(--pf-brand-border-warm-mid);
+  --pf-border-strong: var(--pf-brand-border-warm-strong);
+
+  --pf-text-primary: #f4efe6;
+  --pf-text-secondary: #d4c9bc;
+  --pf-text-tertiary: rgba(201, 191, 179, 0.95);
+  --pf-text-muted: var(--pf-brand-text-muted);
+  --pf-text-inverse: var(--pf-brand-ink-950);
 
   /* —— Brand —— */
-  --pf-accent-primary: #ff7a18;
+  --pf-accent-primary: var(--pf-brand-ember);
   --pf-accent-primary-hover: #ff8c2a;
   --pf-accent-primary-deep: #b74310;
-  --pf-accent-primary-soft: rgba(255, 122, 24, 0.14);
-  --pf-accent-primary-border: rgba(255, 122, 24, 0.28);
-  --pf-accent-primary-glow: rgba(255, 122, 24, 0.28);
+  --pf-accent-primary-soft: var(--pf-brand-ember-soft);
+  --pf-accent-primary-border: rgba(255, 122, 24, 0.24);
+  --pf-accent-primary-glow: rgba(255, 122, 24, 0.16);
 
   --pf-accent-secondary: #c93b2f;
   --pf-accent-secondary-hover: #e24d40;
@@ -38,9 +80,9 @@
   --pf-accent-secondary-glow: rgba(201, 59, 47, 0.22);
 
   /* —— Semantic —— */
-  --pf-success: #10b981;
-  --pf-success-soft: rgba(16, 185, 129, 0.12);
-  --pf-success-border: rgba(52, 211, 153, 0.24);
+  --pf-success: var(--pf-brand-success);
+  --pf-success-soft: var(--pf-brand-success-soft);
+  --pf-success-border: rgba(123, 217, 154, 0.26);
 
   --pf-warning: #f59e0b;
   --pf-warning-soft: rgba(245, 158, 11, 0.12);
@@ -50,32 +92,32 @@
   --pf-danger-soft: rgba(201, 59, 47, 0.14);
   --pf-danger-border: rgba(201, 59, 47, 0.28);
 
-  --pf-info: #a8a29e;
-  --pf-info-soft: rgba(168, 162, 158, 0.12);
-  --pf-info-border: rgba(168, 162, 158, 0.22);
+  --pf-info: var(--pf-brand-text-muted);
+  --pf-info-soft: rgba(169, 157, 144, 0.12);
+  --pf-info-border: rgba(169, 157, 144, 0.22);
 
   /* —— Shell & cards —— */
-  --pf-card-bg: rgba(17, 16, 15, 0.94);
-  --pf-card-border: var(--pf-border-default);
+  --pf-card-bg: rgba(33, 27, 20, 0.96);
+  --pf-card-border: var(--pf-brand-border-warm-mid);
   --pf-card-radius-xl: 24px;
-  --pf-card-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  --pf-card-shadow: 0 10px 32px rgba(0, 0, 0, 0.28), inset 0 1px 0 var(--pf-surface-highlight);
 
-  --pf-card-quiet-bg: rgba(255, 255, 255, 0.03);
-  --pf-card-quiet-border: rgba(255, 255, 255, 0.08);
+  --pf-card-quiet-bg: var(--pf-surface-tint-03);
+  --pf-card-quiet-border: var(--pf-brand-border-warm);
 
-  /* Command-center intros: ember wash stays subtle; border reads as glass, not orange chrome. */
-  --pf-card-hero-bg: radial-gradient(circle at top left, rgba(255, 122, 24, 0.075), transparent 44%),
-    radial-gradient(circle at top right, rgba(201, 59, 47, 0.055), transparent 38%),
-    linear-gradient(180deg, rgba(22, 19, 15, 0.97), rgba(10, 9, 7, 0.99));
-  --pf-card-hero-border: rgba(255, 255, 255, 0.1);
+  /* Command-center intros: ember wash stays subtle; border reads warm paper, not orange chrome. */
+  --pf-card-hero-bg: radial-gradient(circle at top left, rgba(255, 122, 24, 0.07), transparent 44%),
+    radial-gradient(circle at top right, rgba(201, 59, 47, 0.05), transparent 38%),
+    linear-gradient(180deg, rgba(42, 34, 25, 0.55) 0%, rgba(20, 16, 13, 0.98) 100%);
+  --pf-card-hero-border: var(--pf-brand-border-warm-mid);
 
   /* —— Queue row surfaces —— */
-  --pf-row-urgent-bg: rgba(255, 255, 255, 0.06);
-  --pf-row-urgent-border: rgba(255, 255, 255, 0.14);
-  --pf-row-review-bg: rgba(255, 255, 255, 0.04);
-  --pf-row-review-border: rgba(255, 255, 255, 0.1);
-  --pf-row-resolved-bg: rgba(255, 255, 255, 0.025);
-  --pf-row-resolved-border: rgba(255, 255, 255, 0.07);
+  --pf-row-urgent-bg: var(--pf-surface-tint-06);
+  --pf-row-urgent-border: var(--pf-surface-tint-14);
+  --pf-row-review-bg: var(--pf-surface-tint-04);
+  --pf-row-review-border: var(--pf-surface-tint-10);
+  --pf-row-resolved-bg: var(--pf-surface-tint-03);
+  --pf-row-resolved-border: var(--pf-surface-tint-07);
 
   --pf-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
@@ -102,20 +144,20 @@
   --pf-btn-primary-bg: var(--pf-accent-primary);
   --pf-btn-primary-bg-hover: var(--pf-accent-primary-hover);
   --pf-btn-primary-text: #fff7ed;
-  --pf-btn-primary-shadow: 0 8px 28px rgba(255, 122, 24, 0.32);
+  --pf-btn-primary-shadow: 0 8px 26px rgba(255, 122, 24, 0.26);
 
-  --pf-btn-secondary-bg: rgba(255, 255, 255, 0.04);
-  --pf-btn-secondary-bg-hover: rgba(255, 255, 255, 0.07);
-  --pf-btn-secondary-border: rgba(255, 255, 255, 0.1);
-  --pf-btn-secondary-border-hover: rgba(255, 122, 24, 0.35);
+  --pf-btn-secondary-bg: var(--pf-surface-tint-04);
+  --pf-btn-secondary-bg-hover: var(--pf-surface-tint-06);
+  --pf-btn-secondary-border: var(--pf-brand-border-warm);
+  --pf-btn-secondary-border-hover: rgba(255, 122, 24, 0.32);
   --pf-btn-secondary-text: var(--pf-text-primary);
 
   --pf-btn-link-text: #fdba74;
   --pf-btn-link-text-hover: #ffedd5;
 
-  --pf-chip-neutral-bg: rgba(255, 255, 255, 0.05);
-  --pf-chip-neutral-border: rgba(255, 255, 255, 0.1);
-  --pf-chip-neutral-text: #d6d3d1;
+  --pf-chip-neutral-bg: var(--pf-surface-tint-05);
+  --pf-chip-neutral-border: var(--pf-surface-tint-10);
+  --pf-chip-neutral-text: #d0c4b8;
 
   --pf-chip-primary-bg: rgba(255, 122, 24, 0.14);
   --pf-chip-primary-border: rgba(255, 122, 24, 0.28);
@@ -135,18 +177,18 @@
 
   --pf-chip-success-bg: var(--pf-success-soft);
   --pf-chip-success-border: var(--pf-success-border);
-  --pf-chip-success-text: #a7f3d0;
+  --pf-chip-success-text: #c9f0d8;
 
-  --pf-shell-bg: linear-gradient(180deg, #030303 0%, #050505 42%, #10100f 100%);
+  --pf-shell-bg: var(--pf-body-gradient);
 
   --pf-hover-lift: translateY(-1px);
   --pf-focus-ring: 0 0 0 3px rgba(255, 122, 24, 0.28);
   --pf-transition-fast: 140ms ease;
   --pf-transition-base: 180ms ease;
 
-  /* Auth inputs — near-black warm fill (never slate/navy) */
-  --pf-auth-input-bg: #12110f;
-  --pf-auth-input-border: rgba(255, 255, 255, 0.14);
+  /* Auth inputs — walnut fill, warm border (never slate/navy) */
+  --pf-auth-input-bg: var(--pf-brand-brown-800);
+  --pf-auth-input-border: var(--pf-brand-border-warm-mid);
   --pf-auth-input-border-focus: rgba(255, 122, 24, 0.72);
 
   --bg: var(--pf-bg-app);
@@ -156,62 +198,29 @@
   --primary: var(--pf-accent-primary);
 }
 
-/* —— Public marketing homepage: warm operations desk (scoped; app routes unchanged) —— */
+/* —— Public marketing homepage — inherits global warm tokens; light-touch polish only —— */
 body:has(> main.pf-marketing-landing) {
-  background-color: #16130e;
-  background-image: linear-gradient(180deg, #14110d 0%, #1a1611 52%, #1e1a15 100%);
+  background-color: var(--pf-bg-page);
+  background-image: var(--pf-body-gradient);
   background-attachment: fixed;
 }
 
 main.pf-marketing-landing {
-  --pf-bg-app: #15110d;
-  --pf-bg-page: #16130e;
-  --pf-bg-surface: #1e1914;
-  --pf-bg-surface-muted: #18140f;
-  --pf-bg-elevated: #252019;
-
-  --pf-border-subtle: rgba(255, 226, 190, 0.1);
-  --pf-border-default: rgba(255, 226, 190, 0.14);
-  --pf-border-strong: rgba(255, 226, 190, 0.2);
-
-  --pf-text-primary: #f4efe6;
-  --pf-text-secondary: #c9bfb3;
-  --pf-text-tertiary: rgba(190, 180, 168, 0.95);
-  --pf-text-muted: #9a8f82;
-
-  --pf-accent-primary-border: rgba(255, 122, 24, 0.22);
-  --pf-accent-primary-soft: rgba(255, 122, 24, 0.1);
+  /* Softer CTA glow on long-scroll marketing (signed-in keeps :root shadow) */
+  --pf-btn-primary-shadow: 0 7px 22px rgba(255, 122, 24, 0.2);
+  --pf-accent-primary-soft: rgba(255, 122, 24, 0.11);
   --pf-accent-primary-glow: rgba(255, 122, 24, 0.12);
+  --pf-accent-primary-border: rgba(255, 122, 24, 0.22);
 
-  --pf-card-bg: rgba(33, 27, 20, 0.96);
-  --pf-card-border: rgba(255, 226, 190, 0.12);
-  --pf-card-shadow: 0 10px 36px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-
-  --pf-card-quiet-bg: rgba(255, 246, 235, 0.04);
-  --pf-card-quiet-border: rgba(255, 226, 190, 0.1);
-
-  --pf-card-hero-bg: linear-gradient(165deg, rgba(42, 34, 25, 0.55) 0%, rgba(28, 24, 18, 0.98) 100%);
-  --pf-card-hero-border: rgba(255, 226, 190, 0.12);
-
-  --pf-btn-primary-shadow: 0 7px 22px rgba(255, 122, 24, 0.18);
-  --pf-btn-secondary-bg: rgba(255, 246, 235, 0.05);
-  --pf-btn-secondary-border: rgba(255, 226, 190, 0.12);
-  --pf-btn-secondary-border-hover: rgba(255, 122, 24, 0.28);
-
-  --pf-shell-bg: linear-gradient(180deg, #14110d 0%, #1a1611 48%, #201c16 100%);
-
-  --pf-auth-input-bg: #1c1813;
-  --pf-auth-input-border: rgba(255, 226, 190, 0.14);
-
-  background: var(--pf-shell-bg);
+  background: transparent;
   color: var(--pf-text-primary);
 }
 
 .pf-marketing-landing .ms-rc-file {
-  background: #211b14;
-  border-color: rgba(255, 226, 190, 0.1);
+  background: var(--pf-brand-brown-800);
+  border-color: var(--pf-brand-border-warm);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    inset 0 1px 0 var(--pf-surface-highlight),
     0 12px 36px rgba(0, 0, 0, 0.2);
 }
 
@@ -225,7 +234,7 @@ body {
   padding: 0;
   min-height: 100%;
   background-color: var(--pf-bg-app);
-  background-image: linear-gradient(180deg, #030303 0%, #050505 42%, #10100f 100%);
+  background-image: var(--pf-body-gradient);
   background-attachment: fixed;
   color: var(--text);
   font-family: var(--pf-font-sans);
