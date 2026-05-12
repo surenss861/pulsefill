@@ -38,6 +38,19 @@ a {
   text-decoration: none;
 }
 
+.nav-links a:focus-visible,
+.brand:focus-visible {
+  outline: 2px solid rgba(255, 214, 170, 0.45);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.button:focus-visible,
+.ms-rc-case-cta:focus-visible {
+  outline: 2px solid rgba(255, 214, 170, 0.55);
+  outline-offset: 2px;
+}
+
 img {
   display: block;
   max-width: 100%;
@@ -132,7 +145,7 @@ img {
 
 .eyebrow {
   margin: 0 0 14px;
-  color: #ffc494;
+  color: rgba(254, 206, 168, 0.88);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -191,6 +204,14 @@ h2 {
   box-shadow: 0 10px 28px rgba(255, 122, 24, 0.22);
 }
 
+.button.primary:hover {
+  filter: brightness(1.05);
+}
+
+.button.secondary:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
 .button.secondary {
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.045);
@@ -213,62 +234,14 @@ h2 {
   font-weight: 700;
 }
 
-.metrics,
-.workflow {
+.metrics {
   max-width: var(--max);
   margin: 0 auto;
   padding: 0 22px;
-}
-
-.metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   transform: translateY(-18px);
-}
-
-.workflow {
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 38px;
-  margin-bottom: 54px;
-  border-radius: 24px;
-  padding: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: #141210;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.03);
-}
-
-.workflow ol {
-  display: grid;
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.workflow li {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 58px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 14px;
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.035);
-  font-weight: 700;
-}
-
-.workflow li span {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--ember-soft);
-  color: #ffc494;
-  font-size: 12px;
 }
 
 @media (max-width: 900px) {
@@ -277,8 +250,7 @@ h2 {
     padding-bottom: 40px;
   }
 
-  .hero-grid,
-  .workflow {
+  .hero-grid {
     grid-template-columns: 1fr;
   }
 
@@ -301,6 +273,10 @@ h2 {
 
   .ms-rc-case-service {
     font-size: 22px;
+  }
+
+  .ms-rc-workflow {
+    max-width: none;
   }
 
   .ms-operator-grid {
@@ -336,11 +312,6 @@ h2 {
   .metrics {
     grid-template-columns: 1fr;
     transform: none;
-  }
-
-  .workflow {
-    margin-top: 18px;
-    padding: 24px 18px;
   }
 }
 
@@ -389,10 +360,10 @@ h2 {
   flex-shrink: 0;
   background: linear-gradient(
     180deg,
-    rgba(80, 72, 64, 0.9) 0%,
-    rgba(120, 90, 64, 0.55) 42%,
-    rgba(255, 122, 24, 0.35) 72%,
-    rgba(90, 209, 138, 0.45) 100%
+    rgba(72, 66, 60, 0.95) 0%,
+    rgba(100, 82, 68, 0.5) 40%,
+    rgba(255, 122, 24, 0.22) 74%,
+    rgba(90, 209, 138, 0.38) 100%
   );
 }
 
@@ -418,6 +389,7 @@ h2 {
   letter-spacing: -0.03em;
   line-height: 1.15;
   color: rgba(247, 243, 237, 0.96);
+  overflow-wrap: anywhere;
 }
 
 .ms-rc-case-when {
@@ -471,12 +443,18 @@ h2 {
   min-height: 44px;
   border: none;
   border-radius: 10px;
-  cursor: default;
+  cursor: pointer;
   font-family: inherit;
   font-size: 13px;
   font-weight: 750;
   color: #160a02;
   background: var(--ember);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ms-rc-case-cta:hover {
+    filter: brightness(1.05);
+  }
 }
 
 .ms-rc-case-recover {
@@ -509,9 +487,9 @@ h2 {
 }
 
 .ms-rc-step--active {
-  border-color: rgba(255, 122, 24, 0.22);
-  background: linear-gradient(165deg, rgba(28, 22, 18, 0.98), rgba(14, 12, 10, 0.99));
-  box-shadow: inset 3px 0 0 rgba(255, 122, 24, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(165deg, rgba(22, 19, 17, 0.99), rgba(11, 10, 9, 0.99));
+  box-shadow: inset 3px 0 0 rgba(255, 122, 24, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .ms-rc-step-badge {
@@ -529,9 +507,9 @@ h2 {
 }
 
 .ms-rc-step--active .ms-rc-step-badge {
-  background: rgba(255, 122, 24, 0.14);
-  border-color: rgba(255, 122, 24, 0.35);
-  color: #fec89a;
+  background: rgba(255, 122, 24, 0.09);
+  border-color: rgba(255, 122, 24, 0.22);
+  color: rgba(254, 200, 168, 0.95);
 }
 
 .ms-rc-step-body {
@@ -642,9 +620,7 @@ h2 {
 
 .ms-section--path {
   border-top: 1px solid rgba(255, 255, 255, 0.07);
-  background:
-    radial-gradient(ellipse 85% 50% at 50% 0%, rgba(255, 122, 24, 0.04), transparent 55%),
-    linear-gradient(180deg, rgba(8, 7, 6, 0.5), rgba(255, 122, 24, 0.02));
+  background: linear-gradient(180deg, rgba(10, 9, 8, 0.65), transparent 70%);
 }
 
 #path-heading {
