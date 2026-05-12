@@ -292,7 +292,7 @@ export function PulseFillLandingPageContent() {
                   style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 18px", marginTop: 16 }}
                 >
                   <PrimaryButton href={demoHref}>Book a demo</PrimaryButton>
-                  <TextLink href="#how-it-works">See the workflow</TextLink>
+                  <TextLink href="#how-it-works">See how it works</TextLink>
                 </div>
                 <p
                   data-hero-reveal
@@ -372,7 +372,7 @@ export function PulseFillLandingPageContent() {
                 },
                 {
                   t: "Manual follow-up doesn't scale",
-                  d: "The desk becomes the workflow — not a system.",
+                  d: "The front desk carries the process in their heads — not in one system everyone trusts.",
                 },
                 {
                   t: "Most tools stop at the calendar",
@@ -444,7 +444,7 @@ export function PulseFillLandingPageContent() {
         <Container>
           <div style={{ maxWidth: 560, marginBottom: "clamp(36px, 5vw, 56px)" }}>
             <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
-              The missing layer
+              What&apos;s missing today
             </div>
             <h2
               style={{
@@ -607,7 +607,7 @@ export function PulseFillLandingPageContent() {
               From open slot to recovered booking
             </h2>
             <p style={{ margin: "10px 0 0 0", color: TOKENS.muted, fontSize: 14, lineHeight: 1.6, maxWidth: 480 }}>
-              PulseFill connects standby demand, operator action, and recovered outcomes in one workflow.
+              PulseFill connects waiting customers, desk actions, and recovered revenue in one place.
             </p>
           </div>
 
@@ -894,17 +894,17 @@ export function PulseFillLandingPageContent() {
             }}
           >
             <div style={{ fontSize: 9, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 18 }}>
-              Operating signals
+              What you can show later
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "28px 44px" }}>
               {[
-                ["Fill-rate Visibility", "Live"],
-                ["Workflow Clarity", "High"],
-                ["Manual Chaos", "Down"],
-              ].map(([k, v]) => (
-                <div key={k}>
+                { k: "Timed offers", v: "Who was contacted, and when." },
+                { k: "Claims", v: "Who said yes to the opening." },
+                { k: "Confirms", v: "What still needs the booking locked in." },
+              ].map(({ k, v }) => (
+                <div key={k} style={{ flex: "1 1 180px", minWidth: 0, maxWidth: 240 }}>
                   <div style={{ fontSize: 9, color: TOKENS.muted, fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase" }}>{k}</div>
-                  <div style={{ marginTop: 6, fontSize: 24, fontWeight: 680, letterSpacing: "-0.035em", color: TOKENS.text }}>{v}</div>
+                  <p style={{ margin: "8px 0 0 0", color: TOKENS.text, fontSize: 13, lineHeight: 1.45, fontWeight: 520 }}>{v}</p>
                 </div>
               ))}
             </div>
@@ -940,10 +940,10 @@ export function PulseFillLandingPageContent() {
                 maxWidth: 480,
               }}
             >
-              Understandable. Controllable. Real.
+              Your team stays in control.
             </h2>
-            <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.62, maxWidth: 400 }}>
-              Who was offered, who claimed, what failed to send, what still needs a confirm — all in one place.
+            <p style={{ margin: "16px 0 0 0", color: TOKENS.muted, fontSize: 13, lineHeight: 1.62, maxWidth: 420 }}>
+              PulseFill shows what happened, who claimed, and what to do next — before the appointment time is lost.
             </p>
           </div>
           <div
@@ -955,7 +955,7 @@ export function PulseFillLandingPageContent() {
               boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.03)",
             }}
           >
-            {["Clear queue reasons", "Explicit desk actions", "Delivery visibility", "No mystery status"].map((item, i, arr) => (
+            {["Who was offered — and when", "Who claimed the opening", "What still needs a desk confirm", "What revenue to count as saved"].map((item, i, arr) => (
               <div
                 key={item}
                 style={{
@@ -977,8 +977,8 @@ export function PulseFillLandingPageContent() {
               </div>
             ))}
           </div>
-          <p style={{ marginTop: 28, color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 360, fontWeight: 500 }}>
-            Plain language, clear owners, and states you can defend in a busy afternoon.
+          <p style={{ marginTop: 28, color: TOKENS.muted, fontSize: 12, lineHeight: 1.55, maxWidth: 380, fontWeight: 500 }}>
+            You keep clinical judgment; PulseFill keeps the paper trail the front desk can defend.
           </p>
         </Container>
       </section>
@@ -1036,7 +1036,7 @@ export function PulseFillLandingPageContent() {
                     textTransform: "uppercase",
                   }}
                 >
-                  Ready to lose fewer openings?
+                  Book a demo
                 </div>
                 <h2
                   data-cta-reveal
@@ -1049,13 +1049,14 @@ export function PulseFillLandingPageContent() {
                     fontWeight: 630,
                   }}
                 >
-                  Run cancellation recovery with the same rigor as the rest of the day.
+                  Turn cancelled visits into confirmed chairs.
                 </h2>
                 <p
                   data-cta-reveal
-                  style={{ margin: "14px auto 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.52, maxWidth: 340 }}
+                  style={{ margin: "14px auto 0", color: TOKENS.muted, fontSize: 12, lineHeight: 1.52, maxWidth: 400 }}
                 >
-                  When someone cancels, PulseFill finds a waiting customer and helps staff confirm the booking.
+                  See how PulseFill helps your team catch cancellations, offer the spot to waiting customers, and confirm
+                  the booking before the day is lost.
                 </p>
                 <div
                   data-cta-reveal
@@ -1091,8 +1092,8 @@ export function PulseFillLandingPageContent() {
         >
           <div style={{ display: "grid", gap: 6 }}>
             <span style={{ color: TOKENS.text, fontWeight: 600 }}>PulseFill</span>
-            <span style={{ fontSize: 12, color: TOKENS.muted, maxWidth: 320, lineHeight: 1.5 }}>
-              Appointment recovery infrastructure for teams running near-term schedule change.
+            <span style={{ fontSize: 12, color: TOKENS.muted, maxWidth: 340, lineHeight: 1.5 }}>
+              Help your team turn cancelled appointments into confirmed bookings — with clear steps and recovered revenue.
             </span>
           </div>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
