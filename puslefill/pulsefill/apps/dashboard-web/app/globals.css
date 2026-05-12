@@ -292,11 +292,17 @@ main.pf-auth-shell {
   flex: 1;
   width: 100%;
   max-width: 980px;
-  margin: 0 auto;
+  margin: clamp(20px, 3vh, 34px) auto 0;
   padding: clamp(28px, 5vw, 52px) clamp(20px, 4vw, 28px) 48px;
   display: grid;
   gap: clamp(24px, 4vw, 36px);
   align-content: start;
+}
+
+@media (max-width: 760px) {
+  .pf-auth-split {
+    margin-top: 12px;
+  }
 }
 
 @media (min-width: 920px) {
