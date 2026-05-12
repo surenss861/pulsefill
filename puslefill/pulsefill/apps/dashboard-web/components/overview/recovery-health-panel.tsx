@@ -63,14 +63,39 @@ type Props = {
   data: RecoveryHealthResponse | null;
   loading: boolean;
   error: string | null;
+  /** Refetch after a failed load (shown as Retry on the friendly error card). */
+  onReload?: () => void;
 };
 
-export function RecoveryHealthPanel({ data, loading, error }: Props) {
+export function RecoveryHealthPanel({ data, loading, error, onReload }: Props) {
   if (loading) {
     return <OperatorLoadingState variant="section" title="Loading recovery readiness…" skeleton="rows" />;
   }
   if (error) {
-    return <OperatorErrorState title="Could not load recovery readiness" rawMessage={error} compact />;
+    return (
+      <OperatorErrorState
+        title="We couldn't load recovery status."
+        description="Refresh this card. Your openings and customers are still safe."
+        primaryAction={
+          <button
+            type="button"
+            onClick={() => void onReload?.()}
+            style={{
+              ...actionLinkStyle("secondary"),
+              border: "1px solid var(--pf-brand-border-warm-mid)",
+              background: "var(--pf-surface-tint-05)",
+              padding: "8px 14px",
+              borderRadius: 10,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            Retry
+          </button>
+        }
+        compact
+      />
+    );
   }
   if (!data) {
     return null;

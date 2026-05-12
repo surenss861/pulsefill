@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionQueuePreviewCard } from "@/components/action-queue/action-queue-preview-card";
-import { GettingStartedCard } from "@/components/overview/getting-started-card";
-import { OverviewOperatorHero } from "@/components/overview/overview-operator-hero";
+import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
+import { DashboardRecoveryPathSection } from "@/components/dashboard/dashboard-recovery-path-section";
 import { OverviewMetricCard } from "@/components/ui/overview-metric-card";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
 import { DailyOpsStatusStrip } from "@/components/overview/daily-ops-status-strip";
@@ -40,7 +40,7 @@ import { FadeUp } from "@/components/motion/operator-motion";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
 import { RecoveryHealthPanel } from "@/components/overview/recovery-health-panel";
 import { NextBestActionCard } from "@/components/operator/next-best-action-card";
-import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
+import { type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { BillingNoticeBanner } from "@/components/billing/billing-notice-banner";
 import { actionLinkStyle } from "@/lib/operator-action-link-styles";
@@ -105,20 +105,41 @@ export function OverviewPageContent({
   const urgentOpeningsCount = actionQueue.data?.summary.needs_action_count ?? 0;
   const awaitingConfirmationCount = actionQueue.data?.summary.awaiting_confirmation_count ?? 0;
 
+  const setupStepsDone = useMemo(
+    () =>
+      [
+        checklist.hasLocation,
+        checklist.hasProvider,
+        checklist.hasService,
+        checklist.hasOpenSlot,
+        checklist.hasOffersSent,
+        checklist.hasConfirmedBooking,
+      ].filter(Boolean).length,
+    [checklist],
+  );
+
+  const headerDescription = useMemo(() => {
+    if (loading) return "Loading your workspace…";
+    if (!setupComplete) {
+      const left = Math.max(0, 6 - setupStepsDone);
+      return (
+        <>
+          <span style={{ fontWeight: 650, color: "var(--pf-text-primary)" }}>Finish setup to start recovery.</span>
+          <span className="pf-muted-copy" style={{ display: "block", marginTop: 8 }}>
+            {left} step{left === 1 ? "" : "s"} left before PulseFill can match openings to waiting customers.
+          </span>
+        </>
+      );
+    }
+    return "Openings, recovery, and customers in one place.";
+  }, [loading, setupComplete, setupStepsDone]);
+
   const nextBest = useMemo(() => {
     if (loading) return null;
 
     const liveOpen = liveCounts.data?.counts.open ?? 0;
     const offersSent = metrics?.offers_sent ?? 0;
     const slotsBooked = metrics?.slots_booked ?? 0;
-    const setupStepsDone = [
-      checklist.hasLocation,
-      checklist.hasProvider,
-      checklist.hasService,
-      checklist.hasOpenSlot,
-      checklist.hasOffersSent,
-      checklist.hasConfirmedBooking,
-    ].filter(Boolean).length;
 
     const baseStats = [
       {
@@ -165,7 +186,7 @@ export function OverviewPageContent({
         priority: "setup" as const,
         title: "Finish workspace setup",
         description:
-          "Complete your services, providers, and locations so openings can be matched correctly.",
+          "Add your services, providers, and locations so PulseFill can match openings to the right customers.",
         pipelineStep: "opening" as const,
         supportingStats: [
           { label: "Workspace steps", value: `${setupStepsDone}/6`, tone: "live" as const },
@@ -228,6 +249,7 @@ export function OverviewPageContent({
     standbyRequests.count,
     urgentOpeningsCount,
     setup.openSlotsCount,
+    setupStepsDone,
   ]);
 
   const recoverySubtitle = useMemo(() => {
@@ -319,7 +341,7 @@ export function OverviewPageContent({
     <main className="pf-page-overview" style={{ padding: 0 }}>
       <OperatorPageTransition>
       <FadeUp>
-        <OverviewOperatorHero />
+        <DashboardPageHeader description={headerDescription} />
       </FadeUp>
 
       {!billingSummary.loading && billingSummary.data ? (
@@ -332,7 +354,7 @@ export function OverviewPageContent({
 
       {nextBest ? (
         <FadeUp delay={0.05}>
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginTop: 16 }} id={!setupComplete ? "getting-started" : undefined}>
             <NextBestActionCard
               actionKey={nextBest.actionKey}
               title={nextBest.title}
@@ -350,10 +372,23 @@ export function OverviewPageContent({
       ) : null}
 
       <FadeUp delay={0.055}>
-        <div style={{ marginTop: nextBest ? 12 : 16 }}>
-          <RecoveryHealthPanel data={recoveryHealth.data} loading={recoveryHealth.loading} error={recoveryHealth.error} />
+        <div className="pf-dashboard-recovery-health" style={{ marginTop: nextBest ? 12 : 16 }}>
+          <RecoveryHealthPanel
+            data={recoveryHealth.data}
+            loading={recoveryHealth.loading}
+            error={recoveryHealth.error}
+            onReload={() => void recoveryHealth.reload()}
+          />
         </div>
       </FadeUp>
+
+      {!loading ? (
+        <FadeUp delay={0.056}>
+          <div style={{ marginTop: 16 }}>
+            <DashboardRecoveryPathSection activeStep={pipelineForRail} counts={recoveryPipelineCounts} />
+          </div>
+        </FadeUp>
+      ) : null}
 
       <FadeUp delay={0.06}>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
@@ -374,9 +409,9 @@ export function OverviewPageContent({
             onClick={() => void refresh()}
             style={{
               borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.18)",
-              background: "rgba(255,255,255,0.06)",
-              color: "var(--text)",
+              border: "1px solid var(--pf-brand-border-warm-mid)",
+              background: "var(--pf-surface-tint-05)",
+              color: "var(--pf-text-primary)",
               padding: "8px 14px",
               fontSize: 13,
               cursor: "pointer",
@@ -402,27 +437,14 @@ export function OverviewPageContent({
       {loading ? <p style={{ color: "var(--muted)", marginTop: 20 }}>Loading overview…</p> : null}
 
       {showGettingStarted && !loading ? (
-        <div className="pf-command-cockpit pf-command-cockpit--after-nba">
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
-            <GettingStartedCard state={checklist} compact />
-            <ActionQueuePreviewCard
-              items={actionQueue.data?.sections.needs_action ?? []}
-              loading={actionQueue.loading}
-              error={actionQueue.error}
-              summary={actionQueue.data?.summary}
-              hierarchy="secondary"
-            />
-          </div>
-          <aside className="pf-command-cockpit-rail">
-            <RecoveryPipeline
-              activeStep={pipelineForRail}
-              counts={recoveryPipelineCounts}
-              compact
-              animated
-              featured
-              interactive
-            />
-          </aside>
+        <div className="pf-command-cockpit pf-command-cockpit--after-nba pf-command-cockpit--stacked">
+          <ActionQueuePreviewCard
+            items={actionQueue.data?.sections.needs_action ?? []}
+            loading={actionQueue.loading}
+            error={actionQueue.error}
+            summary={actionQueue.data?.summary}
+            hierarchy="secondary"
+          />
           <div className="pf-command-cockpit-footer">
             <CommandCenterRecentActivity />
           </div>
@@ -464,7 +486,7 @@ export function OverviewPageContent({
             }}
           />
 
-          <div className="pf-command-cockpit pf-command-cockpit--after-nba">
+          <div className="pf-command-cockpit pf-command-cockpit--after-nba pf-command-cockpit--stacked">
             <div style={{ minWidth: 0 }}>
               <ActionQueuePreviewCard
                 items={actionQueue.data?.sections.needs_action ?? []}
@@ -474,16 +496,6 @@ export function OverviewPageContent({
                 hierarchy="secondary"
               />
             </div>
-            <aside className="pf-command-cockpit-rail">
-              <RecoveryPipeline
-                activeStep={pipelineForRail}
-                counts={recoveryPipelineCounts}
-                compact
-                animated
-                featured
-                interactive
-              />
-            </aside>
             <div className="pf-command-cockpit-footer">
               <CommandCenterRecentActivity />
             </div>

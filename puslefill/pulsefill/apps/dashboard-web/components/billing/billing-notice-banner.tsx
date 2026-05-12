@@ -42,7 +42,7 @@ export function BillingNoticeBanner({
     href: "/billing",
   };
   if (canCheckout) {
-    primary = { kind: "checkout", label: "Start subscription", onClick: () => void runCheckout() };
+    primary = { kind: "checkout", label: "Activate billing", onClick: () => void runCheckout() };
   } else if (canPortal) {
     primary = { kind: "portal", label: "Open billing portal", onClick: () => void runPortal() };
   }

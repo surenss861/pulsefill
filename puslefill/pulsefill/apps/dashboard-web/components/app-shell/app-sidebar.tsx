@@ -149,12 +149,12 @@ export function AppSidebar({ profile }: AppSidebarProps) {
         </div>
         {!live ? (
           <>
-            <p className="pf-meta-row" style={{ margin: "14px 4px 0", textTransform: "uppercase", letterSpacing: "0.16em" }}>
-              Next action
+            <p className="pf-meta-row pf-sidebar-next-step-label" style={{ margin: "16px 4px 0", textTransform: "uppercase", letterSpacing: "0.14em" }}>
+              Next step
             </p>
             <Link
               href="/overview#getting-started"
-              style={{ display: "block", marginTop: 8, marginLeft: 4, fontSize: 12, fontWeight: 600, color: "var(--pf-accent-primary)" }}
+              className="pf-sidebar-next-step"
             >
               Continue setup →
             </Link>

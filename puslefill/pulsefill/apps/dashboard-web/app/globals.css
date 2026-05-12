@@ -1407,6 +1407,47 @@ main.pf-auth-shell .pf-auth-submit {
   }
 }
 
+/* Single-column Command Center (recovery path lives in full-width strip above). */
+.pf-command-cockpit.pf-command-cockpit--stacked {
+  grid-template-columns: 1fr;
+}
+
+.pf-dashboard-recovery-path {
+  padding: 18px 18px 20px;
+  border-radius: var(--pf-radius-xl);
+  border: 1px solid var(--pf-brand-border-warm-mid);
+  background: linear-gradient(165deg, var(--pf-surface-tint-04), rgba(14, 12, 10, 0.94));
+  box-shadow: inset 0 1px 0 var(--pf-surface-highlight), 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.pf-dashboard-recovery-health {
+  max-width: min(640px, 100%);
+}
+
+.pf-sidebar-next-step {
+  display: block;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  border: 1px solid var(--pf-brand-border-warm-mid);
+  background: var(--pf-surface-tint-05);
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--pf-accent-primary);
+  text-decoration: none;
+  text-align: center;
+}
+
+.pf-sidebar-next-step:hover {
+  background: var(--pf-surface-tint-07);
+  color: var(--pf-accent-primary-hover);
+  text-decoration: none;
+}
+
+.pf-sidebar-next-step-label {
+  margin-bottom: 0;
+}
+
 /* Next best action — primary command surface */
 .pf-next-best-action {
   width: 100%;
@@ -1738,7 +1779,7 @@ main.pf-auth-shell .pf-auth-submit {
   border-radius: 14px;
   border: 1px solid var(--pf-brand-border-warm-mid);
   background: linear-gradient(165deg, var(--pf-surface-tint-04), rgba(255, 122, 24, 0.03) 42%, rgba(20, 16, 13, 0.96));
-  padding: 14px 14px 12px;
+  padding: 16px 16px 14px;
   box-shadow: inset 0 1px 0 var(--pf-surface-highlight);
 }
 
