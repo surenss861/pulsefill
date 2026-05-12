@@ -659,6 +659,28 @@ main.pf-auth-shell .pf-auth-submit {
   letter-spacing: -0.03em;
 }
 
+/* Auth morph (/sign-in ↔ /sign-up): soft crossfade + slide, no extra chrome */
+.pf-auth-morph-story {
+  min-height: 0;
+}
+
+.pf-auth-morph-header-wrap {
+  overflow: hidden;
+}
+
+.pf-auth-morph-header .pf-auth-card-eyebrow {
+  margin-top: 0;
+}
+
+.pf-auth-morph-body {
+  margin-top: 2px;
+  overflow: hidden;
+}
+
+.pf-auth-morph-panel {
+  width: 100%;
+}
+
 @keyframes pf-auth-shell-enter {
   from {
     opacity: 0;

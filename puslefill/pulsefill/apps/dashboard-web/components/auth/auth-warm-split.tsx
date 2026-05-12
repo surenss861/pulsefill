@@ -9,10 +9,12 @@ export const AUTH_RECOVERY_BENEFITS = [
 ] as const;
 
 type AuthWarmSplitProps = {
-  /** Main headline (left column). */
-  headline: string;
-  /** Supporting paragraph under the headline. */
-  subhead: string;
+  /** Main headline (left column). Ignored when `leadingStory` is set. */
+  headline?: string;
+  /** Supporting paragraph under the headline. Ignored when `leadingStory` is set. */
+  subhead?: string;
+  /** Optional custom left story block (e.g. crossfading morph headline). */
+  leadingStory?: ReactNode;
   /** Optional benefit list; omit or pass empty to hide. */
   benefits?: readonly string[];
   /** Show the compact homepage-style case-file preview. */
@@ -28,6 +30,7 @@ type AuthWarmSplitProps = {
 export function AuthWarmSplit({
   headline,
   subhead,
+  leadingStory,
   benefits = AUTH_RECOVERY_BENEFITS,
   showCasePreview = true,
   brandHref = "/",
@@ -40,8 +43,14 @@ export function AuthWarmSplit({
           <Link href={brandHref} className="pf-auth-brand">
             PulseFill
           </Link>
-          <h1 className="pf-auth-lede">{headline}</h1>
-          <p className="pf-auth-sub">{subhead}</p>
+          {leadingStory ? (
+            leadingStory
+          ) : headline != null && subhead != null ? (
+            <>
+              <h1 className="pf-auth-lede">{headline}</h1>
+              <p className="pf-auth-sub">{subhead}</p>
+            </>
+          ) : null}
           {benefits.length > 0 ? (
             <ul className="pf-auth-benefits">
               {benefits.map((item) => (

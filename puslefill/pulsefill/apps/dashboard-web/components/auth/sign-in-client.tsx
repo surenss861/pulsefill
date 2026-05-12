@@ -4,12 +4,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 import { signInAction, sendMagicLinkAction, type AuthFormState } from "@/app/actions/auth";
-import { AuthWarmCard } from "@/components/auth/auth-warm-card";
-import { AUTH_RECOVERY_BENEFITS, AuthWarmSplit } from "@/components/auth/auth-warm-split";
 import { AuthField } from "@/components/auth/auth-field";
 import { PasswordField } from "@/components/auth/password-field";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { PageState } from "@/components/ui/page-state";
+import { AuthModeTransitionLink } from "@/components/auth/auth-mode-transition-link";
 
 const initial: AuthFormState = {};
 
@@ -22,73 +21,62 @@ export function SignInClient() {
   const [magicState, magicFormAction] = useActionState(sendMagicLinkAction, initial);
 
   return (
-    <AuthWarmSplit
-      headline={"Sign in to run today's recovery."}
-      subhead="Manage openings, claims, and confirmed bookings before the day slips away."
-      benefits={AUTH_RECOVERY_BENEFITS}
-      showCasePreview
-    >
-      <AuthWarmCard
-        eyebrow="Staff access"
-        title="Sign in"
-        lede="Access your PulseFill workspace and keep recovery moving."
-      >
-        {resetOk ? (
-          <div style={{ marginBottom: 18 }}>
-            <PageState variant="success" title="Password updated" description="Sign in with your new password." />
+    <>
+      {resetOk ? (
+        <div style={{ marginBottom: 18 }}>
+          <PageState variant="success" title="Password updated" description="Sign in with your new password." />
+        </div>
+      ) : null}
+
+      <form action={signInFormAction} style={{ display: "grid", gap: 0 }}>
+        <input type="hidden" name="next" value={next} />
+        <AuthField label="Email" name="email" type="email" placeholder="you@clinic.com" autoComplete="email" required />
+        <PasswordField label="Password" name="password" placeholder="••••••••" autoComplete="current-password" />
+        {signInState.error ? (
+          <div style={{ marginTop: 12 }}>
+            <PageState variant="error" title="Sign-in failed" description={signInState.error} />
           </div>
         ) : null}
+        <div style={{ marginTop: 8 }}>
+          <SubmitButton pendingText="Signing in…">Sign in</SubmitButton>
+        </div>
+      </form>
 
-        <form action={signInFormAction} style={{ display: "grid", gap: 0 }}>
-          <input type="hidden" name="next" value={next} />
+      <div
+        style={{
+          marginTop: 22,
+          paddingTop: 18,
+          borderTop: "1px solid var(--pf-brand-border-warm)",
+        }}
+      >
+        <form action={magicFormAction} style={{ display: "grid", gap: 0 }}>
           <AuthField label="Email" name="email" type="email" placeholder="you@clinic.com" autoComplete="email" required />
-          <PasswordField label="Password" name="password" placeholder="••••••••" autoComplete="current-password" />
-          {signInState.error ? (
+          {magicState.error ? (
             <div style={{ marginTop: 12 }}>
-              <PageState variant="error" title="Sign-in failed" description={signInState.error} />
+              <PageState variant="error" title="Magic link failed" description={magicState.error} />
             </div>
           ) : null}
-          <div style={{ marginTop: 8 }}>
-            <SubmitButton pendingText="Signing in…">Sign in</SubmitButton>
-          </div>
+          <button type="submit" className="pf-auth-magic-link">
+            Email me a sign-in link
+          </button>
         </form>
+      </div>
 
-        <div
-          style={{
-            marginTop: 22,
-            paddingTop: 18,
-            borderTop: "1px solid var(--pf-brand-border-warm)",
-          }}
-        >
-          <form action={magicFormAction} style={{ display: "grid", gap: 0 }}>
-            <AuthField label="Email" name="email" type="email" placeholder="you@clinic.com" autoComplete="email" required />
-            {magicState.error ? (
-              <div style={{ marginTop: 12 }}>
-                <PageState variant="error" title="Magic link failed" description={magicState.error} />
-              </div>
-            ) : null}
-            <button type="submit" className="pf-auth-magic-link">
-              Email me a sign-in link
-            </button>
-          </form>
-        </div>
+      <div className="pf-auth-footer">
+        <Link href="/forgot-password">Forgot password</Link>
+        <span style={{ color: "var(--pf-text-muted)", fontWeight: 500 }}>
+          Need an account? <AuthModeTransitionLink href="/sign-up">Create one</AuthModeTransitionLink>
+        </span>
+      </div>
 
-        <div className="pf-auth-footer">
-          <Link href="/forgot-password">Forgot password</Link>
-          <span style={{ color: "var(--pf-text-muted)", fontWeight: 500 }}>
-            Need an account? <Link href="/sign-up">Create one</Link>
-          </span>
-        </div>
+      <p className="pf-auth-reassure">Protected access for your business workspace.</p>
 
-        <p className="pf-auth-reassure">Protected access for your business workspace.</p>
-
-        <p style={{ margin: "14px 0 0", fontSize: 12, lineHeight: 1.45, color: "var(--pf-text-muted)" }}>
-          <Link href="/staff-login" style={{ fontWeight: 600 }}>
-            Paste access token
-          </Link>
-          <span style={{ fontWeight: 500, opacity: 0.85 }}> — internal staff</span>
-        </p>
-      </AuthWarmCard>
-    </AuthWarmSplit>
+      <p style={{ margin: "14px 0 0", fontSize: 12, lineHeight: 1.45, color: "var(--pf-text-muted)" }}>
+        <Link href="/staff-login" style={{ fontWeight: 600 }}>
+          Paste access token
+        </Link>
+        <span style={{ fontWeight: 500, opacity: 0.85 }}> — internal staff</span>
+      </p>
+    </>
   );
 }
