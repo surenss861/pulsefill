@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { OutcomeCard } from "../components/outcome-card";
-import { RecoveryCaseCard } from "../components/recovery-case-card";
+import { RecoveryCaseFile } from "../components/recovery-case-file";
 import { RecoveryStepCard } from "../components/recovery-step-card";
 import { RecoveryWorkflowSteps } from "../components/recovery-workflow-steps";
 
@@ -66,7 +66,7 @@ export default function HomePage() {
           </div>
 
           <div className="hero-visual-column">
-            <RecoveryCaseCard />
+            <RecoveryCaseFile />
           </div>
         </div>
       </section>

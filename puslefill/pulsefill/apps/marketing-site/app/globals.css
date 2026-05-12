@@ -46,7 +46,7 @@ a {
 }
 
 .button:focus-visible,
-.ms-rc-case-cta:focus-visible {
+.ms-rc-file-cta:focus-visible {
   outline: 2px solid rgba(255, 214, 170, 0.55);
   outline-offset: 2px;
 }
@@ -120,14 +120,14 @@ img {
     gap: 40px;
   }
 
-  .ms-rc-case {
+  .ms-rc-file {
     max-width: none;
     width: 100%;
   }
 }
 
 @media (min-width: 1181px) {
-  .ms-rc-case {
+  .ms-rc-file {
     max-width: 720px;
   }
 }
@@ -154,6 +154,7 @@ img {
 
 h1,
 h2,
+h3,
 p {
   overflow-wrap: anywhere;
 }
@@ -263,15 +264,15 @@ h2 {
     padding-top: 48px;
   }
 
-  .ms-rc-case {
+  .ms-rc-file {
     min-height: 0;
   }
 
-  .ms-rc-case-main {
-    padding: 20px 18px 22px 16px;
+  .ms-rc-file-sheet {
+    padding: 18px 16px 20px 14px;
   }
 
-  .ms-rc-case-service {
+  .ms-rc-file-service {
     font-size: 22px;
   }
 
@@ -337,112 +338,151 @@ h2 {
   overflow-x: clip;
 }
 
-/* --- Recovery card system (case file, steps, outcomes) --- */
-.ms-rc-case {
+/* --- Hero: recovery case file (operational ticket, not dashboard) --- */
+.ms-rc-file {
   width: 100%;
   max-width: 640px;
   margin-left: auto;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: linear-gradient(165deg, #1c1916 0%, #12100e 48%, #10100d 100%);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  background: #141311;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 14px 36px rgba(0, 0, 0, 0.32);
   overflow: hidden;
 }
 
-.ms-rc-case-inner {
+.ms-rc-file-inner {
   display: flex;
   align-items: stretch;
   min-height: 0;
 }
 
-.ms-rc-case-rail {
-  width: 5px;
+.ms-rc-file-rail {
+  width: 3px;
   flex-shrink: 0;
   background: linear-gradient(
     180deg,
-    rgba(72, 66, 60, 0.95) 0%,
-    rgba(100, 82, 68, 0.5) 40%,
-    rgba(255, 122, 24, 0.22) 74%,
-    rgba(90, 209, 138, 0.38) 100%
+    rgba(110, 98, 88, 0.85) 0%,
+    rgba(255, 138, 48, 0.28) 52%,
+    rgba(82, 196, 120, 0.55) 100%
   );
 }
 
-.ms-rc-case-main {
+.ms-rc-file-sheet {
   flex: 1;
   min-width: 0;
-  padding: 24px 22px 26px 20px;
+  padding: 20px 20px 22px 18px;
 }
 
-.ms-rc-case-overline {
+.ms-rc-file-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.ms-rc-file-kicker {
   margin: 0;
   font-size: 10px;
   font-weight: 750;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(183, 175, 165, 0.85);
+  color: rgba(183, 175, 165, 0.82);
 }
 
-.ms-rc-case-service {
-  margin: 10px 0 0;
-  font-size: clamp(22px, 2.8vw, 28px);
+.ms-rc-file-urgency {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 10px;
   font-weight: 750;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  color: rgba(247, 243, 237, 0.96);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(215, 200, 185, 0.72);
+  text-align: right;
+}
+
+.ms-rc-file-appointment {
+  padding-top: 18px;
+}
+
+.ms-rc-file-service {
+  margin: 0;
+  font-size: clamp(22px, 2.75vw, 27px);
+  font-weight: 760;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: rgba(247, 243, 237, 0.97);
   overflow-wrap: anywhere;
 }
 
-.ms-rc-case-when {
+.ms-rc-file-when {
   margin: 8px 0 0;
   font-size: 14px;
   font-weight: 550;
   color: rgba(215, 208, 198, 0.92);
 }
 
-.ms-rc-case-where {
+.ms-rc-file-where {
   margin: 4px 0 0;
   font-size: 13px;
   font-weight: 500;
   color: rgba(127, 121, 114, 0.95);
 }
 
-.ms-rc-case-status {
-  margin-top: 18px;
-  padding: 14px 14px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(0, 0, 0, 0.22);
+.ms-rc-file-recovery {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
 }
 
-.ms-rc-case-status p {
-  margin: 0 0 8px;
+.ms-rc-file-recovery-label {
+  margin: 0 0 10px;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(140, 133, 125, 0.88);
+}
+
+.ms-rc-file-line {
+  margin: 0 0 6px;
   font-size: 13px;
   line-height: 1.45;
   font-weight: 500;
-  color: rgba(215, 208, 198, 0.93);
+  color: rgba(205, 198, 188, 0.92);
 }
 
-.ms-rc-case-status p:last-child {
+.ms-rc-file-line:last-child {
   margin-bottom: 0;
 }
 
-.ms-rc-case-stat {
+.ms-rc-file-num {
   font-weight: 700;
-  color: rgba(247, 243, 237, 0.95);
-  margin-right: 4px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(247, 243, 237, 0.94);
+  margin-right: 2px;
 }
 
-.ms-rc-case-claim {
-  font-weight: 650;
-  color: rgba(254, 215, 170, 0.92) !important;
+.ms-rc-file-line--claim {
+  margin-top: 4px;
+  font-weight: 620;
+  color: rgba(224, 210, 194, 0.9);
 }
 
-.ms-rc-case-cta {
-  margin-top: 18px;
+.ms-rc-file-action {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.ms-rc-file-cta {
   width: 100%;
   min-height: 44px;
   border: none;
-  border-radius: 10px;
+  border-radius: 7px;
   cursor: pointer;
   font-family: inherit;
   font-size: 13px;
@@ -452,19 +492,19 @@ h2 {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .ms-rc-case-cta:hover {
+  .ms-rc-file-cta:hover {
     filter: brightness(1.05);
   }
 }
 
-.ms-rc-case-recover {
-  margin: 14px 0 0;
+.ms-rc-file-recover {
+  margin: 12px 0 0;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(183, 175, 165, 0.88);
+  color: rgba(183, 175, 165, 0.86);
 }
 
-.ms-rc-case-money {
+.ms-rc-file-money {
   font-weight: 750;
   color: rgba(127, 224, 173, 0.98);
 }
@@ -480,7 +520,7 @@ h2 {
   gap: 16px;
   align-items: flex-start;
   padding: 18px 18px 18px 16px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   background: #161513;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);

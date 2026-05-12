@@ -1,17 +1,12 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { CtaChamberMotion } from "@/components/landing/cta-chamber-motion";
 import { HeroEntranceMotion } from "@/components/landing/hero-entrance-motion";
-
-const HeroAtmosphere = dynamic(
-  () => import("@/components/landing/hero-atmosphere").then((m) => ({ default: m.HeroAtmosphere })),
-  { ssr: false },
-);
 import { HowItWorksPipeline } from "@/components/landing/how-it-works-pipeline";
 import { LANDING_PIPELINE_STEPS } from "@/components/landing/landing-data";
+import { MarketingRecoveryCaseFile } from "./marketing-recovery-case-file";
 
 const TOKENS = {
   text: "var(--pf-text-primary)",
@@ -243,181 +238,6 @@ function MockBrowserChrome({ title, children }: { title: string; children: React
   );
 }
 
-/** Hero: dominant operator frame — tighter crop, stronger depth */
-function OperatorHeroMock() {
-  return (
-    <div
-      style={{
-        borderRadius: 22,
-        border: `1px solid ${TOKENS.border}`,
-        background: "rgba(8,7,6,0.94)",
-        overflow: "hidden",
-        boxShadow: "0 40px 100px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,122,24,0.14), 0 0 140px rgba(255,122,24,0.22)",
-      }}
-    >
-      <MockBrowserChrome title="PulseFill — Recovery">
-        <div
-          style={{
-            background: "var(--pf-card-hero-bg)",
-            border: `1px solid ${TOKENS.emberBorder}`,
-            borderRadius: 16,
-            padding: 16,
-            marginBottom: 12,
-            boxShadow: "0 0 0 1px rgba(255,122,24,0.12), 0 18px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
-          }}
-        >
-          <div
-            style={{
-              color: TOKENS.tertiary,
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-            }}
-          >
-            Today&apos;s recovery
-          </div>
-          <div style={{ display: "grid", gap: 10, marginTop: 10, gridTemplateColumns: "repeat(4, minmax(0,1fr))" }}>
-            <MetricTile label="Recovered" value="12" accent compact />
-            <MetricTile label="Revenue" value="$1.8K" accent compact />
-            <MetricTile label="Awaiting" value="4" compact />
-            <MetricTile label="Failed" value="3" compact />
-          </div>
-        </div>
-        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr", opacity: 0.97 }}>
-          <div
-            style={{
-              borderRadius: 14,
-              border: `1px solid rgba(255,122,24,0.28)`,
-              background: "rgba(255,255,255,0.04)",
-              padding: 12,
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-            }}
-          >
-            <div style={{ color: TOKENS.text, fontSize: 13, fontWeight: 650 }}>What to work first</div>
-            <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-              {[
-                ["Work first", "6"],
-                ["Manual follow-up", "4"],
-              ].map(([label, count]) => (
-                <div
-                  key={label}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "8px 10px",
-                    borderRadius: 12,
-                    background: "rgba(0,0,0,0.28)",
-                    fontSize: 12,
-                    color: TOKENS.text,
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  <span>{label}</span>
-                  <span style={{ color: "rgba(253,186,116,0.95)", fontWeight: 700 }}>{count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ borderRadius: 14, border: `1px solid rgba(255,255,255,0.05)`, background: "rgba(255,255,255,0.02)", padding: 12, opacity: 0.82 }}>
-            <div style={{ color: TOKENS.muted, fontSize: 12, fontWeight: 620 }}>Needs attention</div>
-            <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-              {["Botox · awaiting confirm", "Hygiene · delivery failed"].map((t) => (
-                <div
-                  key={t}
-                  style={{
-                    padding: "8px 10px",
-                    borderRadius: 12,
-                    background: "rgba(255,255,255,0.02)",
-                    fontSize: 11,
-                    color: TOKENS.muted,
-                  }}
-                >
-                  {t}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </MockBrowserChrome>
-    </div>
-  );
-}
-
-/** Hero: phone — secondary to console, tucked composition */
-function CustomerHeroPhone() {
-  return (
-    <div
-      style={{
-        width: 198,
-        borderRadius: 28,
-        border: `1px solid rgba(255,255,255,0.08)`,
-        background: "linear-gradient(165deg, rgba(28,23,18,0.98), rgba(10,9,8,0.98))",
-        padding: 7,
-        boxShadow: "0 22px 56px rgba(0,0,0,0.55), 0 0 48px rgba(255,122,24,0.12)",
-      }}
-    >
-      <div
-        style={{
-          borderRadius: 26,
-          overflow: "hidden",
-          border: `1px solid ${TOKENS.borderSubtle}`,
-          minHeight: 320,
-          padding: 16,
-          background: "linear-gradient(180deg, rgba(28,23,18,0.52), rgba(14,12,10,0.96))",
-        }}
-      >
-        <div style={{ color: TOKENS.tertiary, fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" }}>
-          Offer
-        </div>
-        <div style={{ marginTop: 8, color: TOKENS.text, fontSize: 18, fontWeight: 650, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-          Today at 2:30 PM
-        </div>
-        <div style={{ marginTop: 6, color: TOKENS.muted, fontSize: 12 }}>Yorkville Clinic</div>
-        <div
-          style={{
-            marginTop: 18,
-            borderRadius: 16,
-            padding: 14,
-            background: "var(--pf-card-hero-bg)",
-            border: `1px solid rgba(255,122,24,0.35)`,
-          }}
-        >
-          <div style={{ color: TOKENS.text, fontSize: 13, fontWeight: 620 }}>Offer available</div>
-          <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
-            <div
-              style={{
-                borderRadius: 12,
-                padding: "10px 12px",
-                background: TOKENS.ember,
-                color: "var(--pf-btn-primary-text)",
-                fontSize: 12,
-                fontWeight: 700,
-                textAlign: "center",
-              }}
-            >
-              Claim opening
-            </div>
-            <div
-              style={{
-                borderRadius: 12,
-                padding: "10px 12px",
-                border: `1px solid ${TOKENS.borderSubtle}`,
-                color: TOKENS.text,
-                fontSize: 12,
-                fontWeight: 600,
-                textAlign: "center",
-              }}
-            >
-              View detail
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /** Product payoff: full browser + richer chrome */
 function OperatorPayoffMock() {
   return (
@@ -580,8 +400,8 @@ export function PulseFillLandingPageContent() {
     overflowX: "hidden",
     color: TOKENS.text,
     background: `
-      radial-gradient(ellipse 52% 36% at 78% 12%, rgba(255,122,24,0.12), transparent 50%),
-      radial-gradient(ellipse 70% 45% at 8% 18%, rgba(201,59,47,0.08), transparent 48%),
+      radial-gradient(ellipse 52% 36% at 78% 12%, rgba(255,122,24,0.06), transparent 50%),
+      radial-gradient(ellipse 70% 45% at 8% 18%, rgba(201,59,47,0.05), transparent 48%),
       radial-gradient(ellipse 120% 78% at 50% 0%, rgba(0,0,0,0.42), transparent 56%),
       var(--pf-shell-bg)
     `,
@@ -636,7 +456,7 @@ export function PulseFillLandingPageContent() {
             inset: 0,
             background: `
               radial-gradient(ellipse 58% 90% at 14% 44%, rgba(0,0,0,0.78), transparent 55%),
-              radial-gradient(ellipse 42% 48% at 76% 48%, rgba(255,122,24,0.05), transparent 58%)
+              radial-gradient(ellipse 42% 48% at 76% 48%, rgba(255,122,24,0.03), transparent 58%)
             `,
             pointerEvents: "none",
           }}
@@ -651,7 +471,6 @@ export function PulseFillLandingPageContent() {
             pointerEvents: "none",
           }}
         />
-        <HeroAtmosphere />
         <Container style={{ position: "relative", zIndex: 1 }}>
           <HeroEntranceMotion>
             <div
@@ -666,38 +485,35 @@ export function PulseFillLandingPageContent() {
             >
               <div style={{ flex: "1 1 280px", maxWidth: 400, minWidth: 0, paddingBottom: "clamp(0px, 2vw, 16px)" }}>
                 <div data-hero-reveal>
-                  <HeroEyebrow>Appointment Recovery Operating System</HeroEyebrow>
+                  <HeroEyebrow>Appointment recovery operating system</HeroEyebrow>
                 </div>
                 <h1
                   style={{
                     margin: "6px 0 0 0",
                     color: TOKENS.text,
-                    fontSize: "clamp(40px, 5.8vw, 76px)",
-                    lineHeight: 0.9,
-                    letterSpacing: "-0.056em",
-                    fontWeight: 680,
-                    maxWidth: 420,
+                    fontSize: "clamp(34px, 4.8vw, 58px)",
+                    lineHeight: 1.05,
+                    letterSpacing: "-0.04em",
+                    fontWeight: 780,
+                    maxWidth: 520,
                   }}
                 >
                   <span data-hero-reveal style={{ display: "block" }}>
-                    Cancellations are inevitable.
-                  </span>
-                  <span data-hero-reveal style={{ display: "block" }}>
-                    Lost revenue is not.
+                    Recover cancelled appointments before the day is lost.
                   </span>
                 </h1>
                 <p
                   data-hero-reveal
                   style={{
-                    margin: "26px 0 0 0",
+                    margin: "22px 0 0 0",
                     color: "rgba(245,242,237,0.88)",
                     fontSize: 15,
-                    lineHeight: 1.52,
-                    maxWidth: 400,
+                    lineHeight: 1.55,
+                    maxWidth: 440,
                     fontWeight: 520,
                   }}
                 >
-                  The operating layer between cancellations and recovered revenue.
+                  PulseFill turns your waiting list into claimed bookings when cancellations happen.
                 </p>
                 <div
                   data-hero-reveal
@@ -715,103 +531,21 @@ export function PulseFillLandingPageContent() {
               </div>
 
               <div
-                style={{
-                  position: "relative",
-                  flex: "1.15 1 300px",
-                  minWidth: 0,
-                  minHeight: 420,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  transform: "translateX(clamp(12px, 3vw, 56px))",
-                }}
-              >
-              <div
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  width: "min(68%, 500px)",
-                  height: "min(84%, 460px)",
-                  left: "66%",
-                  top: "50%",
-                  transform: "translate(-50%, -50%)",
-                  background: "radial-gradient(circle, rgba(255,122,24,0.44) 0%, rgba(255,122,24,0.1) 40%, transparent 66%)",
-                  filter: "blur(42px)",
-                  opacity: 0.82,
-                  pointerEvents: "none",
-                }}
-              />
-              <div
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  right: "-2%",
-                  bottom: "-4%",
-                  width: 200,
-                  height: 200,
-                  borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(201,59,47,0.2), transparent 70%)",
-                  filter: "blur(36px)",
-                  pointerEvents: "none",
-                }}
-              />
-
-              <div
                 data-hero-stage
                 style={{
                   position: "relative",
-                  width: "100%",
-                  maxWidth: 740,
-                  marginRight: "clamp(-20px, -3vw, 0px)",
-                  transformStyle: "preserve-3d",
+                  flex: "1.05 1 280px",
+                  minWidth: 0,
+                  maxWidth: 560,
+                  marginLeft: "auto",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
                 }}
               >
-                <div
-                  style={{
-                    transform: "rotate(-0.28deg) scale(1.34)",
-                    transformOrigin: "center center",
-                    filter: "drop-shadow(0 36px 64px rgba(0,0,0,0.62))",
-                  }}
-                >
-                  <OperatorHeroMock />
-                </div>
-
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "6%",
-                    right: "8%",
-                    zIndex: 6,
-                    padding: "9px 12px",
-                    borderRadius: 12,
-                    border: "1px solid rgba(255,122,24,0.4)",
-                    background: "rgba(12,11,9,0.94)",
-                    backdropFilter: "blur(14px)",
-                    boxShadow: "0 14px 40px rgba(0,0,0,0.55), 0 0 32px rgba(255,122,24,0.2)",
-                  }}
-                >
-                  <div style={{ fontSize: 8, color: TOKENS.tertiary, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" }}>
-                    Recovered revenue
-                  </div>
-                  <div style={{ marginTop: 4, color: TOKENS.text, fontSize: 15, fontWeight: 650, letterSpacing: "-0.03em" }}>$1.8K</div>
-                  <div style={{ marginTop: 2, color: TOKENS.muted, fontSize: 9 }}>Today · rolling</div>
-                </div>
-
-                <div
-                  style={{
-                    position: "absolute",
-                    right: "clamp(2px, 1vw, 14px)",
-                    bottom: "clamp(-8px, -0.5vw, 4px)",
-                    zIndex: 5,
-                    filter: "drop-shadow(0 26px 42px rgba(0,0,0,0.68))",
-                    transform: "rotate(1.25deg) translateY(20px) translateX(8px) scale(0.84)",
-                  }}
-                >
-                  <CustomerHeroPhone />
-                </div>
+                <MarketingRecoveryCaseFile />
               </div>
             </div>
-          </div>
           </HeroEntranceMotion>
         </Container>
       </section>
