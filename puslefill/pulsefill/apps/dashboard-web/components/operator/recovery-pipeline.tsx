@@ -46,7 +46,7 @@ type RecoveryPipelineProps = {
   animated?: boolean;
   /** Command Center rail: stronger framing. */
   featured?: boolean;
-  /** When false, hides the “Recovery flow” kicker (parent supplies its own title). */
+  /** When false, hides the “Recovery path” kicker (parent supplies its own title). */
   showFlowLabel?: boolean;
   /** Hover emphasis + optional step clicks (reduced-motion: no extra motion). */
   interactive?: boolean;
@@ -56,7 +56,11 @@ type RecoveryPipelineProps = {
 
 function StepGlyph({ id, phase }: { id: RecoveryPipelineStepId; phase: StepPhase }) {
   const stroke =
-    phase === "active" ? "#fdba74" : phase === "completed" ? "rgba(251,191,168,0.55)" : "rgba(245,247,250,0.22)";
+    phase === "active"
+      ? "#fdba74"
+      : phase === "completed"
+        ? "rgba(251,191,168,0.55)"
+        : "#877c72";
   const size = 18;
   const common = { width: size, height: size, flexShrink: 0 } as const;
 
@@ -141,17 +145,17 @@ export function RecoveryPipeline({
     : {
         padding: compact ? "12px 14px" : "14px 16px",
         borderRadius: "var(--pf-radius-lg)",
-        border: "1px solid rgba(255,255,255,0.1)",
+        border: "1px solid var(--pf-brand-border-warm-mid)",
         background:
-          "linear-gradient(165deg, rgba(22,19,17,0.98), rgba(8,7,6,0.96)), radial-gradient(ellipse 100% 80% at 50% 0%, rgba(255,122,24,0.06), transparent 55%)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 36px rgba(0,0,0,0.28)",
+          "linear-gradient(165deg, var(--pf-surface-tint-04), rgba(14, 12, 10, 0.94)), radial-gradient(ellipse 100% 80% at 50% 0%, rgba(255,122,24,0.04), transparent 55%)",
+        boxShadow: "inset 0 1px 0 var(--pf-surface-highlight), 0 10px 28px rgba(0,0,0,0.22)",
       };
 
   return (
     <div className="pf-recovery-pipeline" style={{ ...wrapShell, ...style }}>
       {showFlowLabel ? (
         <p className="pf-kicker" style={{ margin: "0 0 12px" }}>
-          Recovery flow
+          Recovery path
         </p>
       ) : null}
       <div className="pf-recovery-pipeline-inner pf-rp-track">
@@ -163,30 +167,30 @@ export function RecoveryPipeline({
 
           const ring =
             isActive && runMotion
-              ? "0 0 0 1px rgba(255,122,24,0.45), 0 0 22px rgba(255,122,24,0.22)"
+              ? "0 0 0 1px rgba(255,122,24,0.38), 0 0 16px rgba(255,122,24,0.14)"
               : isActive
-                ? "0 0 0 1px rgba(255,122,24,0.5), 0 0 18px rgba(255,122,24,0.2)"
+                ? "0 0 0 1px rgba(255,122,24,0.42), 0 0 14px rgba(255,122,24,0.12)"
                 : isDone
-                  ? "inset 0 1px 0 rgba(255,255,255,0.05)"
+                  ? "inset 0 1px 0 var(--pf-surface-highlight)"
                   : "none";
 
           const nodeBg = isActive
-            ? "radial-gradient(circle at 35% 25%, rgba(255,200,150,0.25), rgba(255,122,24,0.12))"
+            ? "radial-gradient(circle at 35% 25%, rgba(255,200,150,0.22), rgba(255,122,24,0.1))"
             : isDone
-              ? "rgba(255, 122, 24, 0.07)"
-              : "rgba(255,255,255,0.02)";
+              ? "rgba(255, 122, 24, 0.06)"
+              : "var(--pf-surface-tint-03)";
 
           const emphasize = Boolean(interactive && hoveredStep === id);
           const nodeBorder = emphasize
-            ? "rgba(255, 186, 120, 0.42)"
+            ? "rgba(255, 186, 120, 0.36)"
             : isActive
-              ? "rgba(255, 122, 24, 0.55)"
+              ? "rgba(255, 122, 24, 0.45)"
               : isDone
-                ? "rgba(255, 140, 60, 0.22)"
-                : "rgba(255,255,255,0.08)";
+                ? "rgba(255, 140, 60, 0.2)"
+                : "var(--pf-brand-border-warm)";
 
-          const microMuted = !compact ? "rgba(245,247,250,0.45)" : "rgba(245,247,250,0.38)";
-          const microStrong = !compact ? "rgba(245,247,250,0.78)" : "rgba(254, 215, 170, 0.88)";
+          const microMuted = !compact ? "var(--pf-text-muted)" : "color-mix(in srgb, var(--pf-text-muted) 92%, transparent)";
+          const microStrong = !compact ? "var(--pf-text-secondary)" : "color-mix(in srgb, var(--pf-text-secondary) 95%, transparent)";
           const microColor = emphasize || isActive ? microStrong : microMuted;
 
           const nodeCore = (
@@ -214,7 +218,7 @@ export function RecoveryPipeline({
                   fontWeight: 650,
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",
-                  color: isActive ? "#fdba74" : isDone ? "rgba(254, 215, 170, 0.75)" : "rgba(245,247,250,0.42)",
+                  color: isActive ? "#fdba74" : isDone ? "var(--pf-text-tertiary)" : "var(--pf-text-muted)",
                 }}
               >
                 {TITLES[id]}
@@ -302,11 +306,11 @@ export function RecoveryPipeline({
               ? {}
               : hotConnector
                 ? {
-                    background: "linear-gradient(90deg, rgba(255,122,24,0.55), rgba(255,122,24,0.12))",
-                    boxShadow: "0 0 12px rgba(255,122,24,0.15)",
+                    background: "linear-gradient(90deg, rgba(255,122,24,0.45), rgba(255,122,24,0.1))",
+                    boxShadow: "0 0 10px rgba(255,122,24,0.1)",
                   }
                 : {
-                    background: "linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))",
+                    background: "linear-gradient(90deg, var(--pf-surface-tint-07), var(--pf-surface-tint-03))",
                   }),
           };
 
@@ -342,7 +346,7 @@ export function RecoveryPipeline({
                     ? {
                         background: "linear-gradient(90deg, rgba(255,122,24,0.45), rgba(255,122,24,0.08))",
                       }
-                    : { background: "rgba(255,255,255,0.06)" }),
+                    : { background: "var(--pf-surface-tint-06)" }),
               }}
             />
           );

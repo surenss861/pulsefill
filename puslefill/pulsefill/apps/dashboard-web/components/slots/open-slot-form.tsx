@@ -68,14 +68,14 @@ function formatLastUsedLabel(iso: string): string {
 
 const inputStyle: CSSProperties = {
   borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.11)",
-  background: "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(0,0,0,0.2))",
+  border: "1px solid var(--pf-brand-border-warm-mid)",
+  background: "linear-gradient(180deg, var(--pf-surface-tint-05), rgba(14, 12, 10, 0.35))",
   color: "var(--text)",
   padding: "10px 12px",
   fontSize: 14,
   width: "100%",
   boxSizing: "border-box",
-  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+  boxShadow: "inset 0 1px 0 var(--pf-surface-highlight)",
 };
 
 type Props = {
@@ -352,7 +352,7 @@ export function OpenSlotForm({ onCreated }: Props) {
         style={{
           marginTop: 16,
           paddingTop: 14,
-          borderTop: "1px solid rgba(255,255,255,0.08)",
+          borderTop: "1px solid var(--pf-brand-border-warm)",
         }}
       >
         <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
@@ -372,19 +372,19 @@ export function OpenSlotForm({ onCreated }: Props) {
       </div>
       <div style={{ marginTop: 14, display: "grid", gap: 6, fontSize: 13 }}>
         <p className="pf-meta-row" style={{ margin: 0 }}>
-          <span style={{ color: "rgba(245,247,250,0.38)" }}>Location · </span>
+          <span style={{ color: "var(--pf-brand-text-faint)" }}>Location · </span>
           {locationLabel}
         </p>
         <p className="pf-meta-row" style={{ margin: 0 }}>
-          <span style={{ color: "rgba(245,247,250,0.38)" }}>Provider · </span>
+          <span style={{ color: "var(--pf-brand-text-faint)" }}>Provider · </span>
           {providerLabel}
         </p>
         <p className="pf-meta-row" style={{ margin: 0 }}>
-          <span style={{ color: "rgba(245,247,250,0.38)" }}>Service · </span>
+          <span style={{ color: "var(--pf-brand-text-faint)" }}>Service · </span>
           {serviceLabel}
         </p>
         <p className="pf-meta-row" style={{ margin: 0 }}>
-          <span style={{ color: "rgba(245,247,250,0.38)" }}>Duration · </span>
+          <span style={{ color: "var(--pf-brand-text-faint)" }}>Duration · </span>
           {durationMinutes ? `${durationMinutes} min` : "—"}
         </p>
       </div>
@@ -409,8 +409,8 @@ export function OpenSlotForm({ onCreated }: Props) {
               type="button"
               onClick={() => void reloadOptions()}
               style={{
-                border: "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(255,255,255,0.06)",
+                border: "1px solid var(--pf-brand-border-warm-mid)",
+                background: "var(--pf-surface-tint-05)",
                 padding: "8px 14px",
                 borderRadius: 10,
                 cursor: "pointer",
@@ -486,8 +486,8 @@ export function OpenSlotForm({ onCreated }: Props) {
               style={{
                 padding: "10px 12px",
                 borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.06)",
-                background: "rgba(0,0,0,0.12)",
+                border: "1px solid var(--pf-brand-border-warm)",
+                background: "var(--pf-surface-tint-03)",
               }}
             >
               <div
@@ -508,7 +508,7 @@ export function OpenSlotForm({ onCreated }: Props) {
                     fontWeight: 600,
                     letterSpacing: "0.02em",
                     textTransform: "uppercase",
-                    color: "rgba(245,247,250,0.45)",
+                    color: "var(--pf-text-muted)",
                   }}
                 >
                   Suggested setup
@@ -523,13 +523,13 @@ export function OpenSlotForm({ onCreated }: Props) {
                     type="button"
                     onClick={() => void reloadCreateDefaults()}
                     style={{
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      border: "1px solid var(--pf-brand-border-warm)",
                       background: "transparent",
                       padding: "3px 8px",
                       borderRadius: 6,
                       cursor: "pointer",
                       fontFamily: "inherit",
-                      color: "rgba(245,247,250,0.55)",
+                      color: "var(--pf-text-secondary)",
                       fontSize: 11,
                       fontWeight: 600,
                     }}
@@ -551,7 +551,7 @@ export function OpenSlotForm({ onCreated }: Props) {
                     lineHeight: 1.45,
                     display: "grid",
                     gap: 3,
-                    color: "rgba(245,247,250,0.55)",
+                    color: "var(--pf-text-secondary)",
                   }}
                 >
                   {createDefaults.setup_warnings.map((w) => (

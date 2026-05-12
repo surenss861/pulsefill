@@ -83,7 +83,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
       </div>
 
       <div className="pf-sidebar-workspace">
-        <p className="pf-kicker pf-sidebar-workspace__line">Recovery workspace</p>
+        <p className="pf-kicker pf-sidebar-workspace__line">This workspace</p>
         <p className="pf-sidebar-workspace__email">{truncateEmail(profile.email ?? "")}</p>
       </div>
 
@@ -112,14 +112,22 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           <p className="pf-meta-row" style={{ margin: "0 0 6px", letterSpacing: "0.14em", textTransform: "uppercase" }}>
             Signed in
           </p>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 650, color: "rgba(245, 247, 250, 0.92)", lineHeight: 1.25 }}>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 650, color: "var(--pf-text-primary)", lineHeight: 1.25 }}>
             {profile.full_name?.trim() || "Operator"}
           </p>
           <p className="pf-muted-copy" style={{ margin: "6px 0 0", fontSize: 12 }}>
             {truncateEmail(profile.email ?? "", 36)}
           </p>
           <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255, 176, 112, 0.88)" }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--pf-accent-primary-hover)",
+              }}
+            >
               {profile.role}
             </span>
             <span
@@ -130,9 +138,9 @@ export function AppSidebar({ profile }: AppSidebarProps) {
                 fontWeight: 600,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                border: live ? "1px solid rgba(255, 122, 24, 0.26)" : "1px solid rgba(255,255,255,0.1)",
-                background: live ? "rgba(255, 122, 24, 0.08)" : "rgba(255,255,255,0.04)",
-                color: live ? "rgba(255, 200, 160, 0.92)" : "rgba(245, 247, 250, 0.48)",
+                border: live ? "1px solid var(--pf-accent-primary-border)" : "1px solid var(--pf-brand-border-warm)",
+                background: live ? "var(--pf-accent-primary-soft)" : "var(--pf-surface-tint-05)",
+                color: live ? "var(--pf-accent-primary-hover)" : "var(--pf-text-muted)",
               }}
             >
               {live ? "Live" : "Setup"}

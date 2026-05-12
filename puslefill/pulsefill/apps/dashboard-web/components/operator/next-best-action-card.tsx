@@ -47,38 +47,38 @@ const RAIL_WIDTH: Record<NextBestActionPriority, number> = {
 };
 
 const RAIL_GLOW: Record<NextBestActionPriority, string> = {
-  critical: "4px 0 36px rgba(255,72,40,0.22), 0 0 28px rgba(185,45,35,0.08)",
-  attention: "4px 0 28px rgba(255,122,24,0.18)",
-  setup: "3px 0 20px rgba(255,160,70,0.12)",
-  ready: "2px 0 14px rgba(255,140,60,0.08)",
+  critical: "3px 0 26px rgba(255,72,40,0.14), 0 0 18px rgba(185,45,35,0.06)",
+  attention: "3px 0 20px rgba(255,122,24,0.12)",
+  setup: "2px 0 16px rgba(255,160,70,0.09)",
+  ready: "2px 0 12px rgba(255,140,60,0.06)",
   clear: "none",
 };
 
 /** Merged onto base `nextBestAction` shell for priority mood. */
 const SHELL_MOOD: Record<NextBestActionPriority, CSSProperties> = {
   critical: {
-    border: "1px solid rgba(255,120,90,0.22)",
+    border: "1px solid rgba(255,120,90,0.2)",
     boxShadow:
-      "0 32px 80px rgba(0,0,0,0.48), 0 0 0 1px rgba(185,55,45,0.12), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 0 0 1px rgba(255, 122, 24, 0.06)",
+      "0 28px 72px rgba(0,0,0,0.42), 0 0 0 1px rgba(185,55,45,0.1), inset 0 1px 0 var(--pf-surface-highlight), inset 0 0 0 1px rgba(255, 122, 24, 0.05)",
   },
   attention: {
-    border: "1px solid rgba(255,140,80,0.16)",
+    border: "1px solid rgba(255,140,80,0.14)",
     boxShadow:
-      "0 28px 76px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.065), 0 0 40px rgba(255,122,24,0.06)",
+      "0 26px 68px rgba(0,0,0,0.4), inset 0 1px 0 var(--pf-surface-highlight), 0 0 28px rgba(255,122,24,0.04)",
   },
   setup: {
-    border: "1px solid rgba(255,180,100,0.14)",
-    boxShadow: "0 24px 68px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,180,100,0.12)",
+    boxShadow: "0 22px 60px rgba(0,0,0,0.36), inset 0 1px 0 var(--pf-surface-highlight)",
   },
   ready: {
-    border: "1px solid rgba(255,255,255,0.09)",
-    boxShadow: "0 20px 58px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.055)",
+    border: "1px solid var(--pf-brand-border-warm-mid)",
+    boxShadow: "0 18px 52px rgba(0,0,0,0.32), inset 0 1px 0 var(--pf-surface-highlight)",
   },
   clear: {
-    border: "1px solid rgba(255,255,255,0.065)",
+    border: "1px solid var(--pf-brand-border-warm)",
     background:
-      "linear-gradient(118deg, rgba(14,13,12,0.98) 0%, rgba(8,8,7,0.99) 50%), radial-gradient(ellipse 60% 80% at 0% 30%, rgba(255,122,24,0.03), transparent 55%)",
-    boxShadow: "0 14px 44px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
+      "linear-gradient(118deg, rgba(20,16,13,0.98) 0%, rgba(12,10,8,0.99) 50%), radial-gradient(ellipse 60% 80% at 0% 30%, rgba(255,122,24,0.025), transparent 55%)",
+    boxShadow: "0 12px 40px rgba(0,0,0,0.24), inset 0 1px 0 var(--pf-surface-highlight)",
   },
 };
 
@@ -99,14 +99,14 @@ const CHIP: Record<NextBestActionPriority, CSSProperties> = {
     color: "rgba(255, 220, 180, 0.9)",
   },
   ready: {
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,200,150,0.15)",
-    color: "rgba(245,247,250,0.75)",
+    background: "var(--pf-surface-tint-05)",
+    border: "1px solid var(--pf-brand-border-warm-mid)",
+    color: "var(--pf-text-secondary)",
   },
   clear: {
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    color: "rgba(245,247,250,0.5)",
+    background: "var(--pf-surface-tint-04)",
+    border: "1px solid var(--pf-brand-border-warm)",
+    color: "var(--pf-text-muted)",
   },
 };
 
@@ -124,12 +124,12 @@ function formatUpdatedAt(d: Date): string {
 function statInlineColors(tone: NextBestSupportingStatTone | undefined): { label: string; value: string } {
   switch (tone) {
     case "attention":
-      return { label: "rgba(245,247,250,0.38)", value: "rgba(255, 200, 150, 0.92)" };
+      return { label: "var(--pf-text-muted)", value: "var(--pf-accent-primary-hover)" };
     case "live":
-      return { label: "rgba(245,247,250,0.34)", value: "rgba(254, 200, 160, 0.88)" };
+      return { label: "var(--pf-text-muted)", value: "var(--pf-brand-text)" };
     case "idle":
     default:
-      return { label: "rgba(245,247,250,0.28)", value: "rgba(245,247,250,0.38)" };
+      return { label: "var(--pf-brand-text-faint)", value: "var(--pf-text-secondary)" };
   }
 }
 
@@ -210,7 +210,7 @@ export function NextBestActionCard({
                 gap: 10,
                 paddingBottom: 14,
                 marginBottom: 4,
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
+                borderBottom: "1px solid var(--pf-brand-border-warm)",
               }}
             >
               <span className="pf-kicker">{systemHeaderLabel}</span>
@@ -266,7 +266,7 @@ export function NextBestActionCard({
                     fontSize: 12,
                     lineHeight: 1.45,
                     textAlign: "right" as const,
-                    color: "rgba(245,247,250,0.32)",
+                    color: "var(--pf-text-muted)",
                   }}
                 >
                   {supportingStats.map((s, i) => {
@@ -284,7 +284,7 @@ export function NextBestActionCard({
             </div>
 
             {showRecovery && pipelineStep ? (
-              <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--pf-brand-border-warm)" }}>
                 <RecoveryPipeline activeStep={pipelineStep} compact animated={!reduce} featured={false} />
               </div>
             ) : null}

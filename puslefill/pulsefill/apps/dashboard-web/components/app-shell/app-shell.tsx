@@ -68,12 +68,12 @@ function MobileQuick({ href, label }: { href: string; label: string }) {
         fontWeight: 600,
         letterSpacing: "0.06em",
         textTransform: "uppercase",
-        color: "rgba(245, 247, 250, 0.65)",
+        color: "var(--pf-text-secondary)",
         textDecoration: "none",
         padding: "6px 10px",
         borderRadius: 10,
-        border: "1px solid rgba(255,255,255,0.1)",
-        background: "rgba(255,255,255,0.03)",
+        border: "1px solid var(--pf-brand-border-warm)",
+        background: "var(--pf-surface-tint-04)",
       }}
     >
       {label}

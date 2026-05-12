@@ -16,8 +16,8 @@ export function AppHeader({ user, profile }: AppHeaderProps) {
         top: 0,
         zIndex: 20,
         borderBottom: "1px solid var(--pf-border-subtle)",
-        background: "rgba(5, 5, 5, 0.86)",
-        backdropFilter: "blur(16px)",
+        background: "color-mix(in srgb, var(--pf-bg-elevated) 88%, transparent)",
+        backdropFilter: "blur(18px)",
       }}
     >
       <div
@@ -31,19 +31,14 @@ export function AppHeader({ user, profile }: AppHeaderProps) {
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 11,
-              letterSpacing: "0.24em",
-              textTransform: "uppercase",
-              color: "rgba(245, 247, 250, 0.34)",
-            }}
-          >
-            Operator workspace
+          <p className="pf-kicker" style={{ margin: 0, fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase" }}>
+            Operations desk
           </p>
-          <p style={{ margin: "4px 0 0", fontSize: 14, color: "rgba(245, 247, 250, 0.72)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            Recovery visibility, action, and control
+          <p
+            className="pf-muted-copy"
+            style={{ margin: "4px 0 0", fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          >
+            Openings, recovery, and customers in one place
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
@@ -56,9 +51,9 @@ export function AppHeader({ user, profile }: AppHeaderProps) {
               fontWeight: 600,
               letterSpacing: "0.18em",
               textTransform: "uppercase",
-              border: live ? "1px solid rgba(255, 122, 24, 0.22)" : "1px solid rgba(255,255,255,0.1)",
-              background: live ? "rgba(255, 122, 24, 0.06)" : "rgba(255,255,255,0.03)",
-              color: live ? "rgba(255, 186, 120, 0.92)" : "rgba(245, 247, 250, 0.52)",
+              border: live ? "1px solid var(--pf-accent-primary-border)" : "1px solid var(--pf-brand-border-warm)",
+              background: live ? "var(--pf-accent-primary-soft)" : "var(--pf-surface-tint-04)",
+              color: live ? "var(--pf-accent-primary-hover)" : "var(--pf-text-muted)",
             }}
             className="pf-app-workspace-pill"
           >

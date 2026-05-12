@@ -22,7 +22,7 @@ export function AppUserBadge({ name, email, role }: AppUserBadgeProps) {
         gap: 12,
         borderRadius: 999,
         border: "1px solid var(--pf-border-subtle)",
-        background: "rgba(255, 255, 255, 0.03)",
+        background: "var(--pf-surface-tint-04)",
         padding: "8px 10px 8px 8px",
       }}
     >
@@ -46,7 +46,16 @@ export function AppUserBadge({ name, email, role }: AppUserBadgeProps) {
         <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--pf-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {name?.trim() || "PulseFill operator"}
         </p>
-        <p style={{ margin: "2px 0 0", fontSize: 12, color: "rgba(245, 247, 250, 0.46)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <p
+          style={{
+            margin: "2px 0 0",
+            fontSize: 12,
+            color: "var(--pf-text-muted)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
           {roleLabel(role)} · {email}
         </p>
       </div>
@@ -55,9 +64,9 @@ export function AppUserBadge({ name, email, role }: AppUserBadgeProps) {
           type="submit"
           style={{
             borderRadius: 999,
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            background: "rgba(255, 255, 255, 0.04)",
-            color: "rgba(245, 247, 250, 0.78)",
+            border: "1px solid var(--pf-brand-border-warm)",
+            background: "var(--pf-surface-tint-05)",
+            color: "var(--pf-text-secondary)",
             fontSize: 12,
             fontWeight: 600,
             padding: "8px 12px",

@@ -77,7 +77,7 @@ export function OperatorErrorState({
       <p className="pf-section-title" style={{ fontSize: compact ? 14 : 15, margin: 0, color: "rgba(254, 202, 202, 0.95)" }}>
         {resolvedTitle}
       </p>
-      <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 13, color: "rgba(245,247,250,0.68)" }}>
+      <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 13, color: "var(--pf-text-secondary)" }}>
         {resolvedDescription}
       </p>
       <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
