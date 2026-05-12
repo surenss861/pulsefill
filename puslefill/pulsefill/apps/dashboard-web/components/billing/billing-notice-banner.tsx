@@ -7,6 +7,8 @@ import { useBillingSessionActions } from "@/hooks/useBillingSessionActions";
 export type BillingNoticeBannerProps = {
   /** When older APIs omit entitlements, the banner stays hidden. */
   summary: Pick<BillingSummaryResponse, "entitlements" | "subscription_checkout_available" | "billing_portal_available"> | null;
+  /** Overview: slimmer surface and calmer copy so billing does not compete with setup. */
+  tone?: "default" | "administrative";
   /** If provided, used instead of internal POST for checkout (e.g. billing page coordinates loading/errors). */
   onStartCheckout?: () => void | Promise<void>;
   onOpenPortal?: () => void | Promise<void>;
@@ -16,6 +18,7 @@ export type BillingNoticeBannerProps = {
 
 export function BillingNoticeBanner({
   summary,
+  tone = "default",
   onStartCheckout,
   onOpenPortal,
   checkoutLoading: checkoutLoadingProp,
@@ -49,24 +52,62 @@ export function BillingNoticeBanner({
 
   const showSecondaryPortal = canCheckout && canPortal;
 
+  const administrative = tone === "administrative";
+  const checkoutCopy =
+    administrative && canCheckout
+      ? {
+          title: "Billing not active",
+          message: "Activate billing so renewals and the billing portal stay synced.",
+        }
+      : null;
+
+  const displayTitle = checkoutCopy?.title ?? ent.notice.title;
+  const displayMessage = checkoutCopy?.message ?? ent.notice.message;
+
+  const primaryBtnClass = administrative ? "pf-billing-notice-banner__btn pf-billing-notice-banner__btn--admin" : "pf-billing-notice-banner__btn";
+  const secondaryBtnClass = administrative
+    ? "pf-billing-notice-banner__btn pf-billing-notice-banner__btn--admin pf-billing-notice-banner__btn--ghost"
+    : "pf-billing-notice-banner__btn pf-billing-notice-banner__btn--ghost";
+
   return (
     <div
       role="status"
-      style={{
-        borderRadius: 12,
-        border: "1px solid rgba(251,191,36,0.35)",
-        background: "rgba(251,191,36,0.08)",
-        padding: "12px 14px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-        minWidth: 0,
-      }}
+      className={administrative ? "pf-billing-notice-banner pf-billing-notice-banner--administrative" : "pf-billing-notice-banner"}
+      style={
+        administrative
+          ? undefined
+          : {
+              borderRadius: 12,
+              border: "1px solid rgba(251,191,36,0.35)",
+              background: "rgba(251,191,36,0.08)",
+              padding: "12px 14px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              minWidth: 0,
+            }
+      }
     >
-      <div style={{ minWidth: 0 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 650, color: "rgba(254,243,199,0.95)" }}>{ent.notice.title}</p>
-        <p className="pf-muted-copy" style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.5, color: "rgba(245,247,250,0.78)" }}>
-          {ent.notice.message}
+      <div className="pf-billing-notice-banner__main" style={administrative ? undefined : { minWidth: 0 }}>
+        <p
+          className="pf-billing-notice-banner__title"
+          style={
+            administrative
+              ? undefined
+              : { margin: 0, fontSize: 13, fontWeight: 650, color: "rgba(254,243,199,0.95)" }
+          }
+        >
+          {displayTitle}
+        </p>
+        <p
+          className="pf-billing-notice-banner__message pf-muted-copy"
+          style={
+            administrative
+              ? undefined
+              : { margin: "6px 0 0", fontSize: 12, lineHeight: 1.5, color: "rgba(245,247,250,0.78)" }
+          }
+        >
+          {displayMessage}
         </p>
       </div>
       {localError ? (
@@ -74,21 +115,9 @@ export function BillingNoticeBanner({
           {localError}
         </p>
       ) : null}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+      <div className="pf-billing-notice-banner__actions">
         {primary.kind === "link" && primary.href ? (
-          <Link
-            href={primary.href}
-            style={{
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.16)",
-              background: "rgba(255,255,255,0.08)",
-              color: "var(--pf-text-primary)",
-              padding: "8px 12px",
-              fontSize: 12,
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
+          <Link href={primary.href} className={primaryBtnClass}>
             {primary.label}
           </Link>
         ) : (
@@ -96,16 +125,7 @@ export function BillingNoticeBanner({
             type="button"
             disabled={checkoutLoading || portalLoading}
             onClick={primary.onClick}
-            style={{
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.16)",
-              background: "rgba(255,255,255,0.08)",
-              color: "var(--pf-text-primary)",
-              padding: "8px 12px",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: checkoutLoading || portalLoading ? "wait" : "pointer",
-            }}
+            className={primaryBtnClass}
           >
             {primary.kind === "checkout" && checkoutLoading
               ? "Starting…"
@@ -119,16 +139,7 @@ export function BillingNoticeBanner({
             type="button"
             disabled={checkoutLoading || portalLoading}
             onClick={() => void runPortal()}
-            style={{
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "transparent",
-              color: "rgba(245,247,250,0.82)",
-              padding: "8px 12px",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: checkoutLoading || portalLoading ? "wait" : "pointer",
-            }}
+            className={secondaryBtnClass}
           >
             {portalLoading ? "Opening…" : "Open billing portal"}
           </button>

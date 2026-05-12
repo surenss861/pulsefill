@@ -776,6 +776,50 @@ main.pf-auth-shell .pf-auth-submit {
   border-bottom: 1px solid rgba(255, 255, 255, 0.045);
 }
 
+.pf-needs-attention-strip__copy {
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+.pf-needs-attention-strip__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: rgba(245, 247, 250, 0.9);
+}
+
+.pf-needs-attention-strip__detail {
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  max-width: 520px;
+}
+
+.pf-queue-preview-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--pf-brand-border-warm-mid);
+  background: var(--pf-surface-tint-04);
+  color: var(--pf-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 var(--pf-surface-highlight);
+}
+
+.pf-queue-preview-cta:hover {
+  border-color: rgba(255, 186, 120, 0.32);
+  background: var(--pf-surface-tint-06);
+  color: var(--pf-text-primary);
+  text-decoration: none;
+}
+
 .pf-settings-standby-split {
   display: grid;
   gap: 16px;
@@ -815,6 +859,18 @@ main.pf-auth-shell .pf-auth-submit {
 
 .pf-activity-empty-timeline__body {
   min-width: 0;
+}
+
+.pf-activity-empty-timeline__title {
+  font-size: 14px;
+  margin: 0;
+}
+
+.pf-activity-empty-timeline__detail {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  max-width: 520px;
 }
 
 .pf-openings-next-stack {
@@ -1783,6 +1839,95 @@ main.pf-auth-shell .pf-auth-submit {
   box-shadow: inset 0 1px 0 var(--pf-surface-highlight);
 }
 
+/* Billing notice — shared actions; overview uses --administrative for a slimmer rail */
+.pf-billing-notice-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.pf-billing-notice-banner__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--pf-text-primary);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pf-billing-notice-banner__btn:disabled {
+  cursor: wait;
+  opacity: 0.85;
+}
+
+.pf-billing-notice-banner__btn--ghost {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: rgba(245, 247, 250, 0.82);
+}
+
+.pf-billing-notice-banner--administrative {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 12px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  background: rgba(251, 191, 36, 0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+@media (min-width: 720px) {
+  .pf-billing-notice-banner--administrative {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+
+  .pf-billing-notice-banner--administrative .pf-billing-notice-banner__main {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+
+  .pf-billing-notice-banner--administrative .pf-billing-notice-banner__actions {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+}
+
+.pf-billing-notice-banner--administrative .pf-billing-notice-banner__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: rgba(245, 241, 232, 0.78);
+}
+
+.pf-billing-notice-banner--administrative .pf-billing-notice-banner__message {
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(245, 247, 250, 0.56);
+  max-width: 560px;
+}
+
+.pf-billing-notice-banner__btn--admin {
+  padding: 6px 11px;
+  font-size: 11px;
+  font-weight: 650;
+  border-radius: 9px;
+}
+
 /* Command Center recent activity — feed, not card stack */
 .pf-command-feed {
   margin-top: 20px;
@@ -1799,11 +1944,36 @@ main.pf-auth-shell .pf-auth-submit {
   margin-bottom: 4px;
 }
 
+.pf-command-feed__lede {
+  margin: 6px 0 0;
+  max-width: 520px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.pf-command-feed__all {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pf-accent-primary);
+  text-decoration: none;
+}
+
+.pf-command-feed__all:hover {
+  color: var(--pf-accent-primary-hover);
+  text-decoration: none;
+}
+
 .pf-command-feed__list {
   list-style: none;
   margin: 12px 0 0;
   padding: 0 0 0 16px;
   border-left: 1px solid var(--pf-brand-border-warm-mid);
+}
+
+.pf-command-feed__list--casefile .pf-command-feed__row::before {
+  top: 13px;
+  background: rgba(255, 140, 72, 0.42);
+  box-shadow: 0 0 6px rgba(255, 122, 24, 0.12);
 }
 
 .pf-command-feed__row {
@@ -1828,6 +1998,29 @@ main.pf-auth-shell .pf-auth-submit {
   border-radius: 999px;
   background: rgba(255, 122, 24, 0.5);
   box-shadow: 0 0 8px rgba(255, 122, 24, 0.2);
+}
+
+.pf-activity-case-row__kicker {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.45);
+}
+
+.pf-activity-case-row__subject {
+  margin: 5px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--pf-text-primary);
+}
+
+.pf-activity-case-row__status {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 /* Page silhouette hooks — max-width; overview uses full rail + cockpit inside workspace inner */

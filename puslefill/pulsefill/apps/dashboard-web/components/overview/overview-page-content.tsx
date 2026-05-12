@@ -347,7 +347,7 @@ export function OverviewPageContent({
       {!billingSummary.loading && billingSummary.data ? (
         <FadeUp delay={0.02}>
           <div style={{ marginTop: 14 }}>
-            <BillingNoticeBanner summary={billingSummary.data} />
+            <BillingNoticeBanner summary={billingSummary.data} tone="administrative" />
           </div>
         </FadeUp>
       ) : null}

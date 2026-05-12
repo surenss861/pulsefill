@@ -50,14 +50,18 @@ type RecoveryPipelineProps = {
   showFlowLabel?: boolean;
   /** Hover emphasis + optional step clicks (reduced-motion: no extra motion). */
   interactive?: boolean;
+  /** Full-width overview strip: calmer active step (core workflow, not a flashy stepper). */
+  workflowStrip?: boolean;
   onStepSelect?: (step: RecoveryPipelineStepId) => void;
   style?: CSSProperties;
 };
 
-function StepGlyph({ id, phase }: { id: RecoveryPipelineStepId; phase: StepPhase }) {
+function StepGlyph({ id, phase, calmActive }: { id: RecoveryPipelineStepId; phase: StepPhase; calmActive?: boolean }) {
   const stroke =
     phase === "active"
-      ? "#fdba74"
+      ? calmActive
+        ? "rgba(232, 212, 190, 0.72)"
+        : "#fdba74"
       : phase === "completed"
         ? "rgba(251,191,168,0.55)"
         : "#877c72";
@@ -98,7 +102,13 @@ function StepGlyph({ id, phase }: { id: RecoveryPipelineStepId; phase: StepPhase
       <svg viewBox="0 0 24 24" fill="none" style={common} aria-hidden>
         <circle cx="12" cy="12" r="8" stroke={stroke} strokeWidth="1.4" />
         {phase === "completed" || phase === "active" ? (
-          <path d="M8 12l2.5 2.5L16 9" stroke={phase === "completed" ? "rgba(251,191,168,0.9)" : "#fdba74"} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M8 12l2.5 2.5L16 9"
+            stroke={phase === "completed" ? "rgba(251,191,168,0.9)" : calmActive ? "rgba(232, 212, 190, 0.85)" : "#fdba74"}
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         ) : null}
       </svg>
     ),
@@ -128,6 +138,7 @@ export function RecoveryPipeline({
   featured = false,
   showFlowLabel = true,
   interactive = false,
+  workflowStrip = false,
   onStepSelect,
   style,
 }: RecoveryPipelineProps) {
@@ -164,9 +175,11 @@ export function RecoveryPipeline({
           const count = counts?.[id];
           const isActive = ph === "active";
           const isDone = ph === "completed";
+          const calmActive = workflowStrip && isActive;
 
-          const ring =
-            isActive && runMotion
+          const ring = calmActive
+            ? "inset 0 1px 0 rgba(255,255,255,0.04)"
+            : isActive && runMotion
               ? "0 0 0 1px rgba(255,122,24,0.38), 0 0 16px rgba(255,122,24,0.14)"
               : isActive
                 ? "0 0 0 1px rgba(255,122,24,0.42), 0 0 14px rgba(255,122,24,0.12)"
@@ -174,20 +187,24 @@ export function RecoveryPipeline({
                   ? "inset 0 1px 0 var(--pf-surface-highlight)"
                   : "none";
 
-          const nodeBg = isActive
-            ? "radial-gradient(circle at 35% 25%, rgba(255,200,150,0.22), rgba(255,122,24,0.1))"
-            : isDone
-              ? "rgba(255, 122, 24, 0.06)"
-              : "var(--pf-surface-tint-03)";
+          const nodeBg = calmActive
+            ? "rgba(255, 122, 24, 0.045)"
+            : isActive
+              ? "radial-gradient(circle at 35% 25%, rgba(255,200,150,0.22), rgba(255,122,24,0.1))"
+              : isDone
+                ? "rgba(255, 122, 24, 0.06)"
+                : "var(--pf-surface-tint-03)";
 
           const emphasize = Boolean(interactive && hoveredStep === id);
           const nodeBorder = emphasize
             ? "rgba(255, 186, 120, 0.36)"
-            : isActive
-              ? "rgba(255, 122, 24, 0.45)"
-              : isDone
-                ? "rgba(255, 140, 60, 0.2)"
-                : "var(--pf-brand-border-warm)";
+            : calmActive
+              ? "rgba(255, 140, 72, 0.26)"
+              : isActive
+                ? "rgba(255, 122, 24, 0.45)"
+                : isDone
+                  ? "rgba(255, 140, 60, 0.2)"
+                  : "var(--pf-brand-border-warm)";
 
           const microMuted = !compact ? "var(--pf-text-muted)" : "color-mix(in srgb, var(--pf-text-muted) 92%, transparent)";
           const microStrong = !compact ? "var(--pf-text-secondary)" : "color-mix(in srgb, var(--pf-text-secondary) 95%, transparent)";
@@ -210,15 +227,21 @@ export function RecoveryPipeline({
                 transition: interactive ? "border-color 0.18s ease, box-shadow 0.18s ease" : undefined,
               }}
             >
-              <StepGlyph id={id} phase={ph} />
-              <span
+              <StepGlyph id={id} phase={ph} calmActive={calmActive} />
+                <span
                 style={{
                   marginTop: 8,
                   fontSize: compact ? 10 : 11,
                   fontWeight: 650,
-                  letterSpacing: "0.06em",
+                  letterSpacing: calmActive ? "0.04em" : "0.06em",
                   textTransform: "uppercase",
-                  color: isActive ? "#fdba74" : isDone ? "var(--pf-text-tertiary)" : "var(--pf-text-muted)",
+                  color: calmActive
+                    ? "rgba(245, 240, 232, 0.88)"
+                    : isActive
+                      ? "#fdba74"
+                      : isDone
+                        ? "var(--pf-text-tertiary)"
+                        : "var(--pf-text-muted)",
                 }}
               >
                 {TITLES[id]}
@@ -260,7 +283,7 @@ export function RecoveryPipeline({
               nodeCore
             );
 
-          const pulseActive = isActive && runMotion && !interactive;
+          const pulseActive = isActive && runMotion && !interactive && !workflowStrip;
           const wrappedNode = runMotion ? (
             <motion.div
               key={`n-${id}`}
@@ -305,10 +328,15 @@ export function RecoveryPipeline({
             ...(sweep
               ? {}
               : hotConnector
-                ? {
-                    background: "linear-gradient(90deg, rgba(255,122,24,0.45), rgba(255,122,24,0.1))",
-                    boxShadow: "0 0 10px rgba(255,122,24,0.1)",
-                  }
+                ? workflowStrip
+                  ? {
+                      background: "linear-gradient(90deg, rgba(255,122,24,0.22), rgba(255,122,24,0.06))",
+                      boxShadow: "none",
+                    }
+                  : {
+                      background: "linear-gradient(90deg, rgba(255,122,24,0.45), rgba(255,122,24,0.1))",
+                      boxShadow: "0 0 10px rgba(255,122,24,0.1)",
+                    }
                 : {
                     background: "linear-gradient(90deg, var(--pf-surface-tint-07), var(--pf-surface-tint-03))",
                   }),
@@ -343,9 +371,13 @@ export function RecoveryPipeline({
                 ...(sweep
                   ? {}
                   : hotConnector
-                    ? {
-                        background: "linear-gradient(90deg, rgba(255,122,24,0.45), rgba(255,122,24,0.08))",
-                      }
+                    ? workflowStrip
+                      ? {
+                          background: "linear-gradient(90deg, rgba(255,122,24,0.2), rgba(255,122,24,0.05))",
+                        }
+                      : {
+                          background: "linear-gradient(90deg, rgba(255,122,24,0.45), rgba(255,122,24,0.08))",
+                        }
                     : { background: "var(--pf-surface-tint-06)" }),
               }}
             />

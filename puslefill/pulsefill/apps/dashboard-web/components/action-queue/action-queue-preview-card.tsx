@@ -39,28 +39,13 @@ export function ActionQueuePreviewCard({
   if (secondary && quietEmpty) {
     return (
       <div className="pf-needs-attention-strip">
-        <div style={{ minWidth: 0, flex: "1 1 200px" }}>
-          <h2 className="pf-section-title" style={{ fontSize: 15 }}>
-            Needs attention
-          </h2>
-          <p className="pf-muted-copy" style={{ margin: "4px 0 0", fontSize: 13, maxWidth: 520 }}>
-            No urgent items right now.
+        <div className="pf-needs-attention-strip__copy">
+          <h2 className="pf-needs-attention-strip__title">Nothing needs action</h2>
+          <p className="pf-needs-attention-strip__detail pf-muted-copy">
+            New claims, failed offers, and stuck openings will appear here.
           </p>
         </div>
-        <Link
-          href="/action-queue?section=needs_action"
-          style={{
-            padding: "7px 12px",
-            borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "var(--text)",
-            fontSize: 13,
-            fontWeight: 600,
-            textDecoration: "none",
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}
-        >
+        <Link href="/action-queue?section=needs_action" className="pf-queue-preview-cta">
           Open queue
         </Link>
       </div>
@@ -94,23 +79,16 @@ export function ActionQueuePreviewCard({
                 </span>
               </>
             ) : (
-              "No urgent items right now."
+              <>
+                <span style={{ color: "rgba(245, 247, 250, 0.82)", fontWeight: 600 }}>Nothing needs action</span>
+                <span style={{ display: "block", marginTop: 6 }}>
+                  New claims, failed offers, and stuck openings will appear here.
+                </span>
+              </>
             )}
           </p>
         </div>
-        <Link
-          href="/action-queue?section=needs_action"
-          style={{
-            padding: "8px 14px",
-            borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.18)",
-            color: "var(--text)",
-            fontSize: 13,
-            fontWeight: 600,
-            textDecoration: "none",
-            whiteSpace: "nowrap",
-          }}
-        >
+        <Link href="/action-queue?section=needs_action" className="pf-queue-preview-cta">
           Open queue
         </Link>
       </div>

@@ -24,6 +24,7 @@ export function DashboardRecoveryPathSection({ activeStep, counts }: DashboardRe
         animated
         featured={false}
         interactive
+        workflowStrip
         showFlowLabel={false}
       />
     </section>
