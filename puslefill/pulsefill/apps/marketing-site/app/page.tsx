@@ -3,23 +3,23 @@ import { HeroOperatorConsole } from "../components/hero-operator-console";
 import { MarketingRecoveryBlock } from "../components/marketing-recovery-block";
 
 const outcomes = [
-  { label: "Standby reach", value: "2.4k" },
-  { label: "Avg. claim time", value: "6m" },
-  { label: "Recovered revenue", value: "$18.6k" },
+  { label: "Bookings recovered (pilot)", value: "127" },
+  { label: "Median time to first claim", value: "6m" },
+  { label: "Revenue retained", value: "$18.6k" },
 ];
 
 const operatorTiles = [
   {
-    title: "Command center",
-    body: "Recovery queue, next actions, and live signals — the same surface operators see after sign-in.",
+    title: "Recovery queue",
+    body: "See what cancelled, what’s offered, and what still needs a confirmation tap — one list instead of side threads.",
   },
   {
     title: "Openings & claims",
-    body: "Capture cancellations, send offers, and confirm claims without losing context.",
+    body: "Turn a freed 2:30 slot into a claimed visit with timed offers and a clear claim owner before you move on.",
   },
   {
     title: "Customers & activity",
-    body: "Standby demand, outreach history, and audit-friendly timelines in one warm console.",
+    body: "Who’s on standby, who received the offer, and who the desk confirmed — with timestamps you can stand behind.",
   },
 ];
 
@@ -73,12 +73,12 @@ export default function HomePage() {
         <div className="ms-section-inner">
           <div className="ms-section-head">
             <p className="eyebrow" id="path-eyebrow">
-              End-to-end recovery
+              One workflow
             </p>
-            <h2 id="path-heading">Opening → standby → offer → claim → confirm</h2>
+            <h2 id="path-heading">Cancelled slot → waitlist → claim → confirmed booking</h2>
             <p className="ms-lede">
-              One operator story: capture the cancellation, scan standby preferences, notify the right customers, lock a
-              claim, and confirm the booking.
+              A patient cancels. PulseFill matches your waitlist, sends a timed offer to the right people, captures who
+              claimed, and leaves the front desk with a single confirmation step before revenue walks out the door.
             </p>
           </div>
           <MarketingRecoveryBlock activeStep="offers" compact={false} />
@@ -97,9 +97,12 @@ export default function HomePage() {
       <section className="ms-section ms-section--operator" aria-labelledby="operator-heading">
         <div className="ms-section-inner">
           <div className="ms-section-head">
-            <p className="eyebrow">Operator OS</p>
-            <h2 id="operator-heading">The same command surfaces your team lives in.</h2>
-            <p className="ms-lede">Warm charcoal panels, ember actions, and explainable recovery — not generic admin chrome.</p>
+            <p className="eyebrow">For front desk &amp; ops</p>
+            <h2 id="operator-heading">One console for openings, claims, and customers.</h2>
+            <p className="ms-lede">
+              Built for the people who answer the phone: fewer tabs, less guesswork, and a straight line from
+              cancellation to recovered revenue.
+            </p>
           </div>
           <div className="ms-operator-grid">
             {operatorTiles.map((t) => (
@@ -116,20 +119,20 @@ export default function HomePage() {
         <div className="ms-section-inner ms-standby-grid">
           <div>
             <p className="eyebrow">Customer standby</p>
-            <h2 id="standby-heading">Patients raise their hand. You keep control.</h2>
+            <h2 id="standby-heading">Waitlist without inbox chaos.</h2>
             <p className="ms-lede">
-              Preferences, timing, and consent stay structured so offers go to the right people — without spamming the
-              whole list.
+              Patients set preferences once. When a slot opens, the right people are offered first — you still decide who
+              gets the chair.
             </p>
           </div>
           <div className="ms-standby-panel">
             <p className="pf-kicker" style={{ margin: "0 0 10px" }}>
-              What customers feel
+              Patient experience
             </p>
             <ul className="ms-standby-list">
-              <li>Clear offer windows and fair ordering</li>
-              <li>One-tap claim when an opening fits</li>
-              <li>Confidence that the desk confirmed the booking</li>
+              <li>Offer window and queue position — not a blast to everyone on file.</li>
+              <li>One tap to claim when the time and service match what they asked for.</li>
+              <li>Clear status when the desk has confirmed so they’re not left guessing.</li>
             </ul>
           </div>
         </div>
@@ -138,9 +141,10 @@ export default function HomePage() {
       <section className="ms-section ms-section--pilot" aria-labelledby="pilot-heading">
         <div className="ms-section-inner ms-pilot">
           <div>
-            <h2 id="pilot-heading">Pilot PulseFill on your busiest days.</h2>
+            <h2 id="pilot-heading">Try it on your heaviest cancellation days.</h2>
             <p className="ms-lede" style={{ marginBottom: 0 }}>
-              Book a walkthrough — we will map cancellations, standby, and staff confirmation to your workflow.
+              Book a walkthrough: we’ll map how cancellations hit your calendar, how waitlists are managed today, and how
+              your team confirms in under a minute.
             </p>
           </div>
           <div className="ms-pilot-actions">

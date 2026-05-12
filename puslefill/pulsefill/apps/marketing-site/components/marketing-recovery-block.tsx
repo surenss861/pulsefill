@@ -15,7 +15,7 @@ export function MarketingRecoveryBlock({
     <div className="ms-recovery-block">
       {showTitle ? (
         <p className="pf-kicker" style={{ margin: "0 0 14px" }}>
-          Recovery pipeline
+          In the product
         </p>
       ) : null}
       <RecoveryPipeline activeStep={activeStep} compact={compact} animated showFlowLabel={false} />
