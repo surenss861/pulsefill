@@ -188,76 +188,6 @@ h2 {
   font-weight: 700;
 }
 
-.product-stage {
-  position: relative;
-  min-height: 530px;
-}
-
-.dashboard-frame,
-.phone-frame {
-  border: 1px solid rgba(255, 122, 24, 0.12);
-  background: var(--surface-solid);
-  box-shadow:
-    0 44px 120px rgba(0, 0, 0, 0.62),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(18px);
-}
-
-.dashboard-frame {
-  position: absolute;
-  inset: 12px 0 auto auto;
-  width: min(720px, 100%);
-  overflow: hidden;
-  border-radius: 20px;
-}
-
-.frame-top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--line);
-  color: var(--subtle);
-  font-size: 12px;
-}
-
-.frame-top span {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.frame-top strong {
-  margin-left: auto;
-  font-weight: 700;
-}
-
-.dashboard-frame img {
-  aspect-ratio: 1.5;
-  object-fit: cover;
-  object-position: center top;
-}
-
-.phone-frame {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: min(255px, 42vw);
-  overflow: hidden;
-  border-radius: 32px;
-  padding: 8px;
-  transform: rotate(-4deg);
-}
-
-.phone-frame img {
-  border-radius: 24px;
-  aspect-ratio: 0.72;
-  object-fit: cover;
-  object-position: center top;
-}
-
 .metrics,
 .workflow {
   max-width: var(--max);
@@ -362,12 +292,33 @@ h2 {
     padding-top: 48px;
   }
 
-  .product-stage {
-    min-height: 450px;
+  .ms-hero-recovery-scene {
+    min-height: 420px;
   }
 
-  .dashboard-frame {
-    width: 94%;
+  .ms-hero-scene-stack {
+    margin-top: 0;
+    min-height: 0;
+  }
+
+  .ms-hero-float-card {
+    position: relative;
+    top: auto;
+    left: auto;
+    max-width: 100%;
+    transform: rotate(0deg);
+  }
+
+  .ms-hero-main-card {
+    margin-top: 12px;
+  }
+
+  .ms-hero-recovered-badge {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    margin-top: 8px;
+    align-self: flex-end;
   }
 
   .ms-operator-grid {
@@ -393,14 +344,6 @@ h2 {
 
   h1 {
     font-size: 44px;
-  }
-
-  .product-stage {
-    min-height: 380px;
-  }
-
-  .phone-frame {
-    width: 152px;
   }
 
   .metrics {
@@ -433,6 +376,333 @@ h2 {
   flex-direction: column;
   gap: 20px;
   min-width: 0;
+}
+
+/* --- Hero recovery scene (cinematic product moment) --- */
+.ms-hero-recovery-scene {
+  position: relative;
+  min-height: 500px;
+  padding: 4px 0 28px;
+}
+
+.ms-hero-scene-bg {
+  position: absolute;
+  inset: 8% 2% 6%;
+  border-radius: 32px;
+  background:
+    radial-gradient(ellipse 90% 65% at 62% 8%, rgba(255, 122, 24, 0.11), transparent 52%),
+    radial-gradient(ellipse 70% 50% at 20% 85%, rgba(90, 209, 138, 0.06), transparent 45%),
+    linear-gradient(165deg, rgba(12, 10, 9, 0.5), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ms-hero-flow-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.95;
+}
+
+.ms-hero-scene-stack {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: 0;
+  min-height: 460px;
+}
+
+.ms-hero-float-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: min(240px, 88vw);
+  padding: 16px 16px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(165deg, rgba(24, 21, 18, 0.96), rgba(10, 9, 8, 0.98));
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: rotate(-3deg);
+}
+
+.ms-hero-float-kicker {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 242, 237, 0.38);
+}
+
+.ms-hero-float-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.ms-hero-float-meta {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--subtle);
+}
+
+.ms-hero-float-highlight {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
+  color: rgba(254, 215, 170, 0.92);
+}
+
+.ms-hero-pill {
+  display: inline-flex;
+  margin-top: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.ms-hero-pill--success {
+  border: 1px solid rgba(90, 209, 138, 0.45);
+  background: rgba(90, 209, 138, 0.12);
+  color: #9aebc0;
+}
+
+.ms-hero-main-card {
+  position: relative;
+  z-index: 2;
+  margin-top: 88px;
+  padding: 26px 24px 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 122, 24, 0.38);
+  background: linear-gradient(168deg, rgba(36, 31, 27, 0.99), rgba(14, 12, 10, 0.99));
+  box-shadow:
+    0 0 0 1px rgba(255, 122, 24, 0.1),
+    0 32px 90px rgba(0, 0, 0, 0.55),
+    0 0 48px rgba(255, 122, 24, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.ms-hero-main-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 100% 80% at 50% 0%, rgba(255, 122, 24, 0.14), transparent 55%);
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 0;
+}
+
+.ms-hero-main-card > *:not(.ms-hero-main-glow) {
+  position: relative;
+  z-index: 1;
+}
+
+.ms-hero-main-kicker {
+  margin: 0 0 16px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(253, 186, 116, 0.88);
+}
+
+.ms-hero-main-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 242, 237, 0.42);
+}
+
+.ms-hero-main-title {
+  margin: 6px 0 0;
+  font-size: clamp(20px, 2.4vw, 24px);
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text);
+}
+
+.ms-hero-story-lines {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.ms-hero-story-lines li {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.ms-hero-story-key {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+  color: rgba(247, 243, 237, 0.88);
+}
+
+.ms-hero-story-key--ember {
+  color: #fec89a;
+  font-weight: 750;
+}
+
+.ms-hero-story-key--green {
+  color: #7fe0ad;
+  font-weight: 800;
+}
+
+.ms-hero-flow-dots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ms-hero-flow-dot-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 56px;
+  min-width: 52px;
+  max-width: 88px;
+}
+
+.ms-hero-flow-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ms-hero-flow-dot--0 {
+  border-color: rgba(255, 122, 24, 0.55);
+  background: rgba(255, 122, 24, 0.2);
+  box-shadow: 0 0 12px rgba(255, 122, 24, 0.25);
+}
+
+.ms-hero-flow-dot--1,
+.ms-hero-flow-dot--2 {
+  border-color: rgba(255, 186, 120, 0.45);
+  background: rgba(255, 122, 24, 0.12);
+}
+
+.ms-hero-flow-dot--3 {
+  border-color: rgba(90, 209, 138, 0.55);
+  background: rgba(90, 209, 138, 0.2);
+  box-shadow: 0 0 14px rgba(90, 209, 138, 0.22);
+}
+
+.ms-hero-flow-dot-label {
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(245, 242, 237, 0.45);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.ms-hero-confirm-btn {
+  margin-top: 18px;
+  width: 100%;
+  min-height: 48px;
+  border: none;
+  border-radius: 12px;
+  cursor: default;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: #160a02;
+  background: linear-gradient(180deg, #ff8c38, var(--ember));
+  box-shadow: 0 14px 36px rgba(255, 122, 24, 0.35);
+}
+
+.ms-hero-recovered-badge {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  z-index: 4;
+  min-width: 118px;
+  padding: 14px 16px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(90, 209, 138, 0.42);
+  background: linear-gradient(165deg, rgba(22, 40, 30, 0.95), rgba(10, 14, 12, 0.98));
+  box-shadow:
+    0 0 28px rgba(90, 209, 138, 0.18),
+    0 18px 44px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.ms-hero-badge-kicker {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(154, 235, 192, 0.85);
+}
+
+.ms-hero-badge-amount {
+  margin: 4px 0 0;
+  font-size: 26px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  color: #b8f5d3;
+  line-height: 1;
+}
+
+.ms-hero-badge-meta {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(154, 235, 192, 0.65);
+}
+
+@keyframes ms-hero-flow-dash {
+  to {
+    stroke-dashoffset: -200;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ms-hero-flow-path {
+    animation: ms-hero-flow-dash 2.8s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms-hero-flow-path {
+    animation: none;
+  }
 }
 
 .ms-hero-pipeline {

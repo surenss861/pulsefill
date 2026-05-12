@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { HeroRecoveryScene } from "../components/hero-recovery-scene";
 import { MarketingRecoveryBlock } from "../components/marketing-recovery-block";
 
 const outcomes = [
@@ -44,17 +44,16 @@ export default function HomePage() {
         <div className="hero-grid ms-hero-grid">
           <div className="hero-copy">
             <p className="eyebrow">Cancellation recovery infrastructure</p>
-            <h1>Recover cancelled appointments before the calendar goes cold.</h1>
+            <h1>Cancellations are inevitable. Lost revenue is not.</h1>
             <p className="hero-lede">
-              PulseFill turns last-minute openings into fast, qualified claims with standby matching, offer timing, and
-              confirmation workflows built for busy front desks.
+              PulseFill turns empty appointment times into claimed bookings from your waiting list.
             </p>
             <div className="hero-actions">
               <Link className="button primary" href="/demo">
                 Book a demo
               </Link>
-              <Link className="button secondary" href="/pricing">
-                View pricing
+              <Link className="button secondary" href="/#path-heading">
+                See how it works
               </Link>
             </div>
             <div className="segment-row" aria-label="Supported appointment businesses">
@@ -65,37 +64,7 @@ export default function HomePage() {
           </div>
 
           <div className="hero-visual-column">
-            <div className="ms-hero-pipeline" aria-label="Recovery pipeline preview">
-              <p className="pf-kicker" style={{ margin: "0 0 10px" }}>
-                Live recovery path
-              </p>
-              <MarketingRecoveryBlock activeStep="matched" compact showTitle={false} />
-            </div>
-            <div className="product-stage" aria-label="PulseFill web and iOS product previews">
-              <div className="dashboard-frame">
-                <div className="frame-top">
-                  <span />
-                  <span />
-                  <span />
-                  <strong>Recovery command center</strong>
-                </div>
-                <Image
-                  src="/pulsefill-web.png"
-                  alt="PulseFill web dashboard showing cancellation recovery workflow"
-                  width={1536}
-                  height={1024}
-                  priority
-                />
-              </div>
-              <div className="phone-frame">
-                <Image
-                  src="/pulsefill-ios.png"
-                  alt="PulseFill iOS customer appointment update screen"
-                  width={1536}
-                  height={1024}
-                />
-              </div>
-            </div>
+            <HeroRecoveryScene />
           </div>
         </div>
       </section>
