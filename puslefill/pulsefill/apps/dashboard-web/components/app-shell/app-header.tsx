@@ -31,14 +31,14 @@ export function AppHeader({ user, profile }: AppHeaderProps) {
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <p className="pf-kicker" style={{ margin: 0, fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase" }}>
-            Operations desk
+          <p className="pf-kicker" style={{ margin: 0, fontSize: 11, letterSpacing: "0.12em", textTransform: "none", color: "rgba(201, 191, 179, 0.78)" }}>
+            PulseFill desk
           </p>
           <p
             className="pf-muted-copy"
             style={{ margin: "4px 0 0", fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
           >
-            Openings, recovery, and customers in one place
+            Openings, waiting customers, and confirmations in one place
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>

@@ -1,102 +1,49 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  authFormErrorFromUnknown,
-  isNextRedirectError,
-  userFacingSupabaseMessage,
-} from "@/lib/auth-action-errors";
-import { getAuthEnvSnapshot } from "@/lib/auth-env-snapshot";
-import { createClient } from "@/lib/supabase/server";
-import { safeUrlParts } from "@/lib/supabase/project-url";
-import { getSiteUrl } from "@/lib/site-url";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { createClient, SupabaseConfigError } from "@/lib/supabase/server";
 
-export type AuthFormState = { error?: string };
+export type AuthFormState = {
+  error?: string;
+};
 
-const callbackUrl = (next: string) =>
-  `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(next.startsWith("/") ? next : `/${next}`)}`;
+export type ResendState = {
+  error?: string;
+  ok?: boolean;
+};
 
-export async function signUpAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const fullName = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+async function siteOrigin(): Promise<string> {
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/$/, "");
 
-  if (!fullName || !email || !password || !confirmPassword) {
-    return { error: "Fill in all required fields." };
-  }
-  if (password !== confirmPassword) {
-    return { error: "Passwords do not match." };
-  }
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters." };
-  }
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  if (host) return `${proto}://${host}`;
+  return "http://localhost:3000";
+}
 
+function safeInternalPath(next: string, fallback: string): string {
+  const t = next.trim() || fallback;
+  return t.startsWith("/") && !t.startsWith("//") ? t : fallback;
+}
+
+export async function signOutAction() {
   try {
-    const emailRedirectTo = callbackUrl("/overview");
-    let emailRedirectValid = false;
-    try {
-      new URL(emailRedirectTo);
-      emailRedirectValid = true;
-    } catch {
-      /* invalid absolute URL — still attempt sign-up; logs will show the bad value */
-    }
-
-    if (process.env.AUTH_ENV_DEBUG === "1") {
-      console.log(
-        "[sign-up env check]",
-        getAuthEnvSnapshot({
-          emailRedirectTo: safeUrlParts(emailRedirectTo),
-          emailRedirectToRaw: emailRedirectTo.slice(0, 500),
-          emailRedirectValid,
-        }),
-      );
-    }
-
     const supabase = await createClient();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo,
-      },
-    });
-
-    if (error) {
-      console.error("[sign-up redirect]", {
-        emailRedirectTo,
-        siteUrl: getSiteUrl(),
-        emailRedirectValid,
-      });
-      console.error("[auth] sign-up failed", {
-        message: error.message,
-        code: error.code,
-        status: error.status,
-        emailRedirectTo,
-        siteUrl: getSiteUrl(),
-        supabaseUrl: safeUrlParts(process.env.NEXT_PUBLIC_SUPABASE_URL),
-      });
-      return {
-        error: userFacingSupabaseMessage(
-          error.message,
-          "We couldn't create your workspace. Please try again.",
-        ),
-      };
-    }
-
-    redirect(`/check-email?email=${encodeURIComponent(email)}&flow=signup`);
-  } catch (e) {
-    return authFormErrorFromUnknown("sign-up", e);
+    await supabase.auth.signOut();
+  } catch {
+    /* still send people to sign-in if env is misconfigured */
   }
+  redirect("/sign-in");
 }
 
 export async function signInAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const nextRaw = String(formData.get("next") ?? "/overview").trim();
-  const next =
-    nextRaw.startsWith("/") && !nextRaw.startsWith("//") && !nextRaw.includes("://") ? nextRaw : "/overview";
+  const next = safeInternalPath(String(formData.get("next") ?? "/overview"), "/overview");
 
   if (!email || !password) {
     return { error: "Enter your email and password." };
@@ -105,189 +52,135 @@ export async function signInAction(_prev: AuthFormState, formData: FormData): Pr
   try {
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      return { error: "Invalid email or password." };
-    }
-
+    if (error) return { error: error.message };
     redirect(next);
   } catch (e) {
-    return authFormErrorFromUnknown("sign-in", e);
+    if (isRedirectError(e)) throw e;
+    if (e instanceof SupabaseConfigError) return { error: e.message };
+    return { error: e instanceof Error ? e.message : "Could not sign in." };
   }
 }
 
 export async function sendMagicLinkAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "").trim();
-  if (!email) {
-    return { error: "Enter your work email." };
-  }
+  if (!email) return { error: "Enter your email." };
 
   try {
     const supabase = await createClient();
+    const origin = await siteOrigin();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: callbackUrl("/overview"),
+        emailRedirectTo: `${origin}/overview`,
       },
     });
-
-    if (error) {
-      console.error("[auth] magic-link failed", {
-        message: error.message,
-        code: error.code,
-        status: error.status,
-      });
-      return {
-        error: userFacingSupabaseMessage(
-          error.message,
-          "We couldn't send the sign-in link. Please try again.",
-        ),
-      };
-    }
-
-    redirect(`/check-email?email=${encodeURIComponent(email)}&flow=magic`);
+    if (error) return { error: error.message };
+    redirect(`/check-email?${new URLSearchParams({ email, flow: "magic" }).toString()}`);
   } catch (e) {
-    return authFormErrorFromUnknown("magic-link", e);
+    if (isRedirectError(e)) throw e;
+    if (e instanceof SupabaseConfigError) return { error: e.message };
+    return { error: e instanceof Error ? e.message : "Could not send sign-in link." };
+  }
+}
+
+export async function signUpAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const name = String(formData.get("name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirmPassword") ?? "");
+
+  if (!name) return { error: "Enter your full name." };
+  if (!email) return { error: "Enter your email." };
+  if (password.length < 8) return { error: "Password must be at least 8 characters." };
+  if (password !== confirm) return { error: "Passwords do not match." };
+
+  try {
+    const supabase = await createClient();
+    const origin = await siteOrigin();
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${origin}/overview`,
+        data: { full_name: name },
+      },
+    });
+    if (error) return { error: error.message };
+    redirect(`/check-email?${new URLSearchParams({ email, flow: "signup" }).toString()}`);
+  } catch (e) {
+    if (isRedirectError(e)) throw e;
+    if (e instanceof SupabaseConfigError) return { error: e.message };
+    return { error: e instanceof Error ? e.message : "Could not create account." };
   }
 }
 
 export async function forgotPasswordAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "").trim();
-  if (!email) {
-    return { error: "Enter your email address." };
-  }
+  if (!email) return { error: "Enter your email." };
 
   try {
     const supabase = await createClient();
+    const origin = await siteOrigin();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: callbackUrl("/reset-password"),
+      redirectTo: `${origin}/reset-password`,
     });
-
-    if (error) {
-      console.error("[auth] forgot-password failed", {
-        message: error.message,
-        code: error.code,
-        status: error.status,
-      });
-      return {
-        error: userFacingSupabaseMessage(
-          error.message,
-          "We couldn't send the reset email. Please try again.",
-        ),
-      };
-    }
-
-    redirect(`/check-email?email=${encodeURIComponent(email)}&flow=recovery`);
+    if (error) return { error: error.message };
+    redirect(`/check-email?${new URLSearchParams({ email, flow: "recovery" }).toString()}`);
   } catch (e) {
-    return authFormErrorFromUnknown("forgot-password", e);
+    if (isRedirectError(e)) throw e;
+    if (e instanceof SupabaseConfigError) return { error: e.message };
+    return { error: e instanceof Error ? e.message : "Could not send reset link." };
   }
 }
 
 export async function resetPasswordAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const password = String(formData.get("password") ?? "");
-  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+  const confirm = String(formData.get("confirmPassword") ?? "");
 
-  if (!password || !confirmPassword) {
-    return { error: "Fill in both password fields." };
-  }
-  if (password !== confirmPassword) {
-    return { error: "Passwords do not match." };
-  }
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters." };
-  }
+  if (password.length < 8) return { error: "Password must be at least 8 characters." };
+  if (password !== confirm) return { error: "Passwords do not match." };
 
   try {
     const supabase = await createClient();
     const { error } = await supabase.auth.updateUser({ password });
-
-    if (error) {
-      console.error("[auth] reset-password failed", {
-        message: error.message,
-        code: error.code,
-        status: error.status,
-      });
-      return {
-        error: userFacingSupabaseMessage(
-          error.message,
-          "We couldn't update your password. Please try again.",
-        ),
-      };
-    }
-
+    if (error) return { error: error.message };
     redirect("/sign-in?reset=success");
   } catch (e) {
-    return authFormErrorFromUnknown("reset-password", e);
+    if (isRedirectError(e)) throw e;
+    if (e instanceof SupabaseConfigError) return { error: e.message };
+    return { error: e instanceof Error ? e.message : "Could not update password." };
   }
 }
-
-export type ResendState = { error?: string; ok?: boolean };
 
 export async function resendAuthEmailAction(_prev: ResendState, formData: FormData): Promise<ResendState> {
   const email = String(formData.get("email") ?? "").trim();
   const flow = String(formData.get("flow") ?? "");
-
-  if (!email) {
-    return { error: "Missing email." };
-  }
+  if (!email) return { error: "Missing email." };
 
   try {
     const supabase = await createClient();
+    const origin = await siteOrigin();
 
     if (flow === "magic") {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: callbackUrl("/overview") },
+        options: { emailRedirectTo: `${origin}/overview` },
       });
-      if (error) {
-        console.error("[auth] resend magic failed", {
-          message: error.message,
-          code: error.code,
-          status: error.status,
-        });
-        return {
-          error: userFacingSupabaseMessage(
-            error.message,
-            "We couldn't send the sign-in link. Please try again.",
-          ),
-        };
-      }
+      if (error) return { error: error.message };
       return { ok: true };
     }
 
     if (flow === "recovery") {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: callbackUrl("/reset-password"),
+        redirectTo: `${origin}/reset-password`,
       });
-      if (error) {
-        console.error("[auth] resend recovery failed", {
-          message: error.message,
-          code: error.code,
-          status: error.status,
-        });
-        return {
-          error: userFacingSupabaseMessage(
-            error.message,
-            "We couldn't send the reset email. Please try again.",
-          ),
-        };
-      }
+      if (error) return { error: error.message };
       return { ok: true };
     }
 
     return { error: "Unsupported flow." };
   } catch (e) {
-    return authFormErrorFromUnknown("resend-email", e);
+    if (e instanceof SupabaseConfigError) return { error: e.message };
+    return { error: e instanceof Error ? e.message : "Could not resend email." };
   }
-}
-
-export async function signOutAction() {
-  try {
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-  } catch (e) {
-    if (isNextRedirectError(e)) throw e;
-    console.error("[auth] sign-out failed (session may already be cleared)", e);
-  }
-  redirect("/sign-in");
 }

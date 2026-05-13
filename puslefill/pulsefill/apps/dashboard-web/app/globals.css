@@ -1644,15 +1644,15 @@ main.pf-auth-shell .pf-auth-submit {
       90deg,
       transparent,
       transparent 95px,
-      rgba(255, 246, 235, 0.005) 95px,
-      rgba(255, 246, 235, 0.005) 96px
+      rgba(255, 246, 235, 0.002) 95px,
+      rgba(255, 246, 235, 0.002) 96px
     ),
     repeating-linear-gradient(
       0deg,
       transparent,
       transparent 95px,
-      rgba(255, 246, 235, 0.004) 95px,
-      rgba(255, 246, 235, 0.004) 96px
+      rgba(255, 246, 235, 0.002) 95px,
+      rgba(255, 246, 235, 0.002) 96px
     ),
     radial-gradient(ellipse 120% 80% at 100% 0%, rgba(255, 122, 24, 0.04), transparent 52%),
     radial-gradient(ellipse 90% 70% at 0% 100%, rgba(201, 59, 47, 0.014), transparent 45%),
@@ -1665,14 +1665,14 @@ main.pf-auth-shell .pf-auth-submit {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  opacity: 0.008;
+  opacity: 0.004;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   mix-blend-mode: overlay;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .pf-workspace-field::before {
-    opacity: 0.008;
+    opacity: 0.003;
   }
 }
 
@@ -1688,6 +1688,270 @@ main.pf-auth-shell .pf-auth-submit {
   .pf-workspace-inner {
     animation: none !important;
   }
+}
+
+/* —— Operations desk surfaces (settings-first; reuse on other signed-in pages) —— */
+.pf-desk-page {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(22px, 3vw, 32px);
+}
+
+.pf-desk-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(16px, 3vw, 28px);
+}
+
+.pf-desk-page-header__copy {
+  min-width: 0;
+}
+
+.pf-desk-page-header__title {
+  margin: 0;
+  font-size: clamp(1.55rem, 3.2vw, 2rem);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: var(--pf-text-primary);
+}
+
+.pf-desk-page-header__subtitle {
+  margin: 10px 0 0;
+  max-width: 52ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--pf-text-secondary);
+}
+
+.pf-desk-page-header__actions {
+  flex-shrink: 0;
+}
+
+.pf-desk-hero-card {
+  position: relative;
+  padding: clamp(22px, 3vw, 30px) clamp(22px, 3vw, 32px);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 246, 235, 0.07);
+  background:
+    linear-gradient(145deg, rgba(42, 36, 30, 0.55) 0%, rgba(18, 16, 14, 0.72) 55%, rgba(12, 11, 10, 0.88) 100%),
+    radial-gradient(ellipse 90% 60% at 12% 0%, rgba(255, 122, 24, 0.07), transparent 55%);
+  box-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.pf-desk-hero-card__eyebrow {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: rgba(201, 191, 179, 0.88);
+}
+
+.pf-desk-hero-card__title {
+  margin: 8px 0 0;
+  font-size: clamp(1.25rem, 2.4vw, 1.45rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
+  color: var(--pf-text-primary);
+}
+
+.pf-desk-hero-card__body {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pf-desk-hero-card__meta {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--pf-text-secondary);
+}
+
+.pf-desk-hero-card__access-line {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(245, 240, 232, 0.92);
+}
+
+.pf-desk-access-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pf-desk-access-row input[type="checkbox"] {
+  margin-top: 3px;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--pf-accent-primary);
+  flex-shrink: 0;
+}
+
+.pf-desk-access-row label {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--pf-text-primary);
+  cursor: default;
+}
+
+.pf-desk-access-row__hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pf-text-muted);
+}
+
+.pf-desk-save-access {
+  align-self: flex-start;
+  margin-top: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--pf-accent-primary-border);
+  background: linear-gradient(180deg, #ff7a18 0%, #f97316 100%);
+  color: var(--pf-btn-primary-text);
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--pf-btn-primary-shadow);
+}
+
+.pf-desk-save-access:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.pf-desk-secondary-grid {
+  display: grid;
+  gap: clamp(14px, 2vw, 18px);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .pf-desk-secondary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pf-desk-secondary-card {
+  padding: clamp(18px, 2.2vw, 22px) clamp(18px, 2.4vw, 24px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 246, 235, 0.045);
+  background: linear-gradient(180deg, rgba(22, 20, 18, 0.42) 0%, rgba(12, 11, 10, 0.55) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.pf-desk-secondary-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pf-desk-secondary-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.22;
+  color: var(--pf-text-primary);
+}
+
+.pf-desk-secondary-card__action {
+  flex-shrink: 0;
+}
+
+.pf-desk-secondary-card__body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--pf-text-secondary);
+}
+
+.pf-desk-dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-desk-dl__row {
+  display: grid;
+  grid-template-columns: minmax(0, 120px) minmax(0, 1fr);
+  gap: 8px 14px;
+  align-items: baseline;
+}
+
+@media (max-width: 520px) {
+  .pf-desk-dl__row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+.pf-desk-dl__term {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pf-text-muted);
+}
+
+.pf-desk-dl__detail {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(245, 240, 232, 0.92);
+  word-break: break-word;
+}
+
+.pf-desk-quiet-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pf-accent-primary);
+  text-decoration: none;
+}
+
+.pf-desk-quiet-link:hover {
+  color: var(--pf-accent-primary-hover);
+  text-decoration: underline;
+}
+
+.pf-desk-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--pf-text-secondary);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pf-desk-ghost-btn:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--pf-text-primary);
 }
 
 /* Command rail: walnut dock (signed-in shell — matches marketing/auth warmth). */
@@ -2115,6 +2379,10 @@ main.pf-auth-shell .pf-auth-submit {
 .pf-page-settings,
 .pf-page-customers {
   max-width: 1120px;
+}
+
+.pf-page-settings.pf-desk-page {
+  max-width: 860px;
 }
 
 .pf-customers-page-stack {
