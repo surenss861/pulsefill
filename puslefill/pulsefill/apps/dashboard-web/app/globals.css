@@ -2520,7 +2520,17 @@ main.pf-auth-shell .pf-auth-submit {
     0 0 0 1px rgba(255, 122, 24, 0.12);
 }
 
-.pf-desk-invite-actions {
+textarea.pf-desk-invite-input {
+  min-height: 100px;
+  line-height: 1.45;
+  resize: vertical;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.pf-desk-team-note-save {
+  align-self: flex-start;
+}
   display: flex;
   flex-wrap: wrap;
   gap: 10px;

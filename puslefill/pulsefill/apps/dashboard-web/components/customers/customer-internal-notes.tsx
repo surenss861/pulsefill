@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useState } from "react";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
-import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorRow, OperatorRowList } from "@/components/operator/operator-row-list";
 import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import type { OperatorStatusKind } from "@/components/operator/operator-status-chip";
@@ -20,32 +19,6 @@ type Props = {
   onRetry: () => void;
   /** When true, omit outer section shell — for use inside `DeskSecondaryCard`. */
   embedded?: boolean;
-};
-
-const textareaStyle: CSSProperties = {
-  width: "100%",
-  minHeight: 72,
-  resize: "vertical" as const,
-  borderRadius: 10,
-  border: "1px solid rgba(255,255,255,0.12)",
-  background: "rgba(0,0,0,0.2)",
-  color: "var(--text)",
-  padding: "10px 12px",
-  fontSize: 13,
-  fontFamily: "inherit",
-  lineHeight: 1.45,
-};
-
-const btnStyle: CSSProperties = {
-  borderRadius: 10,
-  border: "1px solid var(--pf-accent-primary-border)",
-  background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
-  color: "var(--pf-btn-primary-text)",
-  padding: "8px 14px",
-  fontSize: 13,
-  fontWeight: 700,
-  cursor: "pointer",
-  fontFamily: "inherit",
 };
 
 function localDayKey(d: Date): string {
@@ -84,7 +57,8 @@ export function CustomerInternalNotes({
   const [draft, setDraft] = useState("");
   const [remind, setRemind] = useState(false);
   const [remindLocal, setRemindLocal] = useState("");
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [validationHint, setValidationHint] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [completeBusy, setCompleteBusy] = useState<string | null>(null);
 
   const openFollowUps = useMemo(() => {
@@ -95,25 +69,26 @@ export function CustomerInternalNotes({
   }, [notes]);
 
   async function submit() {
-    setLocalError(null);
+    setValidationHint(null);
+    setServerError(null);
     const trimmed = draft.trim();
     if (!trimmed) {
-      setLocalError("Write something before saving.");
+      setValidationHint("Write something before you save.");
       return;
     }
     if (trimmed.length > 2000) {
-      setLocalError("Note is too long (max 2000 characters).");
+      setValidationHint("Note is too long (max 2000 characters).");
       return;
     }
     let followIso: string | null = null;
     if (remind) {
       if (!remindLocal) {
-        setLocalError("Choose a reminder date and time.");
+        setValidationHint("Choose a reminder date and time.");
         return;
       }
       const t = new Date(remindLocal).getTime();
       if (Number.isNaN(t)) {
-        setLocalError("Reminder date is not valid.");
+        setValidationHint("That reminder date is not valid.");
         return;
       }
       followIso = new Date(t).toISOString();
@@ -124,48 +99,46 @@ export function CustomerInternalNotes({
       setRemind(false);
       setRemindLocal("");
     } else {
-      setLocalError(r.message);
+      setServerError(r.message);
     }
   }
 
   async function markStripComplete(noteId: string) {
-    setLocalError(null);
+    setValidationHint(null);
+    setServerError(null);
     setCompleteBusy(noteId);
     const r = await onCompleteFollowUp(noteId);
     setCompleteBusy(null);
-    if (!r.ok) setLocalError(r.message);
+    if (!r.ok) setServerError(r.message);
   }
 
   const inner = (
     <>
       {!embedded ? (
         <h2 className="pf-section-title" style={{ fontSize: 15, margin: "0 0 6px" }}>
-          Internal notes
+          Team notes
         </h2>
       ) : null}
-      <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 12, lineHeight: 1.5 }}>
-        Only staff in this workspace can see these notes and reminders.
+      <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.55 }}>
+        Add anything your team should know about this customer. Only people in this workspace can read it.
       </p>
 
       {error ? (
-        <div style={{ marginBottom: 12 }}>
-          <OperatorErrorState rawMessage={error} />
-          <button
-            type="button"
-            onClick={() => void onRetry()}
-            style={{
-              marginTop: 8,
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.14)",
-              background: "rgba(255,255,255,0.06)",
-              color: "var(--text)",
-              padding: "6px 12px",
-              fontSize: 12,
-              cursor: "pointer",
-            }}
-          >
-            Retry
-          </button>
+        <div className="pf-desk-invite-error" role="alert" style={{ marginBottom: 12 }}>
+          <p className="pf-desk-hero-card__eyebrow" style={{ margin: 0 }}>
+            Notes did not load
+          </p>
+          <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.55 }}>
+            Try again in a moment.
+          </p>
+          <p className="pf-muted-copy" style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.45 }}>
+            {error}
+          </p>
+          <div style={{ marginTop: 12 }}>
+            <button type="button" className="pf-desk-confirm-modal__btn-quiet" onClick={() => void onRetry()}>
+              Try again
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -173,14 +146,14 @@ export function CustomerInternalNotes({
         <div
           style={{
             marginBottom: 14,
-            padding: "12px 12px",
-            borderRadius: 10,
+            padding: "12px 14px",
+            borderRadius: 14,
             border: "1px solid rgba(255, 122, 24, 0.22)",
             background: "rgba(255, 122, 24, 0.06)",
           }}
         >
-          <p className="pf-kicker" style={{ margin: 0, fontSize: 10 }}>
-            Open follow-ups
+          <p className="pf-desk-hero-card__eyebrow" style={{ margin: 0, fontSize: 12 }}>
+            Open reminders
           </p>
           <OperatorRowList density="compact" style={{ marginTop: 8 }}>
             {openFollowUps.map((n) => (
@@ -199,16 +172,10 @@ export function CustomerInternalNotes({
                       type="button"
                       disabled={completeBusy === n.id}
                       onClick={() => void markStripComplete(n.id)}
+                      className="pf-desk-confirm-modal__btn-quiet"
                       style={{
-                        borderRadius: 8,
-                        border: "1px solid rgba(255,255,255,0.14)",
-                        background: "rgba(255,255,255,0.06)",
-                        color: "var(--text)",
                         padding: "6px 10px",
                         fontSize: 12,
-                        fontWeight: 600,
-                        cursor: completeBusy === n.id ? "wait" : "pointer",
-                        fontFamily: "inherit",
                       }}
                     >
                       {completeBusy === n.id ? "…" : "Mark complete"}
@@ -221,32 +188,52 @@ export function CustomerInternalNotes({
         </div>
       ) : null}
 
-      <label style={{ display: "block", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>
-        New note
-      </label>
-      <textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        placeholder="e.g. Prefers morning openings, call after 5 PM…"
-        style={textareaStyle}
-        maxLength={2100}
-        disabled={saving}
-        aria-label="Internal note text"
-      />
+      {serverError ? (
+        <div className="pf-desk-invite-error" role="alert" style={{ marginBottom: 12 }}>
+          <p className="pf-desk-hero-card__eyebrow" style={{ margin: 0 }}>
+            Note did not save
+          </p>
+          <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.55 }}>
+            Try again in a moment.
+          </p>
+          <p className="pf-muted-copy" style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.45 }}>
+            {serverError}
+          </p>
+          <div style={{ marginTop: 12 }}>
+            <button type="button" className="pf-desk-confirm-modal__btn-quiet" onClick={() => setServerError(null)}>
+              Try again
+            </button>
+          </div>
+        </div>
+      ) : null}
 
-      <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, fontSize: 13, cursor: "pointer" }}>
-        <input
-          type="checkbox"
-          checked={remind}
-          onChange={(e) => setRemind(e.target.checked)}
+      <label className="pf-desk-invite-label" htmlFor="pf-customer-team-note-draft">
+        Team note
+        <span className="pf-desk-invite-label__hint">What should another staff member know?</span>
+        <textarea
+          id="pf-customer-team-note-draft"
+          className="pf-desk-invite-input"
+          value={draft}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            setValidationHint(null);
+            setServerError(null);
+          }}
+          placeholder="e.g. Prefers morning openings, call after 5 PM…"
+          maxLength={2100}
           disabled={saving}
+          aria-label="Team note text"
         />
-        Add follow-up reminder
+      </label>
+
+      <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, fontSize: 14, cursor: "pointer" }}>
+        <input type="checkbox" checked={remind} onChange={(e) => setRemind(e.target.checked)} disabled={saving} />
+        Add a reminder for later
       </label>
       {remind ? (
         <div style={{ marginTop: 8 }}>
-          <label htmlFor="pf-internal-note-remind" className="pf-muted-copy" style={{ display: "block", fontSize: 11, marginBottom: 4 }}>
-            Date and time (your timezone)
+          <label htmlFor="pf-internal-note-remind" className="pf-muted-copy" style={{ display: "block", fontSize: 13, marginBottom: 6 }}>
+            Reminder date and time (your timezone)
           </label>
           <input
             id="pf-internal-note-remind"
@@ -254,26 +241,21 @@ export function CustomerInternalNotes({
             value={remindLocal}
             onChange={(e) => setRemindLocal(e.target.value)}
             disabled={saving}
-            style={{
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.14)",
-              background: "rgba(0,0,0,0.25)",
-              color: "var(--text)",
-              padding: "8px 10px",
-              fontSize: 13,
-              fontFamily: "inherit",
-            }}
+            className="pf-desk-invite-input"
+            style={{ maxWidth: 360 }}
           />
         </div>
       ) : null}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginTop: 10 }}>
-        <button type="button" style={btnStyle} disabled={saving} onClick={() => void submit()}>
-          {saving ? "Saving…" : "Add note"}
-        </button>
-        {localError ? (
-          <span style={{ fontSize: 12, color: "#f87171" }} role="alert">
-            {localError}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginTop: 12 }}>
+        <MotionTapSurface disabled={saving}>
+          <button type="button" className="pf-desk-save-access pf-desk-team-note-save" disabled={saving} onClick={() => void submit()}>
+            {saving ? "Saving…" : "Save note"}
+          </button>
+        </MotionTapSurface>
+        {validationHint ? (
+          <span className="pf-muted-copy" style={{ fontSize: 12, color: "rgba(248,113,113,0.92)" }} role="status">
+            {validationHint}
           </span>
         ) : null}
       </div>
@@ -283,10 +265,10 @@ export function CustomerInternalNotes({
       </p>
 
       {loading && notes.length === 0 && !error ? (
-        <OperatorLoadingState variant="section" skeleton="rows" title="Loading notes…" />
+        <OperatorLoadingState variant="section" skeleton="rows" title="Loading team notes…" />
       ) : notes.length === 0 ? (
         <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
-          No internal notes yet. Add context your team should remember about this customer.
+          No notes yet. Add what the next shift should remember about this customer.
         </p>
       ) : (
         <OperatorRowList density="compact">

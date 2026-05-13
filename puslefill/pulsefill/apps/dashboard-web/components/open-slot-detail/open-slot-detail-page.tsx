@@ -464,9 +464,9 @@ export function OpenSlotDetailPage() {
               </DeskSecondaryCard>
 
               <div id="operator-slot-internal-note">
-                <DeskSecondaryCard title="Internal notes">
-                  <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55 }}>
-                    Staff-only — quick to update and reflected on the timeline.
+                <DeskSecondaryCard title="Team notes">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.55 }}>
+                    Staff only — saved notes appear on the timeline so the next person has context.
                   </p>
                   <OperatorInternalNoteCard
                     openSlotId={slot.id}
