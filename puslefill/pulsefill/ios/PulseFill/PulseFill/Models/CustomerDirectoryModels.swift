@@ -4,6 +4,7 @@ struct CustomerDirectoryListResponse: Codable {
     let businesses: [CustomerDirectoryBusinessSummary]
 }
 
+/// Public directory row (list). Relationship reflects the signed-in customer only.
 struct CustomerDirectoryBusinessSummary: Codable, Identifiable {
     let id: String
     let name: String
@@ -12,33 +13,44 @@ struct CustomerDirectoryBusinessSummary: Codable, Identifiable {
     let timezone: String?
     let standbyAccessMode: String?
     let customerDiscoveryEnabled: Bool?
+    let city: String?
+    let neighborhood: String?
+    let services: [String]?
+    let relationship: CustomerDirectoryListRelationship?
+}
+
+struct CustomerDirectoryListRelationship: Codable, Equatable {
+    let membershipStatus: String
+    let requestStatus: String
 }
 
 struct CustomerDirectoryBusinessDetailResponse: Codable {
-    let business: CustomerDirectoryBusinessRow
-    let locations: [CustomerDirectoryLocationRow]
+    let business: CustomerDirectoryBusinessProfile
+}
+
+/// Safe public business profile for directory detail (no staff PII, no contact fields).
+struct CustomerDirectoryBusinessProfile: Codable {
+    let id: String
+    let name: String
+    let slug: String
+    let category: String?
+    let timezone: String?
+    let standbyAccessMode: String?
+    let customerDiscoveryEnabled: Bool?
+    let city: String?
+    let neighborhood: String?
+    let description: String?
     let services: [CustomerDirectoryServiceRow]
-    /// Present when the directory API returns per-customer state (membership, request, standby prefs).
-    let customerRelationship: CustomerRelationshipState?
+    let locations: [CustomerDirectoryLocationRow]
+    let relationship: CustomerRelationshipState?
 }
 
 struct CustomerRelationshipState: Codable, Equatable {
     let membershipStatus: String
     let requestStatus: String
     let standbyStatus: String
-}
-
-struct CustomerDirectoryBusinessRow: Codable {
-    let id: String
-    let name: String
-    let slug: String
-    let category: String?
-    let timezone: String?
-    let phone: String?
-    let email: String?
-    let website: String?
-    let standbyAccessMode: String?
-    let customerDiscoveryEnabled: Bool?
+    /// Present on directory detail responses (`next_step` from API).
+    let nextStep: String?
 }
 
 struct CustomerDirectoryLocationRow: Codable, Identifiable {

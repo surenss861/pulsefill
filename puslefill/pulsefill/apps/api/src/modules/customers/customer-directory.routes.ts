@@ -1,197 +1,78 @@
 import type { FastifyInstance } from "fastify";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
 import { sendJson } from "../../lib/http-errors.js";
 import { requireAuth } from "../../plugins/guards.js";
 import { rateLimitTier } from "../../plugins/rate-limit.js";
-import { normalizeEmailForInvite } from "./invite-token.js";
 import {
-  getCustomerBusinessRelationship,
-  standbyIntentPayload,
-} from "./customer-business-relationship.js";
-import { upsertActiveCustomerMembership } from "./membership.js";
+  buildDirectoryDetailPayload,
+  buildDirectoryListPayload,
+  ensureCustomerRow,
+  executeStandbyIntent,
+} from "./customer-directory.service.js";
 
-async function ensureCustomerRow(admin: SupabaseClient, u: User): Promise<{ id: string }> {
-  const row = {
-    auth_user_id: u.id,
-    email: u.email != null ? normalizeEmailForInvite(u.email) : null,
-    full_name: (u.user_metadata?.full_name as string | undefined) ?? null,
-  };
-  const { data, error } = await admin.from("customers").upsert(row, { onConflict: "auth_user_id" }).select("id").single();
-  if (error || !data) {
-    throw new Error("customer_upsert_failed");
-  }
-  return { id: (data as { id: string }).id };
-}
-
-const standbyIntentBody = z
-  .object({
-    message: z.string().max(500).optional(),
-  })
-  .strict();
+const directoryPrefixes = ["/v1/directory", "/v1/customers/directory"] as const;
 
 export async function registerCustomerDirectoryRoutes(app: FastifyInstance) {
-  app.get(
-    "/v1/customers/directory/businesses",
-    { preHandler: requireAuth, config: { rateLimit: rateLimitTier.directoryRead } },
-    async (req, reply) => {
-      const admin = createServiceSupabase(req.server.env);
-      const { data, error } = await admin
-        .from("businesses")
-        .select("id, name, slug, category, timezone, standby_access_mode, customer_discovery_enabled")
-        .eq("customer_discovery_enabled", true)
-        .order("name", { ascending: true })
-        .limit(100);
-
-      if (error) {
-        req.log.error({ error }, "directory list failed");
-        return sendJson(req, reply, 500, { error: "directory_list_failed" });
-      }
-      return reply.send({ businesses: data ?? [] });
-    },
-  );
-
-  app.get<{ Params: { businessId: string } }>(
-    "/v1/customers/directory/businesses/:businessId",
-    { preHandler: requireAuth, config: { rateLimit: rateLimitTier.directoryRead } },
-    async (req, reply) => {
-      const businessId = z.string().uuid().parse(req.params.businessId);
-      const admin = createServiceSupabase(req.server.env);
-
-      const { data: b, error: bErr } = await admin
-        .from("businesses")
-        .select("id, name, slug, category, timezone, phone, email, website, standby_access_mode, customer_discovery_enabled")
-        .eq("id", businessId)
-        .maybeSingle();
-
-      if (bErr || !b) {
-        return sendJson(req, reply, 404, { error: "not_found" });
-      }
-      if (!(b as { customer_discovery_enabled?: boolean }).customer_discovery_enabled) {
-        return sendJson(req, reply, 404, { error: "not_found" });
-      }
-
-      let customerId: string;
-      try {
-        customerId = (await ensureCustomerRow(admin, req.authUser!)).id;
-      } catch {
-        return sendJson(req, reply, 500, { error: "customer_sync_failed" });
-      }
-
-      const [{ data: locations }, { data: services }, customer_relationship] = await Promise.all([
-        admin.from("locations").select("id, name, city, region").eq("business_id", businessId).order("name"),
-        admin.from("services").select("id, name, duration_minutes, active").eq("business_id", businessId).eq("active", true).order("name"),
-        getCustomerBusinessRelationship(admin, customerId, businessId),
-      ]);
-
-      return reply.send({
-        business: b,
-        locations: locations ?? [],
-        services: services ?? [],
-        customer_relationship,
-      });
-    },
-  );
-
-  app.post<{ Params: { businessId: string } }>(
-    "/v1/customers/directory/businesses/:businessId/standby-intent",
-    { preHandler: requireAuth, config: { rateLimit: rateLimitTier.strict } },
-    async (req, reply) => {
-      const businessId = z.string().uuid().parse(req.params.businessId);
-      const body = standbyIntentBody.parse(req.body ?? {});
-      const admin = createServiceSupabase(req.server.env);
-      const u = req.authUser!;
-
-      let customerId: string;
-      try {
-        customerId = (await ensureCustomerRow(admin, u)).id;
-      } catch {
-        return sendJson(req, reply, 500, { error: "customer_sync_failed" });
-      }
-
-      const { data: b, error: bErr } = await admin
-        .from("businesses")
-        .select("id, standby_access_mode, customer_discovery_enabled")
-        .eq("id", businessId)
-        .maybeSingle();
-
-      if (bErr || !b) {
-        return sendJson(req, reply, 404, { error: "not_found" });
-      }
-      const row = b as { id: string; standby_access_mode: string; customer_discovery_enabled: boolean };
-      if (!row.customer_discovery_enabled) {
-        return sendJson(req, reply, 404, { error: "not_found" });
-      }
-
-      const { data: existing } = await admin
-        .from("customer_business_memberships")
-        .select("id, status")
-        .eq("customer_id", customerId)
-        .eq("business_id", businessId)
-        .maybeSingle();
-
-      if (existing && (existing as { status: string }).status === "active") {
-        const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
-        return reply.send({
-          ...standbyIntentPayload(rel, "joined", "already_connected"),
-          request: null,
-        });
-      }
-
-      if (row.standby_access_mode === "private") {
-        const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
-        return sendJson(req, reply, 403, {
-          error: "private_business",
-          message: "This business only connects customers through an invite from the clinic.",
-          ...standbyIntentPayload(rel, "invite_required", "invite_required"),
-        });
-      }
-
-      if (row.standby_access_mode === "public") {
+  for (const base of directoryPrefixes) {
+    app.get(
+      `${base}/businesses`,
+      { preHandler: requireAuth, config: { rateLimit: rateLimitTier.directoryRead } },
+      async (req, reply) => {
+        const admin = createServiceSupabase(req.server.env);
+        let customerId: string;
         try {
-          await upsertActiveCustomerMembership(admin, customerId, businessId, "public");
+          customerId = (await ensureCustomerRow(admin, req.authUser!)).id;
+        } catch {
+          return sendJson(req, reply, 500, { error: "customer_sync_failed" });
+        }
+        try {
+          const payload = await buildDirectoryListPayload(admin, customerId);
+          return reply.send(payload);
         } catch (e) {
-          req.log.error({ e }, "public membership upsert");
-          return sendJson(req, reply, 500, { error: "membership_failed" });
+          req.log.error({ e }, "directory list failed");
+          return sendJson(req, reply, 500, { error: "directory_list_failed" });
         }
-        const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
-        return reply.status(201).send({
-          ...standbyIntentPayload(rel, "joined", "joined_standby"),
-          request: null,
-        });
-      }
+      },
+    );
 
-      // request_to_join
-      const { data: inserted, error: insErr } = await admin
-        .from("customer_standby_requests")
-        .insert({
-          business_id: businessId,
-          customer_id: customerId,
-          status: "pending",
-          message: body.message ?? null,
-        })
-        .select("id, status, requested_at")
-        .maybeSingle();
-
-      if (insErr) {
-        const code = String((insErr as { code?: string }).code ?? "");
-        if (code === "23505") {
-          const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
-          return reply.send({
-            ...standbyIntentPayload(rel, "request_pending", "request_pending"),
-            request: null,
-          });
+    app.get<{ Params: { businessId: string } }>(
+      `${base}/businesses/:businessId`,
+      { preHandler: requireAuth, config: { rateLimit: rateLimitTier.directoryRead } },
+      async (req, reply) => {
+        const businessId = z.string().uuid().parse(req.params.businessId);
+        const admin = createServiceSupabase(req.server.env);
+        let customerId: string;
+        try {
+          customerId = (await ensureCustomerRow(admin, req.authUser!)).id;
+        } catch {
+          return sendJson(req, reply, 500, { error: "customer_sync_failed" });
         }
-        req.log.error({ error: insErr }, "standby request insert");
-        return sendJson(req, reply, 500, { error: "request_failed" });
-      }
 
-      const rel = await getCustomerBusinessRelationship(admin, customerId, businessId);
-      return reply.status(201).send({
-        ...standbyIntentPayload(rel, "request_pending", "request_submitted"),
-        request: inserted,
-      });
-    },
-  );
+        const built = await buildDirectoryDetailPayload(admin, customerId, businessId);
+        if (built.kind === "not_found") {
+          return sendJson(req, reply, 404, { error: "not_found" });
+        }
+        return reply.send(built.body);
+      },
+    );
+
+    app.post<{ Params: { businessId: string } }>(
+      `${base}/businesses/:businessId/standby-intent`,
+      { preHandler: requireAuth, config: { rateLimit: rateLimitTier.strict } },
+      async (req, reply) => {
+        const businessId = z.string().uuid().parse(req.params.businessId);
+        return executeStandbyIntent(req, reply, businessId, req.body);
+      },
+    );
+
+    app.post<{ Params: { businessId: string } }>(
+      `${base}/businesses/:businessId/request-to-join`,
+      { preHandler: requireAuth, config: { rateLimit: rateLimitTier.strict } },
+      async (req, reply) => {
+        const businessId = z.string().uuid().parse(req.params.businessId);
+        return executeStandbyIntent(req, reply, businessId, req.body);
+      },
+    );
+  }
 }

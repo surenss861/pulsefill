@@ -5,8 +5,19 @@ struct BusinessPickerView: View {
     @EnvironmentObject private var env: AppEnvironment
 
     @State private var businesses: [CustomerDirectoryBusinessSummary] = []
+    @State private var selectedCategoryChip: String?
     @State private var loading = true
     @State private var loadError: String?
+
+    private let categoryChips = ["Dental", "Physio", "Salon", "Wellness", "Massage"]
+
+    private var displayedBusinesses: [CustomerDirectoryBusinessSummary] {
+        guard let chip = selectedCategoryChip else { return businesses }
+        return businesses.filter { row in
+            (row.category ?? "").localizedCaseInsensitiveContains(chip)
+                || (row.services ?? []).contains { $0.localizedCaseInsensitiveContains(chip) }
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -49,18 +60,40 @@ struct BusinessPickerView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 20) {
                             PFTypography.Customer.screenLead(
-                                "Find businesses using PulseFill and join standby lists for openings that match your preferences."
+                                "Browse businesses and join their waiting lists. When a slot opens, you’ll get an offer in Openings."
                             )
                             .fixedSize(horizontal: false, vertical: true)
 
-                            ForEach(businesses) { row in
-                                NavigationLink {
-                                    CustomerBusinessDetailView(businessId: row.id)
-                                        .environmentObject(env)
-                                } label: {
-                                    directorySummaryRow(row)
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    categoryChip(title: "All", isSelected: selectedCategoryChip == nil) {
+                                        selectedCategoryChip = nil
+                                    }
+                                    ForEach(categoryChips, id: \.self) { title in
+                                        categoryChip(title: title, isSelected: selectedCategoryChip == title) {
+                                            selectedCategoryChip = selectedCategoryChip == title ? nil : title
+                                        }
+                                    }
                                 }
-                                .buttonStyle(.plain)
+                            }
+
+                            if displayedBusinesses.isEmpty {
+                                CustomerEmptyStateCard(
+                                    systemImage: "line.3.horizontal.decrease.circle",
+                                    title: "No matches",
+                                    message: "Try another category or clear the filter to see every business.",
+                                    footnote: nil
+                                )
+                            } else {
+                                ForEach(displayedBusinesses) { row in
+                                    NavigationLink {
+                                        CustomerBusinessDetailView(businessId: row.id)
+                                            .environmentObject(env)
+                                    } label: {
+                                        directorySummaryRow(row)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
                         }
                         .padding(.horizontal, 20)
@@ -69,13 +102,35 @@ struct BusinessPickerView: View {
                 }
             }
         }
-        .navigationTitle("Find businesses")
+        .navigationTitle("Find appointments")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(PFColor.customerTabBar, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
             await load()
         }
+    }
+
+    private func categoryChip(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: {
+            PFHaptics.selection()
+            action()
+        }) {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .foregroundStyle(isSelected ? PFColor.emberText : PFColor.textSecondary)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? PFColor.ember : PFColor.customerCard)
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? Color.clear : PFColor.customerHairline, lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     private func directorySummaryRow(_ row: CustomerDirectoryBusinessSummary) -> some View {
@@ -94,10 +149,29 @@ struct BusinessPickerView: View {
                             .lineLimit(2)
                     }
 
-                    CustomerStatusPill(
-                        text: CustomerBusinessAccessPolicyCopy.listChipLabel(for: row.standbyAccessMode),
-                        tone: .onDarkEmber
-                    )
+                    let placeLine = [row.neighborhood, row.city]
+                        .compactMap { $0 }
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " · ")
+                    if !placeLine.isEmpty {
+                        Text(placeLine)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .lineLimit(2)
+                    }
+
+                    HStack(spacing: 8) {
+                        CustomerStatusPill(
+                            text: CustomerBusinessAccessPolicyCopy.listChipLabel(for: row.standbyAccessMode),
+                            tone: .onDarkEmber
+                        )
+                        if let rel = row.relationship {
+                            CustomerStatusPill(
+                                text: listRelationshipChip(rel),
+                                tone: rel.membershipStatus == "active" ? .success : .onDarkNeutral
+                            )
+                        }
+                    }
                 }
 
                 Spacer(minLength: 8)
@@ -112,6 +186,13 @@ struct BusinessPickerView: View {
                 }
             }
         }
+    }
+
+    private func listRelationshipChip(_ rel: CustomerDirectoryListRelationship) -> String {
+        if rel.membershipStatus == "active" { return "On waitlist" }
+        if rel.requestStatus == "pending" { return "Request pending" }
+        if rel.requestStatus == "declined" { return "Not approved" }
+        return "Not connected"
     }
 
     @MainActor
@@ -195,7 +276,7 @@ struct CustomerBusinessDetailView: View {
     private func businessDetailContent(_ detail: CustomerDirectoryBusinessDetailResponse) -> some View {
         let state = CustomerBusinessConnectionUIState.resolve(
             accessModeRaw: detail.business.standbyAccessMode,
-            relationship: detail.customerRelationship
+            relationship: detail.business.relationship
         )
 
         ScrollView {
@@ -264,6 +345,24 @@ struct CustomerBusinessDetailView: View {
                         .foregroundStyle(PFColor.textMuted)
                 }
 
+                let placeLine = [detail.business.neighborhood, detail.business.city]
+                    .compactMap { $0 }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: " · ")
+                if !placeLine.isEmpty {
+                    Text(placeLine)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(PFColor.textSecondary)
+                }
+
+                if let blurb = detail.business.description, !blurb.isEmpty {
+                    Text(blurb)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(PFColor.textSecondary)
+                        .lineSpacing(3)
+                        .padding(.top, 2)
+                }
+
                 VStack(alignment: .leading, spacing: 6) {
                     Text(CustomerBusinessAccessPolicyCopy.headline(for: detail.business.standbyAccessMode))
                         .font(.system(size: 13, weight: .semibold))
@@ -281,7 +380,7 @@ struct CustomerBusinessDetailView: View {
 
     @ViewBuilder
     private func servicesSection(_ detail: CustomerDirectoryBusinessDetailResponse) -> some View {
-        let activeServices = detail.services.filter { ($0.active ?? true) }
+        let activeServices = detail.business.services.filter { ($0.active ?? true) }
 
         PFCustomerSectionCard(variant: .default, padding: 18) {
             VStack(alignment: .leading, spacing: 12) {
@@ -329,7 +428,7 @@ struct CustomerBusinessDetailView: View {
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(PFColor.textPrimary)
 
-                if detail.locations.isEmpty {
+                if detail.business.locations.isEmpty {
                     Text("Locations are not listed yet.")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(PFColor.textSecondary)
@@ -341,7 +440,7 @@ struct CustomerBusinessDetailView: View {
                         .lineSpacing(3)
 
                     VStack(alignment: .leading, spacing: 10) {
-                        ForEach(detail.locations) { loc in
+                        ForEach(detail.business.locations) { loc in
                             Text(locationLine(loc))
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundStyle(PFColor.textPrimary)
@@ -381,7 +480,7 @@ struct CustomerBusinessDetailView: View {
         actionMessage = nil
         defer { acting = false }
         do {
-            let res = try await env.apiClient.postCustomerStandbyIntent(businessId: businessId, message: message)
+            let res = try await env.apiClient.postCustomerDirectoryRequestToJoin(businessId: businessId, message: message)
             await loadDetail()
             if res.outcome == "request_pending", res.result == "request_pending" {
                 actionMessage = "You already have a request waiting."

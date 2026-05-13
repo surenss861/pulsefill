@@ -52,19 +52,20 @@ extension APIClient {
     // MARK: - Directory (discoverable businesses)
 
     func getCustomerDirectoryBusinesses() async throws -> CustomerDirectoryListResponse {
-        try await get("/v1/customers/directory/businesses", as: CustomerDirectoryListResponse.self)
+        try await get("/v1/directory/businesses", as: CustomerDirectoryListResponse.self)
     }
 
     func getCustomerDirectoryBusinessDetail(businessId: String) async throws -> CustomerDirectoryBusinessDetailResponse {
         try await get(
-            "/v1/customers/directory/businesses/\(businessId)",
+            "/v1/directory/businesses/\(businessId)",
             as: CustomerDirectoryBusinessDetailResponse.self
         )
     }
 
-    func postCustomerStandbyIntent(businessId: String, message: String?) async throws -> StandbyIntentResponse {
+    /// Waitlist / standby intent (same behavior as legacy `standby-intent` path).
+    func postCustomerDirectoryRequestToJoin(businessId: String, message: String?) async throws -> StandbyIntentResponse {
         try await post(
-            "/v1/customers/directory/businesses/\(businessId)/standby-intent",
+            "/v1/directory/businesses/\(businessId)/request-to-join",
             body: StandbyIntentRequest(message: message),
             as: StandbyIntentResponse.self
         )
