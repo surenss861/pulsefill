@@ -2417,12 +2417,17 @@ main.pf-auth-shell .pf-auth-submit {
 }
 
 .pf-page-settings,
-.pf-page-customers {
+.pf-page-customers,
+.pf-page-customer-profile {
   max-width: 1120px;
 }
 
 .pf-page-customers.pf-desk-page {
   max-width: min(1180px, 100%);
+}
+
+.pf-page-customer-profile.pf-desk-page {
+  max-width: min(860px, 100%);
 }
 
 .pf-desk-customers-metrics {

@@ -10,6 +10,8 @@ import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 type Props = {
   follow_up: CustomerProfileFollowUp;
+  /** When true, omit outer section shell — for use inside `DeskSecondaryCard`. */
+  embedded?: boolean;
 };
 
 const btn: CSSProperties = {
@@ -24,7 +26,7 @@ const btn: CSSProperties = {
   fontFamily: "inherit",
 };
 
-export function CustomerFollowUpActions({ follow_up }: Props) {
+export function CustomerFollowUpActions({ follow_up, embedded = false }: Props) {
   const [copyHint, setCopyHint] = useState<string | null>(null);
 
   const flash = useCallback((msg: string) => {
@@ -53,15 +55,19 @@ export function CustomerFollowUpActions({ follow_up }: Props) {
   const mail = follow_up.can_email && follow_up.contact_email ? buildStaffMailtoHref(follow_up.contact_email) : null;
   const tel = follow_up.can_call && follow_up.contact_phone ? buildTelHref(follow_up.contact_phone) : null;
 
-  return (
-    <section style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
-      <p className="pf-kicker" style={{ margin: 0, fontSize: 10 }}>
-        Follow-up
-      </p>
-      <h2 className="pf-section-title" style={{ fontSize: 15, margin: "6px 0 0" }}>
-        Contact & access
-      </h2>
-      <p className="pf-muted-copy" style={{ margin: "8px 0 12px", fontSize: 12, lineHeight: 1.5 }}>
+  const inner = (
+    <>
+      {!embedded ? (
+        <>
+          <p className="pf-kicker" style={{ margin: 0, fontSize: 10 }}>
+            Follow-up
+          </p>
+          <h2 className="pf-section-title" style={{ fontSize: 15, margin: "6px 0 0" }}>
+            Contact & access
+          </h2>
+        </>
+      ) : null}
+      <p className="pf-muted-copy" style={{ margin: embedded ? "0 0 12px" : "8px 0 12px", fontSize: 12, lineHeight: 1.5 }}>
         Copy contact details or open your email or phone app. PulseFill does not send messages from here yet.
       </p>
       {copyHint ? (
@@ -132,6 +138,12 @@ export function CustomerFollowUpActions({ follow_up }: Props) {
           </Link>
         </MotionAction>
       </div>
-    </section>
+    </>
   );
+
+  if (embedded) {
+    return <div>{inner}</div>;
+  }
+
+  return <section style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>{inner}</section>;
 }

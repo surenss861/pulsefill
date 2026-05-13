@@ -18,6 +18,8 @@ type Props = {
   onAddNote: (body: string, followUpAtIso: string | null) => Promise<{ ok: true } | { ok: false; message: string }>;
   onCompleteFollowUp: (noteId: string) => Promise<{ ok: true } | { ok: false; message: string }>;
   onRetry: () => void;
+  /** When true, omit outer section shell — for use inside `DeskSecondaryCard`. */
+  embedded?: boolean;
 };
 
 const textareaStyle: CSSProperties = {
@@ -77,6 +79,7 @@ export function CustomerInternalNotes({
   onAddNote,
   onCompleteFollowUp,
   onRetry,
+  embedded = false,
 }: Props) {
   const [draft, setDraft] = useState("");
   const [remind, setRemind] = useState(false);
@@ -133,11 +136,13 @@ export function CustomerInternalNotes({
     if (!r.ok) setLocalError(r.message);
   }
 
-  return (
-    <section style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
-      <h2 className="pf-section-title" style={{ fontSize: 15, margin: "0 0 6px" }}>
-        Internal notes
-      </h2>
+  const inner = (
+    <>
+      {!embedded ? (
+        <h2 className="pf-section-title" style={{ fontSize: 15, margin: "0 0 6px" }}>
+          Internal notes
+        </h2>
+      ) : null}
       <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 12, lineHeight: 1.5 }}>
         Only staff in this workspace can see these notes and reminders.
       </p>
@@ -187,7 +192,7 @@ export function CustomerInternalNotes({
                     {openFollowUpSummary(n)} · {n.created_by.name}
                   </span>
                 }
-                status={<OperatorStatusChip kind="attention" label="Open" caps />}
+                status={<OperatorStatusChip kind="attention" label="Open" />}
                 action={
                   <MotionTapSurface disabled={completeBusy === n.id}>
                     <button
@@ -273,9 +278,9 @@ export function CustomerInternalNotes({
         ) : null}
       </div>
 
-      <h3 className="pf-muted-copy" style={{ margin: "18px 0 8px", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-        History
-      </h3>
+      <p className="pf-muted-copy" style={{ margin: "18px 0 8px", fontSize: 12 }}>
+        Previous notes
+      </p>
 
       {loading && notes.length === 0 && !error ? (
         <OperatorLoadingState variant="section" skeleton="rows" title="Loading notes…" />
@@ -301,12 +306,18 @@ export function CustomerInternalNotes({
                     ) : null}
                   </span>
                 }
-                status={chip ? <OperatorStatusChip kind={chip.kind} label={chip.label} caps /> : undefined}
+                status={chip ? <OperatorStatusChip kind={chip.kind} label={chip.label} /> : undefined}
               />
             );
           })}
         </OperatorRowList>
       )}
-    </section>
+    </>
   );
+
+  if (embedded) {
+    return <div>{inner}</div>;
+  }
+
+  return <section style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>{inner}</section>;
 }

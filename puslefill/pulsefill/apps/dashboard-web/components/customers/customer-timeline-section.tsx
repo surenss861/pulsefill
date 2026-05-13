@@ -17,6 +17,8 @@ type Props = {
   error: string | null;
   notes: CustomerNoteItem[];
   onRetry: () => void;
+  /** When true, omit outer section shell — for use inside `DeskSecondaryCard`. */
+  embedded?: boolean;
 };
 
 const NOTE_KINDS = new Set([
@@ -56,7 +58,7 @@ function chipLabelForItem(it: CustomerTimelineItem): string {
   }
 }
 
-export function CustomerTimelineSection({ items, loading, error, notes, onRetry }: Props) {
+export function CustomerTimelineSection({ items, loading, error, notes, onRetry, embedded = false }: Props) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const noteBodyById = useMemo(() => {
@@ -69,13 +71,19 @@ export function CustomerTimelineSection({ items, loading, error, notes, onRetry 
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
-  return (
-    <section style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
-      <h2 className="pf-section-title" style={{ fontSize: 15, margin: "0 0 6px" }}>
-        Timeline
-      </h2>
+  const intro = embedded
+    ? "Alerts, claims, bookings, and team notes in order — staff context only."
+    : "One chronological view of membership, standby, opening alerts, claims, and internal notes — staff context only.";
+
+  const inner = (
+    <>
+      {!embedded ? (
+        <h2 className="pf-section-title" style={{ fontSize: 15, margin: "0 0 6px" }}>
+          Timeline
+        </h2>
+      ) : null}
       <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 12, lineHeight: 1.5 }}>
-        One chronological view of membership, standby, opening alerts, claims, and internal notes — staff context only.
+        {intro}
       </p>
 
       {error ? (
@@ -160,14 +168,18 @@ export function CustomerTimelineSection({ items, loading, error, notes, onRetry 
                     ) : null}
                   </div>
                 }
-                status={
-                  <OperatorStatusChip kind={severityToChipKind(it.severity)} label={chipLabelForItem(it)} caps />
-                }
+                status={<OperatorStatusChip kind={severityToChipKind(it.severity)} label={chipLabelForItem(it)} />}
               />
             );
           })}
         </OperatorRowList>
       ) : null}
-    </section>
+    </>
   );
+
+  if (embedded) {
+    return <div>{inner}</div>;
+  }
+
+  return <section style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>{inner}</section>;
 }
