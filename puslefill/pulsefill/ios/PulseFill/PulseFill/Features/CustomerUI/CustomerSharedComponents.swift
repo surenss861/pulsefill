@@ -83,9 +83,9 @@ struct CustomerScreenBackground: View {
         ZStack {
             LinearGradient(
                 colors: [
-                    PFColor.customerInkDeep,
                     PFColor.customerInk,
-                    PFColor.background,
+                    PFBrandColor.brown850,
+                    PFBrandColor.brown800,
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -93,15 +93,15 @@ struct CustomerScreenBackground: View {
 
             Circle()
                 .fill(PFColor.customerTopGlow)
-                .frame(width: 260, height: 260)
-                .blur(radius: 54)
-                .offset(x: -130, y: -300)
+                .frame(width: 220, height: 220)
+                .blur(radius: 48)
+                .offset(x: -120, y: -280)
 
             Circle()
-                .fill(PFColor.customerSuccessGlow)
-                .frame(width: 240, height: 240)
-                .blur(radius: 64)
-                .offset(x: 150, y: -110)
+                .fill(PFColor.customerAmbientLift)
+                .frame(width: 280, height: 280)
+                .blur(radius: 72)
+                .offset(x: 140, y: -100)
         }
         .ignoresSafeArea()
     }
@@ -136,7 +136,7 @@ struct CustomerAppointmentPassCard<Content: View>: View {
                         RoundedRectangle(cornerRadius: PFRadius.pass, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [PFColor.glassTint.opacity(1.35), Color.clear],
+                                    colors: [PFColor.cardSheenWarm.opacity(1.2), Color.clear],
                                     startPoint: .top,
                                     endPoint: UnitPoint(x: 0.5, y: 0.36)
                                 )
@@ -160,14 +160,14 @@ struct CustomerAppointmentPassCard<Content: View>: View {
                     }
                     .overlay(alignment: .topLeading) {
                         Circle()
-                            .fill(PFColor.glassTint.opacity(1.2))
-                            .frame(width: 180, height: 180)
-                            .blur(radius: 38)
-                            .offset(x: -70, y: -90)
+                            .fill(PFColor.cardSheenWarm.opacity(1.05))
+                            .frame(width: 160, height: 160)
+                            .blur(radius: 36)
+                            .offset(x: -68, y: -88)
                     }
             }
             .shadow(color: PFColor.elevationShadowDeep, radius: 22, x: 0, y: 16)
-            .shadow(color: PFColor.ember.opacity(0.08), radius: 22, x: 0, y: 12)
+            .shadow(color: PFColor.ember.opacity(0.04), radius: 18, x: 0, y: 10)
     }
 }
 
@@ -231,7 +231,7 @@ struct CustomerPrimaryButton: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
             .shadow(color: PFColor.elevationShadowSoft, radius: 6, y: 3)
-            .shadow(color: PFColor.ember.opacity(0.18), radius: 12, y: 4)
+            .shadow(color: PFColor.ember.opacity(0.10), radius: 10, y: 4)
     }
 }
 
@@ -260,7 +260,7 @@ struct CustomerPrimaryChromeLabel: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
             .shadow(color: PFColor.elevationShadowSoft, radius: 6, y: 3)
-            .shadow(color: PFColor.ember.opacity(0.18), radius: 12, y: 4)
+            .shadow(color: PFColor.ember.opacity(0.10), radius: 10, y: 4)
     }
 }
 
@@ -321,7 +321,7 @@ struct CustomerStatusPill: View {
         case .onDarkEmber:
             PFColor.primarySoft
         case .success:
-            PFColor.success.opacity(0.14)
+            PFColor.successWash
         case .warning:
             PFColor.warning.opacity(0.16)
         case .danger:
@@ -338,7 +338,7 @@ struct CustomerStatusPill: View {
         case .onDarkEmber:
             PFColor.primary.opacity(0.40)
         case .success:
-            Color.green.opacity(0.16)
+            PFColor.success.opacity(0.32)
         case .warning:
             PFColor.warning.opacity(0.35)
         case .danger:
@@ -377,7 +377,7 @@ struct CustomerSectionCard<Content: View>: View {
                     )
                     .overlay(alignment: .topLeading) {
                         Circle()
-                            .fill(elevated ? PFColor.emberGlow.opacity(0.52) : PFColor.glassTint.opacity(1.1))
+                            .fill(elevated ? PFColor.cardSheenWarm.opacity(0.95) : PFColor.cardSheenWarm.opacity(0.75))
                             .frame(width: 140, height: 140)
                             .blur(radius: 32)
                             .offset(x: -62, y: -78)

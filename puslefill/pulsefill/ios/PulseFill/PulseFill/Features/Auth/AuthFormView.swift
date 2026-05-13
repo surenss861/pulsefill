@@ -271,7 +271,7 @@ struct AuthFormView: View {
                     RoundedRectangle(cornerRadius: 30, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [PFColor.glassTint.opacity(1.25), Color.clear],
+                                colors: [PFColor.cardSheenWarm.opacity(1.2), Color.clear],
                                 startPoint: .top,
                                 endPoint: UnitPoint(x: 0.5, y: 0.38)
                             )

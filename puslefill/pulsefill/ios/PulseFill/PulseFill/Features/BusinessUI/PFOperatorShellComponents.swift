@@ -71,8 +71,8 @@ struct PFOperatorHero: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            PFColor.customerGlassElevated.opacity(0.55),
-                            PFColor.surface1.opacity(0.95),
+                            PFColor.customerGlassElevated,
+                            PFColor.customerGlassDeep,
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing

@@ -135,7 +135,7 @@ struct AuthAppointmentPassCard: View {
                         RoundedRectangle(cornerRadius: PFRadius.passCard, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [PFColor.glassTint.opacity(1.25), Color.clear],
+                                    colors: [PFColor.cardSheenWarm.opacity(1.2), Color.clear],
                                     startPoint: .top,
                                     endPoint: UnitPoint(x: 0.5, y: 0.36)
                                 )
@@ -159,7 +159,7 @@ struct AuthAppointmentPassCard: View {
                     }
                     .overlay(alignment: .topLeading) {
                         Circle()
-                            .fill(PFColor.glassTint.opacity(1.15))
+                            .fill(PFColor.cardSheenWarm.opacity(1.0))
                             .frame(width: 190, height: 190)
                             .blur(radius: 38)
                             .offset(x: -76, y: -92)

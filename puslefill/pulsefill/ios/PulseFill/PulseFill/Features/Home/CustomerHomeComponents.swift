@@ -16,9 +16,9 @@ struct CustomerHomeHeader: View {
                 if isSignedIn {
                     HStack(spacing: 7) {
                         Circle()
-                            .fill(PFColor.success)
+                            .fill(PFColor.primary)
                             .frame(width: 7, height: 7)
-                            .shadow(color: PFColor.success.opacity(0.45), radius: 8)
+                            .shadow(color: PFColor.ember.opacity(0.22), radius: 6)
 
                         Text("Watching")
                             .font(.system(size: 12, weight: .bold, design: .default))
@@ -393,11 +393,11 @@ struct CustomerStandbyStatusCard: View {
             HStack(alignment: .center, spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(isActive ? PFColor.success.opacity(0.16) : PFColor.primary.opacity(0.12))
+                        .fill(isActive ? PFColor.primarySoft : PFColor.primary.opacity(0.12))
 
                     Image(systemName: isActive ? "dot.radiowaves.left.and.right" : "person.crop.circle.badge.plus")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(isActive ? PFColor.success : PFColor.primaryText)
+                        .foregroundStyle(isActive ? PFColor.emberReadable : PFColor.primaryText)
                 }
                 .frame(width: 44, height: 44)
 

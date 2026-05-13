@@ -156,7 +156,7 @@ struct PFCustomerPrimaryButton: View {
                 .background(emberFill)
                 .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
                 .shadow(color: PFColor.elevationShadowSoft, radius: 6, y: 3)
-                .shadow(color: PFColor.ember.opacity(0.18), radius: 12, y: 4)
+                .shadow(color: PFColor.ember.opacity(0.10), radius: 10, y: 4)
                 .allowsHitTesting(false)
             } else {
                 CustomerPrimaryButton(
