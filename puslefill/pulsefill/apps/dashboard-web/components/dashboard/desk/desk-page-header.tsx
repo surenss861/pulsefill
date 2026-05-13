@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 type DeskPageHeaderProps = {
   title: string;
-  /** One line under the title (sentence case). */
-  subtitle?: string;
+  /** One line under the title (sentence case) or richer copy when needed. */
+  subtitle?: ReactNode;
   /** Optional right column (actions). */
   actions?: ReactNode;
 };

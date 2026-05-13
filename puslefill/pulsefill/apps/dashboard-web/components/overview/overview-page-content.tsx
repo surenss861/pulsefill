@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionQueuePreviewCard } from "@/components/action-queue/action-queue-preview-card";
-import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
+import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
+import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
+import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
 import { DashboardRecoveryPathSection } from "@/components/dashboard/dashboard-recovery-path-section";
 import { OverviewMetricCard } from "@/components/ui/overview-metric-card";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
@@ -37,9 +40,14 @@ import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { useRecoveryHealth } from "@/hooks/useRecoveryHealth";
 import { useBillingSummary } from "@/hooks/useBillingSummary";
 import { FadeUp } from "@/components/motion/operator-motion";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
+import type {
+  NextBestActionPriority,
+  NextBestSupportingStat,
+  NextBestSupportingStatTone,
+} from "@/components/operator/next-best-action-card";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
 import { RecoveryHealthPanel } from "@/components/overview/recovery-health-panel";
-import { NextBestActionCard } from "@/components/operator/next-best-action-card";
 import { type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { BillingNoticeBanner } from "@/components/billing/billing-notice-banner";
@@ -53,6 +61,125 @@ function nextSetupHref(state: SetupChecklistState): string {
   if (!state.hasOffersSent) return "/customers";
   if (!state.hasConfirmedBooking) return "/claims";
   return "/locations";
+}
+
+type OverviewNextBest = {
+  actionKey: string;
+  priority: NextBestActionPriority;
+  title: string;
+  description: string;
+  pipelineStep?: RecoveryPipelineStepId;
+  primaryAction: ReactNode;
+  secondaryMeta?: ReactNode;
+  supportingStats?: readonly NextBestSupportingStat[];
+};
+
+function deskHeroEyebrow(priority: NextBestActionPriority): string | undefined {
+  switch (priority) {
+    case "setup":
+      return undefined;
+    case "critical":
+      return "Needs a decision";
+    case "attention":
+      return "Needs review";
+    case "ready":
+      return "Ready when you are";
+    case "clear":
+      return "You're caught up";
+    default:
+      return undefined;
+  }
+}
+
+function statsInlineColors(tone: NextBestSupportingStatTone | undefined): { label: string; value: string } {
+  switch (tone) {
+    case "attention":
+      return { label: "var(--pf-text-muted)", value: "var(--pf-accent-primary-hover)" };
+    case "live":
+      return { label: "var(--pf-text-muted)", value: "var(--pf-brand-text)" };
+    case "idle":
+    default:
+      return { label: "var(--pf-brand-text-faint)", value: "var(--pf-text-secondary)" };
+  }
+}
+
+function formatOverviewUpdatedAt(d: Date): string {
+  const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (sec < 45) return "Updated just now";
+  if (sec < 90) return "Updated 1 min ago";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `Updated ${min} min ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `Updated ${hr}h ago`;
+  return "Updated earlier";
+}
+
+function OverviewDeskHero({ nextBest, refreshedAt }: { nextBest: OverviewNextBest | null; refreshedAt: Date | null }) {
+  if (!nextBest) {
+    return (
+      <DeskHeroCard title="Today" titleId="pf-overview-main-hero-title">
+        <p className="pf-muted-copy" style={{ margin: 0 }}>
+          Hang on while we load your workspace.
+        </p>
+      </DeskHeroCard>
+    );
+  }
+
+  const eyebrow = deskHeroEyebrow(nextBest.priority);
+
+  return (
+    <DeskHeroCard title={nextBest.title} titleId="pf-overview-main-hero-title" eyebrow={eyebrow}>
+      <p className="pf-desk-hero-card__meta">{nextBest.description}</p>
+      {nextBest.secondaryMeta ? (
+        <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
+          {nextBest.secondaryMeta}
+        </p>
+      ) : null}
+      {refreshedAt ? (
+        <p className="pf-meta-row" style={{ margin: 0, fontSize: 12 }}>
+          {formatOverviewUpdatedAt(refreshedAt)}
+        </p>
+      ) : null}
+      <div
+        style={{
+          marginTop: 18,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 14,
+          rowGap: 12,
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ flex: "0 1 auto" }}>
+          <MotionAction>{nextBest.primaryAction}</MotionAction>
+        </div>
+        {nextBest.supportingStats && nextBest.supportingStats.length > 0 ? (
+          <div
+            style={{
+              flex: "1 1 200px",
+              minWidth: 0,
+              fontSize: 12,
+              lineHeight: 1.45,
+              textAlign: "right",
+              color: "var(--pf-text-muted)",
+            }}
+          >
+            {nextBest.supportingStats.map((s, i) => {
+              const c = statsInlineColors(s.tone);
+              return (
+                <span key={`${s.label}-${String(s.value)}`}>
+                  {i > 0 ? <span style={{ margin: "0 0.35em", opacity: 0.45 }}>·</span> : null}
+                  <span style={{ color: c.label }}>{s.label}: </span>
+                  <span style={{ color: c.value, fontWeight: 650 }}>{s.value}</span>
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+    </DeskHeroCard>
+  );
 }
 
 export type OverviewPageContentProps = {
@@ -118,19 +245,19 @@ export function OverviewPageContent({
     [checklist],
   );
 
-  const headerDescription = useMemo(() => {
+  const deskSubtitle = useMemo(() => {
     if (loading) return "Loading your workspace…";
     if (!setupComplete) {
       return (
         <>
-          <span style={{ fontWeight: 650, color: "var(--pf-text-primary)" }}>Finish the basics first.</span>
-          <span className="pf-muted-copy" style={{ display: "block", marginTop: 8 }}>
+          <span style={{ fontWeight: 650, color: "var(--pf-text-primary)" }}>Finish your setup first.</span>
+          <span className="pf-muted-copy" style={{ display: "block", marginTop: 10 }}>
             PulseFill needs your services, providers, and locations before it can send openings to customers.
           </span>
         </>
       );
     }
-    return "See openings, who was offered a spot, and what still needs a reply.";
+    return "See openings, offers, and what still needs a reply.";
   }, [loading, setupComplete]);
 
   const nextBest = useMemo(() => {
@@ -335,210 +462,187 @@ export function OverviewPageContent({
     if (!loading && metrics) setRefreshedAt(new Date());
   }, [loading, metrics]);
 
+  const queueActivity = (
+    <div className="pf-overview-desk-stack">
+      <DeskSecondaryCard
+        title="Needs action"
+        headerAction={
+          <Link href="/action-queue?section=needs_action" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+            Open queue →
+          </Link>
+        }
+      >
+        <ActionQueuePreviewCard
+          deckEmbedded
+          items={actionQueue.data?.sections.needs_action ?? []}
+          loading={actionQueue.loading}
+          error={actionQueue.error}
+          summary={actionQueue.data?.summary}
+          hierarchy="secondary"
+        />
+      </DeskSecondaryCard>
+      <DeskSecondaryCard
+        title="Recent activity"
+        headerAction={
+          <Link href="/activity" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+            View all →
+          </Link>
+        }
+      >
+        <CommandCenterRecentActivity hideHeader />
+      </DeskSecondaryCard>
+    </div>
+  );
+
   return (
     <main
-      className="pf-page-overview"
+      className="pf-page-overview pf-desk-page pf-overview-desk"
       style={{ padding: 0 }}
       data-pf-overview-setup={showGettingStarted ? "" : undefined}
     >
       <OperatorPageTransition>
-      <FadeUp>
-        <DashboardPageHeader description={headerDescription} />
-      </FadeUp>
+        <FadeUp>
+          <DeskPageHeader
+            title="Today"
+            subtitle={deskSubtitle}
+            actions={
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <RefreshIndicator updatedAt={refreshedAt} />
+                <button type="button" className="pf-desk-ghost-btn" style={{ marginTop: 0 }} onClick={() => void refresh()}>
+                  Refresh
+                </button>
+              </div>
+            }
+          />
+        </FadeUp>
 
-      {!billingSummary.loading && billingSummary.data ? (
-        <FadeUp delay={0.02}>
-          <div className={showGettingStarted ? "pf-dashboard-secondary-billing" : undefined} style={{ marginTop: 14 }}>
-            <BillingNoticeBanner summary={billingSummary.data} tone="administrative" />
+        {!billingSummary.loading && billingSummary.data ? (
+          <FadeUp delay={0.02}>
+            <DeskSecondaryCard title="Billing">
+              <BillingNoticeBanner summary={billingSummary.data} tone="administrative" />
+            </DeskSecondaryCard>
+          </FadeUp>
+        ) : null}
+
+        <FadeUp delay={0.05}>
+          <div style={{ marginTop: 16 }} id={!setupComplete ? "getting-started" : undefined}>
+            <OverviewDeskHero nextBest={nextBest} refreshedAt={refreshedAt} />
           </div>
         </FadeUp>
-      ) : null}
 
-      {nextBest ? (
-        <FadeUp delay={0.05}>
-          <div style={{ marginTop: showGettingStarted ? 18 : 16 }} id={!setupComplete ? "getting-started" : undefined}>
-            <NextBestActionCard
-              actionKey={nextBest.actionKey}
-              title={nextBest.title}
-              description={nextBest.description}
-              heroAnchor={showGettingStarted && nextBest.priority === "setup"}
-              priority={nextBest.priority}
-              primaryAction={nextBest.primaryAction}
-              secondaryMeta={nextBest.secondaryMeta}
-              pipelineStep={nextBest.pipelineStep}
-              supportingStats={nextBest.supportingStats}
-              showPipeline={false}
-              updatedAt={refreshedAt}
+        <FadeUp delay={0.055}>
+          <div className="pf-dashboard-recovery-health" style={{ marginTop: 14 }}>
+            <RecoveryHealthPanel
+              data={recoveryHealth.data}
+              loading={recoveryHealth.loading}
+              error={recoveryHealth.error}
+              onReload={() => void recoveryHealth.reload()}
             />
           </div>
         </FadeUp>
-      ) : null}
 
-      <FadeUp delay={0.055}>
-        <div className="pf-dashboard-recovery-health" style={{ marginTop: showGettingStarted ? 10 : nextBest ? 12 : 16 }}>
-          <RecoveryHealthPanel
-            data={recoveryHealth.data}
-            loading={recoveryHealth.loading}
-            error={recoveryHealth.error}
-            onReload={() => void recoveryHealth.reload()}
-          />
-        </div>
-      </FadeUp>
+        {!loading ? (
+          <FadeUp delay={0.056}>
+            <DeskSecondaryCard title="What happens next">
+              <DashboardRecoveryPathSection hideTitle activeStep={pipelineForRail} counts={recoveryPipelineCounts} />
+            </DeskSecondaryCard>
+          </FadeUp>
+        ) : null}
 
-      {!loading ? (
-        <FadeUp delay={0.056}>
-          <div style={{ marginTop: showGettingStarted ? 10 : 16 }}>
-            <DashboardRecoveryPathSection activeStep={pipelineForRail} counts={recoveryPipelineCounts} />
+        <FadeUp delay={0.06}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
+            {setup.error ? <p style={{ color: "#f87171", margin: 0 }}>Setup data: {setup.error}</p> : null}
+            {metricsError ? <p style={{ color: "#f87171", margin: 0 }}>Metrics: {metricsError}</p> : null}
+            {dailyOps.error ? <p style={{ color: "#f87171", margin: 0 }}>Daily summary: {dailyOps.error}</p> : null}
+            {opsBreakdown.error ? <p style={{ color: "#f87171", margin: 0 }}>Ops breakdown: {opsBreakdown.error}</p> : null}
+            {deliveryReliability.error ? (
+              <p style={{ color: "#f87171", margin: 0 }}>Delivery reliability: {deliveryReliability.error}</p>
+            ) : null}
+            {liveCounts.error ? <p style={{ color: "#f87171", margin: 0 }}>Live counts: {liveCounts.error}</p> : null}
+
+            {loading ? <p style={{ color: "var(--muted)", margin: 0 }}>Loading overview…</p> : null}
+
+            {showGettingStarted && !loading ? queueActivity : null}
+
+            {!showGettingStarted && !loading ? (
+              <>
+                {dailyOps.loading ? (
+                  <OverviewRecoveryHeroStrip eyebrow="Today's counts for your time zone.">
+                    <p style={{ color: "var(--muted)", fontSize: 14 }}>Loading daily summary…</p>
+                  </OverviewRecoveryHeroStrip>
+                ) : dailyOps.data ? (
+                  <OverviewRecoveryHeroStrip
+                    eyebrow="Today's counts for your time zone."
+                    subtitle={recoverySubtitle}
+                    aside={
+                      <OverviewOperationalPulse
+                        lines={pulseLines}
+                        contextLine={`Coverage for ${dailyOps.data.date} (${dailyOps.data.timezone}).`}
+                      />
+                    }
+                  >
+                    <DailyOpsSummaryGrid data={dailyOps.data} />
+                    <div style={{ marginTop: 14 }}>
+                      <DailyOpsStatusStrip byStatus={dailyOps.data.breakdown?.by_status} />
+                    </div>
+                  </OverviewRecoveryHeroStrip>
+                ) : null}
+
+                <OperatorMorningRecoveryDigestPanel
+                  onAfterMutation={async () => {
+                    await Promise.all([
+                      actionQueue.reload({ silent: true }),
+                      dailyOps.reload({ silent: true }),
+                      opsBreakdown.reload({ silent: true }),
+                      deliveryReliability.reload({ silent: true }),
+                    ]);
+                  }}
+                />
+
+                {queueActivity}
+
+                <OverviewDeliveryReliabilityBlock data={deliveryReliability.data} loading={deliveryReliability.loading} />
+                <OverviewOpsBreakdownBlock data={opsBreakdown.data} loading={opsBreakdown.loading} />
+
+                {metrics ? (
+                  <OverviewLongRangeRecoveryBlock>
+                    <div className="pf-overview-metric-grid">
+                      <OverviewMetricCard label="Openings created" value={metrics.open_slots_created} />
+                      <OverviewMetricCard label="Offers sent" value={metrics.offers_sent} />
+                      <OverviewMetricCard label="Openings booked" value={metrics.slots_booked} />
+                      <OverviewMetricCard label="Recovered revenue" value={metrics.recovered_revenue_cents} isCurrency />
+                      <OverviewMetricCard label="Openings (list)" value={setup.openSlotsCount} />
+                      {liveCounts.data ? (
+                        <>
+                          <OverviewMetricCard label="Open / offered (live)" value={liveCounts.data.counts.open} />
+                          <OverviewMetricCard label="Claimed (live)" value={liveCounts.data.counts.claimed} />
+                        </>
+                      ) : null}
+                    </div>
+                  </OverviewLongRangeRecoveryBlock>
+                ) : null}
+              </>
+            ) : null}
+
+            {showGettingStarted && !loading ? (
+              <details className="pf-overview-edu">
+                <summary>How PulseFill works</summary>
+                <p className="pf-overview-edu__body">
+                  When a cancellation happens, staff creates an opening, PulseFill sends it to matching standby customers,
+                  and claimed openings show up for confirmation in the dashboard.
+                </p>
+              </details>
+            ) : null}
           </div>
         </FadeUp>
-      ) : null}
-
-      <FadeUp delay={0.06}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
-      <div
-        className={showGettingStarted ? "pf-overview-post-hero-toolbar" : undefined}
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          gap: 16,
-          flexWrap: "wrap",
-          marginTop: 6,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <RefreshIndicator updatedAt={refreshedAt} />
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            style={{
-              borderRadius: 12,
-              border: "1px solid var(--pf-brand-border-warm-mid)",
-              background: "var(--pf-surface-tint-05)",
-              color: "var(--pf-text-primary)",
-              padding: "8px 14px",
-              fontSize: 13,
-              cursor: "pointer",
-              transition: "transform 0.15s ease, background 0.15s ease",
-            }}
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {setup.error ? (
-        <p style={{ color: "#f87171", marginTop: 16 }}>Setup data: {setup.error}</p>
-      ) : null}
-      {metricsError ? <p style={{ color: "#f87171", marginTop: 8 }}>Metrics: {metricsError}</p> : null}
-      {dailyOps.error ? <p style={{ color: "#f87171", marginTop: 8 }}>Daily summary: {dailyOps.error}</p> : null}
-      {opsBreakdown.error ? <p style={{ color: "#f87171", marginTop: 8 }}>Ops breakdown: {opsBreakdown.error}</p> : null}
-      {deliveryReliability.error ? (
-        <p style={{ color: "#f87171", marginTop: 8 }}>Delivery reliability: {deliveryReliability.error}</p>
-      ) : null}
-      {liveCounts.error ? <p style={{ color: "#f87171", marginTop: 8 }}>Live counts: {liveCounts.error}</p> : null}
-
-      {loading ? <p style={{ color: "var(--muted)", marginTop: 20 }}>Loading overview…</p> : null}
-
-      {showGettingStarted && !loading ? (
-        <div className="pf-command-cockpit pf-command-cockpit--after-nba pf-command-cockpit--stacked">
-          <ActionQueuePreviewCard
-            items={actionQueue.data?.sections.needs_action ?? []}
-            loading={actionQueue.loading}
-            error={actionQueue.error}
-            summary={actionQueue.data?.summary}
-            hierarchy="secondary"
-          />
-          <div className="pf-command-cockpit-footer">
-            <CommandCenterRecentActivity />
-          </div>
-        </div>
-      ) : null}
-
-      {!showGettingStarted && !loading ? (
-        <>
-          {dailyOps.loading ? (
-            <OverviewRecoveryHeroStrip eyebrow="Today's counts for your time zone.">
-              <p style={{ color: "var(--muted)", fontSize: 14 }}>Loading daily summary…</p>
-            </OverviewRecoveryHeroStrip>
-          ) : dailyOps.data ? (
-            <OverviewRecoveryHeroStrip
-              eyebrow="Today's counts for your time zone."
-              subtitle={recoverySubtitle}
-              aside={
-                <OverviewOperationalPulse
-                  lines={pulseLines}
-                  contextLine={`Coverage for ${dailyOps.data.date} (${dailyOps.data.timezone}).`}
-                />
-              }
-            >
-              <DailyOpsSummaryGrid data={dailyOps.data} />
-              <div style={{ marginTop: 14 }}>
-                <DailyOpsStatusStrip byStatus={dailyOps.data.breakdown?.by_status} />
-              </div>
-            </OverviewRecoveryHeroStrip>
-          ) : null}
-
-          <OperatorMorningRecoveryDigestPanel
-            onAfterMutation={async () => {
-              await Promise.all([
-                actionQueue.reload({ silent: true }),
-                dailyOps.reload({ silent: true }),
-                opsBreakdown.reload({ silent: true }),
-                deliveryReliability.reload({ silent: true }),
-              ]);
-            }}
-          />
-
-          <div className="pf-command-cockpit pf-command-cockpit--after-nba pf-command-cockpit--stacked">
-            <div style={{ minWidth: 0 }}>
-              <ActionQueuePreviewCard
-                items={actionQueue.data?.sections.needs_action ?? []}
-                loading={actionQueue.loading}
-                error={actionQueue.error}
-                summary={actionQueue.data?.summary}
-                hierarchy="secondary"
-              />
-            </div>
-            <div className="pf-command-cockpit-footer">
-              <CommandCenterRecentActivity />
-            </div>
-          </div>
-
-          <OverviewDeliveryReliabilityBlock data={deliveryReliability.data} loading={deliveryReliability.loading} />
-          <OverviewOpsBreakdownBlock data={opsBreakdown.data} loading={opsBreakdown.loading} />
-
-          {metrics ? (
-            <OverviewLongRangeRecoveryBlock>
-              <div className="pf-overview-metric-grid">
-                <OverviewMetricCard label="Openings created" value={metrics.open_slots_created} />
-                <OverviewMetricCard label="Offers sent" value={metrics.offers_sent} />
-                <OverviewMetricCard label="Openings booked" value={metrics.slots_booked} />
-                <OverviewMetricCard label="Recovered revenue" value={metrics.recovered_revenue_cents} isCurrency />
-                <OverviewMetricCard label="Openings (list)" value={setup.openSlotsCount} />
-                {liveCounts.data ? (
-                  <>
-                    <OverviewMetricCard label="Open / offered (live)" value={liveCounts.data.counts.open} />
-                    <OverviewMetricCard label="Claimed (live)" value={liveCounts.data.counts.claimed} />
-                  </>
-                ) : null}
-              </div>
-            </OverviewLongRangeRecoveryBlock>
-          ) : null}
-        </>
-      ) : null}
-
-      {showGettingStarted && !loading ? (
-        <details className="pf-overview-edu">
-          <summary>How PulseFill works</summary>
-          <p className="pf-overview-edu__body">
-            When a cancellation happens, staff creates an opening, PulseFill sends it to matching standby customers,
-            and claimed openings show up for confirmation in the dashboard.
-          </p>
-        </details>
-      ) : null}
-        </div>
-      </FadeUp>
       </OperatorPageTransition>
     </main>
   );

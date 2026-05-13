@@ -77,22 +77,33 @@ function activityStatusLine(item: OperatorActivityItem): string | null {
   return null;
 }
 
-export function CommandCenterRecentActivity() {
+type CommandCenterRecentActivityProps = {
+  /** Parent supplies page chrome (e.g. desk card title + “View all”). */
+  hideHeader?: boolean;
+};
+
+export function CommandCenterRecentActivity({ hideHeader = false }: CommandCenterRecentActivityProps) {
   const { items, loading, error } = useOperatorActivityFeed(120_000);
   const top = items.slice(0, 3);
   return (
     <section className="pf-command-feed">
-      <div className="pf-command-feed__head">
-        <div>
-          <h2 className="pf-section-title">See what happened</h2>
-          <p className="pf-muted-copy pf-command-feed__lede">
-            Openings, offers, claims, and confirmations appear here.
-          </p>
+      {hideHeader ? (
+        <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13 }}>
+          Openings, offers, claims, and confirmations show up here.
+        </p>
+      ) : (
+        <div className="pf-command-feed__head">
+          <div>
+            <h2 className="pf-section-title">See what happened</h2>
+            <p className="pf-muted-copy pf-command-feed__lede">
+              Openings, offers, claims, and confirmations appear here.
+            </p>
+          </div>
+          <Link href="/activity" className="pf-command-feed__all">
+            View all →
+          </Link>
         </div>
-        <Link href="/activity" className="pf-command-feed__all">
-          View all →
-        </Link>
-      </div>
+      )}
 
       {error ? (
         <div style={{ marginTop: 12 }}>

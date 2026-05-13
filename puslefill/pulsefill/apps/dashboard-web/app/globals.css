@@ -2385,6 +2385,17 @@ main.pf-auth-shell .pf-auth-submit {
   max-width: 860px;
 }
 
+/* Today / overview: wider desk column than settings, still not full-bleed admin */
+.pf-page-overview.pf-desk-page {
+  max-width: min(1180px, 100%);
+}
+
+.pf-overview-desk-stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2vw, 20px);
+}
+
 .pf-customers-page-stack {
   display: flex;
   flex-direction: column;

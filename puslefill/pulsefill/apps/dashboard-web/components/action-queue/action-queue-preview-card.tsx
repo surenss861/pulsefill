@@ -10,6 +10,7 @@ export function ActionQueuePreviewCard({
   error,
   summary,
   hierarchy = "default",
+  deckEmbedded = false,
 }: {
   items: ActionQueueItem[];
   loading: boolean;
@@ -18,6 +19,8 @@ export function ActionQueuePreviewCard({
   summary?: ActionQueueSummary | null;
   /** Tighter surface when this module is secondary to Next Best Action (Command Center). */
   hierarchy?: "default" | "secondary";
+  /** Flat body for Operations desk cards (parent supplies title + “Open queue”). */
+  deckEmbedded?: boolean;
 }) {
   const top = items.slice(0, 5);
   const followUps = summary?.customer_follow_up_due_count ?? 0;
@@ -35,8 +38,17 @@ export function ActionQueuePreviewCard({
 
   const secondary = hierarchy === "secondary";
   const quietEmpty = !loading && !error && top.length === 0 && !summaryLine;
+  const embedShell = deckEmbedded && secondary;
 
-  if (secondary && quietEmpty) {
+  if (secondary && quietEmpty && deckEmbedded) {
+    return (
+      <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+        Nothing needs action right now. New claims, failed offers, and stuck openings will show up here.
+      </p>
+    );
+  }
+
+  if (secondary && quietEmpty && !deckEmbedded) {
     return (
       <div className="pf-needs-attention-strip">
         <div className="pf-needs-attention-strip__copy">
@@ -52,9 +64,9 @@ export function ActionQueuePreviewCard({
     );
   }
 
-  return (
-    <div
-      style={{
+  const shellStyle = embedShell
+    ? { marginTop: 0 as const }
+    : {
         marginTop: secondary ? 12 : 24,
         borderRadius: secondary ? 16 : 20,
         border: secondary ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(255,255,255,0.1)",
@@ -65,36 +77,45 @@ export function ActionQueuePreviewCard({
           ? "inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 28px rgba(0,0,0,0.2)"
           : "0 20px 56px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
         padding: secondary ? 18 : 22,
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Needs attention</h2>
-          <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 14, maxWidth: 520 }}>
-            {summaryLine ? (
-              <>
-                <span style={{ color: "rgba(245, 247, 250, 0.72)" }}>{summaryLine}</span>
-                <span style={{ display: "block", marginTop: 6 }}>
-                  Top of the queue — highest severity first.
-                </span>
-              </>
-            ) : (
-              <>
-                <span style={{ color: "rgba(245, 247, 250, 0.82)", fontWeight: 600 }}>Nothing needs action</span>
-                <span style={{ display: "block", marginTop: 6 }}>
-                  New claims, failed offers, and stuck openings will appear here.
-                </span>
-              </>
-            )}
-          </p>
+      };
+
+  return (
+    <div style={shellStyle}>
+      {!embedShell ? (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Needs attention</h2>
+            <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 14, maxWidth: 520 }}>
+              {summaryLine ? (
+                <>
+                  <span style={{ color: "rgba(245, 247, 250, 0.72)" }}>{summaryLine}</span>
+                  <span style={{ display: "block", marginTop: 6 }}>
+                    Top of the queue — highest severity first.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span style={{ color: "rgba(245, 247, 250, 0.82)", fontWeight: 600 }}>Nothing needs action</span>
+                  <span style={{ display: "block", marginTop: 6 }}>
+                    New claims, failed offers, and stuck openings will appear here.
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+          <Link href="/action-queue?section=needs_action" className="pf-queue-preview-cta">
+            Open queue
+          </Link>
         </div>
-        <Link href="/action-queue?section=needs_action" className="pf-queue-preview-cta">
-          Open queue
-        </Link>
-      </div>
+      ) : summaryLine ? (
+        <p className="pf-muted-copy" style={{ margin: "0 0 14px", fontSize: 13, lineHeight: 1.5 }}>
+          <span style={{ color: "rgba(245, 247, 250, 0.78)", fontWeight: 600 }}>{summaryLine}</span>
+          <span style={{ display: "block", marginTop: 8 }}>Top of the queue — highest severity first.</span>
+        </p>
+      ) : null}
 
       {error ? <p style={{ color: "#f87171", marginTop: 12 }}>{error}</p> : null}
-      {loading ? <p style={{ color: "var(--muted)", marginTop: 16 }}>Loading…</p> : null}
+      {loading ? <p style={{ color: "var(--muted)", marginTop: embedShell ? 0 : 16 }}>Loading…</p> : null}
 
       {!loading && !error && top.length === 0 && summaryLine ? (
         <p style={{ color: "var(--muted)", marginTop: 16, marginBottom: 0 }}>Nothing queued in this section.</p>
