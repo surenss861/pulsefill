@@ -15,6 +15,54 @@ import { upsertActiveCustomerMembership } from "./membership.js";
 export const DIRECTORY_PUBLIC_BLURB =
   "Join the waiting list. When an opening appears, PulseFill will send you an offer.";
 
+function trimNonEmpty(s: string | null | undefined): string | null {
+  const t = s?.trim();
+  return t && t.length > 0 ? t : null;
+}
+
+/** Pure mapping for customer directory list/detail — `businesses.name` stays internal; API returns resolved display strings. */
+export function resolveDirectoryDisplayFields(input: {
+  name: string;
+  category: string | null;
+  public_display_name: string | null;
+  public_description: string | null;
+  public_category: string | null;
+  public_city: string | null;
+  public_neighborhood: string | null;
+  public_website: string | null;
+  public_phone: string | null;
+  public_logo_url: string | null;
+  public_cover_image_url: string | null;
+  public_join_note: string | null;
+  fallbackLocation?: { name: string; city: string | null } | null;
+  fallbackBlurb: string;
+}): {
+  name: string;
+  category: string | null;
+  city: string | null;
+  neighborhood: string | null;
+  description: string;
+  website: string | null;
+  phone: string | null;
+  logo_url: string | null;
+  cover_image_url: string | null;
+  join_note: string | null;
+} {
+  const loc = input.fallbackLocation;
+  return {
+    name: trimNonEmpty(input.public_display_name) ?? input.name,
+    category: trimNonEmpty(input.public_category) ?? input.category ?? null,
+    city: trimNonEmpty(input.public_city) ?? loc?.city ?? null,
+    neighborhood: trimNonEmpty(input.public_neighborhood) ?? loc?.name ?? null,
+    description: trimNonEmpty(input.public_description) ?? input.fallbackBlurb,
+    website: trimNonEmpty(input.public_website),
+    phone: trimNonEmpty(input.public_phone),
+    logo_url: trimNonEmpty(input.public_logo_url),
+    cover_image_url: trimNonEmpty(input.public_cover_image_url),
+    join_note: trimNonEmpty(input.public_join_note),
+  };
+}
+
 export async function ensureCustomerRow(admin: SupabaseClient, u: User): Promise<{ id: string }> {
   const row = {
     auth_user_id: u.id,
@@ -85,7 +133,9 @@ async function batchDirectoryRelationships(
 export async function buildDirectoryListPayload(admin: SupabaseClient, customerId: string) {
   const { data: businesses, error } = await admin
     .from("businesses")
-    .select("id, name, slug, category, timezone, standby_access_mode, customer_discovery_enabled")
+    .select(
+      "id, name, slug, category, timezone, standby_access_mode, customer_discovery_enabled, public_display_name, public_description, public_category, public_city, public_neighborhood, public_website, public_phone, public_logo_url, public_cover_image_url, public_join_note",
+    )
     .eq("customer_discovery_enabled", true)
     .order("name", { ascending: true })
     .limit(100);
@@ -94,7 +144,7 @@ export async function buildDirectoryListPayload(admin: SupabaseClient, customerI
     throw new Error("directory_list_failed");
   }
 
-  const rows = (businesses ?? []) as Array<{
+  const rows = (businesses ?? []) as unknown as Array<{
     id: string;
     name: string;
     slug: string;
@@ -102,6 +152,16 @@ export async function buildDirectoryListPayload(admin: SupabaseClient, customerI
     timezone: string;
     standby_access_mode: string;
     customer_discovery_enabled: boolean;
+    public_display_name: string | null;
+    public_description: string | null;
+    public_category: string | null;
+    public_city: string | null;
+    public_neighborhood: string | null;
+    public_website: string | null;
+    public_phone: string | null;
+    public_logo_url: string | null;
+    public_cover_image_url: string | null;
+    public_join_note: string | null;
   }>;
 
   const ids = rows.map((r) => r.id);
@@ -136,16 +196,38 @@ export async function buildDirectoryListPayload(admin: SupabaseClient, customerI
   return {
     businesses: rows.map((b) => {
       const loc = firstLocByBiz.get(b.id);
+      const pub = resolveDirectoryDisplayFields({
+        name: b.name,
+        category: b.category,
+        public_display_name: b.public_display_name,
+        public_description: b.public_description,
+        public_category: b.public_category,
+        public_city: b.public_city,
+        public_neighborhood: b.public_neighborhood,
+        public_website: b.public_website,
+        public_phone: b.public_phone,
+        public_logo_url: b.public_logo_url,
+        public_cover_image_url: b.public_cover_image_url,
+        public_join_note: b.public_join_note,
+        fallbackLocation: loc ? { name: loc.name, city: loc.city } : null,
+        fallbackBlurb: DIRECTORY_PUBLIC_BLURB,
+      });
       return {
         id: b.id,
-        name: b.name,
+        name: pub.name,
         slug: b.slug,
-        category: b.category,
+        category: pub.category,
         timezone: b.timezone,
         standby_access_mode: b.standby_access_mode,
         customer_discovery_enabled: b.customer_discovery_enabled,
-        city: loc?.city ?? null,
-        neighborhood: loc?.name ?? null,
+        city: pub.city,
+        neighborhood: pub.neighborhood,
+        description: pub.description,
+        website: pub.website,
+        phone: pub.phone,
+        logo_url: pub.logo_url,
+        cover_image_url: pub.cover_image_url,
+        join_note: pub.join_note,
         services: servicesByBiz.get(b.id) ?? [],
         relationship: relMap.get(b.id) ?? { membership_status: "none" as const, request_status: "none" as const },
       };
@@ -156,14 +238,16 @@ export async function buildDirectoryListPayload(admin: SupabaseClient, customerI
 export async function buildDirectoryDetailPayload(admin: SupabaseClient, customerId: string, businessId: string) {
   const { data: b, error: bErr } = await admin
     .from("businesses")
-    .select("id, name, slug, category, timezone, standby_access_mode, customer_discovery_enabled")
+    .select(
+      "id, name, slug, category, timezone, standby_access_mode, customer_discovery_enabled, public_display_name, public_description, public_category, public_city, public_neighborhood, public_website, public_phone, public_logo_url, public_cover_image_url, public_join_note",
+    )
     .eq("id", businessId)
     .maybeSingle();
 
   if (bErr || !b) {
     return { kind: "not_found" as const };
   }
-  const biz = b as {
+  const biz = b as unknown as {
     id: string;
     name: string;
     slug: string;
@@ -171,6 +255,16 @@ export async function buildDirectoryDetailPayload(admin: SupabaseClient, custome
     timezone: string;
     standby_access_mode: string;
     customer_discovery_enabled: boolean;
+    public_display_name: string | null;
+    public_description: string | null;
+    public_category: string | null;
+    public_city: string | null;
+    public_neighborhood: string | null;
+    public_website: string | null;
+    public_phone: string | null;
+    public_logo_url: string | null;
+    public_cover_image_url: string | null;
+    public_join_note: string | null;
   };
   if (!biz.customer_discovery_enabled) {
     return { kind: "not_found" as const };
@@ -185,21 +279,42 @@ export async function buildDirectoryDetailPayload(admin: SupabaseClient, custome
   const locs = (locations ?? []) as Array<{ id: string; name: string; city: string | null; region: string | null }>;
   const primary = locs[0];
   const nextStep = nextStepFromRelationship(rel);
+  const pub = resolveDirectoryDisplayFields({
+    name: biz.name,
+    category: biz.category,
+    public_display_name: biz.public_display_name,
+    public_description: biz.public_description,
+    public_category: biz.public_category,
+    public_city: biz.public_city,
+    public_neighborhood: biz.public_neighborhood,
+    public_website: biz.public_website,
+    public_phone: biz.public_phone,
+    public_logo_url: biz.public_logo_url,
+    public_cover_image_url: biz.public_cover_image_url,
+    public_join_note: biz.public_join_note,
+    fallbackLocation: primary ? { name: primary.name, city: primary.city } : null,
+    fallbackBlurb: DIRECTORY_PUBLIC_BLURB,
+  });
 
   return {
     kind: "ok" as const,
     body: {
       business: {
         id: biz.id,
-        name: biz.name,
+        name: pub.name,
         slug: biz.slug,
-        category: biz.category,
+        category: pub.category,
         timezone: biz.timezone,
         standby_access_mode: biz.standby_access_mode,
         customer_discovery_enabled: biz.customer_discovery_enabled,
-        city: primary?.city ?? null,
-        neighborhood: primary?.name ?? null,
-        description: DIRECTORY_PUBLIC_BLURB,
+        city: pub.city,
+        neighborhood: pub.neighborhood,
+        description: pub.description,
+        website: pub.website,
+        phone: pub.phone,
+        logo_url: pub.logo_url,
+        cover_image_url: pub.cover_image_url,
+        join_note: pub.join_note,
         services: (services ?? []) as Array<{ id: string; name: string; duration_minutes: number; active: boolean }>,
         locations: locs,
         relationship: {
