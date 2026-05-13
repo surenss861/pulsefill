@@ -22,6 +22,52 @@ type DayWindowRow = {
   end_utc: string;
 };
 
+/** When `business_day_window_utc` is missing or errors (older DB), use UTC calendar day [start, end). */
+function fallbackUtcDayWindow(at: Date): DayWindowRow {
+  const y = at.getUTCFullYear();
+  const mo = at.getUTCMonth();
+  const d = at.getUTCDate();
+  const start = new Date(Date.UTC(y, mo, d, 0, 0, 0, 0));
+  const end = new Date(Date.UTC(y, mo, d + 1, 0, 0, 0, 0));
+  const calendar_date = start.toISOString().slice(0, 10);
+  return {
+    calendar_date,
+    start_utc: start.toISOString(),
+    end_utc: end.toISOString(),
+  };
+}
+
+/** Safe snapshot when daily ops cannot be computed — keeps recovery-health from 500ing. */
+export function neutralDailyOpsSummary(): DailyOpsSummaryResponse {
+  const w = fallbackUtcDayWindow(new Date());
+  const dateStr =
+    typeof w.calendar_date === "string"
+      ? w.calendar_date.slice(0, 10)
+      : String(w.calendar_date).slice(0, 10);
+  return {
+    date: dateStr,
+    timezone: "UTC",
+    metrics: {
+      recovered_bookings_today: 0,
+      recovered_revenue_cents_today: 0,
+      awaiting_confirmation_count: 0,
+      delivery_failures_today: 0,
+      no_matches_today: 0,
+      active_offered_slots_count: 0,
+    },
+    breakdown: {
+      by_status: {
+        open: 0,
+        offered: 0,
+        claimed: 0,
+        booked: 0,
+        expired: 0,
+        cancelled: 0,
+      },
+    },
+  };
+}
+
 export async function buildDailyOpsSummary(
   admin: SupabaseClient,
   businessId: string,
@@ -38,19 +84,22 @@ export async function buildDailyOpsSummary(
 
   const timezone = (biz as { timezone: string }).timezone || "America/New_York";
 
+  const at = new Date();
   const { data: windowRows, error: wErr } = await admin.rpc("business_day_window_utc", {
     p_timezone: timezone,
-    p_at: new Date().toISOString(),
+    p_at: at.toISOString(),
   });
 
-  if (wErr || !windowRows?.length) {
-    throw new Error("day_window_failed");
-  }
-
-  const win = windowRows[0] as DayWindowRow;
+  const win: DayWindowRow =
+    !wErr && windowRows?.length
+      ? (windowRows[0] as DayWindowRow)
+      : fallbackUtcDayWindow(at);
   const startUtc = win.start_utc;
   const endUtc = win.end_utc;
-  const dateStr = win.calendar_date;
+  const dateStr =
+    typeof win.calendar_date === "string"
+      ? win.calendar_date.slice(0, 10)
+      : String(win.calendar_date).slice(0, 10);
 
   const [statusRows, awaitingRow, offeredRow, noMatchRow, bizSlotIds] = await Promise.all([
     admin.from("open_slots").select("status").eq("business_id", businessId),

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { buildDailyOpsSummary } from "./daily-ops-summary.js";
+import { buildDailyOpsSummary, neutralDailyOpsSummary, type DailyOpsSummaryResponse } from "./daily-ops-summary.js";
 
 export type RecoveryHealthOverallStatus = "ready" | "needs_attention" | "setup_required" | "low_coverage";
 
@@ -110,7 +110,7 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
   const since7d = sinceIso(RECENT_DAYS);
   const since30d = sinceIso(30);
 
-  const [locRes, provRes, svcRes, prefsRes, slotIdsRes, noMatchRes, dailyOps] = await Promise.all([
+  const [locRes, provRes, svcRes, prefsRes, slotIdsRes, noMatchRes] = await Promise.all([
     admin.from("locations").select("id", { count: "exact", head: true }).eq("business_id", businessId).eq("active", true),
     admin.from("providers").select("id", { count: "exact", head: true }).eq("business_id", businessId).eq("active", true),
     admin.from("services").select("id", { count: "exact", head: true }).eq("business_id", businessId).eq("active", true),
@@ -122,16 +122,18 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
       .eq("business_id", businessId)
       .eq("event_type", "offers_no_match")
       .gte("created_at", since7d),
-    buildDailyOpsSummary(admin, businessId),
   ]);
 
-  if (locRes.error || provRes.error || svcRes.error) {
-    throw new Error("recovery_health_setup_counts_failed");
+  let dailyOps: DailyOpsSummaryResponse;
+  try {
+    dailyOps = await buildDailyOpsSummary(admin, businessId);
+  } catch {
+    dailyOps = neutralDailyOpsSummary();
   }
 
-  const locCount = locRes.count ?? 0;
-  const provCount = provRes.count ?? 0;
-  const svcCount = svcRes.count ?? 0;
+  const locCount = locRes.error ? 0 : locRes.count ?? 0;
+  const provCount = provRes.error ? 0 : provRes.count ?? 0;
+  const svcCount = svcRes.error ? 0 : svcRes.count ?? 0;
 
   const setupComplete = locCount > 0 && provCount > 0 && svcCount > 0;
   const setupDetails = (() => {
@@ -155,10 +157,12 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
         details: setupDetails,
       };
 
-  if (prefsRes.error) throw new Error("recovery_health_standby_failed");
-  const standbyCustomerIds = [
-    ...new Set((prefsRes.data ?? []).map((r) => String((r as { customer_id: string }).customer_id))),
-  ];
+  let standbyCustomerIds: string[] = [];
+  if (!prefsRes.error) {
+    standbyCustomerIds = [
+      ...new Set((prefsRes.data ?? []).map((r) => String((r as { customer_id: string }).customer_id))),
+    ];
+  }
   const standbyCount = standbyCustomerIds.length;
 
   let reachableCount = 0;
@@ -176,23 +180,23 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
         .eq("platform", "ios")
         .eq("token_type", "apns"),
     ]);
-    if (cErr || dErr) throw new Error("recovery_health_reach_failed");
+    if (!cErr && !dErr) {
+      const withDevice = new Set(
+        (deviceRows ?? []).map((r) => String((r as { customer_id: string }).customer_id)),
+      );
 
-    const withDevice = new Set(
-      (deviceRows ?? []).map((r) => String((r as { customer_id: string }).customer_id)),
-    );
-
-    for (const row of custRows ?? []) {
-      const c = row as {
-        id: string;
-        push_enabled?: boolean | null;
-        email_enabled?: boolean | null;
-        sms_enabled?: boolean | null;
-      };
-      const emailOk = Boolean(c.email_enabled);
-      const smsOk = Boolean(c.sms_enabled);
-      const pushOk = Boolean(c.push_enabled) && withDevice.has(c.id);
-      if (emailOk || smsOk || pushOk) reachableCount += 1;
+      for (const row of custRows ?? []) {
+        const c = row as {
+          id: string;
+          push_enabled?: boolean | null;
+          email_enabled?: boolean | null;
+          sms_enabled?: boolean | null;
+        };
+        const emailOk = Boolean(c.email_enabled);
+        const smsOk = Boolean(c.sms_enabled);
+        const pushOk = Boolean(c.push_enabled) && withDevice.has(c.id);
+        if (emailOk || smsOk || pushOk) reachableCount += 1;
+      }
     }
   }
 
@@ -258,8 +262,7 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
               details: "Customers with active standby and a reachable push or contact channel.",
             };
 
-  const slotIds = (slotIdsRes.data ?? []).map((r) => String((r as { id: string }).id));
-  if (slotIdsRes.error) throw new Error("recovery_health_slots_failed");
+  const slotIds = slotIdsRes.error ? [] : (slotIdsRes.data ?? []).map((r) => String((r as { id: string }).id));
 
   let offersSent7d = 0;
   if (slotIds.length > 0) {
@@ -268,8 +271,7 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
       .select("id", { count: "exact", head: true })
       .in("open_slot_id", slotIds)
       .gte("sent_at", since7d);
-    if (oErr) throw new Error("recovery_health_offers_failed");
-    offersSent7d = count ?? 0;
+    if (!oErr) offersSent7d = count ?? 0;
   }
 
   const { count: confirmedCountRaw, error: confErr } = await admin
@@ -280,11 +282,9 @@ export async function buildRecoveryHealth(admin: SupabaseClient, businessId: str
     .gte("confirmed_at", since30d)
     .eq("open_slots.business_id", businessId);
 
-  if (confErr) throw new Error("recovery_health_confirmed_failed");
-  const confirmedCount = confirmedCountRaw ?? 0;
+  const confirmedCount = confErr ? 0 : confirmedCountRaw ?? 0;
 
-  const noMatches7d = noMatchRes.count ?? 0;
-  if (noMatchRes.error) throw new Error("recovery_health_no_match_failed");
+  const noMatches7d = noMatchRes.error ? 0 : noMatchRes.count ?? 0;
 
   const recentMatchingSignal: RecoveryHealthSignal =
     offersSent7d === 0
