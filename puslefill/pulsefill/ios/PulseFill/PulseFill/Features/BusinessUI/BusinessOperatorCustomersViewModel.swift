@@ -72,12 +72,14 @@ final class BusinessOperatorCustomersViewModel: ObservableObject {
             let s = try await businessAPI.listPendingStandbyRequests()
             pendingStandbyRequests = s.requests
             standbyRequestsLoadFailed = false
+            OperatorMutationNotifier.postStandbyRequestsChanged()
         } catch {
             pendingStandbyRequests = []
             standbyRequestsLoadFailed = didLoadOnce
             if didLoadOnce {
                 flashMessage = APIErrorCopy.message(for: error)
             }
+            OperatorMutationNotifier.postStandbyRequestsChanged()
         }
     }
 
@@ -129,9 +131,11 @@ final class BusinessOperatorCustomersViewModel: ObservableObject {
             let s = try await businessAPI.listPendingStandbyRequests()
             pendingStandbyRequests = s.requests
             standbyRequestsLoadFailed = false
+            OperatorMutationNotifier.postStandbyRequestsChanged()
         } catch {
             pendingStandbyRequests = []
             standbyRequestsLoadFailed = true
+            OperatorMutationNotifier.postStandbyRequestsChanged()
         }
     }
 

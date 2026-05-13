@@ -92,6 +92,10 @@ struct BusinessTodayView: View {
                     primaryAction: { selectedTab = .create }
                 )
 
+                if viewModel.pendingStandbyRequestCount > 0 {
+                    waitlistRequestsSurface
+                }
+
                 if let daily = viewModel.dailySummary, let summary = viewModel.queueSummary {
                     recoveryHealthCard(
                         server: viewModel.recoveryHealth,
@@ -102,7 +106,7 @@ struct BusinessTodayView: View {
                 }
 
                 if let summary = viewModel.queueSummary {
-                    needsActionCard(summary: summary)
+                    needsActionCard(summary: summary, waitlistCount: viewModel.pendingStandbyRequestCount)
                 }
 
                 quickActions
@@ -184,12 +188,57 @@ struct BusinessTodayView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func needsActionCard(summary: OperatorActionQueueSummary) -> some View {
+    private var waitlistRequestsSurface: some View {
+        PFCustomerSectionCard(variant: .attention, padding: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Waitlist requests")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(PFColor.textPrimary)
+
+                Text(
+                    viewModel.pendingStandbyRequestCount == 1
+                        ? "1 customer asked to join your waiting list."
+                        : "\(viewModel.pendingStandbyRequestCount) customers asked to join your waiting list."
+                )
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(PFColor.textSecondary)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+
+                PFCustomerPrimaryButton(title: "Review requests") {
+                    PFHaptics.mediumImpact()
+                    onNavigateMore(.customers)
+                }
+            }
+        }
+    }
+
+    private func needsActionCard(summary: OperatorActionQueueSummary, waitlistCount: Int) -> some View {
         PFCustomerSectionCard(variant: .quiet, padding: 18) {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Next steps")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(PFColor.textPrimary)
+
+                if waitlistCount > 0 {
+                    VStack(alignment: .leading, spacing: 10) {
+                        needsActionRow(
+                            count: waitlistCount,
+                            title: "Waitlist requests",
+                            subtitle: "Approve or decline customers who asked to join your waiting list.",
+                            emphasize: false
+                        )
+                        Button {
+                            PFHaptics.selection()
+                            onNavigateMore(.customers)
+                        } label: {
+                            Text("Review requests")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(PFColor.ember)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
 
                 needsActionRow(count: summary.awaitingConfirmationCount, title: "Customer claims", subtitle: "Confirm the booking before it times out.")
                 needsActionRow(count: summary.needsActionCount, title: "Openings need you", subtitle: "Send offers again or fix delivery so customers see the opening.")

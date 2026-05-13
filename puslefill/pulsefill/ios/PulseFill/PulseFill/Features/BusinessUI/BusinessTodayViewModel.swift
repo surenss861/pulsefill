@@ -17,6 +17,8 @@ final class BusinessTodayViewModel: ObservableObject {
     @Published var morningDigest: MorningRecoveryDigestResponse?
     /// Present when `GET /v1/businesses/mine/recovery-health` succeeds with usable copy; otherwise Today synthesizes from daily + queue.
     @Published var recoveryHealth: OperatorRecoveryHealthResponse?
+    /// Pending customer waitlist requests (`GET …/standby-requests?status=pending`).
+    @Published var pendingStandbyRequestCount: Int = 0
 
     private let businessAPI: BusinessOperatorAPIClient
     private var cancellables = Set<AnyCancellable>()
@@ -45,6 +47,14 @@ final class BusinessTodayViewModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self else { return }
                 Task { await self.load(silent: true) }
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: OperatorRefreshNotifications.standbyRequestsChanged)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await self.refreshPendingStandbyRequestCount() }
             }
             .store(in: &cancellables)
     }
@@ -85,6 +95,17 @@ final class BusinessTodayViewModel: ObservableObject {
             } else {
                 loadState = .loaded
             }
+        }
+
+        await refreshPendingStandbyRequestCount()
+    }
+
+    private func refreshPendingStandbyRequestCount() async {
+        do {
+            let s = try await businessAPI.listPendingStandbyRequests()
+            pendingStandbyRequestCount = s.requests.count
+        } catch {
+            pendingStandbyRequestCount = 0
         }
     }
 
