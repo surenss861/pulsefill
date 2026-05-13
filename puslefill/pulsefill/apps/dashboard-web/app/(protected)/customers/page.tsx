@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
+import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
+import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { MotionAction, MotionTapSurface } from "@/components/operator/operator-motion-primitives";
 import { OperatorMetricStrip } from "@/components/operator/operator-metric-strip";
@@ -19,7 +21,6 @@ import { useStandbyCoverage } from "@/hooks/useStandbyCoverage";
 import { useBillingSummary } from "@/hooks/useBillingSummary";
 import { BillingInlineGuardrail } from "@/components/billing/billing-inline-guardrail";
 import { apiFetch } from "@/lib/api";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 import type {
   CustomerInviteCreateResponse,
   CustomerInviteListItem,
@@ -43,11 +44,11 @@ function OnboardingPlaybook() {
     borderTop: "1px solid rgba(255,255,255,0.06)",
   };
   const kicker: CSSProperties = {
-    fontSize: 10,
-    letterSpacing: "0.14em",
-    textTransform: "uppercase",
-    color: "rgba(245,247,250,0.45)",
-    fontWeight: 600,
+    fontSize: 12,
+    letterSpacing: "0.02em",
+    textTransform: "none",
+    color: "rgba(201, 191, 179, 0.88)",
+    fontWeight: 650,
     margin: 0,
   };
   const body: CSSProperties = {
@@ -79,7 +80,7 @@ function OnboardingPlaybook() {
           userSelect: "none",
         }}
       >
-        Onboarding playbook
+        How invite statuses work
       </summary>
       <div className="pf-onboarding-playbook__body" style={{ padding: "2px 12px 12px" }}>
         <p className="pf-muted-copy" style={{ margin: "0 0 4px", fontSize: 12, lineHeight: 1.5 }}>
@@ -329,223 +330,173 @@ export default function CustomersPage() {
     }
   }
 
-  return (
-    <main className="pf-page-customers" style={{ padding: 0 }}>
-      <OperatorPageTransition>
-        <div className="pf-customers-page-stack">
-          <PageCommandHeader
-            tone="default"
-            eyebrowTone="plain"
-            eyebrow="Customers"
-            title="Waiting customers"
-            description="Invite customers so they can get openings when someone cancels."
-            primaryAction={
-              <MotionAction>
-                <Link href="#invite-customer" style={actionLinkStyle("primary")}>
-                  Invite customer
-                </Link>
-              </MotionAction>
-            }
-            secondaryAction={
-              standbyPending.count > 0 ? (
-                reduceMotion ? (
-                  <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
-                    Waitlist requests
-                  </Link>
-                ) : (
-                  <motion.span
-                    animate={{ opacity: [1, 0.88, 1] }}
-                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                    style={{ display: "inline-block" }}
-                  >
-                    <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
-                      Waitlist requests
-                    </Link>
-                  </motion.span>
-                )
-              ) : (
-                <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
-                  Waitlist requests
-                </Link>
-              )
-            }
-          />
-
-          <div
-            style={{
-              ...operatorSurfaceShell("quiet"),
-              padding: "14px 16px",
-              fontSize: 13,
-              lineHeight: 1.55,
-              color: "rgba(245,247,250,0.78)",
-            }}
+  const headerActions = (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "flex-end" }}>
+      {standbyPending.count > 0 ? (
+        reduceMotion ? (
+          <Link href="/customers/standby-requests" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+            Waitlist requests →
+          </Link>
+        ) : (
+          <motion.span
+            animate={{ opacity: [1, 0.88, 1] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+            style={{ display: "inline-block" }}
           >
-            <Link href="/customers/standby-requests" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
-              Waitlist requests
+            <Link href="/customers/standby-requests" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+              Waitlist requests →
             </Link>
-            <span style={{ color: "var(--muted)" }}>
-              {" "}
-              — people who asked to join; approve them if you use request-to-join.
-            </span>
+          </motion.span>
+        )
+      ) : (
+        <Link href="/customers/standby-requests" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+          Waitlist requests →
+        </Link>
+      )}
+    </div>
+  );
+
+  return (
+    <main className="pf-page-customers pf-desk-page" style={{ padding: 0 }}>
+      <OperatorPageTransition>
+        <div className="pf-overview-desk-stack">
+          <DeskPageHeader title="Customers" subtitle="Invite customers so they can get openings when someone cancels." actions={headerActions} />
+
+          <DeskHeroCard title="Build your waiting list" titleId="pf-customers-hero-title" eyebrow="Waiting customers">
+            <p className="pf-desk-hero-card__meta">
+              Send an invite link to customers you want on your waiting list. When someone cancels, they can get a shot
+              at the opening.
+            </p>
+            <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
+              People can also ask to join — use waitlist requests when you approve them.
+            </p>
+            <MotionAction>
+              <Link href="#invite-customer" className="pf-desk-save-access pf-desk-save-access--link">
+                Invite customer
+              </Link>
+            </MotionAction>
+          </DeskHeroCard>
+
+          <div className="pf-desk-customers-metrics">
+            <DeskSecondaryCard title="Invited">
+              <p className="pf-desk-customers-metric-value">{pendingInvites}</p>
+              <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
+                Waiting on them to join
+              </p>
+            </DeskSecondaryCard>
+            <DeskSecondaryCard title="Ready for openings">
+              <p className="pf-desk-customers-metric-value">{coverageLoading ? "—" : (standbyCoverage?.eligible_customer_count ?? "—")}</p>
+              <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
+                Joined and set up to hear from you
+              </p>
+            </DeskSecondaryCard>
+            <DeskSecondaryCard title="Can be reached">
+              <p className="pf-desk-customers-metric-value">{coverageLoading ? "—" : (standbyCoverage?.reachable_customer_count ?? "—")}</p>
+              <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
+                Can get texts or emails when you send offers
+              </p>
+            </DeskSecondaryCard>
+            <DeskSecondaryCard title="Needs setup">
+              <p className="pf-desk-customers-metric-value">{coverageLoading ? "—" : (needsSetupCount ?? "—")}</p>
+              <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
+                Finish preferences or membership
+              </p>
+            </DeskSecondaryCard>
           </div>
 
-          <OperatorMetricStrip
-            stripClassName="pf-customers-pool-metrics"
-            items={[
-              {
-                label: "Invited",
-                value: pendingInvites,
-                emphasis: pendingInvites > 0 ? "primary" : "default",
-                signal: pendingInvites > 0 ? "live" : "idle",
-                hint: "Waiting on them to join",
-              },
-              {
-                label: "Ready for openings",
-                value: coverageLoading ? "—" : (standbyCoverage?.eligible_customer_count ?? "—"),
-                emphasis:
-                  !coverageLoading && standbyCoverage && standbyCoverage.eligible_customer_count > 0 ? "primary" : "default",
-                signal:
-                  !coverageLoading && standbyCoverage && standbyCoverage.eligible_customer_count > 0 ? "live" : "idle",
-                hint: "Joined and set up to hear from you",
-              },
-              {
-                label: "Can be reached",
-                value: coverageLoading ? "—" : (standbyCoverage?.reachable_customer_count ?? "—"),
-                emphasis:
-                  !coverageLoading &&
-                  standbyCoverage &&
-                  standbyCoverage.reachable_customer_count >= standbyCoverage.eligible_customer_count &&
-                  standbyCoverage.eligible_customer_count > 0
-                    ? "primary"
-                    : "default",
-                signal:
-                  !coverageLoading &&
-                  standbyCoverage &&
-                  standbyCoverage.reachable_customer_count > 0 &&
-                  standbyCoverage.reachable_customer_count >= standbyCoverage.eligible_customer_count
-                    ? "live"
-                    : "idle",
-                hint: "Reach turned on (push, SMS, or email)",
-              },
-              {
-                label: "Needs setup",
-                value: coverageLoading ? "—" : (needsSetupCount ?? "—"),
-                emphasis: !coverageLoading && needsSetupCount != null && needsSetupCount > 0 ? "primary" : "default",
-                signal: !coverageLoading && needsSetupCount != null && needsSetupCount > 0 ? "live" : "idle",
-                hint: "Finish preferences or membership",
-              },
-            ]}
-            compact
-          />
-          <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
+          <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
             {poolHint}
           </p>
 
-          <div className="pf-customers-split" style={{ marginTop: 4 }}>
-            <form
-              id="invite-customer"
-              className="pf-customers-invite-form"
-              onSubmit={onSubmit}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
-                padding: "20px 20px 22px",
-                ...operatorSurfaceShell("operational"),
-              }}
-            >
-              <h2 className="pf-section-title" style={{ fontSize: 16 }}>
-                Invite customer
-              </h2>
-              {!billingSummary.loading && billingSummary.data ? (
-                <BillingInlineGuardrail summary={billingSummary.data} />
-              ) : null}
-              <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
-                Send an invite so someone can join your list and get openings when a visit cancels.
-              </p>
-              <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-                <span style={{ color: "var(--muted)" }}>Customer name (optional)</span>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="e.g. Alex Chen"
-                  style={{
-                    borderRadius: 12,
-                    border: "1px solid var(--pf-border-default)",
-                    background: "var(--pf-auth-input-bg)",
-                    color: "var(--text)",
-                    padding: "10px 12px",
-                    fontSize: 14,
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-                  }}
-                />
-              </label>
-              <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-                <span style={{ color: "var(--muted)" }}>Customer email *</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="patients@example.com"
-                  required
-                  style={{
-                    borderRadius: 12,
-                    border: "1px solid var(--pf-border-default)",
-                    background: "var(--pf-auth-input-bg)",
-                    color: "var(--text)",
-                    padding: "10px 12px",
-                    fontSize: 14,
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-                  }}
-                />
-              </label>
-              {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-              <MotionTapSurface disabled={saving}>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    borderRadius: 12,
-                    border: "1px solid var(--pf-accent-primary-border)",
-                    background: "linear-gradient(180deg, #ff7a18 0%, #f97316 100%)",
-                    color: "var(--pf-btn-primary-text)",
-                    padding: "10px 16px",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    cursor: saving ? "wait" : "pointer",
-                    alignSelf: "flex-start",
-                    boxShadow: "0 10px 28px rgba(255, 122, 24, 0.28)",
-                  }}
-                >
-                  {saving ? "Creating…" : "Create invite"}
-                </button>
-              </MotionTapSurface>
-            </form>
+          <div className="pf-desk-customers-split">
+            <DeskSecondaryCard title="Invite customer">
+              <form id="invite-customer" className="pf-desk-customers-invite-form" onSubmit={onSubmit}>
+                {!billingSummary.loading && billingSummary.data ? (
+                  <BillingInlineGuardrail summary={billingSummary.data} />
+                ) : null}
+                <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
+                  Send an invite so someone can join your list and get openings when a visit cancels.
+                </p>
+                <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+                  <span style={{ color: "var(--muted)" }}>Customer name (optional)</span>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="e.g. Alex Chen"
+                    style={{
+                      borderRadius: 12,
+                      border: "1px solid var(--pf-border-default)",
+                      background: "var(--pf-auth-input-bg)",
+                      color: "var(--text)",
+                      padding: "10px 12px",
+                      fontSize: 14,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                    }}
+                  />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+                  <span style={{ color: "var(--muted)" }}>Customer email *</span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="patients@example.com"
+                    required
+                    style={{
+                      borderRadius: 12,
+                      border: "1px solid var(--pf-border-default)",
+                      background: "var(--pf-auth-input-bg)",
+                      color: "var(--text)",
+                      padding: "10px 12px",
+                      fontSize: 14,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                    }}
+                  />
+                </label>
+                {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
+                <MotionTapSurface disabled={saving}>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="pf-desk-save-access pf-desk-invite-submit"
+                    style={{
+                      cursor: saving ? "wait" : "pointer",
+                      border: "1px solid var(--pf-accent-primary-border)",
+                    }}
+                  >
+                    {saving ? "Creating…" : "Create invite"}
+                  </button>
+                </MotionTapSurface>
+              </form>
+            </DeskSecondaryCard>
 
-            <StandbyCoveragePanel
-              data={standbyCoverage}
-              loading={coverageLoading}
-              error={coverageError}
-              onRetry={() => void reloadCoverage()}
-            />
+            <DeskSecondaryCard title="Customer coverage">
+              <StandbyCoveragePanel
+                embedded
+                data={standbyCoverage}
+                loading={coverageLoading}
+                error={coverageError}
+                onRetry={() => void reloadCoverage()}
+              />
+            </DeskSecondaryCard>
           </div>
 
           {lastCreated ? (
             <div
               style={{
-                marginTop: 4,
-                padding: 16,
-                borderRadius: 14,
+                padding: "18px 20px",
+                borderRadius: 16,
                 border: "1px solid rgba(34,197,94,0.35)",
                 background: "rgba(34,197,94,0.08)",
                 fontSize: 13,
                 lineHeight: 1.5,
-                maxWidth: 720,
               }}
             >
-              <strong style={{ display: "block", marginBottom: 8 }}>Invite created</strong>
-              <p className="pf-muted-copy" style={{ margin: "0 0 8px", fontSize: 12 }}>
+              <p className="pf-section-title" style={{ margin: "0 0 8px", fontSize: 15 }}>
+                Invite sent
+              </p>
+              <p className="pf-muted-copy" style={{ margin: "0 0 8px", fontSize: 13 }}>
                 For {lastCreated.customer_email}
                 {lastCreated.customer_name ? ` · ${lastCreated.customer_name}` : ""}
               </p>
@@ -593,10 +544,7 @@ export default function CustomersPage() {
             </div>
           ) : null}
 
-          <section className="pf-customers-invites" aria-labelledby="customers-invites-heading">
-            <h2 id="customers-invites-heading" className="pf-section-title pf-customers-invites__heading" style={{ fontSize: 15 }}>
-              Invites
-            </h2>
+          <DeskSecondaryCard title="Invites">
             <OnboardingPlaybook />
             {!loading && !listError && invites.length > 0 ? (
               <OperatorMetricStrip
@@ -672,9 +620,9 @@ export default function CustomersPage() {
                       background:
                         inviteFilter === id ? "rgba(249,115,22,0.14)" : "rgba(255,255,255,0.05)",
                       color: "var(--text)",
-                      padding: "5px 11px",
-                      fontSize: 11,
-                      fontWeight: inviteFilter === id ? 700 : 500,
+                      padding: "6px 12px",
+                      fontSize: 12,
+                      fontWeight: inviteFilter === id ? 650 : 500,
                       cursor: "pointer",
                       lineHeight: 1.2,
                     }}
@@ -688,27 +636,14 @@ export default function CustomersPage() {
             {listError ? (
               <div style={{ marginTop: 8 }}>
                 <OperatorErrorState rawMessage={listError} />
-                <button
-                  type="button"
-                  onClick={() => void load()}
-                  style={{
-                    marginTop: 8,
-                    borderRadius: 8,
-                    border: "1px solid rgba(255,255,255,0.14)",
-                    background: "rgba(255,255,255,0.06)",
-                    color: "var(--text)",
-                    padding: "6px 12px",
-                    fontSize: 12,
-                    cursor: "pointer",
-                  }}
-                >
+                <button type="button" className="pf-desk-ghost-btn" style={{ marginTop: 8 }} onClick={() => void load()}>
                   Retry
                 </button>
               </div>
             ) : null}
 
             {!loading && !listError && invites.length === 0 ? (
-              <div className="pf-customers-invites-empty" style={{ ...operatorSurfaceShell("emptyState") }}>
+              <div className="pf-customers-invites-empty" style={{ borderRadius: 12, padding: "14px 16px", border: "1px solid rgba(255,246,235,0.06)", background: "rgba(0,0,0,0.12)" }}>
                 <p className="pf-customers-invites-empty__title">No invites yet</p>
                 <p className="pf-customers-invites-empty__copy pf-muted-copy" style={{ color: "var(--muted)" }}>
                   Create an invite above for a link and code. Accepted customers show onboarding status and a link to
@@ -931,13 +866,11 @@ export default function CustomersPage() {
                           <OperatorStatusChip
                             kind={inviteStatusChipKind(r.status)}
                             label={inviteStatusLabel(r.status)}
-                            caps
                           />
                           {onboard ? (
                             <OperatorStatusChip
                               kind={onboardingToneToKind(onboard.tone)}
                               label={onboard.label}
-                              caps
                             />
                           ) : null}
                         </div>
@@ -952,7 +885,7 @@ export default function CustomersPage() {
                 })}
               </OperatorRowList>
             ) : null}
-          </section>
+          </DeskSecondaryCard>
         </div>
       </OperatorPageTransition>
     </main>

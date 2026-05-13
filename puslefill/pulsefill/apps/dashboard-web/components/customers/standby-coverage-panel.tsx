@@ -11,9 +11,48 @@ type Props = {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  /** Parent card supplies title — skip outer chrome and duplicate headings. */
+  embedded?: boolean;
 };
 
-export function StandbyCoveragePanel({ data, loading, error, onRetry }: Props) {
+function Stat({
+  label,
+  value,
+  hint,
+  fullWidth,
+  plainLabel,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  fullWidth?: boolean;
+  plainLabel?: boolean;
+}) {
+  return (
+    <div style={{ gridColumn: fullWidth ? "1 / -1" : undefined }}>
+      <p
+        className="pf-muted-copy"
+        style={{
+          margin: 0,
+          fontSize: plainLabel ? 12 : 10,
+          textTransform: plainLabel ? "none" : "uppercase",
+          letterSpacing: plainLabel ? "0.01em" : "0.03em",
+          fontWeight: plainLabel ? 600 : 500,
+        }}
+      >
+        {label}
+      </p>
+      <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: "var(--pf-text-primary)" }}>{value}</p>
+      {hint ? (
+        <p className="pf-muted-copy" style={{ margin: "2px 0 0", fontSize: plainLabel ? 12 : 10 }}>
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function StandbyCoveragePanel({ data, loading, error, onRetry, embedded = false }: Props) {
   const [serviceFilter, setServiceFilter] = useState<string>("");
 
   const filteredServices = useMemo(() => {
@@ -22,25 +61,33 @@ export function StandbyCoveragePanel({ data, loading, error, onRetry }: Props) {
     return data.services.filter((s) => s.service_id === serviceFilter);
   }, [data, serviceFilter]);
 
-  return (
-    <div
-      style={{
+  const shell = embedded
+    ? { display: "flex" as const, flexDirection: "column" as const, gap: 14 }
+    : {
         padding: "14px 16px",
         ...operatorSurfaceShell("quiet"),
-        display: "flex",
-        flexDirection: "column",
+        display: "flex" as const,
+        flexDirection: "column" as const,
         gap: 12,
-      }}
-    >
-      <div>
-        <p className="pf-eyebrow-plain" style={{ margin: 0 }}>
-          Waiting list
+      };
+
+  return (
+    <div style={shell}>
+      {embedded ? (
+        <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
+          Who can get offers once they join and choose how they want texts or emails from you.
         </p>
-        <h2 style={{ margin: "6px 0 0", fontSize: 15, fontWeight: 650, letterSpacing: "-0.02em" }}>Coverage</h2>
-        <p style={{ margin: "8px 0 0", color: "rgba(245,247,250,0.5)", fontSize: 12, lineHeight: 1.55 }}>
-          Who can receive offers after they join and pick how they want to hear from you.
-        </p>
-      </div>
+      ) : (
+        <div>
+          <p className="pf-eyebrow-plain" style={{ margin: 0 }}>
+            Waiting list
+          </p>
+          <h2 style={{ margin: "6px 0 0", fontSize: 15, fontWeight: 650, letterSpacing: "-0.02em" }}>Coverage</h2>
+          <p style={{ margin: "8px 0 0", color: "rgba(245,247,250,0.5)", fontSize: 12, lineHeight: 1.55 }}>
+            Who can receive offers after they join and pick how they want to hear from you.
+          </p>
+        </div>
+      )}
 
       {loading ? (
         <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12 }}>
@@ -81,24 +128,44 @@ export function StandbyCoveragePanel({ data, loading, error, onRetry }: Props) {
               fontSize: 12,
             }}
           >
-            <Stat label="Active preferences" value={String(data.active_preferences_count)} />
-            <Stat label="Customers (any pref)" value={String(data.standby_customer_count)} />
-            <Stat label="In pool (membership)" value={String(data.eligible_customer_count)} hint="Ready to match" />
-            <Stat label="Reachable" value={String(data.reachable_customer_count)} hint="Push / SMS / email" />
+            <Stat
+              label={embedded ? "Preferences set" : "Active preferences"}
+              value={String(data.active_preferences_count)}
+              plainLabel={embedded}
+            />
+            <Stat
+              label={embedded ? "On waiting list" : "Customers (any pref)"}
+              value={String(data.standby_customer_count)}
+              plainLabel={embedded}
+            />
+            <Stat
+              label={embedded ? "Ready for openings" : "In pool (membership)"}
+              value={String(data.eligible_customer_count)}
+              hint={embedded ? "Can get matched offers" : "Ready to match"}
+              plainLabel={embedded}
+            />
+            <Stat
+              label={embedded ? "Can be reached" : "Reachable"}
+              value={String(data.reachable_customer_count)}
+              hint={embedded ? "Texts, push, or email on" : "Push / SMS / email"}
+              plainLabel={embedded}
+            />
             {data.customers_pending_membership > 0 ? (
               <Stat
-                label="Pending membership"
+                label={embedded ? "Finishing signup" : "Pending membership"}
                 value={String(data.customers_pending_membership)}
-                hint="Prefs only — finish join"
+                hint={embedded ? "Joined but not fully in pool yet" : "Prefs only — finish join"}
                 fullWidth
+                plainLabel={embedded}
               />
             ) : null}
             {data.unreachable_eligible_count > 0 ? (
               <Stat
-                label="In pool, not reachable"
+                label={embedded ? "Hard to reach" : "In pool, not reachable"}
                 value={String(data.unreachable_eligible_count)}
-                hint="May miss offers"
+                hint={embedded ? "May miss offer texts" : "May miss offers"}
                 fullWidth
+                plainLabel={embedded}
               />
             ) : null}
           </div>
@@ -106,7 +173,7 @@ export function StandbyCoveragePanel({ data, loading, error, onRetry }: Props) {
           {data.services.length > 0 ? (
             <div style={{ display: "grid", gap: 8 }}>
               <label style={{ display: "grid", gap: 4, fontSize: 11 }}>
-                <span className="pf-muted-copy" style={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                <span className="pf-muted-copy" style={{ textTransform: embedded ? "none" : "uppercase", letterSpacing: "0.04em" }}>
                   Filter by service
                 </span>
                 <select
@@ -187,7 +254,15 @@ export function StandbyCoveragePanel({ data, loading, error, onRetry }: Props) {
 
           {data.recent_activity.length > 0 ? (
             <div style={{ display: "grid", gap: 6 }}>
-              <p className="pf-muted-copy" style={{ margin: 0, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <p
+                className="pf-muted-copy"
+                style={{
+                  margin: 0,
+                  fontSize: embedded ? 12 : 10,
+                  textTransform: embedded ? "none" : "uppercase",
+                  letterSpacing: embedded ? "0.02em" : "0.04em",
+                }}
+              >
                 Recent standby activity
               </p>
               <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
@@ -233,32 +308,6 @@ export function StandbyCoveragePanel({ data, loading, error, onRetry }: Props) {
             </Link>
           </p>
         </>
-      ) : null}
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  hint,
-  fullWidth,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-  fullWidth?: boolean;
-}) {
-  return (
-    <div style={{ gridColumn: fullWidth ? "1 / -1" : undefined }}>
-      <p className="pf-muted-copy" style={{ margin: 0, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-        {label}
-      </p>
-      <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: "var(--pf-text-primary)" }}>{value}</p>
-      {hint ? (
-        <p className="pf-muted-copy" style={{ margin: "2px 0 0", fontSize: 10 }}>
-          {hint}
-        </p>
       ) : null}
     </div>
   );
