@@ -107,6 +107,18 @@ struct BusinessOperatorAPIClient {
         try await underlying.getBusinessNamedServices()
     }
 
+    func listPendingStandbyRequests() async throws -> StaffStandbyRequestsListResponse {
+        try await underlying.listStaffStandbyRequests(status: "pending")
+    }
+
+    func approveStandbyRequest(requestId: String) async throws -> StaffStandbyRequestReviewResponse {
+        try await underlying.approveStaffStandbyRequest(requestId: requestId)
+    }
+
+    func declineStandbyRequest(requestId: String) async throws -> StaffStandbyRequestReviewResponse {
+        try await underlying.declineStaffStandbyRequest(requestId: requestId)
+    }
+
     func createOpenSlot(_ body: CreateOpenSlotRequestBody) async throws -> CreateOpenSlotAPIResponse {
         try await underlying.createOpenSlot(body: body)
     }

@@ -13,6 +13,9 @@ final class BusinessOperatorCustomersViewModel: ObservableObject {
     @Published private(set) var loadState: LoadState = .idle
     @Published private(set) var didLoadOnce = false
     @Published private(set) var invites: [StaffCustomerInviteListItemDTO] = []
+    @Published private(set) var pendingStandbyRequests: [StaffStandbyRequestRow] = []
+    @Published private(set) var standbyRequestsLoadFailed = false
+    @Published private(set) var actingStandbyRequestId: String?
 
     @Published var flashMessage: String?
     /// After POST create succeeds — lets the UI offer copy-token / URL affordances.
@@ -64,6 +67,18 @@ final class BusinessOperatorCustomersViewModel: ObservableObject {
                 loadState = .loaded
             }
         }
+
+        do {
+            let s = try await businessAPI.listPendingStandbyRequests()
+            pendingStandbyRequests = s.requests
+            standbyRequestsLoadFailed = false
+        } catch {
+            pendingStandbyRequests = []
+            standbyRequestsLoadFailed = didLoadOnce
+            if didLoadOnce {
+                flashMessage = APIErrorCopy.message(for: error)
+            }
+        }
     }
 
     func refresh() async {
@@ -104,8 +119,19 @@ final class BusinessOperatorCustomersViewModel: ObservableObject {
             didLoadOnce = true
             OperatorMutationNotifier.postCustomerInvitesChanged()
         } catch {
-            let msg = APIErrorCopy.message(for: error)
-            flashMessage = msg
+            flashMessage = APIErrorCopy.message(for: error)
+        }
+        await refreshStandbyRequestsOnly()
+    }
+
+    private func refreshStandbyRequestsOnly() async {
+        do {
+            let s = try await businessAPI.listPendingStandbyRequests()
+            pendingStandbyRequests = s.requests
+            standbyRequestsLoadFailed = false
+        } catch {
+            pendingStandbyRequests = []
+            standbyRequestsLoadFailed = true
         }
     }
 
@@ -122,6 +148,34 @@ final class BusinessOperatorCustomersViewModel: ObservableObject {
         } catch {
             PFHaptics.warning()
             flashMessage = OperatorMutationFriendlyCopy.revokeInviteFailed(error)
+        }
+    }
+
+    func approveStandbyRequest(id: String) async {
+        actingStandbyRequestId = id
+        defer { actingStandbyRequestId = nil }
+        do {
+            _ = try await businessAPI.approveStandbyRequest(requestId: id)
+            PFHaptics.success()
+            flashMessage = "Waitlist request approved."
+            await refreshStandbyRequestsOnly()
+        } catch {
+            PFHaptics.warning()
+            flashMessage = APIErrorCopy.message(for: error)
+        }
+    }
+
+    func declineStandbyRequest(id: String) async {
+        actingStandbyRequestId = id
+        defer { actingStandbyRequestId = nil }
+        do {
+            _ = try await businessAPI.declineStandbyRequest(requestId: id)
+            PFHaptics.mediumImpact()
+            flashMessage = "Request declined."
+            await refreshStandbyRequestsOnly()
+        } catch {
+            PFHaptics.warning()
+            flashMessage = APIErrorCopy.message(for: error)
         }
     }
 }

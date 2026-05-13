@@ -132,6 +132,32 @@ struct BusinessOperatorCustomersView: View {
                 BusinessWorkspaceStrip()
                     .environmentObject(env)
 
+                if viewModel.standbyRequestsLoadFailed, viewModel.pendingStandbyRequests.isEmpty {
+                    Text("Couldn’t refresh waitlist requests. Pull to try again.")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(PFColor.textSecondary)
+                        .padding(.vertical, 4)
+                }
+
+                if !viewModel.pendingStandbyRequests.isEmpty {
+                    section(
+                        title: "Waitlist requests",
+                        isEmpty: false,
+                        emptyMessage: ""
+                    ) {
+                        VStack(spacing: 12) {
+                            Text("\(viewModel.pendingStandbyRequests.count) customers asked to join your waiting list.")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(PFColor.textSecondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            ForEach(viewModel.pendingStandbyRequests) { row in
+                                standbyRequestRow(row)
+                            }
+                        }
+                    }
+                }
+
                 PFOperatorHero(
                     overline: "Customers",
                     title: "Waiting customers",
@@ -221,6 +247,71 @@ struct BusinessOperatorCustomersView: View {
                 content()
             }
         }
+    }
+
+    private func standbyRequestRow(_ row: StaffStandbyRequestRow) -> some View {
+        let trimmedName = row.customerName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedLabel = row.customerLabel?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title: String = {
+            if let t = trimmedName, !t.isEmpty { return t }
+            if let l = trimmedLabel, !l.isEmpty { return l }
+            return "Customer"
+        }()
+        let email = row.customerEmail?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let note = row.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let busy = viewModel.actingStandbyRequestId != nil
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(PFColor.textPrimary)
+                    if !email.isEmpty {
+                        Text(email)
+                            .font(.system(size: 14))
+                            .foregroundStyle(PFColor.textSecondary)
+                    }
+                    if !note.isEmpty {
+                        Text(note)
+                            .font(.system(size: 13))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .lineSpacing(3)
+                    }
+                    Text("Requested \(relativeOrRaw(row.requestedAt))")
+                        .font(.system(size: 12))
+                        .foregroundStyle(PFColor.textSecondary)
+                }
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 10) {
+                Button {
+                    Task { await viewModel.approveStandbyRequest(id: row.id) }
+                } label: {
+                    Text("Approve")
+                        .font(.system(size: 14, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(PFColor.primary)
+                .disabled(busy)
+
+                Button(role: .destructive) {
+                    Task { await viewModel.declineStandbyRequest(id: row.id) }
+                } label: {
+                    Text("Decline")
+                        .font(.system(size: 14, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .disabled(busy)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PFSurface.card)
+        .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
     }
 
     private func pendingRow(_ invite: StaffCustomerInviteListItemDTO) -> some View {
