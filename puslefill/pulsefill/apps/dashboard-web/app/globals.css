@@ -2538,6 +2538,10 @@ a.pf-desk-save-access--link:hover {
   max-width: 900px;
 }
 
+.pf-page-billing.pf-desk-page {
+  max-width: min(860px, 100%);
+}
+
 .pf-page-slot-detail {
   max-width: 1120px;
 }

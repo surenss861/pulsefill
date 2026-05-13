@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
+import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
+import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
 import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
-import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import type { OperatorStatusKind } from "@/components/operator/operator-status-chip";
-import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { apiFetch } from "@/lib/api";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
-import { BillingNoticeBanner } from "@/components/billing/billing-notice-banner";
 import type {
   BillingSubscriptionStatus,
   BillingSummaryResponse,
@@ -62,24 +61,24 @@ function formatPeriodEnd(iso: string | null): string | null {
 function billingPeriodCaption(sub: BillingSummarySubscription): string | null {
   const end = formatPeriodEnd(sub.current_period_end);
   if (sub.status === "incomplete") {
-    return "Complete payment setup when checkout is enabled for this workspace.";
+    return "Finish payment setup to turn on billing for this workspace.";
   }
   if (!end) return null;
   if (sub.status === "trialing") {
-    return `Trial period ends ${end} (or converts on renewal, depending on your Stripe configuration).`;
+    return `Trial period ends ${end}.`;
   }
   if (sub.status === "active") {
     return `Current period ends ${end}.`;
   }
   if (sub.status === "past_due") {
-    return `Payment is past due. Period end ${end} — update billing in Stripe.`;
+    return `Payment is past due. Current period ends ${end}. Update billing to keep recovery running.`;
   }
   if (sub.status === "canceled") {
     const t = sub.current_period_end ? new Date(sub.current_period_end).getTime() : NaN;
     if (!Number.isNaN(t) && t < Date.now()) {
       return `Subscription ended (${end}).`;
     }
-    return `Canceled; access may run until ${end}.`;
+    return `Canceled. Access may continue until ${end}.`;
   }
   return null;
 }
@@ -89,19 +88,69 @@ function BillingDetailRow({ label, children }: { label: string; children: ReactN
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "minmax(0, 120px) minmax(0, 1fr)",
+        gridTemplateColumns: "minmax(0, 140px) minmax(0, 1fr)",
         gap: "10px 16px",
         alignItems: "start",
         padding: "10px 0",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}
     >
-      <span className="pf-kicker" style={{ fontSize: 10, letterSpacing: "0.12em", color: "rgba(245,247,250,0.42)" }}>
+      <span className="pf-muted-copy" style={{ fontSize: 12, lineHeight: 1.45 }}>
         {label}
       </span>
       <div style={{ fontSize: 13, lineHeight: 1.45, color: "rgba(245,247,250,0.88)", minWidth: 0 }}>{children}</div>
     </div>
   );
+}
+
+function subscriptionIsLive(sub: BillingSummarySubscription): boolean {
+  return sub.status === "active" || sub.status === "trialing";
+}
+
+function defaultHeroTitle(data: BillingSummaryResponse): string {
+  if (!data.stripe_billing_available) {
+    return "Billing isn’t connected here";
+  }
+  const sub = data.subscription;
+  if (!sub) {
+    return "Billing is not active yet";
+  }
+  if (subscriptionIsLive(sub)) {
+    return "Billing is active";
+  }
+  if (sub.status === "past_due") {
+    return "Payment needs attention";
+  }
+  if (sub.status === "incomplete") {
+    return "Finish payment setup";
+  }
+  if (sub.status === "canceled") {
+    return "Subscription ended";
+  }
+  return "Billing status";
+}
+
+function defaultHeroMeta(data: BillingSummaryResponse): string {
+  if (!data.stripe_billing_available) {
+    return "Stripe billing is not configured for this environment. Checkout and the customer portal turn on when your operator adds Stripe keys.";
+  }
+  const sub = data.subscription;
+  if (!sub) {
+    return "Turn on billing when you’re ready to use PulseFill with customers.";
+  }
+  if (subscriptionIsLive(sub)) {
+    return `Your workspace is on the ${planLabel(sub.plan)} plan. Payment details stay in Stripe — PulseFill stores plan and status only.`;
+  }
+  if (sub.status === "past_due") {
+    return "Update your payment method or subscription in the billing portal so offers and invites keep working.";
+  }
+  if (sub.status === "incomplete") {
+    return "Your subscription setup was started but isn’t finished yet.";
+  }
+  if (sub.status === "canceled") {
+    return "You can start a new subscription when checkout is available, or manage past invoices in the billing portal.";
+  }
+  return "Review plan and billing below.";
 }
 
 export default function BillingPage() {
@@ -161,36 +210,67 @@ export default function BillingPage() {
 
   const sub = data?.subscription ?? null;
   const periodCaption = sub ? billingPeriodCaption(sub) : null;
+  const ent = data?.entitlements;
+  const noticeRequired = Boolean(ent?.billing_notice_required && ent?.notice);
+
+  const heroTitle =
+    noticeRequired && ent?.notice?.title?.trim() ? ent.notice.title.trim() : data ? defaultHeroTitle(data) : "Billing";
+
+  const heroMeta =
+    noticeRequired && ent?.notice?.message?.trim()
+      ? ent.notice.message.trim()
+      : data
+        ? defaultHeroMeta(data)
+        : "";
+
+  const showActivatePrimary =
+    data &&
+    data.stripe_billing_available &&
+    data.subscription_checkout_available &&
+    (!sub || sub.status === "incomplete");
+
+  const showManagePrimary =
+    data &&
+    data.stripe_billing_available &&
+    data.billing_portal_available &&
+    !showActivatePrimary;
+
+  const heroEyebrow =
+    data && data.stripe_billing_available && sub && subscriptionIsLive(sub) ? "Workspace" : undefined;
+
+  const heroExtraLine =
+    showActivatePrimary && data && !sub
+      ? "Activate billing so your workspace is ready for customer recovery."
+      : null;
+
+  const workspaceNote = (() => {
+    if (!data) return null;
+    if (!data.stripe_billing_available) {
+      return "Billing can be activated after Stripe is configured for this API environment.";
+    }
+    if (!data.billing_portal_available && !data.subscription_checkout_available) {
+      return "Billing can be activated after setup is complete and your operator enables checkout and the customer portal.";
+    }
+    return null;
+  })();
 
   return (
-    <main className="pf-page-billing" style={{ padding: 0 }}>
-      <PageCommandHeader
-        animate={false}
-        tone="default"
-        eyebrow="Workspace"
-        title="Billing"
-        description="Plan, subscription status, and Stripe connection for this workspace. Sensitive payment details stay in Stripe."
-        secondaryAction={
-          <MotionAction>
-            <Link href="/settings" style={{ ...actionLinkStyle("ghost"), fontSize: 13 }}>
-              Settings
-            </Link>
-          </MotionAction>
-        }
-        style={{ marginBottom: 16 }}
-      />
+    <main className="pf-page-billing pf-desk-page" style={{ padding: 0 }}>
       <OperatorPageTransition>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
-          {!loading && !error && data ? (
-            <BillingNoticeBanner
-              summary={data}
-              onStartCheckout={() => void startCheckout()}
-              onOpenPortal={() => void openPortal()}
-              checkoutLoading={checkoutLoading}
-              portalLoading={portalLoading}
-            />
+        <div className="pf-overview-desk-stack">
+          <DeskPageHeader
+            title="Billing"
+            subtitle="Turn on billing when you’re ready to use PulseFill with customers."
+            actions={
+              <Link href="/settings" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+                Settings
+              </Link>
+            }
+          />
+
+          {loading ? (
+            <OperatorLoadingState variant="section" skeleton="rows" title="Loading billing…" />
           ) : null}
-          {loading ? <OperatorLoadingState variant="section" skeleton="rows" title="Loading billing…" /> : null}
 
           {!loading && error ? (
             <div>
@@ -215,84 +295,85 @@ export default function BillingPage() {
           ) : null}
 
           {!loading && !error && data ? (
-            <div
-              style={{
-                padding: "16px 18px 18px",
-                ...operatorSurfaceShell("quiet"),
-                maxWidth: 640,
-              }}
-            >
-              {!data.stripe_billing_available ? (
-                <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 12, lineHeight: 1.5 }}>
-                  Stripe billing is not configured for this API environment. Subscription checkout and the customer portal
-                  will activate once your operator enables Stripe keys.
-                </p>
-              ) : (
-                <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 12, lineHeight: 1.5 }}>
-                  Payment processing uses Stripe. PulseFill stores plan and status only — card and invoice details live in
-                  Stripe.
-                </p>
-              )}
-
-              {!sub ? (
-                <div style={{ paddingTop: 4 }}>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 650, color: "var(--pf-text-primary)" }}>
-                    No subscription on file
+            <>
+              <DeskHeroCard title={heroTitle} titleId="pf-billing-hero-title" eyebrow={heroEyebrow}>
+                <p className="pf-desk-hero-card__meta">{heroMeta}</p>
+                {heroExtraLine ? (
+                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
+                    {heroExtraLine}
                   </p>
-                  <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.5 }}>
-                    When your workspace has an active Stripe subscription, plan and renewal dates will appear here. Use
-                    Start subscription when your operator has enabled Stripe checkout for this environment.
-                  </p>
-                </div>
-              ) : (
-                <div style={{ marginTop: 2 }}>
-                  <BillingDetailRow label="Plan">{planLabel(sub.plan)}</BillingDetailRow>
-                  <BillingDetailRow label="Status">
-                    <OperatorStatusChip kind={subscriptionStatusChipKind(sub.status)} label={subscriptionStatusLabel(sub.status)} caps />
-                  </BillingDetailRow>
-                  <BillingDetailRow label="Stripe customer">
-                    {sub.stripe_customer_linked ? (
-                      <span style={{ color: "rgba(74,222,128,0.9)" }}>Linked</span>
-                    ) : (
-                      <span style={{ color: "rgba(245,247,250,0.55)" }}>Not linked</span>
-                    )}
-                  </BillingDetailRow>
-                  <BillingDetailRow label="Stripe subscription">
-                    {sub.stripe_subscription_linked ? (
-                      <span style={{ color: "rgba(74,222,128,0.9)" }}>Synced</span>
-                    ) : (
-                      <span style={{ color: "rgba(245,247,250,0.55)" }}>Not synced</span>
-                    )}
-                  </BillingDetailRow>
-                  {periodCaption ? (
-                    <BillingDetailRow label="Schedule">
-                      <span style={{ color: "rgba(245,247,250,0.78)" }}>{periodCaption}</span>
-                    </BillingDetailRow>
-                  ) : null}
-                  <div style={{ borderBottom: "none", paddingTop: 4 }} />
-                </div>
-              )}
-
-              <div
-                style={{
-                  marginTop: 14,
-                  paddingTop: 14,
-                  borderTop: "1px solid rgba(255,255,255,0.06)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                }}
-              >
-                <p className="pf-muted-copy" style={{ margin: 0, fontSize: 11, lineHeight: 1.45 }}>
-                  Manage payment methods, invoices, and cancellation in Stripe using the billing portal when it is
-                  available for this workspace.
-                </p>
+                ) : null}
                 {actionError ? (
-                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, color: "rgba(248,113,113,0.92)" }}>
+                  <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 13, color: "rgba(248,113,113,0.92)" }}>
                     {actionError}
                   </p>
                 ) : null}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                {showActivatePrimary ? (
+                  <MotionAction style={{ marginTop: 14 }}>
+                    <button
+                      type="button"
+                      className="pf-desk-save-access"
+                      disabled={checkoutLoading}
+                      onClick={() => void startCheckout()}
+                    >
+                      {checkoutLoading ? "Starting…" : "Activate billing"}
+                    </button>
+                  </MotionAction>
+                ) : showManagePrimary ? (
+                  <MotionAction style={{ marginTop: 14 }}>
+                    <button
+                      type="button"
+                      className="pf-desk-save-access"
+                      disabled={portalLoading}
+                      onClick={() => void openPortal()}
+                    >
+                      {portalLoading ? "Opening…" : "Manage billing"}
+                    </button>
+                  </MotionAction>
+                ) : data.stripe_billing_available ? (
+                  <p className="pf-muted-copy" style={{ margin: "14px 0 0", fontSize: 13 }}>
+                    Billing actions aren’t available for this workspace yet. Check back after setup is finished.
+                  </p>
+                ) : null}
+              </DeskHeroCard>
+
+              <div className="pf-desk-secondary-grid">
+                {sub ? (
+                  <DeskSecondaryCard title="Plan">
+                    <p className="pf-muted-copy" style={{ margin: "0 0 8px", fontSize: 13, lineHeight: 1.55 }}>
+                      Current plan and renewal details for this workspace.
+                    </p>
+                    <BillingDetailRow label="Plan">{planLabel(sub.plan)}</BillingDetailRow>
+                    <BillingDetailRow label="Status">
+                      <OperatorStatusChip kind={subscriptionStatusChipKind(sub.status)} label={subscriptionStatusLabel(sub.status)} />
+                    </BillingDetailRow>
+                    <BillingDetailRow label="Customer in Stripe">
+                      {sub.stripe_customer_linked ? (
+                        <span style={{ color: "rgba(74,222,128,0.9)" }}>Linked</span>
+                      ) : (
+                        <span style={{ color: "rgba(245,247,250,0.55)" }}>Not linked yet</span>
+                      )}
+                    </BillingDetailRow>
+                    <BillingDetailRow label="Subscription in Stripe">
+                      {sub.stripe_subscription_linked ? (
+                        <span style={{ color: "rgba(74,222,128,0.9)" }}>Synced</span>
+                      ) : (
+                        <span style={{ color: "rgba(245,247,250,0.55)" }}>Not synced yet</span>
+                      )}
+                    </BillingDetailRow>
+                    {periodCaption ? (
+                      <BillingDetailRow label="Renewal">
+                        <span style={{ color: "rgba(245,247,250,0.78)" }}>{periodCaption}</span>
+                      </BillingDetailRow>
+                    ) : null}
+                    <div style={{ borderBottom: "none", paddingTop: 4 }} />
+                  </DeskSecondaryCard>
+                ) : null}
+
+                <DeskSecondaryCard title="Billing portal">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55 }}>
+                    Manage payment method, invoices, and subscription in Stripe.
+                  </p>
                   <button
                     type="button"
                     disabled={!data.billing_portal_available || portalLoading}
@@ -306,47 +387,30 @@ export default function BillingPage() {
                       color:
                         data.billing_portal_available && !portalLoading ? "var(--pf-text-primary)" : "rgba(245,247,250,0.45)",
                       padding: "9px 14px",
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: 600,
                       cursor: data.billing_portal_available && !portalLoading ? "pointer" : "not-allowed",
                     }}
                   >
                     {portalLoading ? "Opening…" : "Open billing portal"}
                   </button>
-                  <button
-                    type="button"
-                    disabled={!data.subscription_checkout_available || checkoutLoading}
-                    title={!data.subscription_checkout_available ? "Subscription checkout is not available yet" : undefined}
-                    onClick={() => void startCheckout()}
-                    style={{
-                      borderRadius: 10,
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      background:
-                        data.subscription_checkout_available && !checkoutLoading
-                          ? "rgba(255,255,255,0.08)"
-                          : "rgba(255,255,255,0.04)",
-                      color:
-                        data.subscription_checkout_available && !checkoutLoading
-                          ? "var(--pf-text-primary)"
-                          : "rgba(245,247,250,0.45)",
-                      padding: "9px 14px",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor:
-                        data.subscription_checkout_available && !checkoutLoading ? "pointer" : "not-allowed",
-                    }}
-                  >
-                    {checkoutLoading ? "Starting…" : "Start subscription"}
-                  </button>
-                </div>
-                {data.billing_portal_available || data.subscription_checkout_available ? null : (
-                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 11 }}>
-                    Portal and subscription checkout activate when the API has Stripe keys, a dashboard URL, and billing
-                    routes enabled.
-                  </p>
-                )}
+                  {showActivatePrimary && data.billing_portal_available ? (
+                    <p className="pf-muted-copy" style={{ margin: "12px 0 0", fontSize: 12, lineHeight: 1.45 }}>
+                      If you already pay through Stripe, you can open the portal to update cards or download invoices while you
+                      activate a new subscription from the card above.
+                    </p>
+                  ) : null}
+                </DeskSecondaryCard>
               </div>
-            </div>
+
+              {workspaceNote ? (
+                <DeskSecondaryCard title="Workspace note">
+                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
+                    {workspaceNote}
+                  </p>
+                </DeskSecondaryCard>
+              ) : null}
+            </>
           ) : null}
         </div>
       </OperatorPageTransition>
