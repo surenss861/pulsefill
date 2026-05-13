@@ -15,6 +15,13 @@ struct CustomerDirectoryBusinessSummary: Codable, Identifiable {
     let customerDiscoveryEnabled: Bool?
     let city: String?
     let neighborhood: String?
+    /// Resolved directory blurb (public override or default).
+    let description: String?
+    let website: String?
+    let phone: String?
+    let logoUrl: String?
+    let coverImageUrl: String?
+    let joinNote: String?
     let services: [String]?
     let relationship: CustomerDirectoryListRelationship?
 }
@@ -28,7 +35,7 @@ struct CustomerDirectoryBusinessDetailResponse: Codable {
     let business: CustomerDirectoryBusinessProfile
 }
 
-/// Safe public business profile for directory detail (no staff PII, no contact fields).
+/// Customer-safe public profile for directory detail (optional public phone/website only).
 struct CustomerDirectoryBusinessProfile: Codable {
     let id: String
     let name: String
@@ -40,6 +47,11 @@ struct CustomerDirectoryBusinessProfile: Codable {
     let city: String?
     let neighborhood: String?
     let description: String?
+    let website: String?
+    let phone: String?
+    let logoUrl: String?
+    let coverImageUrl: String?
+    let joinNote: String?
     let services: [CustomerDirectoryServiceRow]
     let locations: [CustomerDirectoryLocationRow]
     let relationship: CustomerRelationshipState?

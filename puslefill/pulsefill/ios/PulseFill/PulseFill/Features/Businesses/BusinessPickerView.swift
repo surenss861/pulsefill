@@ -136,26 +136,37 @@ struct BusinessPickerView: View {
     private func directorySummaryRow(_ row: CustomerDirectoryBusinessSummary) -> some View {
         PFCustomerSectionCard(variant: .default, padding: 16) {
             HStack(alignment: .center, spacing: 14) {
+                directoryListLogo(urlString: row.logoUrl)
+
                 VStack(alignment: .leading, spacing: 8) {
                     Text(row.name)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(PFColor.textPrimary)
                         .multilineTextAlignment(.leading)
 
-                    if let cat = row.category, !cat.isEmpty {
-                        Text(cat)
+                    let placeParts = [row.neighborhood, row.city]
+                        .compactMap { $0 }
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " · ")
+                    let metaPieces = [row.category, placeParts.isEmpty ? nil : placeParts].compactMap { $0 }.filter { !$0.isEmpty }
+                    if !metaPieces.isEmpty {
+                        Text(metaPieces.joined(separator: " · "))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(PFColor.textMuted)
                             .lineLimit(2)
                     }
 
-                    let placeLine = [row.neighborhood, row.city]
-                        .compactMap { $0 }
-                        .filter { !$0.isEmpty }
-                        .joined(separator: " · ")
-                    if !placeLine.isEmpty {
-                        Text(placeLine)
-                            .font(.system(size: 13, weight: .medium))
+                    if let desc = row.description, !desc.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(desc)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(PFColor.textSecondary)
+                            .lineSpacing(3)
+                            .lineLimit(3)
+                    }
+
+                    if let note = row.joinNote, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(note)
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(PFColor.textSecondary)
                             .lineLimit(2)
                     }
@@ -177,7 +188,7 @@ struct BusinessPickerView: View {
                 Spacer(minLength: 8)
 
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text("View business")
+                    Text("View")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(PFColor.ember)
                     Image(systemName: "chevron.right")
@@ -188,8 +199,43 @@ struct BusinessPickerView: View {
         }
     }
 
+    @ViewBuilder
+    private func directoryListLogo(urlString: String?) -> some View {
+        if let s = urlString?.trimmingCharacters(in: .whitespacesAndNewlines),
+           let u = directoryHTTPSURL(s)
+        {
+            AsyncImage(url: u) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    directoryListLogoPlaceholder()
+                default:
+                    directoryListLogoPlaceholder()
+                }
+            }
+            .frame(width: 48, height: 48)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        } else {
+            directoryListLogoPlaceholder()
+        }
+    }
+
+    private func directoryListLogoPlaceholder() -> some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(PFColor.customerCard)
+            .frame(width: 48, height: 48)
+            .overlay {
+                Image(systemName: "building.2.fill")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(PFColor.textMuted)
+            }
+    }
+
     private func listRelationshipChip(_ rel: CustomerDirectoryListRelationship) -> String {
-        if rel.membershipStatus == "active" { return "On waitlist" }
+        if rel.membershipStatus == "active" { return "Joined" }
         if rel.requestStatus == "pending" { return "Request pending" }
         if rel.requestStatus == "declined" { return "Not approved" }
         return "Not connected"
@@ -281,6 +327,29 @@ struct CustomerBusinessDetailView: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
+                if let coverStr = detail.business.coverImageUrl,
+                   let coverURL = directoryHTTPSURL(coverStr)
+                {
+                    AsyncImage(url: coverURL) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        case .failure:
+                            Color.clear.frame(height: 0)
+                        default:
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .fill(PFColor.customerCard)
+                                .frame(height: 140)
+                                .overlay { ProgressView().tint(PFColor.ember) }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                }
+
                 BusinessConnectionCard(
                     businessId: businessId,
                     businessName: detail.business.name,
@@ -339,20 +408,18 @@ struct CustomerBusinessDetailView: View {
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(PFColor.textPrimary)
 
-                if let cat = detail.business.category, !cat.isEmpty {
-                    Text(cat)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(PFColor.textMuted)
-                }
-
                 let placeLine = [detail.business.neighborhood, detail.business.city]
                     .compactMap { $0 }
                     .filter { !$0.isEmpty }
                     .joined(separator: " · ")
-                if !placeLine.isEmpty {
-                    Text(placeLine)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(PFColor.textSecondary)
+                let metaPieces = [detail.business.category, placeLine.isEmpty ? nil : placeLine]
+                    .compactMap { $0 }
+                    .filter { !$0.isEmpty }
+                if !metaPieces.isEmpty {
+                    Text(metaPieces.joined(separator: " · "))
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(PFColor.textMuted)
+                        .lineLimit(3)
                 }
 
                 if let blurb = detail.business.description, !blurb.isEmpty {
@@ -361,6 +428,33 @@ struct CustomerBusinessDetailView: View {
                         .foregroundStyle(PFColor.textSecondary)
                         .lineSpacing(3)
                         .padding(.top, 2)
+                }
+
+                if let note = detail.business.joinNote, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(note)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(PFColor.textSecondary)
+                        .lineSpacing(3)
+                }
+
+                HStack(spacing: 16) {
+                    if let web = detail.business.website, let u = directoryHTTPSURL(web) {
+                        Link(destination: u) {
+                            Label("Website", systemImage: "safari")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        .tint(PFColor.ember)
+                    }
+                    if let phone = detail.business.phone?.trimmingCharacters(in: .whitespacesAndNewlines),
+                       !phone.isEmpty,
+                       let tel = URL(string: "tel:\(phone.filter { $0.isNumber })")
+                    {
+                        Link(destination: tel) {
+                            Label("Call", systemImage: "phone")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        .tint(PFColor.ember)
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -491,4 +585,12 @@ struct CustomerBusinessDetailView: View {
             actionError = APIErrorCopy.message(for: error)
         }
     }
+}
+
+private func directoryHTTPSURL(_ raw: String) -> URL? {
+    let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard let u = URL(string: t), let scheme = u.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
+        return nil
+    }
+    return u
 }
