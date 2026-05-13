@@ -6,7 +6,7 @@ export default function OpenSlotDetailRoutePage() {
   return (
     <Suspense
       fallback={
-        <main className="pf-page-slot-detail" style={{ padding: 24 }}>
+        <main className="pf-page-slot-detail pf-desk-page" style={{ padding: 24 }}>
           <OperatorLoadingState
             variant="section"
             skeleton="form"

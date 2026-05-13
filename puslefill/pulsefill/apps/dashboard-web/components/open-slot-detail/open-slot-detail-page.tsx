@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
+import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
+import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
 import { getOpenSlotBackLink } from "@/lib/open-slot-routes";
-import { OpenSlotDetailSection } from "@/components/open-slot-detail/open-slot-detail-section";
-import { OpenSlotDetailToolbar } from "@/components/open-slot-detail/open-slot-detail-toolbar";
+import { formatSlotRange } from "@/lib/format-slot-range";
 import { OpenSlotLogsPanel } from "@/components/open-slot-detail/open-slot-logs-panel";
 import { NotificationAttemptsPanel } from "@/components/open-slot-detail/notification-attempts-panel";
 import { NotificationDeliveryStatusSection } from "@/components/open-slot-detail/notification-delivery-status-section";
@@ -18,8 +21,10 @@ import { NoMatchExplanationPanel } from "@/components/open-slot-detail/no-match-
 import { OperatorSlotReasonBanner } from "@/components/slots/operator-slot-reason-banner";
 import { SlotOffersInspector } from "@/components/slots/slot-offers-inspector";
 import { SlotTimeline } from "@/components/slots/slot-timeline";
-import { SlotDetailFactsGrid, SlotDetailIdentityHeader } from "@/components/slots/slot-detail-hero";
+import { SlotDetailFactsGrid } from "@/components/slots/slot-detail-hero";
 import { SlotRecentActivityBar } from "@/components/slots/slot-recent-activity-bar";
+import { StateChip } from "@/components/ui/state-chip";
+import { RefreshIndicator } from "@/components/ui/refresh-indicator";
 import { RecoveryPipeline, type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
@@ -41,7 +46,6 @@ import { useBillingSummary } from "@/hooks/useBillingSummary";
 import { BillingInlineGuardrail } from "@/components/billing/billing-inline-guardrail";
 import type { OperatorSlotQueueCategory, OperatorSlotQueueContext } from "@/types/open-slot-detail";
 import { isSlotRecoveryTerminalStatus, slotStatusToRecoveryPipelineActiveStep } from "@/lib/slot-recovery-pipeline";
-import { operatorSurfaceShell } from "@/lib/operator-surface-styles";
 
 function queueCategoryChipLabel(ctx: OperatorSlotQueueContext): string | null {
   if (ctx.reason_title) return ctx.reason_title;
@@ -242,116 +246,137 @@ export function OpenSlotDetailPage() {
     document.getElementById(ids[step])?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
+  const visitTitle = useMemo(() => {
+    if (!slot) return "Opening";
+    const raw = slot.notes?.trim();
+    if (raw) return raw.split("\n")[0].trim().slice(0, 120);
+    if (serviceLabel && serviceLabel !== "—" && serviceLabel !== "Unknown") return serviceLabel;
+    return slot.provider_name_snapshot?.trim() || "Appointment opening";
+  }, [slot, serviceLabel]);
+
+  const slotTimeLabel = useMemo(() => {
+    if (!slot?.starts_at || !slot?.ends_at) return "—";
+    return formatSlotRange(slot.starts_at, slot.ends_at);
+  }, [slot]);
+
+  const contextLine = useMemo(() => {
+    if (!slot) return "";
+    const loc = namesLoading ? "…" : locationLabel;
+    const parts = [loc !== "—" ? loc : null, slot.provider_name_snapshot?.trim()].filter(Boolean);
+    return parts.join(" · ");
+  }, [slot, locationLabel, namesLoading]);
+
+  const heroEyebrow = queueChip ?? undefined;
+
+  const headerActions = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        flexWrap: "wrap",
+        justifyContent: "flex-end",
+      }}
+    >
+      <Link href={back.href} prefetch={false} className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+        {back.label}
+      </Link>
+      {sourceChip ? (
+        <span className="pf-muted-copy" style={{ fontSize: 12 }}>
+          {sourceChip}
+        </span>
+      ) : null}
+      <RefreshIndicator updatedAt={refreshedAt} />
+    </div>
+  );
+
   return (
-    <main className="pf-page-slot-detail" style={{ padding: 0 }}>
-      <OpenSlotDetailToolbar refreshedAt={refreshedAt} backHref={back.href} backLabel={back.label} sourceChip={sourceChip} />
-
+    <main className="pf-page-slot-detail pf-desk-page" style={{ padding: 0 }}>
       <OperatorPageTransition>
-      {loading ? (
-        <div style={{ marginTop: 16 }}>
-          <OperatorLoadingState
-            variant="section"
-            skeleton="form"
-            title="Loading opening…"
-            description="Pulling up this opening, its offers, and where it sits for customers."
+        <div className="pf-overview-desk-stack">
+          <DeskPageHeader
+            title="Opening"
+            subtitle="This cancelled appointment time, what happened so far, and what to do next."
+            actions={headerActions}
           />
-        </div>
-      ) : null}
-      {error ? (
-        <div style={{ marginTop: 16 }}>
-          <OperatorErrorState
-            rawMessage={error}
-            primaryAction={
-              <button
-                type="button"
-                onClick={() => void reload()}
-                style={{
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  background: "rgba(255,255,255,0.06)",
-                  padding: "8px 14px",
-                  borderRadius: 10,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  color: "var(--text)",
-                  fontSize: 13,
-                  fontWeight: 600,
-                }}
-              >
-                Retry
-              </button>
-            }
-          />
-        </div>
-      ) : null}
 
-      {slot && !loading ? (
-        <SlotRecentActivityBar
-          slot={slot}
-          timelineEvents={timelineEvents}
-          notificationLogs={notificationLogs}
-          refreshedAt={refreshedAt}
-        />
-      ) : null}
+          {loading ? (
+            <OperatorLoadingState
+              variant="section"
+              skeleton="form"
+              title="Loading opening…"
+              description="Pulling up this opening, its offers, and where it sits for customers."
+            />
+          ) : null}
+          {error ? (
+            <div>
+              <OperatorErrorState
+                rawMessage={error}
+                primaryAction={
+                  <button
+                    type="button"
+                    onClick={() => void reload()}
+                    style={{
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      background: "rgba(255,255,255,0.06)",
+                      padding: "8px 14px",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      color: "var(--text)",
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Retry
+                  </button>
+                }
+              />
+            </div>
+          ) : null}
 
-      {slot ? (
-        <div className="pf-slot-detail-case-grid" style={{ marginTop: 18 }}>
-          <div className="pf-slot-detail-mobile-stack" style={{ display: "grid", gap: 22, minWidth: 0 }}>
-            {/* 1 — Case header + recovery path + actions (mobile: actions before recovery) */}
-            <div
-              className="pf-mobile-case-hero-card pf-mobile-case-header"
-              style={{
-                borderRadius: 22,
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                background:
-                  "linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,122,24,0.014) 48%, rgba(10,9,7,0.94))",
-                padding: "22px 22px 20px",
-                boxShadow: "0 24px 70px rgba(0,0,0,0.35)",
-              }}
-            >
-              <div className="pf-mobile-slot-hero-stack">
-                <div className="pf-mh-block-header">
-                  <SlotDetailIdentityHeader
-                    slot={slot}
-                    serviceLabel={serviceLabel}
-                    locationLabel={locationLabel}
-                    namesLoading={namesLoading}
-                  />
-                </div>
-                <div className="pf-mh-block-recovery" style={{ marginTop: 14 }}>
-                  <p className="pf-eyebrow-plain pf-mobile-case-header" style={{ margin: "0 0 8px" }}>
-                    What happens next
+          {slot && !loading ? (
+            <SlotRecentActivityBar
+              slot={slot}
+              timelineEvents={timelineEvents}
+              notificationLogs={notificationLogs}
+              refreshedAt={refreshedAt}
+            />
+          ) : null}
+
+          {slot && !loading ? (
+            <>
+              <DeskHeroCard title={visitTitle} titleId="pf-slot-desk-hero-title" eyebrow={heroEyebrow}>
+                <p className="pf-desk-hero-card__meta">{slotTimeLabel}</p>
+                {contextLine ? (
+                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+                    {contextLine}
                   </p>
-                  {isSlotRecoveryTerminalStatus(slot.status) ? (
-                    <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
-                      {terminalRecoveryCopy(slot.status)}
-                    </p>
-                  ) : (
-                    <div className="pf-mobile-recovery-strip">
-                      <RecoveryPipeline
-                        activeStep={slotStatusToRecoveryPipelineActiveStep(slot.status)}
-                        compact
-                        animated
-                        showFlowLabel={false}
-                        interactive={false}
-                      />
-                    </div>
-                  )}
-                </div>
-                {queueChip ? (
-                  <div className="pf-mh-block-queue" style={{ marginTop: 14 }}>
+                ) : null}
+                <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+                  <StateChip status={slot.status} />
+                  {queueChip ? (
                     <OperatorStatusChip
                       kind={queueCategoryToStatusKind(queueContext?.current_category ?? null) ?? "pending"}
                       label={queueChip}
-                      caps
                     />
+                  ) : null}
+                </div>
+                {isSlotRecoveryTerminalStatus(slot.status) ? (
+                  <p className="pf-muted-copy" style={{ margin: "14px 0 0", fontSize: 13, lineHeight: 1.55 }}>
+                    {terminalRecoveryCopy(slot.status)}
+                  </p>
+                ) : (
+                  <p className="pf-muted-copy" style={{ margin: "14px 0 0", fontSize: 13, lineHeight: 1.55 }}>
+                    Send offers to waiting customers, watch for a claim, then confirm the booking to close the loop.
+                  </p>
+                )}
+                {!billingSummary.loading && billingSummary.data ? (
+                  <div style={{ marginTop: 14 }}>
+                    <BillingInlineGuardrail summary={billingSummary.data} />
                   </div>
                 ) : null}
-                <div className="pf-mh-block-actions pf-mobile-action-dock" style={{ marginTop: 20 }}>
-                  {!billingSummary.loading && billingSummary.data ? (
-                    <div style={{ marginBottom: 10 }}>
-                      <BillingInlineGuardrail summary={billingSummary.data} />
-                    </div>
-                  ) : null}
+                <div style={{ marginTop: 16 }}>
                   <OperatorSlotActionBar
                     openSlotId={slot.id}
                     slotStatus={slot.status}
@@ -365,86 +390,70 @@ export function OpenSlotDetailPage() {
                     }
                   />
                 </div>
-              </div>
-            </div>
+              </DeskHeroCard>
 
-            {/* 2 — Guidance */}
-            <OperatorSlotReasonBanner queueContext={queueContext} />
+              <OperatorSlotReasonBanner queueContext={queueContext} />
 
-            <NoMatchExplanationPanel
-              visible={
-                queueContext?.current_category === "no_matches" || Boolean(noMatch.data?.has_explanation)
-              }
-              data={noMatch.data}
-              loading={noMatch.loading}
-              error={noMatch.error}
-              onRetry={() => void noMatch.reload()}
-            />
-
-            {/* 3 — Attention cues */}
-            <SlotAttentionCues slot={slot} logs={notificationLogs} />
-
-            {/* 4 — Case summary */}
-            <OpenSlotDetailSection
-              sectionId="pf-slot-scroll-appointment"
-              eyebrow="Case"
-              title="Appointment details"
-              description="The time, provider, service, and location connected to this opening."
-            >
-            <div
-              style={{
-                borderRadius: 18,
-                border: "1px solid rgba(255,255,255,0.09)",
-                background: "linear-gradient(165deg, rgba(18,16,14,0.95), rgba(8,7,6,0.98))",
-                padding: 18,
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-              }}
-            >
-              <SlotDetailFactsGrid
-                slot={slot}
-                serviceLabel={serviceLabel}
-                locationLabel={locationLabel}
-                namesLoading={namesLoading}
+              <NoMatchExplanationPanel
+                visible={
+                  queueContext?.current_category === "no_matches" || Boolean(noMatch.data?.has_explanation)
+                }
+                data={noMatch.data}
+                loading={noMatch.loading}
+                error={noMatch.error}
+                onRetry={() => void noMatch.reload()}
               />
-            </div>
-          </OpenSlotDetailSection>
 
-          {slot.notes ? (
-            <OpenSlotDetailSection eyebrow="Patient-facing" title="Opening notes" description="Shown where relevant in customer-facing flows.">
-              <div
-                style={{
-                  borderRadius: 16,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(0,0,0,0.22)",
-                  padding: 16,
-                }}
-              >
-                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "var(--pf-text-primary)" }}>{slot.notes}</p>
-              </div>
-            </OpenSlotDetailSection>
-          ) : null}
+              <SlotAttentionCues slot={slot} logs={notificationLogs} />
 
-            {/* 5 — Offers / claims */}
-            <OpenSlotDetailSection
-            sectionId="pf-slot-scroll-workflow"
-            eyebrow="Workflow"
-            title="Customer request"
-            description="Confirm once the clinic has added this appointment to the schedule."
-          >
-            <div style={{ display: "grid", gap: 16 }}>
-              <OperatorSlotOffersSummary slot={slot} />
-              <SlotOffersInspector slot={slot} />
-            </div>
-            </OpenSlotDetailSection>
+              <section id="pf-slot-scroll-appointment" style={{ scrollMarginTop: 96 }}>
+                <DeskSecondaryCard title="Appointment details">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55 }}>
+                    Service, provider, location, and recent activity for this opening.
+                  </p>
+                  <SlotDetailFactsGrid
+                    variant="desk"
+                    slot={slot}
+                    serviceLabel={serviceLabel}
+                    locationLabel={locationLabel}
+                    namesLoading={namesLoading}
+                  />
+                  <p className="pf-muted-copy" style={{ margin: "12px 0 0", fontSize: 12 }}>
+                    Last refreshed:{" "}
+                    {refreshedAt
+                      ? new Intl.DateTimeFormat("en-CA", { dateStyle: "medium", timeStyle: "short" }).format(refreshedAt)
+                      : "—"}
+                  </p>
+                </DeskSecondaryCard>
+              </section>
 
-            {/* Mobile-first: delivery status before deep notification diagnostics */}
-            <div className="pf-mobile-delivery-early">
-              <OpenSlotDetailSection
-                eyebrow="Messages"
-                title="Delivery status"
-                description="Who was reached and whether pushes were skipped or failed."
-              >
-                <div className="pf-mobile-secondary-panel">
+              {slot.notes ? (
+                <DeskSecondaryCard title="Opening notes">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 8px", fontSize: 13, lineHeight: 1.55 }}>
+                    Shown to customers where this opening appears.
+                  </p>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "var(--pf-text-primary)" }}>{slot.notes}</p>
+                </DeskSecondaryCard>
+              ) : null}
+
+              <section id="pf-slot-scroll-workflow" style={{ scrollMarginTop: 96 }}>
+                <DeskSecondaryCard title="Customer request">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55 }}>
+                    When someone claims this time, confirm the booking once it is on the schedule.
+                  </p>
+                  <div style={{ display: "grid", gap: 16 }}>
+                    <OperatorSlotOffersSummary slot={slot} />
+                    <SlotOffersInspector slot={slot} />
+                  </div>
+                </DeskSecondaryCard>
+              </section>
+
+              <DeskSecondaryCard title="Messages & delivery">
+                <div style={{ display: "grid", gap: 14 }}>
+                  <SlotDeliverySummary
+                    summary={notificationDelivery?.summary ?? null}
+                    loading={notificationDeliveryLoading}
+                  />
                   <NotificationDeliveryStatusSection
                     loading={notificationDeliveryLoading}
                     error={notificationDeliveryError}
@@ -452,148 +461,112 @@ export function OpenSlotDetailPage() {
                     summary={notificationDelivery?.summary ?? null}
                   />
                 </div>
-              </OpenSlotDetailSection>
-            </div>
+              </DeskSecondaryCard>
 
-            {/* 6 — Internal notes */}
-            <div id="operator-slot-internal-note">
-            <OpenSlotDetailSection
-              eyebrow="Team memory"
-              title="Internal notes & resolution"
-              description="Staff-only — fast to update, auditable on the timeline."
-            >
-              <OperatorInternalNoteCard
-                openSlotId={slot.id}
-                initialNote={slot.internal_note}
-                initialResolutionStatus={slot.resolution_status}
-                initialUpdatedAt={slot.internal_note_updated_at}
-                onSaved={() => void silentRefresh()}
-              />
-            </OpenSlotDetailSection>
-            </div>
-
-            {/* 7 — Timeline */}
-            <OpenSlotDetailSection
-              sectionId="pf-slot-scroll-timeline"
-              eyebrow="History"
-              title="Activity timeline"
-              description="What changed, when, and why it matters."
-            >
-              {timelineLoading ? <p className="pf-muted-copy">Loading timeline…</p> : null}
-              {timelineError ? <p style={{ color: "#f87171" }}>{timelineError}</p> : null}
-              {!timelineLoading ? <SlotTimeline events={timelineEvents} /> : null}
-            </OpenSlotDetailSection>
-
-            {/* 8 — Notification attempt diagnostics */}
-            <OpenSlotDetailSection
-            eyebrow="Messages"
-            title="Notification history"
-            description="See which customer messages were sent and whether anything needs attention."
-          >
-              {notificationAttemptsLoading ? <p className="pf-muted-copy">Loading notification attempts…</p> : null}
-              {notificationAttemptsError ? <p style={{ color: "#f87171" }}>{notificationAttemptsError}</p> : null}
-              {!notificationAttemptsLoading && !notificationAttemptsError && notificationAttempts.length > 0 ? (
-                <OpenSlotLogsPanel summaryLabel="Message delivery records">
-                  <NotificationAttemptsPanel attempts={notificationAttempts} />
-                </OpenSlotLogsPanel>
-              ) : null}
-              {!notificationAttemptsLoading && !notificationAttemptsError && notificationAttempts.length === 0 ? (
-                <p style={{ margin: 0, fontSize: 13, color: "rgba(245,247,250,0.45)" }}>
-                  No notification attempts for this opening yet.
-                </p>
-              ) : null}
-            </OpenSlotDetailSection>
-
-            {/* 10 — Raw logs */}
-            <div id="operator-slot-notification-logs">
-            <OpenSlotDetailSection
-              eyebrow="Messages"
-              title="Detailed notification history"
-              description="Expand for message status details and provider outcomes."
-            >
-              {notificationLogsLoading ? <p className="pf-muted-copy">Loading notification logs…</p> : null}
-              {notificationLogsError ? <p style={{ color: "#f87171" }}>{notificationLogsError}</p> : null}
-              {!notificationLogsLoading && !notificationLogsError && notificationLogs.length > 0 ? (
-                <OpenSlotLogsPanel summaryLabel="Notification history details">
-                  <NotificationLogsInspector logs={notificationLogs} />
-                </OpenSlotLogsPanel>
-              ) : null}
-              {!notificationLogsLoading && !notificationLogsError && notificationLogs.length === 0 ? (
-                <p style={{ margin: 0, fontSize: 13, color: "rgba(245,247,250,0.45)" }}>No notification logs for this opening yet.</p>
-              ) : null}
-            </OpenSlotDetailSection>
-            </div>
-          </div>
-
-          <aside className="pf-slot-detail-case-rail">
-            {!isSlotRecoveryTerminalStatus(slot.status) ? (
-              <div style={{ padding: "12px 14px", ...operatorSurfaceShell("quiet") }}>
-                <p className="pf-eyebrow-plain" style={{ margin: "0 0 8px" }}>
-                  What happens next
-                </p>
-                <RecoveryPipeline
-                  activeStep={slotStatusToRecoveryPipelineActiveStep(slot.status)}
-                  compact
-                  animated
-                  showFlowLabel={false}
-                  interactive
-                  onStepSelect={scrollToRecoverySection}
-                  style={{ background: "transparent", boxShadow: "none", border: "1px solid rgba(255,255,255,0.06)", padding: "10px 8px" }}
-                />
+              <div id="operator-slot-internal-note">
+                <DeskSecondaryCard title="Internal notes">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55 }}>
+                    Staff-only — quick to update and reflected on the timeline.
+                  </p>
+                  <OperatorInternalNoteCard
+                    openSlotId={slot.id}
+                    initialNote={slot.internal_note}
+                    initialResolutionStatus={slot.resolution_status}
+                    initialUpdatedAt={slot.internal_note_updated_at}
+                    onSaved={() => void silentRefresh()}
+                  />
+                </DeskSecondaryCard>
               </div>
-            ) : null}
-            <div style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
-              <p className="pf-kicker" style={{ margin: "0 0 6px" }}>
-                Last updated
-              </p>
-              <p className="pf-meta-row" style={{ margin: 0, fontSize: 13 }}>
-                {refreshedAt
-                  ? new Intl.DateTimeFormat("en-CA", { dateStyle: "medium", timeStyle: "short" }).format(refreshedAt)
-                  : "—"}
-              </p>
-            </div>
 
-            {queueContext?.reason_detail?.trim() ? (
-              <div style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
-                <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
-                  Match & queue
-                </p>
-                <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.5 }}>
-                  {queueContext.reason_detail.length > 280
-                    ? `${queueContext.reason_detail.slice(0, 280)}…`
-                    : queueContext.reason_detail}
-                </p>
+              <section id="pf-slot-scroll-timeline" style={{ scrollMarginTop: 96 }}>
+                <DeskSecondaryCard title="What happened">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55 }}>
+                    Opening created, offers, claims, and confirmations in order.
+                  </p>
+                  {timelineLoading ? <p className="pf-muted-copy">Loading timeline…</p> : null}
+                  {timelineError ? <p style={{ color: "#f87171" }}>{timelineError}</p> : null}
+                  {!timelineLoading ? <SlotTimeline events={timelineEvents} /> : null}
+                </DeskSecondaryCard>
+              </section>
+
+              <DeskSecondaryCard title="Message attempts">
+                {notificationAttemptsLoading ? <p className="pf-muted-copy">Loading message attempts…</p> : null}
+                {notificationAttemptsError ? <p style={{ color: "#f87171" }}>{notificationAttemptsError}</p> : null}
+                {!notificationAttemptsLoading && !notificationAttemptsError && notificationAttempts.length > 0 ? (
+                  <OpenSlotLogsPanel summaryLabel="Message delivery records">
+                    <NotificationAttemptsPanel attempts={notificationAttempts} />
+                  </OpenSlotLogsPanel>
+                ) : null}
+                {!notificationAttemptsLoading && !notificationAttemptsError && notificationAttempts.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: 13, color: "rgba(245,247,250,0.45)" }}>
+                    No message attempts for this opening yet.
+                  </p>
+                ) : null}
+              </DeskSecondaryCard>
+
+              <div id="operator-slot-notification-logs">
+                <DeskSecondaryCard title="Detailed notification history">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55 }}>
+                    Expand rows for delivery status and provider outcomes.
+                  </p>
+                  {notificationLogsLoading ? <p className="pf-muted-copy">Loading notification history…</p> : null}
+                  {notificationLogsError ? <p style={{ color: "#f87171" }}>{notificationLogsError}</p> : null}
+                  {!notificationLogsLoading && !notificationLogsError && notificationLogs.length > 0 ? (
+                    <OpenSlotLogsPanel summaryLabel="Notification history details">
+                      <NotificationLogsInspector logs={notificationLogs} />
+                    </OpenSlotLogsPanel>
+                  ) : null}
+                  {!notificationLogsLoading && !notificationLogsError && notificationLogs.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 13, color: "rgba(245,247,250,0.45)" }}>
+                      No notification history for this opening yet.
+                    </p>
+                  ) : null}
+                </DeskSecondaryCard>
               </div>
-            ) : null}
 
-            {winningCustomerId ? (
-              <div style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}>
-                <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
-                  Customer coverage
-                </p>
-                <OperatorCustomerContextSection
-                  loading={customerCtx.loading}
-                  error={customerCtx.error}
-                  data={customerCtx.data}
-                />
-              </div>
-            ) : null}
+              {!isSlotRecoveryTerminalStatus(slot.status) ? (
+                <DeskSecondaryCard title="What happens next">
+                  <RecoveryPipeline
+                    activeStep={slotStatusToRecoveryPipelineActiveStep(slot.status)}
+                    compact
+                    animated
+                    showFlowLabel={false}
+                    interactive
+                    onStepSelect={scrollToRecoverySection}
+                    sentenceCaseTitles
+                    stepNumbers
+                    style={{
+                      background: "transparent",
+                      boxShadow: "none",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      padding: "10px 8px",
+                    }}
+                  />
+                </DeskSecondaryCard>
+              ) : null}
 
-            <div
-              className="pf-slot-detail-rail-delivery-desktop-only"
-              style={{ padding: "14px 16px", ...operatorSurfaceShell("quiet") }}
-            >
-              <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
-                Delivery
-              </p>
-              <SlotDeliverySummary
-                summary={notificationDelivery?.summary ?? null}
-                loading={notificationDeliveryLoading}
-              />
-            </div>
-          </aside>
+              {queueContext?.reason_detail?.trim() ? (
+                <DeskSecondaryCard title="Why this looks like this">
+                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
+                    {queueContext.reason_detail.length > 280
+                      ? `${queueContext.reason_detail.slice(0, 280)}…`
+                      : queueContext.reason_detail}
+                  </p>
+                </DeskSecondaryCard>
+              ) : null}
+
+              {winningCustomerId ? (
+                <DeskSecondaryCard title="Customer on this opening">
+                  <OperatorCustomerContextSection
+                    loading={customerCtx.loading}
+                    error={customerCtx.error}
+                    data={customerCtx.data}
+                  />
+                </DeskSecondaryCard>
+              ) : null}
+            </>
+          ) : null}
         </div>
-      ) : null}
       </OperatorPageTransition>
     </main>
   );

@@ -17,6 +17,26 @@ function formatDate(iso: string) {
   }).format(new Date(iso));
 }
 
+function DeskFactRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 140px) minmax(0, 1fr)",
+        gap: "8px 16px",
+        alignItems: "start",
+        padding: "8px 0",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
+      <span className="pf-muted-copy" style={{ fontSize: 12, lineHeight: 1.45 }}>
+        {label}
+      </span>
+      <span style={{ fontSize: 13, lineHeight: 1.45, color: "rgba(245,247,250,0.9)", minWidth: 0 }}>{value}</span>
+    </div>
+  );
+}
+
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div
@@ -56,6 +76,11 @@ type Props = {
   serviceLabel: string;
   locationLabel: string;
   namesLoading: boolean;
+};
+
+type FactsGridProps = Props & {
+  /** Desk layout: plain rows instead of metric tiles. */
+  variant?: "default" | "desk";
 };
 
 /** Title, window, and status — use at top of execution surface. */
@@ -120,7 +145,7 @@ export function SlotDetailIdentityHeader({ slot, serviceLabel, locationLabel, na
 }
 
 /** Dense facts for the opening record (opening context section). */
-export function SlotDetailFactsGrid({ slot, serviceLabel, locationLabel, namesLoading }: Props) {
+export function SlotDetailFactsGrid({ slot, serviceLabel, locationLabel, namesLoading, variant = "default" }: FactsGridProps) {
   const sv = namesLoading ? "…" : serviceLabel;
   const lv = namesLoading ? "…" : locationLabel;
   const valueLabel =
@@ -132,7 +157,29 @@ export function SlotDetailFactsGrid({ slot, serviceLabel, locationLabel, namesLo
   const touchedBy =
     slot.last_touched_by?.full_name?.trim() ||
     slot.last_touched_by?.email?.split("@")[0]?.trim() ||
+    (slot.last_touched_by_staff_id ? `Staff ${String(slot.last_touched_by_staff_id).slice(0, 8)}…` : null) ||
     "—";
+
+  if (variant === "desk") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        <DeskFactRow label="Service" value={sv} />
+        <DeskFactRow label="Location" value={lv} />
+        <DeskFactRow label="Estimated value" value={valueLabel} />
+        <DeskFactRow label="Offers" value={String(slot.slot_offers.length)} />
+        <DeskFactRow label="Claims" value={String(slot.slot_claims.length)} />
+        <DeskFactRow label="Last offers sent" value={lastSent} />
+        <DeskFactRow label="Last updated" value={lastTouch} />
+        <DeskFactRow label="Last updated by" value={touchedBy} />
+        {slot.slot_offers.length > 0 ? (
+          <p className="pf-muted-copy" style={{ margin: "12px 0 0", fontSize: 13, lineHeight: 1.55 }}>
+            <span style={{ color: "var(--pf-text-primary)", fontWeight: 600 }}>Offer summary: </span>
+            {summarizeOfferDelivery(slot.slot_offers)}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <>
