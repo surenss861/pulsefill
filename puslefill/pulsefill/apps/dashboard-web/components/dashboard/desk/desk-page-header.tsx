@@ -16,7 +16,7 @@ export function DeskPageHeader({ title, subtitle, actions }: DeskPageHeaderProps
     <header className="pf-desk-page-header">
       <div className="pf-desk-page-header__copy">
         <h1 className="pf-desk-page-header__title">{title}</h1>
-        {subtitle ? <p className="pf-desk-page-header__subtitle">{subtitle}</p> : null}
+        {subtitle ? <div className="pf-desk-page-header__subtitle">{subtitle}</div> : null}
       </div>
       {actions ? <div className="pf-desk-page-header__actions">{actions}</div> : null}
     </header>
