@@ -319,7 +319,7 @@ export function OpenSlotForm({ onCreated }: Props) {
   const rail = (
     <>
       <p className="pf-section-title" style={{ fontSize: 16, margin: "0 0 12px" }}>
-        Recovery preview
+        After you post
       </p>
       <RecoveryPipeline
         activeStep="opening"
@@ -343,10 +343,10 @@ export function OpenSlotForm({ onCreated }: Props) {
           gap: 8,
         }}
       >
-        <li>Capture cancelled time</li>
-        <li>Match standby customers</li>
-        <li>Send offers</li>
-        <li>Confirm claimed booking</li>
+        <li>Post the cancelled time</li>
+        <li>PulseFill checks your waiting list</li>
+        <li>Send offers to customers</li>
+        <li>Someone claims, then you confirm</li>
       </ol>
       <div
         style={{
@@ -356,11 +356,11 @@ export function OpenSlotForm({ onCreated }: Props) {
         }}
       >
         <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
-          Matching readiness
+          Can it reach customers?
         </p>
         {setupIncomplete ? (
           <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
-            Finish location, provider, and service setup before this opening can match standby customers.
+            Add a location, provider, and service first — then this time can go to your waitlist.
           </p>
         ) : (
           <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
@@ -457,10 +457,10 @@ export function OpenSlotForm({ onCreated }: Props) {
               }}
             >
               <p className="pf-section-title" style={{ fontSize: 15, margin: "0 0 8px" }}>
-                Finish setup before creating openings
+                Finish your workspace basics first
               </p>
               <p className="pf-muted-copy" style={{ margin: 0 }}>
-                Add at least one location, provider, and service to post openings.
+                Add at least one location, provider, and service before you post a cancelled time.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
                 <Link href="/locations" style={{ color: "var(--primary)", fontWeight: 600 }}>

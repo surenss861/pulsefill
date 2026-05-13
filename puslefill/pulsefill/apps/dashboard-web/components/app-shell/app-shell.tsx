@@ -27,7 +27,7 @@ export function AppShell({ children, user, profile }: AppShellProps) {
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
           <AppHeader user={user} profile={profile} />
           <div className="pf-app-mobile-quick" style={{ display: "none", borderBottom: "1px solid var(--pf-border-subtle)", padding: "10px 12px", gap: 8, overflowX: "auto" }}>
-            <MobileQuick href="/overview" label="Command Center" />
+            <MobileQuick href="/overview" label="Today" />
             <MobileQuick href="/open-slots" label="Openings" />
             <MobileQuick href="/customers" label="Customers" />
             <MobileQuick href="/activity" label="Activity" />

@@ -11,14 +11,14 @@ type DashboardPageHeaderProps = {
 };
 
 /**
- * Command Center page chrome — one consistent header for `/overview`.
+ * Overview page chrome — one consistent header for `/overview`.
  */
 export function DashboardPageHeader({ description, meta }: DashboardPageHeaderProps) {
   return (
     <PageCommandHeader
       animate={false}
       tone="default"
-      eyebrow="Command Center"
+      eyebrow="Today"
       title="Overview"
       description={description}
       meta={meta}

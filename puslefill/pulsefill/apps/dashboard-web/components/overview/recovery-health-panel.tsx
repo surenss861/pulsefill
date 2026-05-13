@@ -31,7 +31,7 @@ function overallChipLabel(status: RecoveryHealthOverallStatus): string {
     case "needs_attention":
       return "Needs attention";
     case "setup_required":
-      return "Setup required";
+      return "Needs setup";
     case "low_coverage":
       return "Low coverage";
     default:
@@ -69,13 +69,13 @@ type Props = {
 
 export function RecoveryHealthPanel({ data, loading, error, onReload }: Props) {
   if (loading) {
-    return <OperatorLoadingState variant="section" title="Loading recovery readiness…" skeleton="rows" />;
+    return <OperatorLoadingState variant="section" title="Loading recovery status…" skeleton="rows" />;
   }
   if (error) {
     return (
       <OperatorErrorState
-        title="We couldn't load recovery status."
-        description="Refresh this card. Your openings and customers are still safe."
+        title="Recovery status did not load"
+        description="Try again. Your openings and customers are still safe."
         primaryAction={
           <button
             type="button"
@@ -126,7 +126,7 @@ export function RecoveryHealthPanel({ data, loading, error, onReload }: Props) {
   return (
     <section className="pf-operator-action-panel" style={{ padding: 16, ...shell, ...borderAccent }}>
       <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
-        Recovery readiness
+        Recovery status
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
         <div style={{ minWidth: 0, flex: "1 1 200px" }}>
@@ -221,13 +221,13 @@ export function RecoveryHealthPanel({ data, loading, error, onReload }: Props) {
 
       {data.status === "ready" ? (
         <p className="pf-muted-copy" style={{ marginTop: 12, fontSize: 12, lineHeight: 1.45 }}>
-          No urgent flags in this snapshot — use Next best action above for what to do right now.
+          Nothing urgent in this snapshot — check the card at the top for what to do next.
         </p>
       ) : null}
 
       {evaluatedWhen ? (
         <p className="pf-muted-copy" style={{ marginTop: 10, fontSize: 11, opacity: 0.72, lineHeight: 1.45 }}>
-          Last evaluated {evaluatedWhen} · Updates when you refresh the Command Center.
+          Last evaluated {evaluatedWhen} · Updates when you refresh this page.
         </p>
       ) : null}
     </section>

@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react";
 
-const DEFAULT_TITLE = "Today's recovery";
+const DEFAULT_TITLE = "How today looks";
 export const DEFAULT_OVERVIEW_RECOVERY_SUBTITLE =
-  "Track recovered bookings, recovered revenue, and the slots that still need attention.";
+  "See what was rebooked, what came back in revenue, and what still needs someone to act.";
 
 type Props = {
   /** Metric grid + optional status strip (children) */

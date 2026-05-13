@@ -21,13 +21,13 @@ export type NextBestSupportingStat = {
 const PRIORITY_STATUS: Record<NextBestActionPriority, string> = {
   critical: "Needs decision",
   attention: "Needs review",
-  setup: "Setup required",
+  setup: "Basics to finish",
   ready: "Ready",
   clear: "All clear",
 };
 
 /** Left label in the system header row. */
-const DEFAULT_SYSTEM_HEADER = "System recommendation";
+const DEFAULT_SYSTEM_HEADER = "Setup needed";
 
 const RAIL: Record<NextBestActionPriority, string> = {
   critical:
@@ -138,7 +138,7 @@ type NextBestActionCardProps = {
   actionKey: string;
   title: string;
   description: string;
-  /** Left side of the system header row (default: “System recommendation”). */
+  /** Left side of the system header row (default: “Setup needed”). */
   systemHeaderLabel?: string;
   priority: NextBestActionPriority;
   primaryAction: ReactNode;

@@ -15,7 +15,7 @@ export function DashboardRecoveryPathSection({ activeStep, counts }: DashboardRe
   return (
     <section className="pf-dashboard-recovery-path" aria-labelledby="pf-dashboard-recovery-path-heading">
       <p id="pf-dashboard-recovery-path-heading" className="pf-kicker" style={{ margin: "0 0 14px" }}>
-        How recovery works
+        What happens next
       </p>
       <RecoveryPipeline
         activeStep={activeStep}
@@ -25,6 +25,8 @@ export function DashboardRecoveryPathSection({ activeStep, counts }: DashboardRe
         featured={false}
         interactive
         workflowStrip
+        stepNumbers
+        sentenceCaseTitles
         showFlowLabel={false}
       />
     </section>

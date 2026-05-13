@@ -78,7 +78,7 @@ function terminalRecoveryCopy(status: string): string {
   if (s === "expired") return "This opening expired before a booking was confirmed.";
   if (s === "cancelled") return "This opening was cancelled.";
   if (s === "failed") return "This opening is in a failed state — review delivery and notes before closing it out.";
-  return "This opening is no longer active on the recovery path.";
+  return "This opening is no longer active.";
 }
 
 export function OpenSlotDetailPage() {
@@ -253,7 +253,7 @@ export function OpenSlotDetailPage() {
             variant="section"
             skeleton="form"
             title="Loading opening…"
-            description="Fetching case details, offers, and the latest recovery status."
+            description="Pulling up this opening, its offers, and where it sits for customers."
           />
         </div>
       ) : null}
@@ -319,7 +319,7 @@ export function OpenSlotDetailPage() {
                 </div>
                 <div className="pf-mh-block-recovery" style={{ marginTop: 14 }}>
                   <p className="pf-kicker pf-mobile-case-header" style={{ margin: "0 0 8px" }}>
-                    Recovery path
+                    What happens next
                   </p>
                   {isSlotRecoveryTerminalStatus(slot.status) ? (
                     <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
@@ -529,7 +529,7 @@ export function OpenSlotDetailPage() {
             {!isSlotRecoveryTerminalStatus(slot.status) ? (
               <div style={{ padding: "12px 14px", ...operatorSurfaceShell("quiet") }}>
                 <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
-                  Recovery steps
+                  What happens next
                 </p>
                 <RecoveryPipeline
                   activeStep={slotStatusToRecoveryPipelineActiveStep(slot.status)}

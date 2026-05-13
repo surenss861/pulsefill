@@ -281,6 +281,7 @@ export default function OpenSlotsPageClient() {
                     compact
                     animated
                     interactive
+                    showFlowLabel={false}
                     style={{
                       background: "transparent",
                       boxShadow: "none",
@@ -292,10 +293,10 @@ export default function OpenSlotsPageClient() {
                   What happens next
                 </p>
                 <ol className="pf-openings-next-stack">
-                  <li>Capture cancelled time</li>
-                  <li>Match standby customers</li>
-                  <li>Send offers</li>
-                  <li>Confirm claimed booking</li>
+                  <li>Post the cancelled time</li>
+                  <li>PulseFill checks your waiting list</li>
+                  <li>Send offers to customers</li>
+                  <li>Someone claims, then you confirm</li>
                 </ol>
                 <MotionAction>
                   <Link href="/customers" style={{ ...actionLinkStyle("ghost"), display: "inline-block", marginTop: 14, fontSize: 13 }}>

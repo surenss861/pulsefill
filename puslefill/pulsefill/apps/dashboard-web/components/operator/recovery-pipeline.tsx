@@ -10,19 +10,19 @@ export type RecoveryPipelineStepId = "opening" | "matched" | "offers" | "claim" 
 const STEP_ORDER: RecoveryPipelineStepId[] = ["opening", "matched", "offers", "claim", "confirmed"];
 
 const TITLES: Record<RecoveryPipelineStepId, string> = {
-  opening: "Opening",
-  matched: "Match",
-  offers: "Offers",
-  claim: "Claim",
-  confirmed: "Confirm",
+  opening: "Add opening",
+  matched: "Find customers",
+  offers: "Send offers",
+  claim: "Customer claims",
+  confirmed: "Confirm booking",
 };
 
 const MICRO: Record<RecoveryPipelineStepId, { full: string; short: string }> = {
-  opening: { full: "Cancelled time captured", short: "Time captured" },
-  matched: { full: "Standby pool scanned", short: "Pool scanned" },
-  offers: { full: "Customers notified", short: "Notified" },
-  claim: { full: "Customer raised hand", short: "Raised hand" },
-  confirmed: { full: "Booking recovered", short: "Recovered" },
+  opening: { full: "Post the cancelled time.", short: "Post the time" },
+  matched: { full: "PulseFill checks your waiting list.", short: "Checks waitlist" },
+  offers: { full: "Customers get the opening.", short: "Customers notified" },
+  claim: { full: "Someone asks for the spot.", short: "Someone asks" },
+  confirmed: { full: "Your team locks it in.", short: "Team locks it in" },
 };
 
 function stepIndex(id: RecoveryPipelineStepId | undefined): number {
@@ -44,7 +44,7 @@ type RecoveryPipelineProps = {
   counts?: Partial<Record<RecoveryPipelineStepId, number>>;
   compact?: boolean;
   animated?: boolean;
-  /** Command Center rail: stronger framing. */
+  /** Stronger framing (e.g. featured rail). */
   featured?: boolean;
   /** When false, hides the “Recovery path” kicker (parent supplies its own title). */
   showFlowLabel?: boolean;
@@ -52,6 +52,10 @@ type RecoveryPipelineProps = {
   interactive?: boolean;
   /** Full-width overview strip: calmer active step (core workflow, not a flashy stepper). */
   workflowStrip?: boolean;
+  /** Prefix step titles with 1. … 5. (pairs well with `sentenceCaseTitles` on overview). */
+  stepNumbers?: boolean;
+  /** Sentence-case step titles instead of all-caps labels. */
+  sentenceCaseTitles?: boolean;
   onStepSelect?: (step: RecoveryPipelineStepId) => void;
   style?: CSSProperties;
 };
@@ -139,6 +143,8 @@ export function RecoveryPipeline({
   showFlowLabel = true,
   interactive = false,
   workflowStrip = false,
+  stepNumbers = false,
+  sentenceCaseTitles = false,
   onStepSelect,
   style,
 }: RecoveryPipelineProps) {
@@ -166,7 +172,7 @@ export function RecoveryPipeline({
     <div className="pf-recovery-pipeline" style={{ ...wrapShell, ...style }}>
       {showFlowLabel ? (
         <p className="pf-kicker" style={{ margin: "0 0 12px" }}>
-          Recovery path
+          What happens next
         </p>
       ) : null}
       <div className="pf-recovery-pipeline-inner pf-rp-track">
@@ -176,6 +182,10 @@ export function RecoveryPipeline({
           const isActive = ph === "active";
           const isDone = ph === "completed";
           const calmActive = workflowStrip && isActive;
+          const sentenceTitles = sentenceCaseTitles;
+          const titleText = `${stepNumbers ? `${i + 1}. ` : ""}${TITLES[id]}`;
+          const ariaStep = stepNumbers ? `Step ${i + 1}: ` : "";
+          const ariaLabel = `${ariaStep}${TITLES[id]} — ${MICRO[id].full}`;
 
           const ring = calmActive
             ? "inset 0 1px 0 rgba(255,255,255,0.04)"
@@ -217,8 +227,8 @@ export function RecoveryPipeline({
                 flexDirection: "column",
                 alignItems: "center",
                 textAlign: "center",
-                minWidth: compact ? 58 : 88,
-                maxWidth: 120,
+                minWidth: sentenceTitles || stepNumbers ? 76 : compact ? 62 : 88,
+                maxWidth: sentenceTitles || stepNumbers ? 136 : 120,
                 padding: "10px 6px",
                 borderRadius: 14,
                 border: `1px solid ${nodeBorder}`,
@@ -228,23 +238,25 @@ export function RecoveryPipeline({
               }}
             >
               <StepGlyph id={id} phase={ph} calmActive={calmActive} />
-                <span
+              <span
                 style={{
                   marginTop: 8,
-                  fontSize: compact ? 10 : 11,
+                  fontSize: sentenceTitles ? (compact ? 12 : 13) : compact ? 10 : 11,
                   fontWeight: 650,
-                  letterSpacing: calmActive ? "0.04em" : "0.06em",
-                  textTransform: "uppercase",
+                  letterSpacing: sentenceTitles ? "0.02em" : calmActive ? "0.04em" : "0.06em",
+                  textTransform: sentenceTitles ? "none" : "uppercase",
                   color: calmActive
                     ? "rgba(245, 240, 232, 0.88)"
                     : isActive
-                      ? "#fdba74"
+                      ? sentenceTitles
+                        ? "rgba(250, 232, 210, 0.95)"
+                        : "#fdba74"
                       : isDone
                         ? "var(--pf-text-tertiary)"
                         : "var(--pf-text-muted)",
                 }}
               >
-                {TITLES[id]}
+                {titleText}
               </span>
               {!compact ? (
                 <span style={{ marginTop: 5, fontSize: 11, lineHeight: 1.35, color: microColor, fontWeight: 500 }}>
@@ -265,7 +277,7 @@ export function RecoveryPipeline({
                 type="button"
                 style={{ ...btnReset, display: "flex", justifyContent: "center", borderRadius: 16 }}
                 onClick={() => onStepSelect(id)}
-                aria-label={`${TITLES[id]}: ${MICRO[id].full}`}
+                aria-label={ariaLabel}
               >
                 {nodeCore}
               </button>

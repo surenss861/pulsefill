@@ -86,7 +86,7 @@ export function CommandCenterRecentActivity() {
         <div>
           <h2 className="pf-section-title">Recent activity</h2>
           <p className="pf-muted-copy pf-command-feed__lede">
-            A running log of openings, offers, claims, and confirmations on your workspace.
+            Latest moves on openings, offers, claims, and confirmations.
           </p>
         </div>
         <Link href="/activity" className="pf-command-feed__all">

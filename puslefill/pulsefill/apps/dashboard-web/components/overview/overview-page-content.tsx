@@ -121,18 +121,17 @@ export function OverviewPageContent({
   const headerDescription = useMemo(() => {
     if (loading) return "Loading your workspace…";
     if (!setupComplete) {
-      const left = Math.max(0, 6 - setupStepsDone);
       return (
         <>
-          <span style={{ fontWeight: 650, color: "var(--pf-text-primary)" }}>Finish setup to start recovery.</span>
+          <span style={{ fontWeight: 650, color: "var(--pf-text-primary)" }}>Finish the basics first.</span>
           <span className="pf-muted-copy" style={{ display: "block", marginTop: 8 }}>
-            {left} step{left === 1 ? "" : "s"} left before PulseFill can match openings to waiting customers.
+            PulseFill needs your services, providers, and locations before it can send openings to customers.
           </span>
         </>
       );
     }
-    return "Openings, recovery, and customers in one place.";
-  }, [loading, setupComplete, setupStepsDone]);
+    return "See openings, who was offered a spot, and what still needs a reply.";
+  }, [loading, setupComplete]);
 
   const nextBest = useMemo(() => {
     if (loading) return null;
@@ -157,7 +156,7 @@ export function OverviewPageContent({
         actionKey: `claim-${awaitingConfirmationCount}`,
         priority: "critical" as const,
         title: "Claim waiting for confirmation",
-        description: "A customer wants this opening. Confirm the booking or release the spot.",
+        description: "A customer wants this time. Confirm the booking on your side or release the spot.",
         pipelineStep: "claim" as const,
         supportingStats: baseStats,
         primaryAction: <Link href="/claims" style={actionLinkStyle("primary")}>Review claim</Link>,
@@ -167,9 +166,8 @@ export function OverviewPageContent({
       return {
         actionKey: `standby-${standbyRequests.count}`,
         priority: "attention" as const,
-        title: "Standby requests waiting",
-        description:
-          "Customers are asking to join your standby pool. Review them so they can receive openings.",
+        title: "Waitlist requests to review",
+        description: "People asked to get on your waitlist. Approve them so they can receive openings.",
         pipelineStep: "matched" as const,
         supportingStats: baseStats,
         secondaryMeta: `${standbyRequests.count} pending request${standbyRequests.count === 1 ? "" : "s"}`,
@@ -184,12 +182,12 @@ export function OverviewPageContent({
       return {
         actionKey: `setup-${setupStepsDone}`,
         priority: "setup" as const,
-        title: "Finish workspace setup",
+        title: "Add your appointment details",
         description:
-          "Add your services, providers, and locations so PulseFill can match openings to the right customers.",
+          "Tell PulseFill what services you offer, who provides them, and where appointments happen.",
         pipelineStep: "opening" as const,
         supportingStats: [
-          { label: "Workspace steps", value: `${setupStepsDone}/6`, tone: "live" as const },
+          { label: "Setup progress", value: `${setupStepsDone}/6`, tone: "live" as const },
           {
             label: "Claims waiting",
             value: awaitingConfirmationCount,
@@ -209,8 +207,8 @@ export function OverviewPageContent({
       return {
         actionKey: `offers-${urgentOpeningsCount}`,
         priority: "attention" as const,
-        title: "Openings ready for offers",
-        description: "Send matched offers so standby customers can claim available times.",
+        title: "Openings need offers sent",
+        description: "You have matched times — send offers so people on the waitlist can claim them.",
         pipelineStep: "offers" as const,
         supportingStats: baseStats,
         secondaryMeta: `${urgentOpeningsCount} opening${urgentOpeningsCount === 1 ? "" : "s"} need attention`,
@@ -222,7 +220,7 @@ export function OverviewPageContent({
         actionKey: "ready-open",
         priority: "ready" as const,
         title: "Ready for the next cancellation",
-        description: "Create an opening when a customer cancels and PulseFill will guide the recovery flow.",
+        description: "When someone cancels, post the time here and PulseFill walks you through filling it.",
         pipelineStep: "opening" as const,
         supportingStats: baseStats,
         primaryAction: <Link href="/open-slots/create" style={actionLinkStyle("primary")}>Create opening</Link>,
@@ -231,8 +229,8 @@ export function OverviewPageContent({
     return {
       actionKey: "clear",
       priority: "clear" as const,
-      title: "Recovery system is clear",
-      description: "No urgent actions right now. PulseFill will surface the next recovery move here.",
+      title: "You're caught up",
+      description: "Nothing urgent right now. The next thing to do will show in the card above.",
       pipelineStep: "confirmed" as const,
       supportingStats: baseStats,
       primaryAction: <Link href="/activity" style={actionLinkStyle("secondary")}>View activity</Link>,
@@ -454,12 +452,12 @@ export function OverviewPageContent({
       {!showGettingStarted && !loading ? (
         <>
           {dailyOps.loading ? (
-            <OverviewRecoveryHeroStrip eyebrow="Live view of today's cancellation recovery workflow.">
+            <OverviewRecoveryHeroStrip eyebrow="Today's counts for your time zone.">
               <p style={{ color: "var(--muted)", fontSize: 14 }}>Loading daily summary…</p>
             </OverviewRecoveryHeroStrip>
           ) : dailyOps.data ? (
             <OverviewRecoveryHeroStrip
-              eyebrow="Live view of today's cancellation recovery workflow."
+              eyebrow="Today's counts for your time zone."
               subtitle={recoverySubtitle}
               aside={
                 <OverviewOperationalPulse

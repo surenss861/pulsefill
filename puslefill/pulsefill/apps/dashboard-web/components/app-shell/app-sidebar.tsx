@@ -19,7 +19,7 @@ type AppSidebarProps = {
 };
 
 const primaryNav = [
-  { href: "/overview", label: "Command Center", icon: <NavIconCommandCenter /> },
+  { href: "/overview", label: "Today", icon: <NavIconCommandCenter /> },
   { href: "/open-slots", label: "Openings", icon: <NavIconOpenings /> },
   { href: "/customers", label: "Customers", icon: <NavIconCustomers /> },
   { href: "/activity", label: "Activity", icon: <NavIconActivity /> },

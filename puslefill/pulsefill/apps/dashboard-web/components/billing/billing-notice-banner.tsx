@@ -56,8 +56,8 @@ export function BillingNoticeBanner({
   const checkoutCopy =
     administrative && canCheckout
       ? {
-          title: "Billing not active",
-          message: "Activate billing so renewals and the billing portal stay synced.",
+          title: "Billing is not active yet",
+          message: "Turn on billing when you're ready to use PulseFill with customers.",
         }
       : null;
 
