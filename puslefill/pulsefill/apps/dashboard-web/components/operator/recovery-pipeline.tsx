@@ -171,7 +171,7 @@ export function RecoveryPipeline({
   return (
     <div className="pf-recovery-pipeline" style={{ ...wrapShell, ...style }}>
       {showFlowLabel ? (
-        <p className="pf-kicker" style={{ margin: "0 0 12px" }}>
+        <p className="pf-eyebrow-plain" style={{ margin: "0 0 12px" }}>
           What happens next
         </p>
       ) : null}

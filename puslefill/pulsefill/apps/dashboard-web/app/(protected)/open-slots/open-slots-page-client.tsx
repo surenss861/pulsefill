@@ -289,7 +289,7 @@ export default function OpenSlotsPageClient() {
                     }}
                   />
                 </div>
-                <p className="pf-kicker" style={{ margin: "16px 0 8px", fontSize: 9 }}>
+                <p className="pf-eyebrow-plain" style={{ margin: "16px 0 8px" }}>
                   What happens next
                 </p>
                 <ol className="pf-openings-next-stack">

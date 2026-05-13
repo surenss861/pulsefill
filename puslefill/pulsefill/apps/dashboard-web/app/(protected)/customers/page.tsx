@@ -246,23 +246,23 @@ export default function CustomersPage() {
   }, []);
 
   const poolHint = (() => {
-    if (coverageLoading) return "Loading standby coverage…";
+    if (coverageLoading) return "Loading who can hear from you…";
     if (coverageError) return "Couldn’t load coverage — use Retry in the panel.";
-    if (!standbyCoverage) return "Standby coverage will appear here once loaded.";
+    if (!standbyCoverage) return "Coverage numbers show up here once loaded.";
     const e = standbyCoverage.eligible_customer_count;
     const r = standbyCoverage.reachable_customer_count;
     if (e === 0) {
       return acceptedInvites > 0
-        ? "Customers are connected; ask them to finish standby preferences so they enter the pool."
-        : "Invite customers first, then ensure they join and enable standby.";
+        ? "Customers are connected — have them finish their preferences so they can get offers."
+        : "Invite people first, then make sure they accept and turn on how they want to hear from you.";
     }
     if (r < e) {
-      return `${e} in pool · ${r} reachable — some customers may need push, SMS, or email enabled.`;
+      return `${e} ready for openings · ${r} can be reached right now — some people still need text or email turned on.`;
     }
     if (standbyCoverage.uncovered_services.length > 0) {
-      return `${e} in pool — some services have no watchers yet; widen preferences or invite more customers.`;
+      return `${e} ready — a few services don’t have anyone watching yet; widen preferences or invite more people.`;
     }
-    return `${e} customers in the standby pool with reachable channels.`;
+    return `${e} customers can get openings, and they can all be reached.`;
   })();
 
   const load = useCallback(async () => {
@@ -330,9 +330,10 @@ export default function CustomersPage() {
         <div className="pf-customers-page-stack">
           <PageCommandHeader
             tone="default"
+            eyebrowTone="plain"
             eyebrow="Customers"
-            title="Standby pool"
-            description="Invite customers to join standby so PulseFill can match them to new openings."
+            title="Waiting customers"
+            description="Invite customers so they can get openings when someone cancels."
             primaryAction={
               <MotionAction>
                 <Link href="#invite-customer" style={actionLinkStyle("primary")}>
@@ -344,7 +345,7 @@ export default function CustomersPage() {
               standbyPending.count > 0 ? (
                 reduceMotion ? (
                   <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
-                    Standby requests
+                    Waitlist requests
                   </Link>
                 ) : (
                   <motion.span
@@ -353,13 +354,13 @@ export default function CustomersPage() {
                     style={{ display: "inline-block" }}
                   >
                     <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
-                      Standby requests
+                      Waitlist requests
                     </Link>
                   </motion.span>
                 )
               ) : (
                 <Link href="/customers/standby-requests" style={actionLinkStyle("secondary")}>
-                  Standby requests
+                  Waitlist requests
                 </Link>
               )
             }
@@ -375,11 +376,11 @@ export default function CustomersPage() {
             }}
           >
             <Link href="/customers/standby-requests" style={{ color: "var(--pf-accent-primary)", fontWeight: 600 }}>
-              Standby requests
+              Waitlist requests
             </Link>
             <span style={{ color: "var(--muted)" }}>
               {" "}
-              — review customers who asked to join when you use request-to-join access.
+              — people who asked to join; approve them if you use request-to-join.
             </span>
           </div>
 
@@ -387,23 +388,23 @@ export default function CustomersPage() {
             stripClassName="pf-customers-pool-metrics"
             items={[
               {
-                label: "Pending invites",
+                label: "Invites pending",
                 value: pendingInvites,
                 emphasis: pendingInvites > 0 ? "primary" : "default",
                 signal: pendingInvites > 0 ? "live" : "idle",
-                hint: "Awaiting acceptance",
+                hint: "Not accepted yet",
               },
               {
-                label: "In standby pool",
+                label: "Ready to receive openings",
                 value: coverageLoading ? "—" : (standbyCoverage?.eligible_customer_count ?? "—"),
                 emphasis:
                   !coverageLoading && standbyCoverage && standbyCoverage.eligible_customer_count > 0 ? "primary" : "default",
                 signal:
                   !coverageLoading && standbyCoverage && standbyCoverage.eligible_customer_count > 0 ? "live" : "idle",
-                hint: "Active pref + membership",
+                hint: "Joined and set up to hear from you",
               },
               {
-                label: "Reachable",
+                label: "Can be reached",
                 value: coverageLoading ? "—" : (standbyCoverage?.reachable_customer_count ?? "—"),
                 emphasis:
                   !coverageLoading &&
@@ -419,7 +420,7 @@ export default function CustomersPage() {
                   standbyCoverage.reachable_customer_count >= standbyCoverage.eligible_customer_count
                     ? "live"
                     : "idle",
-                hint: "Push / SMS / email",
+                hint: "Reach turned on (push, SMS, or email)",
               },
             ]}
             compact
@@ -447,8 +448,7 @@ export default function CustomersPage() {
                 <BillingInlineGuardrail summary={billingSummary.data} />
               ) : null}
               <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
-                Create an invite link for a customer to join your standby pool. Only staff in this workspace can create
-                or revoke invites.
+                Send an invite so someone can join your list and get openings when a visit cancels.
               </p>
               <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
                 <span style={{ color: "var(--muted)" }}>Customer name (optional)</span>

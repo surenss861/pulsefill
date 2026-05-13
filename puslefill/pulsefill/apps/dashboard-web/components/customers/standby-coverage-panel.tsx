@@ -33,12 +33,12 @@ export function StandbyCoveragePanel({ data, loading, error, onRetry }: Props) {
       }}
     >
       <div>
-        <p className="pf-kicker" style={{ margin: 0, fontSize: 10 }}>
-          Standby pool
+        <p className="pf-eyebrow-plain" style={{ margin: 0 }}>
+          Waiting list
         </p>
         <h2 style={{ margin: "6px 0 0", fontSize: 15, fontWeight: 650, letterSpacing: "-0.02em" }}>Coverage</h2>
         <p style={{ margin: "8px 0 0", color: "rgba(245,247,250,0.5)", fontSize: 12, lineHeight: 1.55 }}>
-          Who can receive offers after they join and enable standby (active preference + membership).
+          Who can receive offers after they join and pick how they want to hear from you.
         </p>
       </div>
 

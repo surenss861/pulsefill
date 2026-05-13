@@ -90,7 +90,7 @@ export function RecoveryHealthPanel({ data, loading, error, onReload }: Props) {
               fontFamily: "inherit",
             }}
           >
-            Retry
+            Retry loading status
           </button>
         }
         compact
@@ -125,7 +125,7 @@ export function RecoveryHealthPanel({ data, loading, error, onReload }: Props) {
 
   return (
     <section className="pf-operator-action-panel" style={{ padding: 16, ...shell, ...borderAccent }}>
-      <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
+      <p className="pf-eyebrow-plain" style={{ margin: "0 0 8px" }}>
         Recovery status
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>

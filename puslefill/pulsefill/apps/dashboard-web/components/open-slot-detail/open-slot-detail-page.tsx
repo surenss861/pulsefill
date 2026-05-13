@@ -318,7 +318,7 @@ export function OpenSlotDetailPage() {
                   />
                 </div>
                 <div className="pf-mh-block-recovery" style={{ marginTop: 14 }}>
-                  <p className="pf-kicker pf-mobile-case-header" style={{ margin: "0 0 8px" }}>
+                  <p className="pf-eyebrow-plain pf-mobile-case-header" style={{ margin: "0 0 8px" }}>
                     What happens next
                   </p>
                   {isSlotRecoveryTerminalStatus(slot.status) ? (
@@ -528,7 +528,7 @@ export function OpenSlotDetailPage() {
           <aside className="pf-slot-detail-case-rail">
             {!isSlotRecoveryTerminalStatus(slot.status) ? (
               <div style={{ padding: "12px 14px", ...operatorSurfaceShell("quiet") }}>
-                <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
+                <p className="pf-eyebrow-plain" style={{ margin: "0 0 8px" }}>
                   What happens next
                 </p>
                 <RecoveryPipeline

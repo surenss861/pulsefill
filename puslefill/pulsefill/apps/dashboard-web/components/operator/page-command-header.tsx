@@ -8,6 +8,8 @@ export type PageCommandHeaderTone = "default" | "strong";
 
 type PageCommandHeaderProps = {
   eyebrow: string;
+  /** When "plain", eyebrow is sentence case (default is small-caps track). */
+  eyebrowTone?: "caps" | "plain";
   title: ReactNode;
   description?: ReactNode;
   primaryAction?: ReactNode;
@@ -22,6 +24,7 @@ type PageCommandHeaderProps = {
 
 export function PageCommandHeader({
   eyebrow,
+  eyebrowTone = "caps",
   title,
   description,
   primaryAction,
@@ -54,7 +57,7 @@ export function PageCommandHeader({
         }}
       >
         <div style={{ flex: "1 1 220px", minWidth: 0 }}>
-          <p className="pf-kicker">{eyebrow}</p>
+          <p className={eyebrowTone === "plain" ? "pf-eyebrow-plain" : "pf-kicker"}>{eyebrow}</p>
           <div className="pf-page-title" style={{ marginTop: 6 }}>
             {title}
           </div>

@@ -329,7 +329,7 @@ export function OpenSlotForm({ onCreated }: Props) {
         interactive
         style={{ marginBottom: 16 }}
       />
-      <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
+      <p className="pf-eyebrow-plain" style={{ margin: "0 0 8px" }}>
         What happens next
       </p>
       <ol
@@ -355,7 +355,7 @@ export function OpenSlotForm({ onCreated }: Props) {
           borderTop: "1px solid var(--pf-brand-border-warm)",
         }}
       >
-        <p className="pf-kicker" style={{ margin: "0 0 8px" }}>
+        <p className="pf-eyebrow-plain" style={{ margin: "0 0 8px" }}>
           Can it reach customers?
         </p>
         {setupIncomplete ? (

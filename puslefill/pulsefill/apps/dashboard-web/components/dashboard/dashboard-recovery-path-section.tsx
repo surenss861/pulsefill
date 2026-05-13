@@ -14,7 +14,7 @@ type DashboardRecoveryPathSectionProps = {
 export function DashboardRecoveryPathSection({ activeStep, counts }: DashboardRecoveryPathSectionProps) {
   return (
     <section className="pf-dashboard-recovery-path" aria-labelledby="pf-dashboard-recovery-path-heading">
-      <p id="pf-dashboard-recovery-path-heading" className="pf-kicker" style={{ margin: "0 0 14px" }}>
+      <p id="pf-dashboard-recovery-path-heading" className="pf-eyebrow-plain" style={{ margin: "0 0 14px" }}>
         What happens next
       </p>
       <RecoveryPipeline

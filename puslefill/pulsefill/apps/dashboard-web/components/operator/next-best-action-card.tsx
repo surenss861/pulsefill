@@ -172,6 +172,7 @@ export function NextBestActionCard({
   const shell: CSSProperties = { ...baseShell, ...moodShell };
   const showRecovery = Boolean(showPipeline && pipelineStep);
   const rw = RAIL_WIDTH[priority];
+  const quietSetupHeader = priority === "setup";
 
   return (
     <div className={`pf-next-best-action pf-next-best-action--${priority}`} style={{ ...style }}>
@@ -201,43 +202,50 @@ export function NextBestActionCard({
             }}
           />
           <div className="pf-next-best-action__body">
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 10,
-                paddingBottom: 14,
-                marginBottom: 4,
-                borderBottom: "1px solid var(--pf-brand-border-warm)",
-              }}
-            >
-              <span className="pf-kicker">{systemHeaderLabel}</span>
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, justifyContent: "flex-end" }}>
-                {updatedAt ? <span className="pf-meta-row">{formatUpdatedAt(updatedAt)}</span> : null}
-                <span
-                  style={{
-                    display: "inline-block",
-                    fontSize: 11,
-                    fontWeight: 650,
-                    letterSpacing: "0.04em",
-                    padding: "4px 10px",
-                    borderRadius: 999,
-                    ...CHIP[priority],
-                  }}
-                >
-                  {PRIORITY_STATUS[priority]}
-                </span>
+            {quietSetupHeader ? null : (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  paddingBottom: 14,
+                  marginBottom: 4,
+                  borderBottom: "1px solid var(--pf-brand-border-warm)",
+                }}
+              >
+                <span className="pf-kicker">{systemHeaderLabel}</span>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, justifyContent: "flex-end" }}>
+                  {updatedAt ? <span className="pf-meta-row">{formatUpdatedAt(updatedAt)}</span> : null}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      fontSize: 11,
+                      fontWeight: 650,
+                      letterSpacing: "0.04em",
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      ...CHIP[priority],
+                    }}
+                  >
+                    {PRIORITY_STATUS[priority]}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
-            <h2 className="pf-page-title" style={{ margin: "12px 0 0", maxWidth: 640 }}>
+            <h2 className="pf-page-title" style={{ margin: quietSetupHeader ? "0 0 0" : "12px 0 0", maxWidth: 640 }}>
               {title}
             </h2>
             <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 15, maxWidth: 620 }}>
               {description}
             </p>
+            {quietSetupHeader && updatedAt ? (
+              <p className="pf-meta-row" style={{ margin: "8px 0 0", fontSize: 12 }}>
+                {formatUpdatedAt(updatedAt)}
+              </p>
+            ) : null}
             {secondaryMeta ? (
               <div className="pf-muted-copy" style={{ marginTop: 10, fontSize: 13 }}>
                 {secondaryMeta}

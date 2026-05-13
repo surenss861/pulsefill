@@ -148,7 +148,7 @@ export function OverviewPageContent({
       },
       { label: "Active openings", value: liveOpen, tone: liveOpen > 0 ? ("live" as const) : ("idle" as const) },
       { label: "Offers sent", value: offersSent, tone: offersSent > 0 ? ("live" as const) : ("idle" as const) },
-      { label: "Recovered", value: slotsBooked, tone: slotsBooked > 0 ? ("live" as const) : ("idle" as const) },
+      { label: "Visits rebooked", value: slotsBooked, tone: slotsBooked > 0 ? ("live" as const) : ("idle" as const) },
     ];
 
     if (awaitingConfirmationCount > 0) {
@@ -159,7 +159,7 @@ export function OverviewPageContent({
         description: "A customer wants this time. Confirm the booking on your side or release the spot.",
         pipelineStep: "claim" as const,
         supportingStats: baseStats,
-        primaryAction: <Link href="/claims" style={actionLinkStyle("primary")}>Review claim</Link>,
+        primaryAction: <Link href="/claims" style={actionLinkStyle("primary")}>Open claims</Link>,
       };
     }
     if (!standbyRequests.loading && standbyRequests.count > 0) {
@@ -173,7 +173,7 @@ export function OverviewPageContent({
         secondaryMeta: `${standbyRequests.count} pending request${standbyRequests.count === 1 ? "" : "s"}`,
         primaryAction: (
           <Link href="/customers/standby-requests" style={actionLinkStyle("primary")}>
-            Review requests
+            Review waitlist
           </Link>
         ),
       };
@@ -198,7 +198,7 @@ export function OverviewPageContent({
         ],
         primaryAction: (
           <Link href={nextSetupHref(checklist)} style={actionLinkStyle("primary")}>
-            Continue setup
+            Add appointment details
           </Link>
         ),
       };
@@ -212,7 +212,7 @@ export function OverviewPageContent({
         pipelineStep: "offers" as const,
         supportingStats: baseStats,
         secondaryMeta: `${urgentOpeningsCount} opening${urgentOpeningsCount === 1 ? "" : "s"} need attention`,
-        primaryAction: <Link href="/open-slots" style={actionLinkStyle("primary")}>Review openings</Link>,
+        primaryAction: <Link href="/open-slots" style={actionLinkStyle("primary")}>Send offers</Link>,
       };
     }
     if (setup.openSlotsCount === 0) {
