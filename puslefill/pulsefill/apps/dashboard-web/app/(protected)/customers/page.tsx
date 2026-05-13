@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageCommandHeader } from "@/components/operator/page-command-header";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
@@ -245,7 +245,7 @@ export default function CustomersPage() {
     }
   }, []);
 
-  const poolHint = (() => {
+  const poolHint = useMemo(() => {
     if (coverageLoading) return "Loading who can hear from you…";
     if (coverageError) return "Couldn’t load coverage — use Retry in the panel.";
     if (!standbyCoverage) return "Coverage numbers show up here once loaded.";
@@ -263,7 +263,12 @@ export default function CustomersPage() {
       return `${e} ready — a few services don’t have anyone watching yet; widen preferences or invite more people.`;
     }
     return `${e} customers can get openings, and they can all be reached.`;
-  })();
+  }, [coverageLoading, coverageError, standbyCoverage, acceptedInvites]);
+
+  const needsSetupCount = useMemo(() => {
+    if (coverageLoading || !standbyCoverage) return null;
+    return (standbyCoverage.unreachable_eligible_count ?? 0) + (standbyCoverage.customers_pending_membership ?? 0);
+  }, [coverageLoading, standbyCoverage]);
 
   const load = useCallback(async () => {
     try {
@@ -388,14 +393,14 @@ export default function CustomersPage() {
             stripClassName="pf-customers-pool-metrics"
             items={[
               {
-                label: "Invites pending",
+                label: "Invited",
                 value: pendingInvites,
                 emphasis: pendingInvites > 0 ? "primary" : "default",
                 signal: pendingInvites > 0 ? "live" : "idle",
-                hint: "Not accepted yet",
+                hint: "Waiting on them to join",
               },
               {
-                label: "Ready to receive openings",
+                label: "Ready for openings",
                 value: coverageLoading ? "—" : (standbyCoverage?.eligible_customer_count ?? "—"),
                 emphasis:
                   !coverageLoading && standbyCoverage && standbyCoverage.eligible_customer_count > 0 ? "primary" : "default",
@@ -422,6 +427,13 @@ export default function CustomersPage() {
                     : "idle",
                 hint: "Reach turned on (push, SMS, or email)",
               },
+              {
+                label: "Needs setup",
+                value: coverageLoading ? "—" : (needsSetupCount ?? "—"),
+                emphasis: !coverageLoading && needsSetupCount != null && needsSetupCount > 0 ? "primary" : "default",
+                signal: !coverageLoading && needsSetupCount != null && needsSetupCount > 0 ? "live" : "idle",
+                hint: "Finish preferences or membership",
+              },
             ]}
             compact
           />
@@ -432,6 +444,7 @@ export default function CustomersPage() {
           <div className="pf-customers-split" style={{ marginTop: 4 }}>
             <form
               id="invite-customer"
+              className="pf-customers-invite-form"
               onSubmit={onSubmit}
               style={{
                 display: "flex",

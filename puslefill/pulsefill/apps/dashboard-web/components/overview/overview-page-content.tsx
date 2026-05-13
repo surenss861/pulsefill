@@ -182,9 +182,9 @@ export function OverviewPageContent({
       return {
         actionKey: `setup-${setupStepsDone}`,
         priority: "setup" as const,
-        title: "Add your appointment details",
+        title: "Finish your setup",
         description:
-          "Tell PulseFill what services you offer, who provides them, and where appointments happen.",
+          "Add your services, providers, and locations so PulseFill can send openings to the right customers.",
         pipelineStep: "opening" as const,
         supportingStats: [
           { label: "Setup progress", value: `${setupStepsDone}/6`, tone: "live" as const },
@@ -336,7 +336,11 @@ export function OverviewPageContent({
   }, [loading, metrics]);
 
   return (
-    <main className="pf-page-overview" style={{ padding: 0 }}>
+    <main
+      className="pf-page-overview"
+      style={{ padding: 0 }}
+      data-pf-overview-setup={showGettingStarted ? "" : undefined}
+    >
       <OperatorPageTransition>
       <FadeUp>
         <DashboardPageHeader description={headerDescription} />
@@ -344,7 +348,7 @@ export function OverviewPageContent({
 
       {!billingSummary.loading && billingSummary.data ? (
         <FadeUp delay={0.02}>
-          <div style={{ marginTop: 14 }}>
+          <div className={showGettingStarted ? "pf-dashboard-secondary-billing" : undefined} style={{ marginTop: 14 }}>
             <BillingNoticeBanner summary={billingSummary.data} tone="administrative" />
           </div>
         </FadeUp>
@@ -352,11 +356,12 @@ export function OverviewPageContent({
 
       {nextBest ? (
         <FadeUp delay={0.05}>
-          <div style={{ marginTop: 16 }} id={!setupComplete ? "getting-started" : undefined}>
+          <div style={{ marginTop: showGettingStarted ? 18 : 16 }} id={!setupComplete ? "getting-started" : undefined}>
             <NextBestActionCard
               actionKey={nextBest.actionKey}
               title={nextBest.title}
               description={nextBest.description}
+              heroAnchor={showGettingStarted && nextBest.priority === "setup"}
               priority={nextBest.priority}
               primaryAction={nextBest.primaryAction}
               secondaryMeta={nextBest.secondaryMeta}
@@ -370,7 +375,7 @@ export function OverviewPageContent({
       ) : null}
 
       <FadeUp delay={0.055}>
-        <div className="pf-dashboard-recovery-health" style={{ marginTop: nextBest ? 12 : 16 }}>
+        <div className="pf-dashboard-recovery-health" style={{ marginTop: showGettingStarted ? 10 : nextBest ? 12 : 16 }}>
           <RecoveryHealthPanel
             data={recoveryHealth.data}
             loading={recoveryHealth.loading}
@@ -382,7 +387,7 @@ export function OverviewPageContent({
 
       {!loading ? (
         <FadeUp delay={0.056}>
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginTop: showGettingStarted ? 10 : 16 }}>
             <DashboardRecoveryPathSection activeStep={pipelineForRail} counts={recoveryPipelineCounts} />
           </div>
         </FadeUp>
@@ -391,6 +396,7 @@ export function OverviewPageContent({
       <FadeUp delay={0.06}>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--pf-page-section-gap)" }}>
       <div
+        className={showGettingStarted ? "pf-overview-post-hero-toolbar" : undefined}
         style={{
           display: "flex",
           justifyContent: "flex-end",

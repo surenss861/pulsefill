@@ -1213,10 +1213,10 @@ main.pf-auth-shell .pf-auth-submit {
   max-width: 100%;
 }
 
-/* Pool metrics (3-up → 2 → 1) */
+/* Pool metrics (4-up → 2×2 → 1) */
 .pf-customers-pool-metrics.pf-operator-metric-strip {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -1224,7 +1224,7 @@ main.pf-auth-shell .pf-auth-submit {
   min-width: 0 !important;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1040px) {
   .pf-customers-pool-metrics.pf-operator-metric-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1511,6 +1511,62 @@ main.pf-auth-shell .pf-auth-submit {
 
 .pf-next-best-action--setup .pf-next-best-action__body {
   padding-top: clamp(22px, 2.8vw, 30px);
+}
+
+/* Setup mode: one unmistakable anchor on /overview */
+.pf-next-best-action--setup.pf-next-best-action--hero .pf-next-best-action__surface {
+  border-radius: 22px;
+  border-color: rgba(255, 200, 150, 0.22) !important;
+  box-shadow:
+    0 32px 88px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 var(--pf-surface-highlight),
+    0 0 0 1px rgba(255, 122, 24, 0.07) !important;
+}
+
+.pf-next-best-action--hero .pf-next-best-action__body .pf-page-title {
+  font-size: clamp(1.42rem, 3.2vw, 2rem);
+  letter-spacing: -0.04em;
+}
+
+.pf-next-best-action--hero .pf-next-best-action__cta-row {
+  margin-top: 22px;
+}
+
+/* /overview setup mode: post-hero blocks read quieter (billing: .pf-dashboard-secondary-billing) */
+.pf-page-overview[data-pf-overview-setup] .pf-dashboard-recovery-path {
+  padding: 12px 14px 14px;
+  border-radius: var(--pf-radius-lg);
+  border-color: rgba(255, 226, 190, 0.09);
+  background: linear-gradient(165deg, var(--pf-surface-tint-03), rgba(14, 12, 10, 0.9));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 6px 18px rgba(0, 0, 0, 0.14);
+}
+
+.pf-page-overview[data-pf-overview-setup] .pf-dashboard-recovery-health {
+  max-width: 100%;
+}
+
+.pf-page-overview[data-pf-overview-setup] .pf-dashboard-recovery-health .pf-operator-action-panel {
+  padding: 12px 14px !important;
+  border-color: rgba(255, 255, 255, 0.055) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+}
+
+.pf-page-overview[data-pf-overview-setup] .pf-overview-post-hero-toolbar {
+  opacity: 0.88;
+}
+
+.pf-page-overview[data-pf-overview-setup] .pf-command-cockpit--after-nba.pf-command-cockpit--stacked {
+  opacity: 0.9;
+}
+
+.pf-page-overview[data-pf-overview-setup] .pf-command-feed {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top-color: rgba(255, 226, 190, 0.08);
+}
+
+.pf-dashboard-secondary-billing {
+  opacity: 0.9;
 }
 
 .pf-next-best-action__body {
@@ -2059,6 +2115,22 @@ main.pf-auth-shell .pf-auth-submit {
 .pf-page-settings,
 .pf-page-customers {
   max-width: 1120px;
+}
+
+.pf-customers-page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pf-customers-invite-form {
+  border-radius: 18px;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.26), inset 0 1px 0 var(--pf-surface-highlight);
+}
+
+.pf-page-customers section .pf-page-title {
+  font-size: clamp(1.32rem, 2.6vw, 1.82rem);
+  letter-spacing: -0.038em;
 }
 
 .pf-page-locations,

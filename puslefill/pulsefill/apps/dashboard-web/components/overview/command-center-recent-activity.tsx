@@ -84,9 +84,9 @@ export function CommandCenterRecentActivity() {
     <section className="pf-command-feed">
       <div className="pf-command-feed__head">
         <div>
-          <h2 className="pf-section-title">Recent activity</h2>
+          <h2 className="pf-section-title">See what happened</h2>
           <p className="pf-muted-copy pf-command-feed__lede">
-            Latest moves on openings, offers, claims, and confirmations.
+            Openings, offers, claims, and confirmations appear here.
           </p>
         </div>
         <Link href="/activity" className="pf-command-feed__all">
@@ -111,7 +111,7 @@ export function CommandCenterRecentActivity() {
           <div className="pf-activity-empty-timeline__body">
             <p className="pf-section-title pf-activity-empty-timeline__title">No activity yet</p>
             <p className="pf-muted-copy pf-activity-empty-timeline__detail">
-              Openings, offers, claims, and confirmations will show here.
+              Openings, offers, claims, and confirmations appear here.
             </p>
           </div>
         </div>

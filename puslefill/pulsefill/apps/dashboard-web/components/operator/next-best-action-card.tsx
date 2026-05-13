@@ -140,6 +140,8 @@ type NextBestActionCardProps = {
   description: string;
   /** Left side of the system header row (default: “Setup needed”). */
   systemHeaderLabel?: string;
+  /** Setup mode on /overview: stronger surface so this card reads as the main action. */
+  heroAnchor?: boolean;
   priority: NextBestActionPriority;
   primaryAction: ReactNode;
   secondaryMeta?: ReactNode;
@@ -157,6 +159,7 @@ export function NextBestActionCard({
   title,
   description,
   systemHeaderLabel = DEFAULT_SYSTEM_HEADER,
+  heroAnchor = false,
   priority,
   primaryAction,
   secondaryMeta,
@@ -171,14 +174,26 @@ export function NextBestActionCard({
   const moodShell = SHELL_MOOD[priority];
   const shell: CSSProperties = { ...baseShell, ...moodShell };
   const showRecovery = Boolean(showPipeline && pipelineStep);
-  const rw = RAIL_WIDTH[priority];
+  const rwBase = RAIL_WIDTH[priority];
+  const rw = heroAnchor && priority === "setup" ? Math.max(rwBase, 7) : rwBase;
   const quietSetupHeader = priority === "setup";
+  const hero = Boolean(heroAnchor && priority === "setup");
 
   return (
-    <div className={`pf-next-best-action pf-next-best-action--${priority}`} style={{ ...style }}>
+    <div
+      className={[
+        "pf-next-best-action",
+        `pf-next-best-action--${priority}`,
+        hero ? "pf-next-best-action--hero" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={{ ...style }}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={actionKey}
+          className="pf-next-best-action__surface"
           initial={reduce ? false : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           exit={reduce ? undefined : { opacity: 0, y: -8 }}
@@ -191,6 +206,7 @@ export function NextBestActionCard({
         >
           <div
             aria-hidden
+            className="pf-next-best-action__rail"
             style={{
               position: "absolute",
               left: 0,
@@ -253,6 +269,7 @@ export function NextBestActionCard({
             ) : null}
 
             <div
+              className="pf-next-best-action__cta-row"
               style={{
                 marginTop: 18,
                 display: "flex",
