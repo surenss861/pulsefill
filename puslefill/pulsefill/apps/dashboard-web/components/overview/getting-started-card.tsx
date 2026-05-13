@@ -9,7 +9,7 @@ export function GettingStartedCard({
   compact = false,
 }: {
   state: SetupChecklistState;
-  /** Slim progress rail — use when Next Best Action already drives setup (Command Center). */
+  /** Slim progress rail — use when Next Best Action already drives setup on overview. */
   compact?: boolean;
 }) {
   const steps = [

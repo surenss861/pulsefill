@@ -17,7 +17,7 @@ export function ActionQueuePreviewCard({
   error: string | null;
   /** When set, shows real queue counts above the list. */
   summary?: ActionQueueSummary | null;
-  /** Tighter surface when this module is secondary to Next Best Action (Command Center). */
+  /** Tighter surface when this module is secondary to Next Best Action on overview. */
   hierarchy?: "default" | "secondary";
   /** Flat body for Operations desk cards (parent supplies title + “Open queue”). */
   deckEmbedded?: boolean;

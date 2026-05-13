@@ -222,15 +222,3 @@ export function SlotDetailFactsGrid({ slot, serviceLabel, locationLabel, namesLo
     </>
   );
 }
-
-/** @deprecated Prefer `SlotDetailIdentityHeader` + `SlotDetailFactsGrid` in layout; kept for compatibility. */
-export function SlotDetailHero({ slot, serviceLabel, locationLabel, namesLoading }: Props) {
-  return (
-    <>
-      <SlotDetailIdentityHeader slot={slot} serviceLabel={serviceLabel} locationLabel={locationLabel} namesLoading={namesLoading} />
-      <div style={{ marginTop: 22 }}>
-        <SlotDetailFactsGrid slot={slot} serviceLabel={serviceLabel} locationLabel={locationLabel} namesLoading={namesLoading} />
-      </div>
-    </>
-  );
-}

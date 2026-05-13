@@ -986,7 +986,7 @@ main.pf-auth-shell .pf-auth-submit {
   padding-block: 16px;
 }
 
-/* Overview — collapsed product primer below Command Center */
+/* Overview — collapsed product primer below the main desk column */
 .pf-overview-edu {
   margin-top: 16px;
   border-radius: 14px;
@@ -1416,7 +1416,7 @@ main.pf-auth-shell .pf-auth-submit {
   }
 }
 
-/* Command Center: main column + sticky recovery rail */
+/* Overview: main column + sticky recovery rail */
 .pf-command-cockpit {
   display: grid;
   gap: var(--pf-page-section-gap);
@@ -1452,7 +1452,7 @@ main.pf-auth-shell .pf-auth-submit {
   grid-column: 1 / -1;
 }
 
-/* Command Center: cockpit sits below NBA — extra rhythm so queue/checklist reads secondary */
+/* Cockpit sits below next-best-action — extra rhythm so queue/checklist reads secondary */
 .pf-command-cockpit--after-nba {
   margin-top: 4px;
 }
@@ -1463,7 +1463,7 @@ main.pf-auth-shell .pf-auth-submit {
   }
 }
 
-/* Single-column Command Center (recovery path lives in full-width strip above). */
+/* Single-column overview (recovery path lives in full-width strip above). */
 .pf-command-cockpit.pf-command-cockpit--stacked {
   grid-template-columns: 1fr;
 }
@@ -2271,7 +2271,7 @@ main.pf-auth-shell .pf-auth-submit {
   border-radius: 9px;
 }
 
-/* Command Center recent activity — feed, not card stack */
+/* Overview recent activity — feed, not card stack */
 .pf-command-feed {
   margin-top: 20px;
   padding-top: 16px;
