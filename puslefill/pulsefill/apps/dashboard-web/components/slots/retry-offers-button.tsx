@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { emitOperatorRefreshEvent, type OperatorRefreshAction } from "@/lib/operator-refresh-events";
 import { useToast } from "@/components/ui/toast-provider";
 import { MotionTapSurface } from "@/components/operator/operator-motion-primitives";
+import { OperatorDeskConfirmDialog } from "@/components/operator/operator-desk-confirm-dialog";
 import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
 
 type SendOffersMatchSummary = {
@@ -58,11 +59,13 @@ export function RetryOffersButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<LastSendOffersResult | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { showToast } = useToast();
 
   const defaultLabel = emphasis === "primary" ? "Send offers" : "Send / retry offers";
   const buttonLabel = label ?? defaultLabel;
   const buttonStyle = emphasis === "primary" ? pressablePrimary : pressableSecondary;
+  const isRetry = refreshAction === "retry_offers";
 
   async function handleSend() {
     try {
@@ -105,6 +108,7 @@ export function RetryOffersButton({
         tone: infoTone ? "info" : "success",
       });
       emitOperatorRefreshEvent("slot:updated", { slotId: openSlotId, action: refreshAction });
+      setDialogOpen(false);
       onDone?.();
     } catch (err) {
       const code = err instanceof Error ? (err as { code?: string }).code : undefined;
@@ -113,6 +117,7 @@ export function RetryOffersButton({
           title: "This opening changed — refreshing.",
           tone: "info",
         });
+        setDialogOpen(false);
         await onConflict?.();
         return;
       }
@@ -133,22 +138,57 @@ export function RetryOffersButton({
 
   return (
     <div style={{ display: "grid", gap: 10, minWidth: 0, maxWidth: 420 }}>
-      <MotionTapSurface disabled={loading}>
+      <MotionTapSurface disabled={loading || dialogOpen}>
         <button
           type="button"
-          onClick={() => void handleSend()}
-          disabled={loading}
+          onClick={() => {
+            setError(null);
+            setDialogOpen(true);
+          }}
+          disabled={loading || dialogOpen}
           style={{
             ...buttonStyle,
-            opacity: loading ? 0.65 : 1,
-            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading || dialogOpen ? 0.65 : 1,
+            cursor: loading || dialogOpen ? "not-allowed" : "pointer",
             justifySelf: "start",
           }}
-          {...pressableHandlers(loading)}
+          {...pressableHandlers(loading || dialogOpen)}
         >
-          {loading ? "Sending offers…" : buttonLabel}
+          {buttonLabel}
         </button>
       </MotionTapSurface>
+
+      <OperatorDeskConfirmDialog
+        open={dialogOpen}
+        titleId={`pf-desk-send-offers-${openSlotId}-${refreshAction}`}
+        title={isRetry ? "Send offers again?" : "Send offers?"}
+        busy={loading}
+        primaryLabel={isRetry ? "Send offers again" : "Send offers"}
+        primaryBusyLabel="Sending…"
+        primaryVariant="warm"
+        onPrimary={() => void handleSend()}
+        secondaryLabel="Cancel"
+        onClose={() => {
+          if (!loading) {
+            setDialogOpen(false);
+            setError(null);
+          }
+        }}
+      >
+        <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+          {isRetry
+            ? "PulseFill will run another match for this opening and notify waiting customers who fit this appointment."
+            : "PulseFill will offer this opening to waiting customers who match the appointment."}
+        </p>
+        <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.5 }}>
+          After you continue, check offers and delivery below for who was contacted and what happens next.
+        </p>
+        {error ? (
+          <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.45, color: "rgba(248,113,113,0.92)" }}>
+            {error}
+          </p>
+        ) : null}
+      </OperatorDeskConfirmDialog>
 
       {lastResult ? (
         <div
@@ -162,17 +202,19 @@ export function RetryOffersButton({
             color: "var(--text)",
           }}
         >
-          <p style={{ margin: 0, fontWeight: 600, fontSize: 12, color: "var(--muted)" }}>Result</p>
+          <p className="pf-muted-copy" style={{ margin: 0, fontWeight: 650, fontSize: 12 }}>
+            What happened
+          </p>
           <p style={{ margin: "6px 0 0", color: "var(--text)" }}>{lastResult.message}</p>
           <ul style={{ margin: "10px 0 0", paddingLeft: 18, color: "var(--muted)", fontSize: 12 }}>
             <li>
-              Standby matches considered: <strong style={{ color: "var(--text)" }}>{lastResult.matched}</strong>
+              Waitlist matches considered: <strong style={{ color: "var(--text)" }}>{lastResult.matched}</strong>
             </li>
             {lastResult.isNoMatches &&
             lastResult.matchSummary &&
             typeof lastResult.matchSummary.total_preferences_checked === "number" ? (
               <li>
-                Preferences evaluated:{" "}
+                Preferences checked:{" "}
                 <strong style={{ color: "var(--text)" }}>{lastResult.matchSummary.total_preferences_checked}</strong>
               </li>
             ) : null}
@@ -199,8 +241,6 @@ export function RetryOffersButton({
           </p>
         </div>
       ) : null}
-
-      {error ? <p style={{ margin: 0, fontSize: 13, color: "#f87171" }}>{error}</p> : null}
     </div>
   );
 }

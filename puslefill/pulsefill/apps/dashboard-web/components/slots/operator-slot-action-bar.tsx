@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { ConfirmBookingButton } from "@/components/claims/confirm-booking-button";
 import { RetryOffersButton } from "@/components/slots/retry-offers-button";
 import { OperatorActionPanel } from "@/components/operator/operator-action-panel";
+import { OperatorDeskConfirmDialog } from "@/components/operator/operator-desk-confirm-dialog";
 import { useToast } from "@/components/ui/toast-provider";
 import { operatorActionMessageForCode } from "@/lib/operator-action-errors";
 import { emitOperatorRefreshEvent, type OperatorRefreshAction } from "@/lib/operator-refresh-events";
@@ -61,6 +62,8 @@ export function OperatorSlotActionBar({
   const { showToast } = useToast();
   const [expireLoading, setExpireLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [expireDialogOpen, setExpireDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   const presentation = useMemo(
     () =>
@@ -102,7 +105,6 @@ export function OperatorSlotActionBar({
   }
 
   async function handleExpire() {
-    if (!window.confirm("Expire this opening? It can no longer receive offers after this.")) return;
     try {
       setExpireLoading(true);
       await runConflictAware(
@@ -114,6 +116,7 @@ export function OperatorSlotActionBar({
         "expire_slot",
       );
       showToast({ title: "Opening expired.", tone: "success" });
+      setExpireDialogOpen(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not expire opening.";
       showToast({ title: msg, tone: "error" });
@@ -123,7 +126,6 @@ export function OperatorSlotActionBar({
   }
 
   async function handleCancel() {
-    if (!window.confirm("Cancel this opening for patients? This cannot be undone from the dashboard.")) return;
     try {
       setCancelLoading(true);
       await runConflictAware(
@@ -135,6 +137,7 @@ export function OperatorSlotActionBar({
         "cancel_slot",
       );
       showToast({ title: "Opening cancelled.", tone: "success" });
+      setCancelDialogOpen(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not cancel opening.";
       showToast({ title: msg, tone: "error" });
@@ -146,7 +149,7 @@ export function OperatorSlotActionBar({
   function renderAction(action: OperatorSlotAvailableAction, row: "primary" | "secondary") {
     const isPrimary = row === "primary";
     const baseBtn = isPrimary ? pressablePrimary : pressableSecondary;
-    const loading = expireLoading || cancelLoading;
+    const loading = expireLoading || cancelLoading || expireDialogOpen || cancelDialogOpen;
 
     if (action === "confirm_booking") {
       if (!claimId) return null;
@@ -180,14 +183,14 @@ export function OperatorSlotActionBar({
         <button
           key={action}
           type="button"
-          disabled={loading || expireLoading}
-          onClick={() => void handleExpire()}
+          disabled={loading || expireLoading || expireDialogOpen}
+          onClick={() => setExpireDialogOpen(true)}
           style={{
             ...baseBtn,
             opacity: expireLoading ? 0.65 : 1,
-            cursor: expireLoading ? "not-allowed" : "pointer",
+            cursor: expireLoading || expireDialogOpen ? "not-allowed" : "pointer",
           }}
-          {...pressableHandlers(loading || expireLoading)}
+          {...pressableHandlers(loading || expireLoading || expireDialogOpen)}
         >
           {expireLoading ? "Expiring…" : ACTION_LABELS[action]}
         </button>
@@ -199,14 +202,14 @@ export function OperatorSlotActionBar({
         <button
           key={action}
           type="button"
-          disabled={loading || cancelLoading}
-          onClick={() => void handleCancel()}
+          disabled={loading || cancelLoading || cancelDialogOpen}
+          onClick={() => setCancelDialogOpen(true)}
           style={{
             ...baseBtn,
             opacity: cancelLoading ? 0.65 : 1,
-            cursor: cancelLoading ? "not-allowed" : "pointer",
+            cursor: cancelLoading || cancelDialogOpen ? "not-allowed" : "pointer",
           }}
-          {...pressableHandlers(loading || cancelLoading)}
+          {...pressableHandlers(loading || cancelLoading || cancelDialogOpen)}
         >
           {cancelLoading ? "Cancelling…" : ACTION_LABELS[action]}
         </button>
@@ -278,12 +281,50 @@ export function OperatorSlotActionBar({
     ) : null;
 
   return (
-    <OperatorActionPanel
-      eyebrow={presentation.eyebrow ?? undefined}
-      title={presentation.title}
-      description={presentation.description}
-      priority={presentation.priority}
-      primaryAction={combinedActions ?? undefined}
-    />
+    <>
+      <OperatorActionPanel
+        eyebrow={presentation.eyebrow ?? undefined}
+        title={presentation.title}
+        description={presentation.description}
+        priority={presentation.priority}
+        primaryAction={combinedActions ?? undefined}
+      />
+      <OperatorDeskConfirmDialog
+        open={expireDialogOpen}
+        titleId="pf-desk-expire-opening-title"
+        title="Expire this opening?"
+        busy={expireLoading}
+        primaryLabel="Expire opening"
+        primaryBusyLabel="Expiring…"
+        primaryVariant="danger"
+        onPrimary={() => void handleExpire()}
+        secondaryLabel="Keep opening"
+        onClose={() => {
+          if (!expireLoading) setExpireDialogOpen(false);
+        }}
+      >
+        <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+          This closes the opening without a confirmed booking.
+        </p>
+      </OperatorDeskConfirmDialog>
+      <OperatorDeskConfirmDialog
+        open={cancelDialogOpen}
+        titleId="pf-desk-cancel-opening-title"
+        title="Cancel this opening?"
+        busy={cancelLoading}
+        primaryLabel="Cancel opening"
+        primaryBusyLabel="Cancelling…"
+        primaryVariant="danger"
+        onPrimary={() => void handleCancel()}
+        secondaryLabel="Keep opening"
+        onClose={() => {
+          if (!cancelLoading) setCancelDialogOpen(false);
+        }}
+      >
+        <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+          Customers will no longer be able to claim this appointment time.
+        </p>
+      </OperatorDeskConfirmDialog>
+    </>
   );
 }
