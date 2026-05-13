@@ -142,7 +142,7 @@ struct AuthFormView: View {
 
                 Text(target == .signIn ? "Sign in" : "Create account")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(mode == target ? PFColor.emberText : PFColor.textMuted)
+                    .foregroundStyle(mode == target ? PFColor.emberText : PFColor.customerTextTertiary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 42)
             }
@@ -214,23 +214,25 @@ struct AuthFormView: View {
                 HStack(spacing: 10) {
                     if authManager.isBusy {
                         ProgressView()
-                            .tint(authPrimaryCTAChromeActive ? PFColor.emberText.opacity(0.9) : PFColor.textMuted)
+                            .tint(authPrimaryCTAChromeActive ? PFColor.emberText.opacity(0.9) : PFColor.customerTextSecondary)
                     }
 
                     Text(authManager.isBusy ? mode.busyTitle : mode.primaryButtonTitle)
                         .font(.system(size: 16, weight: .bold))
                 }
-                .foregroundStyle(authPrimaryCTAChromeActive ? PFColor.emberText : PFColor.textMuted)
+                .foregroundStyle(
+                    authPrimaryCTAChromeActive ? PFColor.emberText : PFColor.customerTextSecondary
+                )
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
                 .background {
                     RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
-                        .fill(authPrimaryCTAChromeActive ? PFColor.ember : PFColor.surface2)
+                        .fill(authPrimaryCTAChromeFill)
                         .overlay {
                             if authPrimaryCTAChromeActive {
                                 LinearGradient(
                                     colors: [
-                                        Color.white.opacity(0.14),
+                                        Color.white.opacity(0.10),
                                         Color.clear,
                                     ],
                                     startPoint: .topLeading,
@@ -243,7 +245,7 @@ struct AuthFormView: View {
                         .overlay {
                             RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
                                 .stroke(
-                                    authPrimaryCTAChromeActive ? Color.clear : PFColor.hairline,
+                                    authPrimaryCTAChromeActive ? Color.clear : PFColor.customerHairline,
                                     lineWidth: 1
                                 )
                         }
@@ -256,46 +258,25 @@ struct AuthFormView: View {
         .padding(18)
         .background {
             RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            PFColor.customerGlassElevated,
-                            PFColor.customerGlassDeep,
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(PFColor.customerGlass)
                 .matchedGeometryEffect(id: "auth-form-card", in: authNamespace)
                 .overlay {
                     RoundedRectangle(cornerRadius: 30, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [PFColor.cardSheenWarm.opacity(1.2), Color.clear],
+                                colors: [PFColor.cardSheenWarm.opacity(0.4), Color.clear],
                                 startPoint: .top,
-                                endPoint: UnitPoint(x: 0.5, y: 0.38)
+                                endPoint: UnitPoint(x: 0.5, y: 0.35)
                             )
                         )
                         .allowsHitTesting(false)
                 }
                 .overlay {
                     RoundedRectangle(cornerRadius: 30, style: .continuous)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    PFColor.customerHairlineStrong,
-                                    PFColor.customerHairline,
-                                    PFColor.customerHairline.opacity(0.75),
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
+                        .stroke(PFColor.customerHairlineStrong, lineWidth: 1)
                 }
         }
-        .shadow(color: PFColor.elevationShadowDeep, radius: 20, x: 0, y: 14)
-        .shadow(color: PFColor.ember.opacity(0.06), radius: 24, x: 0, y: 14)
+        .shadow(color: PFColor.elevationShadowDeep, radius: 18, x: 0, y: 12)
         .animation(authAnimation, value: mode)
     }
 
@@ -303,7 +284,7 @@ struct AuthFormView: View {
         HStack(spacing: 6) {
             Text(mode.switchPrompt)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(PFColor.textMuted)
+                .foregroundStyle(PFColor.customerTextTertiary)
 
             Button {
                 switchMode(mode == .signIn ? .signUp : .signIn)
@@ -321,9 +302,9 @@ struct AuthFormView: View {
     private var authScrim: some View {
         LinearGradient(
             colors: [
-                PFColor.customerInkDeep.opacity(0.12),
+                PFColor.customerInkDeep.opacity(0.06),
                 Color.clear,
-                PFColor.background.opacity(0.45),
+                PFColor.background.opacity(0.32),
             ],
             startPoint: .top,
             endPoint: .bottom
@@ -345,6 +326,23 @@ struct AuthFormView: View {
     /// Primary ember CTA chrome while the form can submit or a submit is in flight.
     private var authPrimaryCTAChromeActive: Bool {
         canSubmit || authManager.isBusy
+    }
+
+    /// Slightly burnt ember (web-style) when active; solid walnut when disabled but still legible.
+    private var authPrimaryCTAChromeFill: LinearGradient {
+        if authPrimaryCTAChromeActive {
+            LinearGradient(
+                colors: [PFColor.primaryDark, PFColor.ember.opacity(0.92)],
+                startPoint: .bottomLeading,
+                endPoint: .topTrailing
+            )
+        } else {
+            LinearGradient(
+                colors: [PFColor.customerGlass, PFColor.customerGlass],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
     }
 
     private func switchMode(_ next: AuthFormMode) {
@@ -394,7 +392,7 @@ private struct AuthInputField: View {
         HStack(spacing: 12) {
             Image(systemName: systemImage)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(isFocused ? PFColor.emberReadable : PFColor.textMuted)
+                .foregroundStyle(isFocused ? PFColor.emberReadable : PFColor.customerTextTertiary)
                 .frame(width: 20)
 
             Group {
@@ -402,13 +400,13 @@ private struct AuthInputField: View {
                     SecureField(
                         "",
                         text: $text,
-                        prompt: Text(title).foregroundStyle(PFColor.textMuted.opacity(0.85))
+                        prompt: Text(title).foregroundStyle(PFColor.customerTextTertiary)
                     )
                 } else {
                     TextField(
                         "",
                         text: $text,
-                        prompt: Text(title).foregroundStyle(PFColor.textMuted.opacity(0.85))
+                        prompt: Text(title).foregroundStyle(PFColor.customerTextTertiary)
                     )
                 }
             }
@@ -424,11 +422,11 @@ private struct AuthInputField: View {
         .frame(height: 54)
         .background {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(PFColor.surface2.opacity(0.92))
+                .fill(PFColor.customerGlassDeep)
                 .overlay {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(
-                            isFocused ? PFColor.primaryBorder.opacity(0.55) : PFColor.hairline,
+                            isFocused ? PFColor.primaryBorder.opacity(0.5) : PFColor.customerHairline,
                             lineWidth: 1
                         )
                 }

@@ -12,9 +12,9 @@ struct AuthLandingView: View {
 
                 LinearGradient(
                     colors: [
-                        PFColor.customerInkDeep.opacity(0.35),
+                        PFColor.customerInkDeep.opacity(0.28),
                         Color.clear,
-                        PFColor.background.opacity(0.55),
+                        PFColor.background.opacity(0.45),
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -73,22 +73,30 @@ struct AuthLandingView: View {
                                 .frame(minHeight: 56)
                                 .foregroundStyle(PFColor.emberText)
                                 .background {
-                                    ZStack {
-                                        PFColor.ember
-                                        LinearGradient(
-                                            colors: [
-                                                Color.white.opacity(0.16),
-                                                Color.clear,
-                                            ],
-                                            startPoint: .top,
-                                            endPoint: .center
+                                    RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [PFColor.primaryDark, PFColor.ember.opacity(0.92)],
+                                                startPoint: .bottomLeading,
+                                                endPoint: .topTrailing
+                                            )
                                         )
-                                        .blendMode(.overlay)
-                                    }
+                                        .overlay {
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.white.opacity(0.10),
+                                                    Color.clear,
+                                                ],
+                                                startPoint: .top,
+                                                endPoint: .center
+                                            )
+                                            .blendMode(.overlay)
+                                            .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
+                                        }
                                 }
                                 .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
-                                .shadow(color: PFColor.elevationShadowSoft, radius: 8, y: 5)
-                                .shadow(color: PFColor.ember.opacity(0.16), radius: 14, y: 5)
+                                .shadow(color: PFColor.elevationShadowSoft, radius: 6, y: 4)
+                                .shadow(color: PFColor.ember.opacity(0.09), radius: 10, y: 4)
                         }
 
                         Button {
@@ -98,7 +106,7 @@ struct AuthLandingView: View {
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .frame(minHeight: 52)
-                                .foregroundStyle(PFColor.primaryText)
+                                .foregroundStyle(PFColor.customerTextPrimary)
                                 .background(PFColor.chipWashStrong)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
@@ -114,11 +122,11 @@ struct AuthLandingView: View {
                                 .font(.system(size: 15, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .frame(minHeight: 48)
-                                .foregroundStyle(PFColor.textSecondary)
+                                .foregroundStyle(PFColor.customerTextSecondary)
                                 .background(PFColor.chipWash)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
-                                        .stroke(PFColor.hairline, lineWidth: 1)
+                                        .stroke(PFColor.customerHairline, lineWidth: 1)
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
                         }
@@ -133,8 +141,8 @@ struct AuthLandingView: View {
                 LinearGradient(
                     colors: [
                         Color.clear,
-                        PFColor.customerInkDeep.opacity(0.22),
-                        PFColor.background.opacity(0.5),
+                        PFColor.customerInkDeep.opacity(0.17),
+                        PFColor.background.opacity(0.42),
                     ],
                     startPoint: .center,
                     endPoint: .bottom
@@ -176,12 +184,12 @@ struct AuthLandingView: View {
     private func authLandingBullet(_ line: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Circle()
-                .fill(PFColor.textMuted.opacity(0.85))
+                .fill(PFColor.customerTextTertiary.opacity(0.9))
                 .frame(width: 5, height: 5)
                 .padding(.top, 6)
             Text(line)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(PFColor.textMuted)
+                .foregroundStyle(PFColor.customerTextTertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

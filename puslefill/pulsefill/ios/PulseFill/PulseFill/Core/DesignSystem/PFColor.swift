@@ -40,9 +40,9 @@ enum PFColor {
     static let customerHairline = Color(red: 1.0, green: 226 / 255, blue: 190 / 255).opacity(0.1)
     static let customerHairlineStrong = Color(red: 1.0, green: 226 / 255, blue: 190 / 255).opacity(0.16)
     /// Subtle ember atmosphere only (web `--pf-accent-primary-glow` ~0.16 alpha at full strength; we blur wide).
-    static let customerTopGlow = PFBrandColor.ember.opacity(0.07)
+    static let customerTopGlow = PFBrandColor.ember.opacity(0.06)
     /// Warm lift for depth — **never** use success green in screen atmospheres.
-    static let customerAmbientLift = PFBrandColor.brown750.opacity(0.32)
+    static let customerAmbientLift = PFBrandColor.brown750.opacity(0.27)
     /// Local card sheen (walnut paper), not glass white.
     static let cardSheenWarm = Color(red: 1.0, green: 246 / 255, blue: 235 / 255).opacity(0.045)
     /// Deprecated name: historically green-tinted — now warm walnut only (see `customerAmbientLift`).
