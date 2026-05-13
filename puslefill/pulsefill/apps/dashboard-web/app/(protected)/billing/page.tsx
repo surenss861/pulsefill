@@ -107,6 +107,13 @@ function subscriptionIsLive(sub: BillingSummarySubscription): boolean {
   return sub.status === "active" || sub.status === "trialing";
 }
 
+function checkoutShouldBeHeroPrimary(sub: BillingSummarySubscription | null): boolean {
+  if (!sub) return true;
+  if (sub.status === "incomplete") return true;
+  if (sub.status === "canceled") return true;
+  return false;
+}
+
 function defaultHeroTitle(data: BillingSummaryResponse): string {
   if (!data.stripe_billing_available) {
     return "Billing isn’t connected here";
@@ -227,7 +234,7 @@ export default function BillingPage() {
     data &&
     data.stripe_billing_available &&
     data.subscription_checkout_available &&
-    (!sub || sub.status === "incomplete");
+    checkoutShouldBeHeroPrimary(sub);
 
   const showManagePrimary =
     data &&
