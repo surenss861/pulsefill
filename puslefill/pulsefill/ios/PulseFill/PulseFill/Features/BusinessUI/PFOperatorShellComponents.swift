@@ -36,6 +36,7 @@ struct PFOperatorHero: View {
     let title: String
     let subtitle: String
     var showLivePulse: Bool = true
+    var uppercaseOverline: Bool = true
     var primaryActionTitle: String?
     var primaryAction: (() -> Void)?
 
@@ -43,9 +44,9 @@ struct PFOperatorHero: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 if showLivePulse { PFLivePulseDot() }
-                Text(overline.uppercased())
-                    .font(.system(size: 11, weight: .semibold))
-                    .kerning(0.9)
+                Text(uppercaseOverline ? overline.uppercased() : overline)
+                    .font(.system(size: 12, weight: .semibold))
+                    .kerning(uppercaseOverline ? 0.6 : 0)
                     .foregroundStyle(PFColor.textSecondary)
             }
             Text(title)
@@ -80,9 +81,9 @@ struct PFOperatorHero: View {
         }
         .overlay(
             RoundedRectangle(cornerRadius: PFRadius.sheet, style: .continuous)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                .stroke(PFColor.customerHairlineStrong, lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.18), radius: 18, x: 0, y: 10)
+        .shadow(color: PFColor.elevationShadowSoft, radius: 16, x: 0, y: 10)
     }
 }
 
@@ -185,7 +186,7 @@ struct PFOperatorMoreDestinationRow: View {
                     .stroke(PFColor.textSecondary.opacity(0.14), lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
-            .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: 6)
+            .shadow(color: PFColor.elevationShadowSoft, radius: 10, x: 0, y: 5)
         }
         .buttonStyle(.plain)
     }

@@ -45,15 +45,15 @@ export async function getCustomerNotificationPreferences(
   customerId: string,
   pushPermissionStatus: string,
 ): Promise<Record<string, unknown>> {
-  const { data } = await admin
+  const { data, error } = await admin
     .from("customer_notification_preferences")
     .select("*")
     .eq("customer_id", customerId)
     .maybeSingle();
 
-  const prefs = normalizeRow((data as Record<string, unknown>) ?? null);
+  const prefs = normalizeRow(error ? null : ((data as Record<string, unknown>) ?? null));
 
-  const { count } = await admin
+  const { count, error: countErr } = await admin
     .from("customer_push_devices")
     .select("id", { count: "exact", head: true })
     .eq("customer_id", customerId)
@@ -63,7 +63,7 @@ export async function getCustomerNotificationPreferences(
     preferences: prefs,
     readiness: {
       push_permission_status: pushPermissionStatus,
-      has_push_device: (count ?? 0) > 0,
+      has_push_device: !countErr && (count ?? 0) > 0,
     },
   };
 }

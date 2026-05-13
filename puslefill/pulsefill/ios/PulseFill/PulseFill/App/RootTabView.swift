@@ -54,6 +54,7 @@ struct RootTabView: View {
                 .padding(.top, 8)
             }
         }
+        .pfScreenBackground()
         .onChange(of: env.sessionStore.standbyOnboardingRecheck) { _, _ in
             Task { await runStandbyOnboardingGate() }
         }

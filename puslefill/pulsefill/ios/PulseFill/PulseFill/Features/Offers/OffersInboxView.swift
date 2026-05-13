@@ -58,10 +58,11 @@ struct OffersInboxView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: PFCustomerShellMetrics.sectionSpacing) {
                         PFEmberHero(
-                            overline: "Openings",
+                            overline: "Offers",
                             title: "Appointments you can claim",
-                            subtitle: "When a business has a matching opening, it shows up here.",
-                            primaryActionTitle: "Edit standby preferences",
+                            subtitle: "Openings from your connected businesses show up here.",
+                            uppercaseOverline: false,
+                            primaryActionTitle: "Standby preferences",
                             primaryAction: { env.customerNavigation.open(.standbyStatus) }
                         )
                         .customerAppearAnimation(staggerIndex: 0)
@@ -69,7 +70,7 @@ struct OffersInboxView: View {
                         if loading && offers.isEmpty {
                             PFCustomerLoadingState(
                                 title: "Loading openings…",
-                                message: "Checking for openings that match your standby preferences.",
+                                message: "Checking for openings that match your standby.",
                                 compact: false,
                             )
                             .padding(.top, 8)
@@ -86,15 +87,15 @@ struct OffersInboxView: View {
                                 message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(errorMessage),
                                 actionTitle: "Reload openings",
                                 action: { Task { await load() } },
-                                secondaryTitle: "Edit preferences",
+                                secondaryTitle: "Standby preferences",
                                 secondaryAction: { env.customerNavigation.open(.standbyStatus) }
                             )
                         } else if offers.isEmpty {
                             PFEmptyMoment(
                                 systemImage: "bell.badge",
                                 title: "No openings yet",
-                                message: "When a business has an earlier appointment, it will show up here.",
-                                actionTitle: "Edit preferences",
+                                message: "Openings from your connected businesses show up here.",
+                                actionTitle: "Standby preferences",
                                 action: { env.customerNavigation.open(.standbyStatus) }
                             )
                         } else {
@@ -111,7 +112,7 @@ struct OffersInboxView: View {
 
                             if !parts.available.isEmpty {
                                 VStack(alignment: .leading, spacing: 12) {
-                                    PFTypography.Customer.label("Available today")
+                                    offersInboxSectionHeading("Ready to claim")
 
                                     ForEach(Array(parts.available.enumerated()), id: \.element.id) { index, item in
                                         let st = customerOfferDisplayStatus(forInbox: item)
@@ -125,15 +126,15 @@ struct OffersInboxView: View {
 
                             if !parts.waiting.isEmpty {
                                 VStack(alignment: .leading, spacing: 12) {
-                                    PFTypography.Customer.label("Waiting on business")
+                                    offersInboxSectionHeading("Waiting on business")
 
                                     ForEach(Array(parts.waiting.enumerated()), id: \.element.id) { index, item in
                                         let st = customerOfferDisplayStatus(forInbox: item)
                                         CustomerOfferCard(
                                             offer: item,
                                             displayStatus: st,
-                                            chromeActionTitle: "View status",
-                                            openingLabel: "Waiting for confirmation",
+                                            chromeActionTitle: "Track claim",
+                                            openingLabel: "Waiting on business",
                                         ) {
                                             navigationPath.append(item.id)
                                         }
@@ -144,7 +145,7 @@ struct OffersInboxView: View {
 
                             if !parts.history.isEmpty {
                                 VStack(alignment: .leading, spacing: 12) {
-                                    PFTypography.Customer.label("Past openings")
+                                    offersInboxSectionHeading("Past openings")
 
                                     ForEach(Array(parts.history.enumerated()), id: \.element.id) { index, item in
                                         let st = customerOfferDisplayStatus(forInbox: item)
@@ -187,6 +188,12 @@ struct OffersInboxView: View {
             }
         }
         .tint(PFColor.ember)
+    }
+
+    private func offersInboxSectionHeading(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(PFColor.customerDimText)
     }
 
     private func load() async {

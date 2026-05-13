@@ -44,7 +44,7 @@ struct OperatorSlotsListView: View {
                         } label: {
                             Image(systemName: "plus.circle.fill")
                         }
-                        .accessibilityLabel("Create opening")
+                        .accessibilityLabel("Add opening")
                     }
                 }
             }
@@ -77,9 +77,11 @@ struct OperatorSlotsListView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 PFOperatorHero(
-                    overline: "List",
-                    title: "Open appointments",
-                    subtitle: "Every empty slot and what to do next.",
+                    overline: "Openings",
+                    title: "Cancelled appointment times",
+                    subtitle: "Create an opening when someone cancels so PulseFill can offer it to waiting customers.",
+                    showLivePulse: true,
+                    uppercaseOverline: false,
                     primaryActionTitle: businessShellSelectedTab != nil ? "Add opening" : nil,
                     primaryAction: businessShellSelectedTab != nil
                         ? { businessShellSelectedTab?.wrappedValue = .create }
@@ -100,8 +102,8 @@ struct OperatorSlotsListView: View {
         VStack(spacing: 12) {
             Spacer()
             PFOperatorErrorMoment(
-                title: "Open appointments could not load",
-                message: "We could not load your openings. Check your connection and try again.",
+                title: "Openings could not load",
+                message: "We couldn’t load your openings. Check your connection and try again.",
                 technicalMessage: message,
                 actionTitle: "Reload openings",
                 footerHint: "You can still open Today or Claims from the tabs below.",
@@ -121,9 +123,11 @@ struct OperatorSlotsListView: View {
                 }
 
                 PFOperatorHero(
-                    overline: "List",
-                    title: "Open appointments",
-                    subtitle: "Every empty slot and what to do next.",
+                    overline: "Openings",
+                    title: "Cancelled appointment times",
+                    subtitle: "Create an opening when someone cancels so PulseFill can offer it to waiting customers.",
+                    showLivePulse: true,
+                    uppercaseOverline: false,
                     primaryActionTitle: businessShellSelectedTab != nil ? "Add opening" : nil,
                     primaryAction: businessShellSelectedTab != nil
                         ? { businessShellSelectedTab?.wrappedValue = .create }
@@ -182,7 +186,7 @@ struct OperatorSlotsListView: View {
                         PFOperatorEmptyMoment(
                             systemImage: "calendar.badge.plus",
                             title: "No openings yet",
-                            message: "Add an empty appointment so waiting customers can claim it.",
+                            message: "Add a cancelled time so waiting customers can claim it.",
                             actionTitle: businessShellSelectedTab != nil ? "Add opening" : nil,
                             action: businessShellSelectedTab != nil
                                 ? { businessShellSelectedTab?.wrappedValue = .create }

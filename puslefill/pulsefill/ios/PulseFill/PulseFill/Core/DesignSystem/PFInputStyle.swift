@@ -8,7 +8,7 @@ struct PFTextFieldStyle: TextFieldStyle {
             .clipShape(RoundedRectangle(cornerRadius: PFRadius.control, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: PFRadius.control, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(PFColor.hairline, lineWidth: 1)
             )
             .foregroundStyle(PFColor.textPrimary)
     }

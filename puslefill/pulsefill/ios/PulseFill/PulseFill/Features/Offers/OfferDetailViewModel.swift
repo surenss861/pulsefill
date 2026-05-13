@@ -114,7 +114,7 @@ final class OfferDetailViewModel {
             if let refreshed = self.offer,
                customerOfferDisplayStatus(forDetail: refreshed) == .claimed
             {
-                successBanner = "Claim sent. The business will confirm this opening."
+                successBanner = "You claimed this opening. The business still needs to confirm it."
             }
         } catch {
             errorBanner = PFCustomerFacingErrorCopy.claimFailureMessage(from: error)

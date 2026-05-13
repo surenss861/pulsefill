@@ -7,8 +7,8 @@ enum CustomerEventCopy {
         case .offerExpiringSoon: "Ends soon"
         case .offerExpired: "No longer available"
         case .claimSubmitted: "Claim sent"
-        case .claimPendingConfirmation: "Waiting for confirmation"
-        case .bookingConfirmed: "Confirmed"
+        case .claimPendingConfirmation: "Waiting on business"
+        case .bookingConfirmed: "Booking confirmed"
         case .claimUnavailable: "No longer available"
         case .missedOpportunity: "Missed"
         case .standbyStatusReminder: "Status"
@@ -22,8 +22,8 @@ enum CustomerEventCopy {
         case .offerExpiringSoon: "Opening ends soon"
         case .offerExpired: "Opening no longer available"
         case .claimSubmitted: "Claim sent"
-        case .claimPendingConfirmation: "Waiting for confirmation"
-        case .bookingConfirmed: "Confirmed"
+        case .claimPendingConfirmation: "Waiting on business"
+        case .bookingConfirmed: "Booking confirmed"
         case .claimUnavailable: "Opening no longer available"
         case .missedOpportunity: "Missed opportunity"
         case .standbyStatusReminder: "Check your standby status"
@@ -55,9 +55,9 @@ enum CustomerEventCopy {
         case .claimSubmitted:
             return "You picked an earlier time"
         case .claimPendingConfirmation:
-            return "Waiting on the business"
+            return "Waiting on business"
         case .bookingConfirmed:
-            return "Appointment booked"
+            return "Booking confirmed"
         case .claimUnavailable:
             return "That time was taken"
         case .missedOpportunity:

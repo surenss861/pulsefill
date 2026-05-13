@@ -15,23 +15,23 @@ struct AuthAppointmentPreview: Equatable {
             service: "Dental cleaning",
             businessName: "Yorkville Wellness",
             pillDay: "Today",
-            scheduleEyebrow: "TODAY",
+            scheduleEyebrow: "Today",
             time: "2:30 PM",
-            status: "Ready to claim"
+            status: "Maya claimed · Recover $185"
         ),
         AuthAppointmentPreview(
             service: "Physio consult",
             businessName: "Midtown Wellness",
             pillDay: "Tomorrow",
-            scheduleEyebrow: "TOMORROW",
+            scheduleEyebrow: "Tomorrow",
             time: "11:15 AM",
-            status: "Earlier time found"
+            status: "Waiting on business"
         ),
         AuthAppointmentPreview(
             service: "Skin treatment",
             businessName: "Queen West Studio",
             pillDay: "Friday",
-            scheduleEyebrow: "FRI",
+            scheduleEyebrow: "Fri",
             time: "4:00 PM",
             status: "Opening available"
         ),

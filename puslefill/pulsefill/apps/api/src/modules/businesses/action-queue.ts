@@ -69,6 +69,27 @@ export type ActionQueueResponse = {
   customer_follow_ups: CustomerFollowUpQueueItem[];
 };
 
+/** Safe empty queue for transient DB errors — keeps Business Today from red-screening. */
+export function neutralActionQueueResponse(): ActionQueueResponse {
+  return {
+    summary: {
+      needs_action_count: 0,
+      review_count: 0,
+      resolved_count: 0,
+      awaiting_confirmation_count: 0,
+      delivery_failed_count: 0,
+      retry_recommended_count: 0,
+      customer_follow_up_due_count: 0,
+    },
+    sections: {
+      needs_action: [],
+      review: [],
+      resolved: [],
+    },
+    customer_follow_ups: [],
+  };
+}
+
 type SlotRow = {
   id: string;
   status: string;
@@ -242,7 +263,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
     ]);
 
   if (activeErr || expErr || bookErr) {
-    throw new Error("action_queue_slot_load_failed");
+    return neutralActionQueueResponse();
   }
 
   const slots = [...(activeSlots ?? []), ...(expiredSlots ?? [])] as unknown as SlotRow[];
@@ -254,10 +275,10 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
   const activeIds = (activeSlots ?? []).map((s) => s.id);
 
   const [
-    { data: slotClaims },
-    { data: failedLogs },
-    { data: allOffers },
-    { data: noMatchAudits },
+    { data: slotClaims, error: claimsQErr },
+    { data: failedLogs, error: failedQErr },
+    { data: allOffers, error: offersQErr },
+    { data: noMatchAudits, error: auditQErr },
   ] = await Promise.all([
     activeIds.length
       ? admin
@@ -265,7 +286,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
           .select("id, open_slot_id, customer_id, claimed_at, status")
           .in("open_slot_id", activeIds)
           .in("status", ["won", "pending"])
-      : { data: [] },
+      : { data: [] as unknown[], error: null as null },
     activeIds.length
       ? admin
           .from("notification_logs")
@@ -273,10 +294,10 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
           .in("open_slot_id", activeIds)
           .eq("status", "failed")
           .order("created_at", { ascending: false })
-      : { data: [] },
+      : { data: [] as unknown[], error: null as null },
     activeIds.length
       ? admin.from("slot_offers").select("open_slot_id, status, expires_at").in("open_slot_id", activeIds)
-      : { data: [] },
+      : { data: [] as unknown[], error: null as null },
     admin
       .from("audit_events")
       .select("entity_id, created_at")
@@ -287,6 +308,10 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
       .order("created_at", { ascending: false })
       .limit(80),
   ]);
+
+  if (claimsQErr || failedQErr || offersQErr || auditQErr) {
+    return neutralActionQueueResponse();
+  }
 
   const claimsBySlot = new Map<string, ClaimRow[]>();
   for (const c of slotClaims ?? []) {
@@ -304,7 +329,8 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
   }
 
   const offersBySlot = new Map<string, Array<{ status: string; expires_at: string }>>();
-  for (const o of allOffers ?? []) {
+  for (const raw of allOffers ?? []) {
+    const o = raw as { open_slot_id: string; status: string; expires_at: string };
     const list = offersBySlot.get(o.open_slot_id) ?? [];
     list.push({ status: o.status, expires_at: o.expires_at });
     offersBySlot.set(o.open_slot_id, list);

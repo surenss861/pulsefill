@@ -18,10 +18,10 @@ enum OperatorPrimaryActionDeriver {
         case "open":
             return OperatorPrimaryAction(kind: .sendOffers, label: "Send offers", claimId: nil)
         case "offered":
-            return OperatorPrimaryAction(kind: .retryOffers, label: "Retry", claimId: nil)
+            return OperatorPrimaryAction(kind: .retryOffers, label: "Retry offers", claimId: nil)
         case "claimed":
             guard let winningClaimId else { return nil }
-            return OperatorPrimaryAction(kind: .confirmBooking, label: "Confirm", claimId: winningClaimId)
+            return OperatorPrimaryAction(kind: .confirmBooking, label: "Confirm booking", claimId: winningClaimId)
         default:
             return nil
         }
@@ -39,7 +39,7 @@ enum OperatorPrimaryActionDeriver {
 
         if first == .confirmBooking {
             guard status == "claimed", let claimId = item.claimId else { return nil }
-            return OperatorPrimaryAction(kind: .confirmBooking, label: "Confirm", claimId: claimId)
+            return OperatorPrimaryAction(kind: .confirmBooking, label: "Confirm booking", claimId: claimId)
         }
 
         if first == .retryOffers {
@@ -47,7 +47,7 @@ enum OperatorPrimaryActionDeriver {
                 return OperatorPrimaryAction(kind: .sendOffers, label: "Send offers", claimId: nil)
             }
             if status == "offered" {
-                return OperatorPrimaryAction(kind: .retryOffers, label: "Retry", claimId: nil)
+                return OperatorPrimaryAction(kind: .retryOffers, label: "Retry offers", claimId: nil)
             }
             return nil
         }

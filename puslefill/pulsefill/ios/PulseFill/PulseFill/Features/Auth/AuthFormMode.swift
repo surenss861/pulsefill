@@ -15,26 +15,28 @@ enum AuthFormMode: String, CaseIterable, Identifiable {
 
     var eyebrow: String {
         switch self {
-        case .signIn: return "Welcome back"
-        case .signUp: return "Invite access"
+        case .signIn:
+            return ""
+        case .signUp:
+            return "Using a business invite?"
         }
     }
 
     var title: String {
         switch self {
         case .signIn:
-            return "Sign in to PulseFill."
+            return "Sign in to run today’s recovery."
         case .signUp:
-            return "Create your account."
+            return "Create account"
         }
     }
 
     var subtitle: String {
         switch self {
         case .signIn:
-            return "View openings, claim them, and track booking updates."
+            return "Manage openings, claims, and confirmed bookings before the day slips away."
         case .signUp:
-            return "Use the email tied to your invite to start receiving appointment updates."
+            return "Use the same email the business used on the invite so we can connect your profile."
         }
     }
 
@@ -54,7 +56,7 @@ enum AuthFormMode: String, CaseIterable, Identifiable {
 
     var switchPrompt: String {
         switch self {
-        case .signIn: return "Have an invite?"
+        case .signIn: return "Need an account?"
         case .signUp: return "Already have an account?"
         }
     }

@@ -98,7 +98,7 @@ struct OperatorSlotDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Opening created")
+                    Text("Opening added")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(PFColor.textPrimary)
                     Text("Now send offers to waiting customers.")
@@ -155,12 +155,13 @@ struct OperatorSlotDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: PFOperatorShellMetrics.stackSpacing) {
                     PFOperatorHero(
-                        overline: "Details",
-                        title: slot.providerNameSnapshot ?? "Empty appointment",
+                        overline: "Opening",
+                        title: slot.providerNameSnapshot ?? "Cancelled time",
                         subtitle: slot.status == "claimed"
                             ? OperatorOpeningStatusCopy.label(forRawStatus: slot.status)
-                            : "Send offers to your waiting list, then confirm any claim in the Claims tab.",
-                        showLivePulse: false
+                            : "Send offers to waiting customers, then confirm any claim in Customer claims.",
+                        showLivePulse: false,
+                        uppercaseOverline: false
                     )
 
                     if showCreatedSuccessBanner {
@@ -273,9 +274,9 @@ struct OperatorSlotDetailView: View {
 
     private func serverActionBar(slot: StaffOpenSlotDetail, scroll: ScrollViewProxy) -> some View {
         PFSectionCard(
-            eyebrow: "Actions",
-            title: "Next best move",
-            description: "Server-authored action matrix for this slot.",
+            eyebrow: "Next step",
+            title: "Send offers or confirm",
+            description: "Use the actions below for this opening.",
             borderColor: PFColor.primary.opacity(0.20)
         ) {
             if viewModel.primaryRowActions.isEmpty, viewModel.secondaryRowActions.isEmpty {
@@ -360,7 +361,7 @@ struct OperatorSlotDetailView: View {
     private func legacyNextActionCard(_ slot: StaffOpenSlotDetail, scroll: ScrollViewProxy) -> some View {
         PFSectionCard(
             eyebrow: OperatorSlotDetailPresenters.nextActionTitle(for: slot.status),
-            title: "Action guidance",
+            title: "What to do next",
             description: OperatorSlotDetailPresenters.nextActionDescription(for: slot.status),
             borderColor: PFColor.primary.opacity(0.20)
         ) {
@@ -372,7 +373,7 @@ struct OperatorSlotDetailView: View {
                     .buttonStyle(PFPrimaryButtonStyle())
                     .disabled(viewModel.isConfirming)
 
-                    Button("Customer context") {
+                    Button("Customer details") {
                         withAnimation {
                             if viewModel.customerContext != nil {
                                 scroll.scrollTo("operatorCustomerContextAnchor", anchor: .top)
@@ -407,7 +408,7 @@ struct OperatorSlotDetailView: View {
                     .foregroundStyle(PFColor.textSecondary)
             }
             if slot.status == "claimed" {
-                Text("Awaiting staff confirmation")
+                Text("Waiting for you to confirm")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(PFColor.warning)
             }
@@ -424,7 +425,7 @@ struct OperatorSlotDetailView: View {
 
     private func heroCard(_ slot: StaffOpenSlotDetail) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("OPENING FOR")
+            Text("This opening")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(PFColor.textSecondary)
 
@@ -471,7 +472,7 @@ struct OperatorSlotDetailView: View {
         return Group {
             if failedOffers > 0 || failedLogs > 0 {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("NEEDS ATTENTION")
+                    Text("Needs attention")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(PFColor.warning)
 
@@ -500,7 +501,7 @@ struct OperatorSlotDetailView: View {
 
     private func winningClaimCard(_ claim: WinningClaimRow, context: OperatorCustomerContextResponse?) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("WINNING CLAIM")
+            Text("Customer claim")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(PFColor.warning)
 
@@ -526,7 +527,7 @@ struct OperatorSlotDetailView: View {
 
     private func offerOutcomesCard(_ offers: [StaffSlotOfferRow]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("OFFER OUTCOMES")
+            Text("Offer outcomes")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(PFColor.textSecondary)
 
@@ -547,7 +548,7 @@ struct OperatorSlotDetailView: View {
 
     private func timelineCard(_ events: [OperatorTimelineEvent]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("RECENT ACTIVITY")
+            Text("Recent activity")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(PFColor.textSecondary)
 

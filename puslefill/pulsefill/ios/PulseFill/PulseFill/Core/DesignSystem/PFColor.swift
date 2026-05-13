@@ -32,8 +32,8 @@ enum PFColor {
     static let customerGlassDeep = PFBrandColor.brown900
     static let customerHairline = Color(red: 1.0, green: 237 / 255, blue: 190 / 255).opacity(0.1)
     static let customerHairlineStrong = Color(red: 1.0, green: 237 / 255, blue: 190 / 255).opacity(0.16)
-    static let customerTopGlow = Color(red: 1.0, green: 0.36, blue: 0.06).opacity(0.16)
-    static let customerSuccessGlow = PFBrandColor.success.opacity(0.12)
+    static let customerTopGlow = Color(red: 1.0, green: 0.36, blue: 0.06).opacity(0.11)
+    static let customerSuccessGlow = PFBrandColor.success.opacity(0.085)
     static let emberGlow = PFBrandColor.ember.opacity(0.22)
     /// Ember wash for chips / icon tiles on dark glass.
     static let emberSoft = PFBrandColor.ember.opacity(0.13)
@@ -79,6 +79,19 @@ enum PFColor {
     static let divider = Color(red: 1.0, green: 237 / 255, blue: 190 / 255).opacity(0.08)
     static let hairline = Color(red: 1.0, green: 237 / 255, blue: 190 / 255).opacity(0.1)
     static let glassTint = Color(red: 1.0, green: 246 / 255, blue: 235 / 255).opacity(0.055)
+
+    // MARK: - Warm elevation (avoid pure black shadows)
+
+    /// Primary card depth — brown-tinted, matches web operations-desk surfaces.
+    static let elevationShadow = PFBrandColor.brown900.opacity(0.48)
+    /// Secondary lift (rows, compact cards).
+    static let elevationShadowSoft = PFBrandColor.brown900.opacity(0.30)
+    /// Strong depth (pass / hero) without neutral black.
+    static let elevationShadowDeep = PFBrandColor.ink950.opacity(0.52)
+
+    /// Neutral chip / pill wash on dark walnut (replaces cold `Color.white.opacity` fills).
+    static let chipWash = Color(red: 1.0, green: 246 / 255, blue: 235 / 255).opacity(0.045)
+    static let chipWashStrong = Color(red: 1.0, green: 246 / 255, blue: 235 / 255).opacity(0.072)
 
     // MARK: - Signed-out onboarding (cream card on warm dark chrome)
 

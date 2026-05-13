@@ -49,14 +49,15 @@ struct ProfileView: View {
 
                             PFEmberHero(
                                 overline: "Profile",
-                                title: "Your setup",
-                                subtitle: "Manage connected businesses, standby alerts, and account access."
+                                title: "Your account & alerts",
+                                subtitle: "Connect businesses, tune standby, and keep opening alerts on.",
+                                uppercaseOverline: false
                             )
 
                             PFCustomerInfoCallout(
-                                title: "How Profile fits in",
+                                title: "Start here",
                                 message:
-                                    "Use an invite code to connect to a business, find businesses in PulseFill, then set standby so matching openings can reach you.",
+                                    "Use an invite code from a business, find them in PulseFill, then set standby so matching openings can reach you.",
                                 variant: .neutral
                             )
 
@@ -153,12 +154,12 @@ struct ProfileView: View {
         VStack(alignment: .leading, spacing: 12) {
             switch intro {
             case .signedOutPrimary:
-                Text("Have an invite code?")
+                Text("Use invite code")
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(PFColor.textPrimary)
 
                 Text(
-                    "Use an invite code from a business to connect and set standby preferences."
+                    "Paste the code the business sent you to connect and get earlier appointments."
                 )
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(PFColor.textSecondary)
@@ -201,7 +202,7 @@ struct ProfileView: View {
             }
 
             PFCustomerPrimaryButton(
-                title: env.authManager.isBusy ? "Connecting…" : "Connect with invite code",
+                title: env.authManager.isBusy ? "Connecting…" : "Use invite code",
                 isEnabled: !businessInviteToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !env.authManager.isBusy,
                 isLoading: env.authManager.isBusy,
                 action: {
@@ -234,7 +235,7 @@ struct ProfileView: View {
         .overlay {
             if inviteSectionEmphasized {
                 RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous)
-                    .stroke(PFColor.ember.opacity(0.88), lineWidth: 2)
+                    .stroke(PFColor.primaryBorder.opacity(0.75), lineWidth: 2)
             }
         }
     }
@@ -276,7 +277,7 @@ struct ProfileView: View {
                     .lineSpacing(3)
 
                 NavigationLink(value: CustomerDestination.standbyStatus) {
-                    CustomerPrimaryChromeLabel(title: "View standby status")
+                    CustomerPrimaryChromeLabel(title: "Standby status")
                 }
                 .buttonStyle(.plain)
 

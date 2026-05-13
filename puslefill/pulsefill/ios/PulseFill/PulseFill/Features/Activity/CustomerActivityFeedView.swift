@@ -17,17 +17,18 @@ struct CustomerActivityFeedView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: PFCustomerShellMetrics.sectionSpacing) {
                         PFEmberHero(
-                            overline: "Updates",
-                            title: "What changed",
-                            subtitle: "Track claims, confirmations, and missed openings in one timeline."
+                            overline: "Activity",
+                            title: "Opening updates",
+                            subtitle: "See claims, confirmations, and missed openings in one timeline.",
+                            uppercaseOverline: false
                         )
                         .customerAppearAnimation(staggerIndex: 0)
 
                         if !activityAboutCalloutSuppressed {
                             PFCustomerInfoCallout(
-                                title: "About Activity",
+                                title: "How Activity works",
                                 message:
-                                    "We show what changed in plain language — not technical codes. Tap a row when there’s something you can open or review.",
+                                    "We show changes in plain language. Tap a row when there is an opening or claim to review.",
                                 variant: .neutral
                             )
                             .customerAppearAnimation(staggerIndex: 1)
@@ -70,7 +71,7 @@ struct CustomerActivityFeedView: View {
                                 PFEmptyMoment(
                                     systemImage: "list.bullet.rectangle",
                                     title: "No updates yet",
-                                    message: "Claims, confirmations, and missed openings will show up here.",
+                                    message: "When you claim an opening or a booking is confirmed, it will show up here.",
                                     actionTitle: "View openings",
                                     action: { env.customerNavigation.openOffersInbox() }
                                 )
@@ -120,7 +121,7 @@ struct CustomerActivityFeedView: View {
 
     private var activityAboutFootnoteWhenFailed: some View {
         Text(
-            "We show what changed in plain language — tap a row when there’s something you can open or review."
+            "We show changes in plain language — tap a row when there is an opening or claim to review."
         )
         .font(.system(size: 13, weight: .medium))
         .foregroundStyle(PFColor.customerMutedText)

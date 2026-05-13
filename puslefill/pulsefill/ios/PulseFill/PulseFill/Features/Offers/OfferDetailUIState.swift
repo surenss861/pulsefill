@@ -47,9 +47,9 @@ enum OfferDetailUIState: Equatable {
         case .available:
             return "Opening available"
         case .waitingForConfirmation:
-            return "Waiting for confirmation"
+            return "Waiting on business"
         case .confirmed:
-            return "Confirmed"
+            return "Booking confirmed"
         case .expired, .unavailable:
             return "No longer available"
         case .taken:
@@ -64,11 +64,11 @@ enum OfferDetailUIState: Equatable {
         case .claiming:
             return "Sending your claim now."
         case .available:
-            return "You can claim this opening if the time still works for you."
+            return "Claim this appointment before it is gone."
         case .waitingForConfirmation:
-            return "Your claim was sent. The business will confirm if this opening can be booked."
+            return "You claimed this opening. The business still needs to confirm it."
         case .confirmed:
-            return "You’re booked for this opening."
+            return "Your appointment is locked in."
         case .expired:
             return "This opening expired or was filled before you could claim it."
         case .unavailable:

@@ -48,7 +48,7 @@ struct OperatorEmptyStateCard: View {
         .background(PFSurface.card)
         .overlay(
             RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                .stroke(PFColor.textSecondary.opacity(0.12), lineWidth: 1)
+                .stroke(PFColor.hairline, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
     }
@@ -106,7 +106,7 @@ struct OperatorErrorStateCard: View {
                         .textSelection(.enabled)
                         .padding(10)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(PFColor.textSecondary.opacity(0.08))
+                        .background(PFColor.divider.opacity(0.85))
                         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
             }

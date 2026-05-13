@@ -34,12 +34,10 @@ struct MainShellView: View {
 
 private struct ClientConfigurationBlockingView: View {
     let message: String
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
-            AuthMetalBackgroundView(reduceMotion: reduceMotion)
-                .ignoresSafeArea()
+            PFScreenBackground()
 
             VStack(spacing: 18) {
                 Image(systemName: "wifi.exclamationmark")
@@ -48,19 +46,19 @@ private struct ClientConfigurationBlockingView: View {
 
                 Text("Connection problem")
                     .font(.system(size: 26, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.94))
+                    .foregroundStyle(PFColor.textPrimary)
                     .multilineTextAlignment(.center)
 
                 Text(message)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.72))
+                    .foregroundStyle(PFColor.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
                     .padding(.horizontal, 28)
 
                 Text("If this keeps happening, try again later or reinstall PulseFill from the link the business shared.")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.42))
+                    .foregroundStyle(PFColor.textMuted)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
                     .padding(.horizontal, 32)

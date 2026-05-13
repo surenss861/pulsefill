@@ -115,7 +115,7 @@ struct OfferDetailView: View {
                     NavigationLink {
                         ClaimOutcomeView(api: env.apiClient, claimId: claimId)
                     } label: {
-                        Text("Track claim status")
+                        Text("Track claim")
                             .font(.system(size: 16, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .frame(minHeight: PFCustomerShellMetrics.buttonMinHeight)
@@ -156,7 +156,8 @@ struct OfferDetailView: View {
             overline: "Opening",
             title: uiState.bannerTitle,
             subtitle: uiState.bannerMessage,
-            showPulse: shouldShowHeroPulse(uiState)
+            showPulse: shouldShowHeroPulse(uiState),
+            uppercaseOverline: false
         )
     }
 

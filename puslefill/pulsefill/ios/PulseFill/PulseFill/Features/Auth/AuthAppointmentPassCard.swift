@@ -135,7 +135,7 @@ struct AuthAppointmentPassCard: View {
                         RoundedRectangle(cornerRadius: PFRadius.passCard, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [Color.white.opacity(0.07), Color.white.opacity(0.0)],
+                                    colors: [PFColor.glassTint.opacity(1.25), Color.clear],
                                     startPoint: .top,
                                     endPoint: UnitPoint(x: 0.5, y: 0.36)
                                 )
@@ -147,9 +147,9 @@ struct AuthAppointmentPassCard: View {
                             .stroke(
                                 LinearGradient(
                                     colors: [
-                                        PFColor.ember.opacity(0.30),
-                                        Color.white.opacity(0.13),
-                                        Color.white.opacity(0.11),
+                                        PFColor.customerHairlineStrong,
+                                        PFColor.customerHairline,
+                                        PFColor.customerHairline.opacity(0.75),
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -159,21 +159,21 @@ struct AuthAppointmentPassCard: View {
                     }
                     .overlay(alignment: .topLeading) {
                         Circle()
-                            .fill(Color.white.opacity(0.07))
+                            .fill(PFColor.glassTint.opacity(1.15))
                             .frame(width: 190, height: 190)
                             .blur(radius: 38)
                             .offset(x: -76, y: -92)
                     }
                     .overlay(alignment: .bottomTrailing) {
                         Circle()
-                            .fill(PFColor.ember.opacity(0.10))
+                            .fill(PFColor.ember.opacity(0.06))
                             .frame(width: 170, height: 170)
                             .blur(radius: 42)
                             .offset(x: 56, y: 70)
                     }
             }
-            .shadow(color: Color.black.opacity(0.46), radius: 28, x: 0, y: 20)
-            .shadow(color: PFColor.ember.opacity(0.14), radius: 34, x: 0, y: 18)
+            .shadow(color: PFColor.elevationShadowDeep, radius: 22, x: 0, y: 16)
+            .shadow(color: PFColor.ember.opacity(0.07), radius: 26, x: 0, y: 14)
 
             progressDots
         }
@@ -198,8 +198,8 @@ struct AuthAppointmentPassCard: View {
                 Circle()
                     .fill(
                         reduceMotion
-                            ? Color.white.opacity(0.28)
-                            : (active ? PFColor.ember : Color.white.opacity(0.24))
+                            ? PFColor.textMuted.opacity(0.35)
+                            : (active ? PFColor.ember : PFColor.textMuted.opacity(0.28))
                     )
                     .frame(width: reduceMotion ? 5 : (active ? 7 : 5), height: reduceMotion ? 5 : (active ? 7 : 5))
                     .animation(.easeInOut(duration: 0.22), value: selectedIndex)

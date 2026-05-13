@@ -27,6 +27,13 @@ export async function registerAuthRoutes(app: FastifyInstance) {
           .eq("auth_user_id", uid),
       ]);
 
+      if (customerRes.error) {
+        req.log.warn({ err: customerRes.error }, "auth_me_customer_lookup_degraded");
+      }
+      if (staffRes.error) {
+        req.log.warn({ err: staffRes.error }, "auth_me_staff_lookup_degraded");
+      }
+
       const customerId = customerRes.error ? null : (customerRes.data?.id ?? null);
       const staffRows = staffRes.error || !staffRes.data ? [] : staffRes.data;
       const businesses = staffRows.map((row: Record<string, unknown>) => {
@@ -82,7 +89,10 @@ export async function registerAuthRoutes(app: FastifyInstance) {
 
       if (error) {
         req.log.error({ error }, "customer upsert failed");
-        return sendJson(req, reply, 500, { error: "sync_failed" });
+        return sendJson(req, reply, 500, {
+          error: "sync_failed",
+          message: "We could not sync your profile. Try again in a moment.",
+        });
       }
 
       return reply.send({ ok: true, synced: true, customer_id: data.id });

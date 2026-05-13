@@ -2,10 +2,17 @@ import SwiftUI
 
 // MARK: - Screen (customer standby chrome)
 
-/// Warm charcoal + ember glow behind customer flows. Alias of the shared customer backdrop.
+/// Warm near-black canvas behind signed-in flows (customer + business). Matches web operations-desk ink.
 struct PFScreenBackground: View {
     var body: some View {
         CustomerScreenBackground()
+    }
+}
+
+extension View {
+    /// Applies the standard warm signed-in backdrop behind feature content.
+    func pfScreenBackground() -> some View {
+        background(PFScreenBackground())
     }
 }
 
@@ -67,8 +74,8 @@ enum PFCustomerOfferStatusKind: Equatable {
     var label: String {
         switch self {
         case .available: "Opening available"
-        case .waiting: "Waiting for confirmation"
-        case .confirmed: "Confirmed"
+        case .waiting: "Waiting on business"
+        case .confirmed: "Booking confirmed"
         case .expired, .unavailable: "No longer available"
         case .taken: "Opening taken"
         case .pending: "Pending"
@@ -139,17 +146,17 @@ struct PFCustomerPrimaryButton: View {
                         .opacity(0)
                     HStack(spacing: 10) {
                         ProgressView()
-                            .tint(.black.opacity(0.85))
+                            .tint(PFColor.emberText.opacity(0.9))
                         Text(title)
                             .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(.black.opacity(0.92))
+                            .foregroundStyle(PFColor.emberText.opacity(0.95))
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .background(emberFill)
                 .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
-                .shadow(color: Color.black.opacity(0.12), radius: 6, y: 3)
-                .shadow(color: PFColor.ember.opacity(0.28), radius: 14, y: 4)
+                .shadow(color: PFColor.elevationShadowSoft, radius: 6, y: 3)
+                .shadow(color: PFColor.ember.opacity(0.18), radius: 12, y: 4)
                 .allowsHitTesting(false)
             } else {
                 CustomerPrimaryButton(
@@ -168,7 +175,7 @@ struct PFCustomerPrimaryButton: View {
             PFColor.ember
             LinearGradient(
                 colors: [
-                    Color.white.opacity(0.2),
+                    Color.white.opacity(0.16),
                     Color.clear,
                 ],
                 startPoint: .top,

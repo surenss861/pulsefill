@@ -31,9 +31,11 @@ struct BusinessAccountView: View {
                     workspaceCard
 
                     PFOperatorHero(
-                        overline: "Signed in",
+                        overline: "Account",
                         title: "Workspace",
-                        subtitle: "Switch modes, see who you’re operating as, or sign out."
+                        subtitle: "Manage business mode, account access, and sign out.",
+                        showLivePulse: true,
+                        uppercaseOverline: false
                     )
 
                     modeCard
@@ -121,15 +123,14 @@ struct BusinessAccountView: View {
 
     private var modeCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("CURRENT MODE")
+            Text("Current mode")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(PFColor.textSecondary)
-                .tracking(0.5)
 
             HStack(spacing: 10) {
                 Image(systemName: "briefcase.fill")
                     .foregroundStyle(PFColor.primary)
-                Text("Business (operator)")
+                Text("Business mode")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(PFColor.textPrimary)
                 Spacer()
@@ -143,7 +144,7 @@ struct BusinessAccountView: View {
 
     private var customerModeCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("You also have a customer profile on this account. Switch when you want standby, offers, and personal activity — not business tools.")
+            Text("You also have a customer profile on this account. Switch when you want personal openings and activity — not the business desk.")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(PFColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

@@ -117,7 +117,7 @@ struct NotificationPreferencesView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         PFTypography.Customer.label("What you want to hear about")
                         Toggle("New openings", isOn: $viewModel.notifyNewOffers)
-                        Toggle("Waiting for confirmation", isOn: $viewModel.notifyClaimUpdates)
+                        Toggle("Waiting on business", isOn: $viewModel.notifyClaimUpdates)
                         Toggle("Confirmed bookings", isOn: $viewModel.notifyBookingConfirmations)
                         Toggle("Standby tips", isOn: $viewModel.notifyStandbyTips)
                     }

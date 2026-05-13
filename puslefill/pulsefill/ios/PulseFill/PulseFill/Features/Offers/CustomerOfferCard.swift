@@ -81,8 +81,8 @@ enum CustomerOfferInboxCopy {
 struct CustomerOfferCard: View {
     let offer: OfferInboxItem
     let displayStatus: CustomerOfferDisplayStatus
-    /// Shown on the pass chrome (e.g. "View opening", "View status").
-    var chromeActionTitle: String = "View opening"
+    /// Shown on the pass chrome (e.g. "Claim opening", "Track claim").
+    var chromeActionTitle: String = "Claim opening"
     /// Small label above the service line (patient-safe).
     var openingLabel: String = "Opening available"
     let onView: () -> Void

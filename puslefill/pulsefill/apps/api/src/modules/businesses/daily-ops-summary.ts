@@ -78,8 +78,9 @@ export async function buildDailyOpsSummary(
     .eq("id", businessId)
     .maybeSingle();
 
+  /** Orphaned staff row, missing migration, or transient DB issue — never 500 iOS Today for this. */
   if (bizErr || !biz) {
-    throw new Error("business_load_failed");
+    return neutralDailyOpsSummary();
   }
 
   const timezone = (biz as { timezone: string }).timezone || "America/New_York";
@@ -123,14 +124,14 @@ export async function buildDailyOpsSummary(
     admin.from("open_slots").select("id").eq("business_id", businessId),
   ]);
 
-  const slotIdList = (bizSlotIds.data ?? []).map((r) => (r as { id: string }).id);
+  const slotIdList = bizSlotIds.error ? [] : (bizSlotIds.data ?? []).map((r) => (r as { id: string }).id);
 
   let delivery_failures_today = 0;
   let recovered_bookings_today = 0;
   let recovered_revenue_cents_today = 0;
 
   if (slotIdList.length > 0) {
-    const [{ count: failCount }, { data: confirmedClaims }] = await Promise.all([
+    const [{ count: failCount, error: failErr }, { data: confirmedClaims, error: claimsErr }] = await Promise.all([
       admin
         .from("notification_logs")
         .select("id", { count: "exact", head: true })
@@ -155,9 +156,9 @@ export async function buildDailyOpsSummary(
         .lt("confirmed_at", endUtc),
     ]);
 
-    delivery_failures_today = failCount ?? 0;
+    delivery_failures_today = failErr ? 0 : failCount ?? 0;
 
-    for (const row of confirmedClaims ?? []) {
+    for (const row of claimsErr ? [] : confirmedClaims ?? []) {
       recovered_bookings_today += 1;
       const os = (row as { open_slots?: { estimated_value_cents?: number | null } }).open_slots;
       const slot = Array.isArray(os) ? os[0] : os;
@@ -181,7 +182,7 @@ export async function buildDailyOpsSummary(
     cancelled: 0,
   };
 
-  for (const row of statusRows.data ?? []) {
+  for (const row of statusRows.error ? [] : statusRows.data ?? []) {
     const k = String((row as { status: string }).status || "").toLowerCase();
     switch (k) {
       case "open":
@@ -213,10 +214,10 @@ export async function buildDailyOpsSummary(
     metrics: {
       recovered_bookings_today,
       recovered_revenue_cents_today,
-      awaiting_confirmation_count: awaitingRow.count ?? 0,
+      awaiting_confirmation_count: awaitingRow.error ? 0 : awaitingRow.count ?? 0,
       delivery_failures_today,
-      no_matches_today: noMatchRow.count ?? 0,
-      active_offered_slots_count: offeredRow.count ?? 0,
+      no_matches_today: noMatchRow.error ? 0 : noMatchRow.count ?? 0,
+      active_offered_slots_count: offeredRow.error ? 0 : offeredRow.count ?? 0,
     },
     breakdown: {
       by_status: byStatus,

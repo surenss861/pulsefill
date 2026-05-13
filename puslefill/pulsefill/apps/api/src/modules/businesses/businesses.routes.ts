@@ -4,8 +4,8 @@ import { createServiceSupabase } from "../../config/supabase.js";
 import { sendJson } from "../../lib/http-errors.js";
 import { requireStaff } from "../../plugins/guards.js";
 import { rateLimitTier } from "../../plugins/rate-limit.js";
-import { buildActionQueue } from "./action-queue.js";
-import { buildDailyOpsSummary } from "./daily-ops-summary.js";
+import { buildActionQueue, neutralActionQueueResponse } from "./action-queue.js";
+import { buildDailyOpsSummary, neutralDailyOpsSummary } from "./daily-ops-summary.js";
 import { buildDeliveryReliability } from "./delivery-reliability.js";
 import { buildOpsBreakdown } from "./ops-breakdown.js";
 import { buildMorningRecoveryDigest } from "./morning-recovery-digest.js";
@@ -253,7 +253,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         return reply.send(data);
       } catch (e) {
         req.log.error({ e }, "action_queue_failed");
-        return sendJson(req, reply, 500, { error: "action_queue_failed" });
+        return reply.send(neutralActionQueueResponse());
       }
     },
   );
@@ -283,7 +283,7 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
         return reply.send(data);
       } catch (e) {
         req.log.error({ e }, "daily_ops_summary_failed");
-        return sendJson(req, reply, 500, { error: "daily_ops_summary_failed" });
+        return reply.send(neutralDailyOpsSummary());
       }
     },
   );

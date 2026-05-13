@@ -15,11 +15,11 @@ enum CustomerOfferDisplayStatus: Equatable {
 
     var label: String {
         switch self {
-        case .readyToClaim: return "Ready to claim"
+        case .readyToClaim: return "Opening available"
         case .offerAvailable: return "Opening available"
         case .expiresSoon: return "Ends soon"
-        case .claimed: return "Waiting for confirmation"
-        case .confirmed: return "Confirmed"
+        case .claimed: return "Waiting on business"
+        case .confirmed: return "Booking confirmed"
         case .expired: return "No longer available"
         case .unavailable: return "No longer available"
         case .unknown: return "Status unavailable"
@@ -119,17 +119,17 @@ func customerOfferDisplayStatus(forDetail offer: CustomerOfferDetail, now: Date 
 func homeSpotlightActionTitle(for status: CustomerOfferDisplayStatus) -> String {
     switch status {
     case .readyToClaim, .offerAvailable, .expiresSoon:
-        return "View opening"
+        return "Claim opening"
     case .claimed:
-        return "View status"
+        return "Track claim"
     case .confirmed:
-        return "View booking"
+        return "View opening"
     case .expired:
         return "No longer available"
     case .unavailable:
         return "No longer available"
     case .unknown:
-        return "View update"
+        return "View opening"
     }
 }
 

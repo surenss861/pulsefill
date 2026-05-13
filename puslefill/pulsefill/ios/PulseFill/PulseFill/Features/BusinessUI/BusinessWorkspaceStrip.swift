@@ -58,7 +58,7 @@ struct BusinessWorkspaceStrip: View {
                 .foregroundStyle(PFColor.primary)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Operating as \(p.businessName)")
+                Text("Workspace · \(p.businessName)")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(PFColor.textPrimary)
                     .lineLimit(2)

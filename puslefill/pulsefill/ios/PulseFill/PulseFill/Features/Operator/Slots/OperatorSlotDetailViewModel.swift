@@ -153,7 +153,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
             if !trimmed.isEmpty {
                 msg = trimmed
             } else if res.result == "no_matches" {
-                msg = "No matching standby customers were found."
+                msg = "No waiting customers matched this opening yet."
             } else {
                 msg = action == .retryOffers || slot.status == "offered" ? "Offers retried." : "Offers sent."
             }

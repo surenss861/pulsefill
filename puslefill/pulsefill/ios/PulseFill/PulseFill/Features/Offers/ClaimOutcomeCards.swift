@@ -5,8 +5,8 @@ struct ClaimOutcomeHeroCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(stateLabel.uppercased())
-                .font(.system(size: 11, weight: .semibold))
+            Text(stateLabel)
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(stateColor)
 
             Text(outcome.title)
@@ -28,9 +28,9 @@ struct ClaimOutcomeHeroCard: View {
     private var stateLabel: String {
         switch outcome.state.lowercased() {
         case "confirmed":
-            return "Confirmed"
+            return "Booking confirmed"
         case "pending_confirmation":
-            return "Waiting for confirmation"
+            return "Waiting on business"
         case "expired", "lost", "unavailable":
             return "No longer available"
         default:

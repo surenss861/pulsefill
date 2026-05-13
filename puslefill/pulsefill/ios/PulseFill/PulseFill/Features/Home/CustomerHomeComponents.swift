@@ -26,7 +26,7 @@ struct CustomerHomeHeader: View {
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
-                    .background(Color.white.opacity(0.055))
+                    .background(PFColor.chipWash)
                     .clipShape(Capsule())
                     .overlay {
                         Capsule()
@@ -36,9 +36,7 @@ struct CustomerHomeHeader: View {
             }
 
             if isSignedIn {
-                PFTypography.Customer.screenTitle("Your appointment updates,\nall in one place.")
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                EmptyView()
             } else {
                 PFTypography.Customer.screenTitle("Stay ready for openings")
                     .multilineTextAlignment(.leading)
@@ -63,9 +61,9 @@ enum CustomerHomeSpotlightCopy {
         case .expiresSoon:
             return "Ends soon"
         case .claimed:
-            return "Waiting for confirmation"
+            return "Waiting on business"
         case .confirmed:
-            return "Confirmed"
+            return "Booking confirmed"
         case .expired, .unavailable:
             return "No longer available"
         case .unknown:
@@ -76,13 +74,13 @@ enum CustomerHomeSpotlightCopy {
     static func message(for status: CustomerOfferDisplayStatus) -> String {
         switch status {
         case .readyToClaim, .offerAvailable:
-            return "A matching opening is ready to review."
+            return "Claim this appointment before it is gone."
         case .expiresSoon:
-            return "This opening ends soon — review it when you can."
+            return "This opening ends soon — claim it if the time still works."
         case .claimed:
-            return "Your claim was sent. Check the opening for updates."
+            return "You claimed this opening. The business still needs to confirm it."
         case .confirmed:
-            return "You’re booked for this opening."
+            return "Your appointment is locked in."
         case .expired:
             return "This opening expired or was filled before you could claim it."
         case .unavailable:
@@ -373,12 +371,12 @@ struct EmptyOfferStateCard: View {
     var body: some View {
         CustomerEmptyStateCard(
             systemImage: "bell.badge",
-            title: "No openings right now.",
-            message: "You’re still on standby for updates. We’ll notify you when a better appointment time opens up.",
-            footnote: "Keep notifications on so you don’t miss an opening.",
-            primaryActionTitle: onNotificationSettings == nil ? nil : "Check notification settings",
+            title: "No openings yet",
+            message: "Openings from your connected businesses show up here. Keep notifications on so you don’t miss one.",
+            footnote: nil,
+            primaryActionTitle: onNotificationSettings == nil ? nil : "Notification settings",
             primaryAction: onNotificationSettings,
-            secondaryActionTitle: onStandbyPreferences == nil ? nil : "Update standby preferences",
+            secondaryActionTitle: onStandbyPreferences == nil ? nil : "Standby preferences",
             secondaryAction: onStandbyPreferences
         )
     }
@@ -395,11 +393,11 @@ struct CustomerStandbyStatusCard: View {
             HStack(alignment: .center, spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(isActive ? Color.green.opacity(0.16) : PFColor.primary.opacity(0.12))
+                        .fill(isActive ? PFColor.success.opacity(0.16) : PFColor.primary.opacity(0.12))
 
                     Image(systemName: isActive ? "dot.radiowaves.left.and.right" : "person.crop.circle.badge.plus")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(isActive ? Color.green : PFColor.primaryText)
+                        .foregroundStyle(isActive ? PFColor.success : PFColor.primaryText)
                 }
                 .frame(width: 44, height: 44)
 
@@ -478,7 +476,7 @@ struct CustomerRecentActivityCard: View {
                 }
 
                 if rows.isEmpty {
-                    Text("New openings and booking updates show up here — check back when something changes.")
+                    Text("No updates yet. When you claim an opening or a booking is confirmed, it will show up here.")
                         .font(.system(size: 14, weight: .medium))
                         .lineSpacing(3)
                         .foregroundStyle(PFColor.textSecondary)

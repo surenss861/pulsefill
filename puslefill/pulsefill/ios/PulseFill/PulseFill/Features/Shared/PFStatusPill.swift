@@ -14,11 +14,11 @@ struct PFStatusPill: View {
             switch self {
             case .primary: return PFColor.primarySoft
             case .danger: return PFColor.error.opacity(0.14)
-            case .resolved: return Color.white.opacity(0.04)
-            case .muted: return Color.white.opacity(0.035)
+            case .resolved: return PFColor.chipWashStrong
+            case .muted: return PFColor.chipWash
             case .success: return PFColor.success.opacity(0.15)
             case .warning: return PFColor.warning.opacity(0.14)
-            case .default: return Color.white.opacity(0.04)
+            case .default: return PFColor.chipWash
             }
         }
 
@@ -40,7 +40,7 @@ struct PFStatusPill: View {
             case .danger: return PFColor.error.opacity(0.35)
             case .success: return PFColor.success.opacity(0.35)
             case .warning: return PFColor.warning.opacity(0.35)
-            default: return Color.white.opacity(0.10)
+            default: return PFColor.hairline
             }
         }
     }

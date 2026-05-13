@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Quick-create a staff opening — Business mode **Create** tab.
+/// Quick-create a staff opening — Business mode **Add** tab.
 struct OperatorCreateOpeningView: View {
     @EnvironmentObject private var env: AppEnvironment
     @StateObject private var viewModel: OperatorCreateOpeningViewModel
@@ -93,9 +93,11 @@ struct OperatorCreateOpeningView: View {
                     .environmentObject(env)
 
                 PFOperatorHero(
-                    overline: "Create",
-                    title: "Add an empty appointment",
-                    subtitle: "Then send offers so waiting customers can claim it. You confirm the booking in Claims."
+                    overline: "Add opening",
+                    title: "Tell PulseFill which time opened up",
+                    subtitle: "Pick the time and service. Then send offers so a waiting customer can claim it. You confirm the booking in Customer claims.",
+                    showLivePulse: true,
+                    uppercaseOverline: false
                 )
                 .padding(.top, 8)
 
@@ -180,7 +182,7 @@ struct OperatorCreateOpeningView: View {
                 }
 
                 PFCustomerPrimaryButton(
-                    title: "Create opening",
+                    title: "Add opening",
                     isEnabled: !viewModel.isSubmitting,
                     isLoading: viewModel.isSubmitting
                 ) {

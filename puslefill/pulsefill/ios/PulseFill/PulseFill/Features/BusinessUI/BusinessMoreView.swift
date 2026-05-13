@@ -13,23 +13,25 @@ struct BusinessMoreView: View {
                         .environmentObject(env)
 
                     PFOperatorHero(
-                        overline: "Tools",
-                        title: "Customers & account",
-                        subtitle: "Invite people to your waiting list or manage sign-in and workspace."
+                        overline: "More",
+                        title: "Customers & workspace",
+                        subtitle: "Invite waiting customers or open Workspace for account access and sign out.",
+                        showLivePulse: true,
+                        uppercaseOverline: false
                     )
 
                     VStack(spacing: PFOperatorShellMetrics.stackSpacing) {
                         PFOperatorMoreDestinationRow(
                             systemImage: "person.2.fill",
                             title: "Customers",
-                            subtitle: "Invite customers and manage your waiting list.",
+                            subtitle: "Invite customers so they can get openings when someone cancels.",
                             action: { morePath.append(BusinessMoreRoute.customers) }
                         )
 
                         PFOperatorMoreDestinationRow(
                             systemImage: "person.crop.circle.fill",
                             title: "Account",
-                            subtitle: "Workspace, mode switch, and sign out.",
+                            subtitle: "Manage business mode, account access, and sign out.",
                             action: { morePath.append(BusinessMoreRoute.account) }
                         )
                     }

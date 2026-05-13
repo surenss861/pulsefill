@@ -14,7 +14,7 @@ struct PFSurfaceCard<Content: View>: View {
             .clipShape(RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: PFRadius.card, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+                    .strokeBorder(PFColor.hairline, lineWidth: 1)
             )
     }
 }

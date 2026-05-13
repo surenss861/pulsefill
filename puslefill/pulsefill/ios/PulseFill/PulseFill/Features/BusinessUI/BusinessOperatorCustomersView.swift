@@ -133,9 +133,11 @@ struct BusinessOperatorCustomersView: View {
                     .environmentObject(env)
 
                 PFOperatorHero(
-                    overline: "Standby",
-                    title: "Your waiting list",
-                    subtitle: "Invite people by email so PulseFill can offer them empty appointments.",
+                    overline: "Customers",
+                    title: "Waiting customers",
+                    subtitle: "Invite customers so they can get openings when someone cancels.",
+                    showLivePulse: true,
+                    uppercaseOverline: false,
                     primaryActionTitle: "Invite customer",
                     primaryAction: { showCreateInvite = true }
                 )
@@ -162,9 +164,9 @@ struct BusinessOperatorCustomersView: View {
                     }
 
                     section(
-                        title: "Standby spotlight",
+                        title: "Getting started",
                         isEmpty: viewModel.standbySpotlightInvites.isEmpty,
-                        emptyMessage: "No spotlight items yet — connected customers will show here when relevant."
+                        emptyMessage: "No items here yet — new or onboarding customers will show when relevant."
                     ) {
                         VStack(spacing: 12) {
                             ForEach(viewModel.standbySpotlightInvites) { invite in
@@ -192,7 +194,7 @@ struct BusinessOperatorCustomersView: View {
         }
     }
 
-    /// Connected rows that aren’t already shown under Standby spotlight (by invite id).
+    /// Connected rows that aren’t already shown under Getting started (by invite id).
     private var otherConnectedInvites: [StaffCustomerInviteListItemDTO] {
         let spotlightIds = Set(viewModel.standbySpotlightInvites.map(\.id))
         return viewModel.connectedInvites.filter { !spotlightIds.contains($0.id) }

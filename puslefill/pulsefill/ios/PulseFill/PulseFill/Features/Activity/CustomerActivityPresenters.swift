@@ -21,8 +21,8 @@ enum CustomerActivityDisplayKind: Equatable {
         switch self {
         case .openingReceived: return "Opening received"
         case .claimSent: return "Claim sent"
-        case .waitingForConfirmation: return "Waiting for confirmation"
-        case .confirmed: return "Confirmed"
+        case .waitingForConfirmation: return "Waiting on business"
+        case .confirmed: return "Booking confirmed"
         case .openingNoLongerAvailable: return "Opening no longer available"
         case .standbyUpdated: return "Standby updated"
         case .notificationSent: return "Notification sent"

@@ -136,7 +136,7 @@ struct CustomerAppointmentPassCard<Content: View>: View {
                         RoundedRectangle(cornerRadius: PFRadius.pass, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [Color.white.opacity(0.07), Color.white.opacity(0.0)],
+                                    colors: [PFColor.glassTint.opacity(1.35), Color.clear],
                                     startPoint: .top,
                                     endPoint: UnitPoint(x: 0.5, y: 0.36)
                                 )
@@ -148,9 +148,9 @@ struct CustomerAppointmentPassCard<Content: View>: View {
                             .stroke(
                                 LinearGradient(
                                     colors: [
-                                        PFColor.ember.opacity(0.28),
-                                        Color.white.opacity(0.12),
-                                        Color.white.opacity(0.10),
+                                        PFColor.customerHairlineStrong,
+                                        PFColor.customerHairline,
+                                        PFColor.customerHairline.opacity(0.75),
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -160,14 +160,14 @@ struct CustomerAppointmentPassCard<Content: View>: View {
                     }
                     .overlay(alignment: .topLeading) {
                         Circle()
-                            .fill(Color.white.opacity(0.07))
+                            .fill(PFColor.glassTint.opacity(1.2))
                             .frame(width: 180, height: 180)
                             .blur(radius: 38)
                             .offset(x: -70, y: -90)
                     }
             }
-            .shadow(color: Color.black.opacity(0.42), radius: 24, x: 0, y: 18)
-            .shadow(color: PFColor.ember.opacity(0.12), radius: 30, x: 0, y: 14)
+            .shadow(color: PFColor.elevationShadowDeep, radius: 22, x: 0, y: 16)
+            .shadow(color: PFColor.ember.opacity(0.08), radius: 22, x: 0, y: 12)
     }
 }
 
@@ -214,13 +214,13 @@ struct CustomerPrimaryButton: View {
         PFTypography.Customer.button(title)
             .frame(maxWidth: .infinity)
             .frame(minHeight: 54)
-            .foregroundStyle(.black)
+            .foregroundStyle(PFColor.emberText)
             .background {
                 ZStack {
                     PFColor.ember
                     LinearGradient(
                         colors: [
-                            Color.white.opacity(0.2),
+                            Color.white.opacity(0.18),
                             Color.clear,
                         ],
                         startPoint: .top,
@@ -230,8 +230,8 @@ struct CustomerPrimaryButton: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
-            .shadow(color: Color.black.opacity(0.12), radius: 6, y: 3)
-            .shadow(color: PFColor.ember.opacity(0.28), radius: 14, y: 4)
+            .shadow(color: PFColor.elevationShadowSoft, radius: 6, y: 3)
+            .shadow(color: PFColor.ember.opacity(0.18), radius: 12, y: 4)
     }
 }
 
@@ -243,13 +243,13 @@ struct CustomerPrimaryChromeLabel: View {
         PFTypography.Customer.button(title)
             .frame(maxWidth: .infinity)
             .frame(minHeight: 54)
-            .foregroundStyle(.black)
+            .foregroundStyle(PFColor.emberText)
             .background {
                 ZStack {
                     PFColor.ember
                     LinearGradient(
                         colors: [
-                            Color.white.opacity(0.2),
+                            Color.white.opacity(0.18),
                             Color.clear,
                         ],
                         startPoint: .top,
@@ -259,8 +259,8 @@ struct CustomerPrimaryChromeLabel: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
-            .shadow(color: Color.black.opacity(0.12), radius: 6, y: 3)
-            .shadow(color: PFColor.ember.opacity(0.28), radius: 14, y: 4)
+            .shadow(color: PFColor.elevationShadowSoft, radius: 6, y: 3)
+            .shadow(color: PFColor.ember.opacity(0.18), radius: 12, y: 4)
     }
 }
 
@@ -317,11 +317,11 @@ struct CustomerStatusPill: View {
         case .onCream:
             PFColor.emberSoft
         case .onDarkNeutral:
-            Color.white.opacity(0.065)
+            PFColor.chipWashStrong
         case .onDarkEmber:
             PFColor.primarySoft
         case .success:
-            Color.green.opacity(0.12)
+            PFColor.success.opacity(0.14)
         case .warning:
             PFColor.warning.opacity(0.16)
         case .danger:
@@ -334,7 +334,7 @@ struct CustomerStatusPill: View {
         case .onCream:
             PFColor.ember.opacity(0.16)
         case .onDarkNeutral:
-            Color.white.opacity(0.08)
+            PFColor.hairline
         case .onDarkEmber:
             PFColor.primary.opacity(0.40)
         case .success:
@@ -377,7 +377,7 @@ struct CustomerSectionCard<Content: View>: View {
                     )
                     .overlay(alignment: .topLeading) {
                         Circle()
-                            .fill(elevated ? PFColor.emberGlow.opacity(0.62) : Color.white.opacity(0.035))
+                            .fill(elevated ? PFColor.emberGlow.opacity(0.52) : PFColor.glassTint.opacity(1.1))
                             .frame(width: 140, height: 140)
                             .blur(radius: 32)
                             .offset(x: -62, y: -78)
@@ -387,9 +387,9 @@ struct CustomerSectionCard<Content: View>: View {
                             .stroke(
                                 LinearGradient(
                                     colors: [
-                                        elevated ? PFColor.primaryBorder : PFColor.customerHairlineStrong,
+                                        elevated ? PFColor.primaryBorder.opacity(0.75) : PFColor.customerHairlineStrong,
                                         PFColor.customerHairline,
-                                        Color.white.opacity(0.04),
+                                        PFColor.customerHairline.opacity(0.55),
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -399,7 +399,12 @@ struct CustomerSectionCard<Content: View>: View {
                     }
             }
             .clipShape(RoundedRectangle(cornerRadius: PFRadius.customerCard, style: .continuous))
-            .shadow(color: Color.black.opacity(elevated ? 0.34 : 0.22), radius: elevated ? 22 : 14, x: 0, y: elevated ? 16 : 8)
+            .shadow(
+                color: elevated ? PFColor.elevationShadow : PFColor.elevationShadowSoft,
+                radius: elevated ? 20 : 12,
+                x: 0,
+                y: elevated ? 14 : 7
+            )
     }
 }
 

@@ -136,8 +136,9 @@ struct HomeView: View {
                     if env.sessionStore.isSignedIn {
                         PFEmberHero(
                             overline: "Home",
-                            title: "Get earlier appointments",
-                            subtitle: "Claim openings from businesses you trust before they are gone."
+                            title: "Get earlier appointments.",
+                            subtitle: "Claim openings from businesses you trust.",
+                            uppercaseOverline: false
                         )
                         .customerAppearAnimation(staggerIndex: 1)
 
@@ -177,15 +178,15 @@ struct HomeView: View {
     private var signedInContent: some View {
         if loading && loadedOffers.isEmpty {
             PFCustomerLoadingState(
-                title: "Loading your home…",
-                message: "Checking openings and standby status.",
+                title: "Loading your openings…",
+                message: "Checking for new openings and your standby status.",
                 compact: false
             )
             .padding(.top, 8)
             .customerAppearAnimation(staggerIndex: 2)
         } else if let loadError {
             PFErrorMoment(
-                title: "Couldn’t load your latest updates",
+                title: "Couldn’t load your openings",
                 message: PFCustomerFacingErrorCopy.sanitizeCustomerMessage(loadError),
                 actionTitle: "Reload home",
                 action: { Task { await refresh(kind: .initial) } },

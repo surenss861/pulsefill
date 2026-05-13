@@ -12,16 +12,13 @@ struct AuthFormView: View {
     @State private var password = ""
     @State private var appeared = false
 
-    private let ctaOrange = Color(red: 1.0, green: 0.42, blue: 0.05)
-
     init(initialMode: AuthFormMode) {
         _mode = State(initialValue: initialMode)
     }
 
     var body: some View {
         ZStack {
-            AuthMetalBackgroundView(reduceMotion: reduceMotion)
-                .ignoresSafeArea()
+            PFScreenBackground()
 
             authScrim
 
@@ -68,10 +65,11 @@ struct AuthFormView: View {
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.88))
+                    .foregroundStyle(PFColor.textSecondary)
                     .frame(width: 42, height: 42)
-                    .background(Color.white.opacity(0.08))
+                    .background(PFColor.chipWashStrong)
                     .clipShape(Circle())
+                    .overlay(Circle().stroke(PFColor.hairline, lineWidth: 1))
             }
             .buttonStyle(.plain)
 
@@ -79,7 +77,7 @@ struct AuthFormView: View {
 
             Text(mode.navigationTitle)
                 .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(.white.opacity(0.92))
+                .foregroundStyle(PFColor.textPrimary)
 
             Spacer()
 
@@ -93,20 +91,24 @@ struct AuthFormView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(mode.eyebrow)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(PFColor.ember)
+            if !mode.eyebrow.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text(mode.eyebrow)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(PFColor.textSecondary)
+            }
 
             Text(mode.title)
-                .font(.system(size: 34, weight: .bold))
+                .font(.system(size: 28, weight: .bold))
                 .lineSpacing(2)
-                .foregroundStyle(.white.opacity(0.96))
+                .foregroundStyle(PFColor.textPrimary)
+                .lineLimit(4)
+                .minimumScaleFactor(0.82)
                 .contentTransition(.opacity)
 
             Text(mode.subtitle)
-                .font(.system(size: 15.5, weight: .semibold))
+                .font(.system(size: 15, weight: .medium))
                 .lineSpacing(4)
-                .foregroundStyle(Color(red: 0.63, green: 0.66, blue: 0.72))
+                .foregroundStyle(PFColor.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
                 .contentTransition(.opacity)
         }
@@ -119,11 +121,11 @@ struct AuthFormView: View {
             authModeButton(.signUp)
         }
         .padding(5)
-        .background(Color.white.opacity(0.055))
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(PFColor.chipWash)
+        .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.white.opacity(0.10), lineWidth: 1)
+            RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
+                .stroke(PFColor.hairline, lineWidth: 1)
         }
     }
 
@@ -138,9 +140,9 @@ struct AuthFormView: View {
                         .matchedGeometryEffect(id: "active-auth-mode", in: authNamespace)
                 }
 
-                Text(target == .signIn ? "Sign in" : "Create")
+                Text(target == .signIn ? "Sign in" : "Create account")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(mode == target ? Color.black.opacity(0.88) : Color.white.opacity(0.56))
+                    .foregroundStyle(mode == target ? PFColor.emberText : PFColor.textMuted)
                     .frame(maxWidth: .infinity)
                     .frame(height: 42)
             }
@@ -174,9 +176,9 @@ struct AuthFormView: View {
                             PFHaptics.lightImpact()
                             Task { await authManager.requestPasswordReset(email: email) }
                         } label: {
-                            Text("Forgot password?")
+                            Text("Reset password")
                                 .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(PFColor.ember)
+                                .foregroundStyle(PFColor.emberReadable)
                         }
                         .buttonStyle(.plain)
                         .disabled(authManager.isBusy)
@@ -212,29 +214,38 @@ struct AuthFormView: View {
                 HStack(spacing: 10) {
                     if authManager.isBusy {
                         ProgressView()
-                            .tint(authPrimaryCTAChromeActive ? .black : .white.opacity(0.72))
+                            .tint(authPrimaryCTAChromeActive ? PFColor.emberText.opacity(0.9) : PFColor.textMuted)
                     }
 
                     Text(authManager.isBusy ? mode.busyTitle : mode.primaryButtonTitle)
                         .font(.system(size: 16, weight: .bold))
                 }
-                .foregroundStyle(authPrimaryCTAChromeActive ? Color.black.opacity(0.88) : Color.white.opacity(0.54))
+                .foregroundStyle(authPrimaryCTAChromeActive ? PFColor.emberText : PFColor.textMuted)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
                 .background {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(authPrimaryCTAChromeActive ? ctaOrange : Color.white.opacity(0.16))
+                    RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
+                        .fill(authPrimaryCTAChromeActive ? PFColor.ember : PFColor.surface2)
                         .overlay {
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(authPrimaryCTAChromeActive ? 0.18 : 0.08),
-                                    Color.black.opacity(authPrimaryCTAChromeActive ? 0.08 : 0.03),
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                            .blendMode(.overlay)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            if authPrimaryCTAChromeActive {
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.14),
+                                        Color.clear,
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                                .blendMode(.overlay)
+                                .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
+                            }
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
+                                .stroke(
+                                    authPrimaryCTAChromeActive ? Color.clear : PFColor.hairline,
+                                    lineWidth: 1
+                                )
                         }
                 }
             }
@@ -260,7 +271,7 @@ struct AuthFormView: View {
                     RoundedRectangle(cornerRadius: 30, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color.white.opacity(0.07), Color.white.opacity(0.0)],
+                                colors: [PFColor.glassTint.opacity(1.25), Color.clear],
                                 startPoint: .top,
                                 endPoint: UnitPoint(x: 0.5, y: 0.38)
                             )
@@ -272,9 +283,9 @@ struct AuthFormView: View {
                         .stroke(
                             LinearGradient(
                                 colors: [
-                                    PFColor.ember.opacity(0.26),
-                                    Color.white.opacity(0.12),
-                                    Color.white.opacity(0.11),
+                                    PFColor.customerHairlineStrong,
+                                    PFColor.customerHairline,
+                                    PFColor.customerHairline.opacity(0.75),
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -283,8 +294,8 @@ struct AuthFormView: View {
                         )
                 }
         }
-        .shadow(color: Color.black.opacity(0.42), radius: 24, x: 0, y: 18)
-        .shadow(color: ctaOrange.opacity(0.10), radius: 34, x: 0, y: 18)
+        .shadow(color: PFColor.elevationShadowDeep, radius: 20, x: 0, y: 14)
+        .shadow(color: PFColor.ember.opacity(0.06), radius: 24, x: 0, y: 14)
         .animation(authAnimation, value: mode)
     }
 
@@ -292,14 +303,14 @@ struct AuthFormView: View {
         HStack(spacing: 6) {
             Text(mode.switchPrompt)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.46))
+                .foregroundStyle(PFColor.textMuted)
 
             Button {
                 switchMode(mode == .signIn ? .signUp : .signIn)
             } label: {
                 Text(mode.switchActionTitle)
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(PFColor.ember)
+                    .foregroundStyle(PFColor.emberReadable)
             }
             .buttonStyle(.plain)
         }
@@ -310,9 +321,9 @@ struct AuthFormView: View {
     private var authScrim: some View {
         LinearGradient(
             colors: [
-                Color.black.opacity(0.12),
-                Color.black.opacity(0.02),
-                Color.black.opacity(0.64),
+                PFColor.customerInkDeep.opacity(0.12),
+                Color.clear,
+                PFColor.background.opacity(0.45),
             ],
             startPoint: .top,
             endPoint: .bottom
@@ -383,7 +394,7 @@ private struct AuthInputField: View {
         HStack(spacing: 12) {
             Image(systemName: systemImage)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(isFocused ? PFColor.emberReadable : Color.white.opacity(0.52))
+                .foregroundStyle(isFocused ? PFColor.emberReadable : PFColor.textMuted)
                 .frame(width: 20)
 
             Group {
@@ -391,18 +402,18 @@ private struct AuthInputField: View {
                     SecureField(
                         "",
                         text: $text,
-                        prompt: Text(title).foregroundStyle(Color.white.opacity(0.48))
+                        prompt: Text(title).foregroundStyle(PFColor.textMuted.opacity(0.85))
                     )
                 } else {
                     TextField(
                         "",
                         text: $text,
-                        prompt: Text(title).foregroundStyle(Color.white.opacity(0.48))
+                        prompt: Text(title).foregroundStyle(PFColor.textMuted.opacity(0.85))
                     )
                 }
             }
             .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(Color.white.opacity(0.94))
+            .foregroundStyle(PFColor.textPrimary)
             .tint(PFColor.ember)
             .keyboardType(keyboardType)
             .textInputAutocapitalization(.never)
@@ -413,13 +424,11 @@ private struct AuthInputField: View {
         .frame(height: 54)
         .background {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.095))
+                .fill(PFColor.surface2.opacity(0.92))
                 .overlay {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(
-                            isFocused
-                                ? PFColor.ember.opacity(0.50)
-                                : Color.white.opacity(0.12),
+                            isFocused ? PFColor.primaryBorder.opacity(0.55) : PFColor.hairline,
                             lineWidth: 1
                         )
                 }

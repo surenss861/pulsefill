@@ -22,7 +22,7 @@ struct OperatorClaimsView: View {
                 }
             }
             .background(PFScreenBackground().ignoresSafeArea())
-            .navigationTitle("Claims")
+            .navigationTitle("Customer claims")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -96,7 +96,7 @@ struct OperatorClaimsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 OperatorListLoadingPlaceholder(
-                    title: "Loading claims…",
+                    title: "Loading customer claims…",
                     subtitle: "Finding openings where someone claimed a spot.",
                     skeletonCount: 3
                 )
@@ -110,10 +110,10 @@ struct OperatorClaimsView: View {
         VStack {
             Spacer()
             PFOperatorErrorMoment(
-                title: "Claims could not load",
-                message: "We could not load claims. Try again or pull down to refresh.",
+                title: "Customer claims could not load",
+                message: "We couldn’t load claims. Try again or pull down to refresh.",
                 technicalMessage: message,
-                actionTitle: "Reload claims",
+                actionTitle: "Reload",
                 footerHint: "Openings and Today still work from the other tabs.",
                 onAction: { await viewModel.load() }
             )
@@ -129,9 +129,11 @@ struct OperatorClaimsView: View {
                     .environmentObject(env)
 
                 PFOperatorHero(
-                    overline: "Confirm",
+                    overline: "Claims",
                     title: "Customer claims",
-                    subtitle: "Someone claimed an opening? Confirm the booking so the slot counts as filled."
+                    subtitle: "Confirm bookings when customers ask for an opening.",
+                    showLivePulse: true,
+                    uppercaseOverline: false
                 )
 
                 OperatorClaimsOverviewStrip(
@@ -147,7 +149,7 @@ struct OperatorClaimsView: View {
                     showConfirmPrimary: true,
                     emptySystemImage: "checkmark.seal",
                     emptyTitle: "No claims waiting",
-                    emptyMessage: "When a customer claims an opening, it appears here. Post openings from the Create tab."
+                    emptyMessage: "When a customer claims an opening, it appears here. Add openings from the Add tab."
                 )
 
                 claimsSection(

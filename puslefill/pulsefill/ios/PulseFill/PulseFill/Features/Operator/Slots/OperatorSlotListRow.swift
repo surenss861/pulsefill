@@ -68,7 +68,7 @@ struct OperatorSlotListRow: View {
 
     private var titleText: String {
         let trimmed = slot.providerNameSnapshot?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return trimmed.isEmpty ? "Empty appointment" : trimmed
+        return trimmed.isEmpty ? "Cancelled time" : trimmed
     }
 
     private var contextLine: String {
@@ -78,7 +78,7 @@ struct OperatorSlotListRow: View {
     private var attentionText: String? {
         switch slot.status.lowercased() {
         case "claimed":
-            return "Awaiting confirmation"
+            return "Waiting on you"
         case "offered":
             return "Offers active"
         case "expired":

@@ -30,12 +30,15 @@ struct BusinessTabView: View {
 
             OperatorCreateOpeningView(businessAPI: env.businessOperatorAPI)
                 .environmentObject(env)
-                .tabItem { Label("Create", systemImage: "plus.circle.fill") }
+                .tabItem { Label("Add", systemImage: "plus.circle.fill") }
                 .tag(BusinessShellTab.create)
 
             OperatorClaimsView(businessAPI: env.businessOperatorAPI)
                 .environmentObject(env)
-                .tabItem { Label("Claims", systemImage: "checkmark.seal") }
+                .tabItem {
+                    Label("Claims", systemImage: "checkmark.seal")
+                        .accessibilityLabel("Customer claims")
+                }
                 .tag(BusinessShellTab.claims)
 
             BusinessMoreView(morePath: $morePath)
@@ -47,6 +50,7 @@ struct BusinessTabView: View {
         .toolbarBackground(PFColor.operatorTabBar, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
         .toolbarColorScheme(.dark, for: .tabBar)
+        .pfScreenBackground()
     }
 }
 

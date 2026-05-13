@@ -5,13 +5,13 @@ enum OperatorSlotDetailPresenters {
     static func nextActionTitle(for status: String) -> String {
         switch status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
         case "claimed":
-            return "Booking confirmation"
+            return "Confirm booking"
         case "open":
             return "Send offers"
         case "offered":
             return "Retry or wait"
         case "booked":
-            return "Recovered"
+            return "Booking confirmed"
         case "expired":
             return "Expired"
         case "cancelled", "canceled":
@@ -26,13 +26,13 @@ enum OperatorSlotDetailPresenters {
         case "claimed":
             return "Verify the claimant and confirm the booking once you’re satisfied."
         case "open":
-            return "PulseFill can ping standby customers with this cancellation slot."
+            return "Send offers so waiting customers see this cancelled time."
         case "offered":
-            return "Offers are live; widen coverage or retry if delivery looks weak."
+            return "Offers are out. Wait for replies, or retry from the actions below if delivery looks weak."
         case "booked":
-            return "This opening is recovered. Review notes if you need clinic context."
+            return "This time is booked. Review your internal note if you need context for the desk."
         case "expired", "cancelled", "canceled":
-            return "No further automation actions are available."
+            return "Nothing else to do here."
         default:
             return OperatorOpeningStatusCopy.label(forRawStatus: status)
         }
@@ -67,7 +67,7 @@ enum OperatorSlotDetailPresenters {
 
     static func offerOutcomeSummary(_ offers: [StaffSlotOfferRow]) -> String {
         guard !offers.isEmpty else {
-            return "Offers will appear once you send to standby customers."
+            return "Offers will appear once you send to waiting customers."
         }
 
         var counts: [String: Int] = [:]

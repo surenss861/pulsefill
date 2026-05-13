@@ -15,6 +15,8 @@ struct PFEmberHero: View {
     let title: String
     let subtitle: String
     var showPulse: Bool = true
+    /// When `false`, shows `overline` in sentence case (customer surfaces); when `true`, uses small caps styling.
+    var uppercaseOverline: Bool = true
     var primaryActionTitle: String?
     var primaryAction: (() -> Void)?
 
@@ -23,9 +25,9 @@ struct PFEmberHero: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     if showPulse { PFLivePulseDot() }
-                    Text(overline.uppercased())
-                        .font(.system(size: 11, weight: .semibold))
-                        .tracking(0.9)
+                    Text(uppercaseOverline ? overline.uppercased() : overline)
+                        .font(.system(size: 12, weight: .semibold))
+                        .tracking(uppercaseOverline ? 0.6 : 0)
                         .foregroundStyle(PFColor.customerTextSecondary)
                 }
 

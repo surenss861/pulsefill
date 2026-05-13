@@ -8,50 +8,53 @@ struct AuthLandingView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
-                AuthMetalBackgroundView(reduceMotion: reduceMotion)
-                    .ignoresSafeArea()
+                PFScreenBackground()
 
                 LinearGradient(
                     colors: [
-                        Color(red: 0.16, green: 0.10, blue: 0.08).opacity(0.72),
-                        Color(red: 0.09, green: 0.06, blue: 0.055).opacity(0.55),
-                        Color(red: 0.06, green: 0.045, blue: 0.04).opacity(0.68),
+                        PFColor.customerInkDeep.opacity(0.35),
+                        Color.clear,
+                        PFColor.background.opacity(0.55),
                     ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
                 .ignoresSafeArea()
+                .allowsHitTesting(false)
 
                 VStack(alignment: .leading, spacing: 0) {
-                    Spacer(minLength: 42)
+                    Spacer(minLength: 36)
 
                     VStack(alignment: .leading, spacing: 0) {
                         Text("PulseFill")
-                            .font(.system(size: 23, weight: .bold))
-                            .foregroundStyle(Color.white.opacity(0.92))
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(PFColor.textPrimary)
 
-                        Text("Get earlier appointments.")
-                            .font(.system(size: 36, weight: .bold))
-                            .foregroundStyle(Color.white.opacity(0.94))
-                            .lineSpacing(4)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.9)
+                        Text("Sign in to run today’s recovery.")
+                            .font(.system(size: 30, weight: .bold))
+                            .foregroundStyle(PFColor.textPrimary)
+                            .lineSpacing(3)
+                            .lineLimit(3)
+                            .minimumScaleFactor(0.82)
                             .allowsTightening(true)
                             .multilineTextAlignment(.leading)
-                            .padding(.top, 18)
+                            .padding(.top, 14)
 
-                        Text("Create an account to receive openings from businesses you’re connected with.")
+                        Text("Manage openings, claims, and confirmed bookings before the day slips away.")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(PFColor.textSecondary)
                             .lineSpacing(3)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 10)
+
+                        recoveryBulletList
                             .padding(.top, 14)
                     }
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 10)
 
-                    Spacer(minLength: 22)
+                    Spacer(minLength: 18)
 
                     AuthAppointmentPassCard()
                         .opacity(appeared ? 1 : 0)
@@ -62,20 +65,19 @@ struct AuthLandingView: View {
 
                     VStack(spacing: 12) {
                         Button {
-                            path.append(AuthDestination.signUp)
+                            path.append(AuthDestination.signIn)
                         } label: {
-                            Text("Create account")
+                            Text("Sign in")
                                 .font(.system(size: 17, weight: .semibold))
                                 .frame(maxWidth: .infinity)
-                                .frame(minHeight: 58)
-                                .foregroundStyle(Color.black)
+                                .frame(minHeight: 56)
+                                .foregroundStyle(PFColor.emberText)
                                 .background {
                                     ZStack {
-                                        // Brighter ember for signed-out CTA (PFColor.primary reads muddy on warm scrim).
-                                        Color(red: 1.0, green: 0.42, blue: 0.05)
+                                        PFColor.ember
                                         LinearGradient(
                                             colors: [
-                                                Color.white.opacity(0.2),
+                                                Color.white.opacity(0.16),
                                                 Color.clear,
                                             ],
                                             startPoint: .top,
@@ -84,41 +86,41 @@ struct AuthLandingView: View {
                                         .blendMode(.overlay)
                                     }
                                 }
-                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                                .shadow(color: Color.black.opacity(0.22), radius: 8, y: 5)
-                                .shadow(color: Color(red: 1.0, green: 0.42, blue: 0.05).opacity(0.35), radius: 16, y: 5)
-                        }
-
-                        Button {
-                            path.append(AuthDestination.signIn)
-                        } label: {
-                            Text("Sign in")
-                                .font(.system(size: 16, weight: .semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .foregroundStyle(Color.white.opacity(0.92))
-                                .background(Color.white.opacity(0.08))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                        .stroke(Color.white.opacity(0.14), lineWidth: 1)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
+                                .shadow(color: PFColor.elevationShadowSoft, radius: 8, y: 5)
+                                .shadow(color: PFColor.ember.opacity(0.16), radius: 14, y: 5)
                         }
 
                         Button {
                             path.append(AuthDestination.signUp)
                         } label: {
-                            Text("I have an invite code")
+                            Text("Create account")
+                                .font(.system(size: 16, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(minHeight: 52)
+                                .foregroundStyle(PFColor.primaryText)
+                                .background(PFColor.chipWashStrong)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
+                                        .stroke(PFColor.primaryBorder, lineWidth: 1)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
+                        }
+
+                        Button {
+                            path.append(AuthDestination.signUp)
+                        } label: {
+                            Text("Use invite code")
                                 .font(.system(size: 15, weight: .semibold))
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .foregroundStyle(Color.white.opacity(0.65))
-                                .background(Color.white.opacity(0.05))
+                                .frame(minHeight: 48)
+                                .foregroundStyle(PFColor.textSecondary)
+                                .background(PFColor.chipWash)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
+                                        .stroke(PFColor.hairline, lineWidth: 1)
                                 )
-                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
                         }
                     }
                     .opacity(appeared ? 1 : 0)
@@ -131,8 +133,8 @@ struct AuthLandingView: View {
                 LinearGradient(
                     colors: [
                         Color.clear,
-                        Color(red: 0.05, green: 0.03, blue: 0.025).opacity(0.38),
-                        Color(red: 0.035, green: 0.022, blue: 0.018).opacity(0.68),
+                        PFColor.customerInkDeep.opacity(0.22),
+                        PFColor.background.opacity(0.5),
                     ],
                     startPoint: .center,
                     endPoint: .bottom
@@ -161,6 +163,27 @@ struct AuthLandingView: View {
             }
         }
         .tint(PFColor.primary)
+    }
+
+    private var recoveryBulletList: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            authLandingBullet("See cancelled appointments")
+            authLandingBullet("Send offers to waiting customers")
+            authLandingBullet("Confirm claimed bookings")
+        }
+    }
+
+    private func authLandingBullet(_ line: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Circle()
+                .fill(PFColor.textMuted.opacity(0.85))
+                .frame(width: 5, height: 5)
+                .padding(.top, 6)
+            Text(line)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(PFColor.textMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 
