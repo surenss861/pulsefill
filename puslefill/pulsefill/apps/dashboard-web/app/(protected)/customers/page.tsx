@@ -306,7 +306,7 @@ export default function CustomersPage() {
     setFormError(null);
     setLastCreated(null);
     if (!email.trim()) {
-      setFormError("Email is required.");
+      setFormError("Enter an email address.");
       return;
     }
     setSaving(true);
@@ -329,6 +329,17 @@ export default function CustomersPage() {
       setSaving(false);
     }
   }
+
+  const resetInviteForm = useCallback(() => {
+    setFormError(null);
+    setEmail("");
+    setCustomerName("");
+  }, []);
+
+  const dismissInviteSuccess = useCallback(() => {
+    setLastCreated(null);
+    setCopyState(null);
+  }, []);
 
   const headerActions = (
     <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -409,66 +420,148 @@ export default function CustomersPage() {
           </p>
 
           <div className="pf-desk-customers-split">
-            <DeskSecondaryCard title="Invite customer">
-              <form id="invite-customer" className="pf-desk-customers-invite-form" onSubmit={onSubmit}>
+            <DeskSecondaryCard title={lastCreated ? "Invite sent" : "Invite customer"}>
+              <div id="invite-customer">
                 {!billingSummary.loading && billingSummary.data ? (
                   <BillingInlineGuardrail summary={billingSummary.data} />
                 ) : null}
-                <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
-                  Send an invite so someone can join your list and get openings when a visit cancels.
-                </p>
-                <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-                  <span style={{ color: "var(--muted)" }}>Customer name (optional)</span>
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="e.g. Alex Chen"
-                    style={{
-                      borderRadius: 12,
-                      border: "1px solid var(--pf-border-default)",
-                      background: "var(--pf-auth-input-bg)",
-                      color: "var(--text)",
-                      padding: "10px 12px",
-                      fontSize: 14,
-                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-                    }}
-                  />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-                  <span style={{ color: "var(--muted)" }}>Customer email *</span>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="patients@example.com"
-                    required
-                    style={{
-                      borderRadius: 12,
-                      border: "1px solid var(--pf-border-default)",
-                      background: "var(--pf-auth-input-bg)",
-                      color: "var(--text)",
-                      padding: "10px 12px",
-                      fontSize: 14,
-                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-                    }}
-                  />
-                </label>
-                {formError ? <p style={{ color: "#f87171", margin: 0, fontSize: 13 }}>{formError}</p> : null}
-                <MotionTapSurface disabled={saving}>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="pf-desk-save-access pf-desk-invite-submit"
-                    style={{
-                      cursor: saving ? "wait" : "pointer",
-                      border: "1px solid var(--pf-accent-primary-border)",
-                    }}
-                  >
-                    {saving ? "Creating…" : "Create invite"}
-                  </button>
-                </MotionTapSurface>
-              </form>
+
+                {lastCreated ? (
+                  <div className="pf-desk-invite-success">
+                    <p className="pf-section-title" style={{ margin: 0, fontSize: 18, fontWeight: 650, letterSpacing: "-0.02em" }}>
+                      Invite sent
+                    </p>
+                    <p className="pf-muted-copy" style={{ margin: 0, fontSize: 15, lineHeight: 1.55 }}>
+                      The customer can now join your waitlist and set their preferences.
+                    </p>
+                    <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
+                      For <strong style={{ color: "var(--pf-text-primary)", fontWeight: 650 }}>{lastCreated.customer_email}</strong>
+                      {lastCreated.customer_name ? (
+                        <>
+                          {" "}
+                          · {lastCreated.customer_name}
+                        </>
+                      ) : null}
+                    </p>
+                    {lastCreated.invite_url ? (
+                      <p className="pf-desk-invite-success__url">{lastCreated.invite_url}</p>
+                    ) : (
+                      <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13 }}>
+                        Invite link is not available in this environment. You can still copy the invite code below.
+                      </p>
+                    )}
+                    <div className="pf-desk-invite-actions">
+                      {lastCreated.invite_url ? (
+                        <button
+                          type="button"
+                          className="pf-desk-invite-copy-btn"
+                          onClick={async () => {
+                            try {
+                              await copyToClipboard(lastCreated.invite_url!);
+                              setCopyState("url");
+                            } catch {
+                              setCopyState(null);
+                            }
+                          }}
+                        >
+                          {copyState === "url" ? "Copied" : "Copy invite link"}
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="pf-desk-invite-copy-btn"
+                        onClick={async () => {
+                          try {
+                            await copyToClipboard(lastCreated.code ?? lastCreated.one_time_token);
+                            setCopyState("token");
+                          } catch {
+                            setCopyState(null);
+                          }
+                        }}
+                      >
+                        {copyState === "token" ? "Copied" : "Copy invite code"}
+                      </button>
+                      <MotionTapSurface>
+                        <button type="button" className="pf-desk-confirm-modal__btn-quiet" onClick={dismissInviteSuccess}>
+                          Done
+                        </button>
+                      </MotionTapSurface>
+                    </div>
+                  </div>
+                ) : (
+                  <form className="pf-desk-customers-invite-form" onSubmit={onSubmit}>
+                    <p className="pf-muted-copy" style={{ margin: 0, fontSize: 15, lineHeight: 1.55 }}>
+                      Send an invite so this customer can receive openings when someone cancels.
+                    </p>
+                    <label className="pf-desk-invite-label" htmlFor="pf-invite-email">
+                      Customer email
+                      <span className="pf-desk-invite-label__hint">Required — we send the invite here.</span>
+                      <input
+                        id="pf-invite-email"
+                        className="pf-desk-invite-input"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="name@example.com"
+                        autoComplete="email"
+                        required
+                      />
+                    </label>
+                    <label className="pf-desk-invite-label" htmlFor="pf-invite-name">
+                      Name (optional)
+                      <span className="pf-desk-invite-label__hint">Shown in your invite list so staff recognize who it is.</span>
+                      <input
+                        id="pf-invite-name"
+                        className="pf-desk-invite-input"
+                        type="text"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="e.g. Alex Chen"
+                        autoComplete="name"
+                      />
+                    </label>
+
+                    {formError ? (
+                      <div className="pf-desk-invite-error" role="alert">
+                        <p className="pf-desk-hero-card__eyebrow" style={{ margin: 0 }}>
+                          Invite did not send
+                        </p>
+                        <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.55 }}>
+                          Check the email and try again.
+                        </p>
+                        <p className="pf-muted-copy" style={{ margin: "6px 0 0", fontSize: 13, lineHeight: 1.45 }}>
+                          {formError}
+                        </p>
+                        <div style={{ marginTop: 12 }}>
+                          <MotionTapSurface>
+                            <button type="button" className="pf-desk-confirm-modal__btn-quiet" onClick={() => setFormError(null)}>
+                              Try again
+                            </button>
+                          </MotionTapSurface>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="pf-desk-invite-actions">
+                      <MotionTapSurface disabled={saving}>
+                        <button type="submit" disabled={saving} className="pf-desk-save-access pf-desk-invite-submit">
+                          {saving ? "Sending…" : "Send invite"}
+                        </button>
+                      </MotionTapSurface>
+                      <MotionTapSurface disabled={saving}>
+                        <button
+                          type="button"
+                          className="pf-desk-confirm-modal__btn-quiet"
+                          disabled={saving}
+                          onClick={resetInviteForm}
+                        >
+                          Cancel
+                        </button>
+                      </MotionTapSurface>
+                    </div>
+                  </form>
+                )}
+              </div>
             </DeskSecondaryCard>
 
             <DeskSecondaryCard title="Customer coverage">
@@ -481,68 +574,6 @@ export default function CustomersPage() {
               />
             </DeskSecondaryCard>
           </div>
-
-          {lastCreated ? (
-            <div
-              style={{
-                padding: "18px 20px",
-                borderRadius: 16,
-                border: "1px solid rgba(34,197,94,0.35)",
-                background: "rgba(34,197,94,0.08)",
-                fontSize: 13,
-                lineHeight: 1.5,
-              }}
-            >
-              <p className="pf-section-title" style={{ margin: "0 0 8px", fontSize: 15 }}>
-                Invite sent
-              </p>
-              <p className="pf-muted-copy" style={{ margin: "0 0 8px", fontSize: 13 }}>
-                For {lastCreated.customer_email}
-                {lastCreated.customer_name ? ` · ${lastCreated.customer_name}` : ""}
-              </p>
-              {lastCreated.invite_url ? (
-                <p style={{ margin: "0 0 8px" }}>
-                  <code style={{ wordBreak: "break-all", fontSize: 12 }}>{lastCreated.invite_url}</code>
-                </p>
-              ) : (
-                <p style={{ margin: "0 0 8px", color: "var(--muted)" }}>
-                  Invite link unavailable in this environment. You can still copy the invite code below.
-                </p>
-              )}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                {lastCreated.invite_url ? (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await copyToClipboard(lastCreated.invite_url!);
-                        setCopyState("url");
-                      } catch {
-                        setCopyState(null);
-                      }
-                    }}
-                    style={copyButton}
-                  >
-                    {copyState === "url" ? "Copied" : "Copy invite link"}
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await copyToClipboard(lastCreated.code ?? lastCreated.one_time_token);
-                      setCopyState("token");
-                    } catch {
-                      setCopyState(null);
-                    }
-                  }}
-                  style={copyButton}
-                >
-                  {copyState === "token" ? "Copied" : "Copy invite code"}
-                </button>
-              </div>
-            </div>
-          ) : null}
 
           <DeskSecondaryCard title="Invites">
             <OnboardingPlaybook />
