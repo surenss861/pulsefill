@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
 import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
 import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
@@ -11,6 +11,8 @@ import { OperatorLoadingState } from "@/components/operator/operator-loading-sta
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import type { OperatorStatusKind } from "@/components/operator/operator-status-chip";
+import { OperatorDeskConfirmDialog } from "@/components/operator/operator-desk-confirm-dialog";
+import { BILLING_SESSION_ACTION_ERR } from "@/hooks/useBillingSessionActions";
 import { apiFetch } from "@/lib/api";
 import type {
   BillingSubscriptionStatus,
@@ -21,8 +23,6 @@ import type {
 const BILLING_SUMMARY = "/v1/billing/summary";
 const BILLING_CHECKOUT = "/v1/billing/checkout";
 const BILLING_PORTAL = "/v1/billing/portal";
-
-const BILLING_ACTION_ERROR = "We couldn't open billing right now. Try again shortly.";
 
 function planLabel(plan: BillingSummarySubscription["plan"]): string {
   if (plan === "starter") return "Starter";
@@ -167,6 +167,9 @@ export default function BillingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [checkoutConfirmOpen, setCheckoutConfirmOpen] = useState(false);
+  const [portalConfirmOpen, setPortalConfirmOpen] = useState(false);
+  const lastSessionKindRef = useRef<"checkout" | "portal">("checkout");
 
   const load = useCallback(async () => {
     try {
@@ -189,9 +192,9 @@ export default function BillingPage() {
       setCheckoutLoading(true);
       const res = await apiFetch<{ url: string }>(BILLING_CHECKOUT, { method: "POST", body: "{}" });
       if (res.url) window.location.assign(res.url);
-      else setActionError(BILLING_ACTION_ERROR);
+      else setActionError(BILLING_SESSION_ACTION_ERR);
     } catch {
-      setActionError(BILLING_ACTION_ERROR);
+      setActionError(BILLING_SESSION_ACTION_ERR);
     } finally {
       setCheckoutLoading(false);
     }
@@ -203,13 +206,31 @@ export default function BillingPage() {
       setPortalLoading(true);
       const res = await apiFetch<{ url: string }>(BILLING_PORTAL, { method: "POST", body: "{}" });
       if (res.url) window.location.assign(res.url);
-      else setActionError(BILLING_ACTION_ERROR);
+      else setActionError(BILLING_SESSION_ACTION_ERR);
     } catch {
-      setActionError(BILLING_ACTION_ERROR);
+      setActionError(BILLING_SESSION_ACTION_ERR);
     } finally {
       setPortalLoading(false);
     }
   }, []);
+
+  const runConfirmedCheckout = useCallback(async () => {
+    lastSessionKindRef.current = "checkout";
+    try {
+      await startCheckout();
+    } finally {
+      setCheckoutConfirmOpen(false);
+    }
+  }, [startCheckout]);
+
+  const runConfirmedPortal = useCallback(async () => {
+    lastSessionKindRef.current = "portal";
+    try {
+      await openPortal();
+    } finally {
+      setPortalConfirmOpen(false);
+    }
+  }, [openPortal]);
 
   useEffect(() => {
     void load();
@@ -282,21 +303,8 @@ export default function BillingPage() {
           {!loading && error ? (
             <div>
               <OperatorErrorState rawMessage={error} />
-              <button
-                type="button"
-                onClick={() => void load()}
-                style={{
-                  marginTop: 10,
-                  borderRadius: 8,
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  background: "rgba(255,255,255,0.06)",
-                  color: "var(--text)",
-                  padding: "8px 14px",
-                  fontSize: 12,
-                  cursor: "pointer",
-                }}
-              >
-                Retry
+              <button type="button" className="pf-desk-quiet-link" style={{ marginTop: 10, fontSize: 13 }} onClick={() => void load()}>
+                Try again
               </button>
             </div>
           ) : null}
@@ -311,9 +319,21 @@ export default function BillingPage() {
                   </p>
                 ) : null}
                 {actionError ? (
-                  <p className="pf-muted-copy" style={{ margin: "10px 0 0", fontSize: 13, color: "rgba(248,113,113,0.92)" }}>
-                    {actionError}
-                  </p>
+                  <div className="pf-desk-invite-error" role="alert" style={{ marginTop: 10 }}>
+                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{actionError}</p>
+                    <button
+                      type="button"
+                      className="pf-desk-quiet-link"
+                      style={{ marginTop: 10, fontSize: 13 }}
+                      onClick={() => {
+                        setActionError(null);
+                        if (lastSessionKindRef.current === "portal") setPortalConfirmOpen(true);
+                        else setCheckoutConfirmOpen(true);
+                      }}
+                    >
+                      Try again
+                    </button>
+                  </div>
                 ) : null}
                 {showActivatePrimary ? (
                   <MotionAction style={{ marginTop: 14 }}>
@@ -321,7 +341,7 @@ export default function BillingPage() {
                       type="button"
                       className="pf-desk-save-access"
                       disabled={checkoutLoading}
-                      onClick={() => void startCheckout()}
+                      onClick={() => setCheckoutConfirmOpen(true)}
                     >
                       {checkoutLoading ? "Starting…" : "Activate billing"}
                     </button>
@@ -332,7 +352,7 @@ export default function BillingPage() {
                       type="button"
                       className="pf-desk-save-access"
                       disabled={portalLoading}
-                      onClick={() => void openPortal()}
+                      onClick={() => setPortalConfirmOpen(true)}
                     >
                       {portalLoading ? "Opening…" : "Manage billing"}
                     </button>
@@ -385,7 +405,7 @@ export default function BillingPage() {
                     type="button"
                     disabled={!data.billing_portal_available || portalLoading}
                     title={!data.billing_portal_available ? "Billing portal is not available yet" : undefined}
-                    onClick={() => void openPortal()}
+                    onClick={() => setPortalConfirmOpen(true)}
                     style={{
                       borderRadius: 10,
                       border: "1px solid rgba(255,255,255,0.12)",
@@ -421,6 +441,36 @@ export default function BillingPage() {
           ) : null}
         </div>
       </OperatorPageTransition>
+      <OperatorDeskConfirmDialog
+        open={checkoutConfirmOpen}
+        titleId="pf-billing-page-confirm-checkout-title"
+        title="Activate billing?"
+        busy={checkoutLoading}
+        primaryLabel="Activate billing"
+        primaryBusyLabel="Opening Stripe…"
+        primaryVariant="warm"
+        onClose={() => !checkoutLoading && setCheckoutConfirmOpen(false)}
+        onPrimary={() => void runConfirmedCheckout()}
+      >
+        <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+          This opens Stripe so you can turn on billing for this workspace.
+        </p>
+      </OperatorDeskConfirmDialog>
+      <OperatorDeskConfirmDialog
+        open={portalConfirmOpen}
+        titleId="pf-billing-page-confirm-portal-title"
+        title="Open billing portal?"
+        busy={portalLoading}
+        primaryLabel="Open billing portal"
+        primaryBusyLabel="Opening…"
+        primaryVariant="warm"
+        onClose={() => !portalLoading && setPortalConfirmOpen(false)}
+        onPrimary={() => void runConfirmedPortal()}
+      >
+        <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+          You&apos;ll manage payment methods, invoices, and your subscription in Stripe.
+        </p>
+      </OperatorDeskConfirmDialog>
     </main>
   );
 }

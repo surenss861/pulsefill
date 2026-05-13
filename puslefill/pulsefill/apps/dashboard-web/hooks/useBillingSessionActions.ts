@@ -6,7 +6,7 @@ import { apiFetch } from "@/lib/api";
 const BILLING_CHECKOUT = "/v1/billing/checkout";
 const BILLING_PORTAL = "/v1/billing/portal";
 
-export const BILLING_SESSION_ACTION_ERR = "We couldn't open billing right now. Try again shortly.";
+export const BILLING_SESSION_ACTION_ERR = "Billing did not open. Try again in a moment.";
 
 export function useBillingSessionActions() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
