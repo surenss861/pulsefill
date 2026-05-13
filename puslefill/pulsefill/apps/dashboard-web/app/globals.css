@@ -2559,6 +2559,94 @@ a.pf-desk-save-access--link:hover {
   max-width: 1180px;
 }
 
+.pf-page-open-slot-create.pf-desk-page {
+  max-width: min(1180px, 100%);
+}
+
+/* Desk-style confirm overlays (bulk actions, etc.) */
+.pf-desk-confirm-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pf-desk-confirm-modal__panel {
+  width: min(440px, 100%);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 246, 235, 0.08);
+  background:
+    linear-gradient(145deg, rgba(42, 36, 30, 0.78) 0%, rgba(18, 16, 14, 0.94) 100%),
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(255, 122, 24, 0.06), transparent 55%);
+  padding: clamp(20px, 3vw, 26px);
+  box-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.pf-desk-confirm-modal__title {
+  margin: 0;
+  font-size: clamp(1.05rem, 2vw, 1.22rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--pf-text-primary);
+}
+
+.pf-desk-confirm-modal__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.pf-desk-confirm-modal__btn-quiet {
+  border-radius: 12px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pf-desk-confirm-modal__btn-quiet:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.pf-desk-confirm-modal__btn-primary {
+  border-radius: 12px;
+  padding: 10px 16px;
+  border: none;
+  font-weight: 650;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.pf-desk-confirm-modal__btn-primary:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.pf-desk-confirm-modal__btn-primary--danger {
+  background: rgba(248, 113, 113, 0.92);
+  color: #1a0505;
+}
+
+.pf-desk-confirm-modal__btn-primary--warm {
+  background: linear-gradient(180deg, #ff7a18 0%, #f97316 100%);
+  color: var(--pf-btn-primary-text);
+}
+
 .pf-page-claims {
   max-width: 880px;
 }

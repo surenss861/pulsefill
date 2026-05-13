@@ -7,53 +7,49 @@ import type { OpenSlotCreatedSummary } from "@/components/slots/open-slot-create
 import { OpenSlotCreatedPanel } from "@/components/slots/open-slot-created-panel";
 import { OpenSlotForm } from "@/components/slots/open-slot-form";
 import { BillingInlineGuardrail } from "@/components/billing/billing-inline-guardrail";
-import { PageCommandHeader } from "@/components/operator/page-command-header";
+import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
-import { MotionAction } from "@/components/operator/operator-motion-primitives";
-import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 
 export default function CreateOpenSlotPage() {
   const [created, setCreated] = useState<OpenSlotCreatedSummary | null>(null);
   const billingSummary = useBillingSummary();
 
-  return (
-    <main className="pf-page-open-slot-create" style={{ padding: "clamp(16px, 3vw, 24px) 0 32px" }}>
-      <PageCommandHeader
-        animate={false}
-        tone="default"
-        eyebrow="Opening intake"
-        title="Create opening"
-        description="Capture a cancelled appointment time so PulseFill can match standby customers."
-        secondaryAction={
-          <MotionAction>
-            <Link href="/open-slots" style={actionLinkStyle("secondary")}>
-              ← Openings
-            </Link>
-          </MotionAction>
-        }
-        style={{ marginBottom: 20 }}
-      />
+  const headerActions = (
+    <Link href="/open-slots" prefetch={false} className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+      Back to openings
+    </Link>
+  );
 
+  return (
+    <main className="pf-page-open-slot-create pf-desk-page" style={{ padding: 0 }}>
       <OperatorPageTransition>
-        {created ? (
-          <OpenSlotCreatedPanel summary={created} onCreateAnother={() => setCreated(null)} />
-        ) : (
-          <>
-            {!billingSummary.loading && billingSummary.data ? (
-              <div style={{ marginBottom: 14 }}>
-                <BillingInlineGuardrail summary={billingSummary.data} />
-              </div>
-            ) : null}
-            <Suspense
-              fallback={
-                <OperatorLoadingState variant="section" skeleton="form" title="Loading form…" description="Reading link preferences." />
-              }
-            >
-              <OpenSlotForm onCreated={setCreated} />
-            </Suspense>
-          </>
-        )}
+        <div className="pf-overview-desk-stack">
+          <DeskPageHeader
+            title="Create opening"
+            subtitle="Add the cancelled appointment time so PulseFill can find matching customers on your waitlist."
+            actions={headerActions}
+          />
+
+          {created ? (
+            <OpenSlotCreatedPanel summary={created} onCreateAnother={() => setCreated(null)} />
+          ) : (
+            <>
+              {!billingSummary.loading && billingSummary.data ? (
+                <div>
+                  <BillingInlineGuardrail summary={billingSummary.data} />
+                </div>
+              ) : null}
+              <Suspense
+                fallback={
+                  <OperatorLoadingState variant="section" skeleton="form" title="Loading form…" description="Reading link preferences." />
+                }
+              >
+                <OpenSlotForm onCreated={setCreated} />
+              </Suspense>
+            </>
+          )}
+        </div>
       </OperatorPageTransition>
     </main>
   );

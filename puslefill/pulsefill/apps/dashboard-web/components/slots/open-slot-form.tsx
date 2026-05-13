@@ -319,7 +319,7 @@ export function OpenSlotForm({ onCreated }: Props) {
   const rail = (
     <>
       <p className="pf-section-title" style={{ fontSize: 16, margin: "0 0 12px" }}>
-        After you post
+        After you save this
       </p>
       <RecoveryPipeline
         activeStep="opening"
@@ -500,18 +500,8 @@ export function OpenSlotForm({ onCreated }: Props) {
                   rowGap: 4,
                 }}
               >
-                <p
-                  className="pf-muted-copy"
-                  style={{
-                    margin: 0,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    letterSpacing: "0.02em",
-                    textTransform: "uppercase",
-                    color: "var(--pf-text-muted)",
-                  }}
-                >
-                  Suggested setup
+                <p className="pf-desk-hero-card__eyebrow" style={{ margin: 0, fontSize: 12 }}>
+                  Suggested shortcuts
                 </p>
                 {createDefaultsLoading ? (
                   <span className="pf-muted-copy" style={{ fontSize: 11 }}>
@@ -610,7 +600,7 @@ export function OpenSlotForm({ onCreated }: Props) {
 
           <section style={{ padding: 0 }}>
             <h2 className="pf-section-title" style={{ margin: "0 0 14px", fontSize: 16 }}>
-              1. Appointment details
+              Appointment details
             </h2>
             <div style={{ display: "grid", gap: 14 }}>
               <label style={{ display: "grid", gap: 6 }}>
@@ -693,7 +683,7 @@ export function OpenSlotForm({ onCreated }: Props) {
 
           <section style={{ padding: 0 }}>
             <h2 className="pf-section-title" style={{ margin: "0 0 14px", fontSize: 16 }}>
-              2. Time window
+              Time window
             </h2>
             <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
               <label style={{ display: "grid", gap: 6 }}>
@@ -734,7 +724,7 @@ export function OpenSlotForm({ onCreated }: Props) {
 
           <section style={{ padding: 0 }}>
             <h2 className="pf-section-title" style={{ margin: "0 0 14px", fontSize: 16 }}>
-              3. Offer details
+              Offer details
             </h2>
             <div style={{ display: "grid", gap: 14 }}>
               <label style={{ display: "grid", gap: 6 }}>
@@ -786,7 +776,7 @@ export function OpenSlotForm({ onCreated }: Props) {
           flexWrap: "wrap",
         }}
       >
-        <Link href="/open-slots" className="pf-muted-copy" style={{ fontSize: 13 }}>
+        <Link href="/open-slots" prefetch={false} className="pf-desk-quiet-link" style={{ fontSize: 13, marginTop: 0 }}>
           Back to openings
         </Link>
         <div style={{ minHeight: 44, display: "flex", alignItems: "center" }}>

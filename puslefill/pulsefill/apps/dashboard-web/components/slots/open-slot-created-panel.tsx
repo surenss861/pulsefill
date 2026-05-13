@@ -6,7 +6,8 @@ import { useState } from "react";
 import type { OpenSlotCreatedSummary } from "@/components/slots/open-slot-created-summary";
 import { useToast } from "@/components/ui/toast-provider";
 import { apiFetch } from "@/lib/api";
-import { pressableHandlers, pressablePrimary, pressableSecondary } from "@/lib/pressable";
+import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
+import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { navigateToOpenSlotDetail } from "@/lib/operator-navigation";
 import { emitOperatorRefreshEvent } from "@/lib/operator-refresh-events";
 import { SendOffersPrereqCallout } from "@/components/slots/send-offers-prereq-callout";
@@ -88,20 +89,9 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
   }
 
   return (
-    <div
-      style={{
-        marginTop: 24,
-        border: "1px solid rgba(34,197,94,0.25)",
-        background: "rgba(34,197,94,0.08)",
-        borderRadius: 20,
-        padding: 20,
-        color: "var(--text)",
-      }}
-    >
-      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 650 }}>Opening created</h2>
-      <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--muted)", lineHeight: 1.5 }}>
-        The opening is ready. Send offers to matching standby customers now, or open detail to review before
-        sending.
+    <DeskHeroCard title="Opening created" titleId="pf-open-slot-created-title" eyebrow="On the list">
+      <p className="pf-desk-hero-card__meta">
+        The opening is saved. Send offers to matching waitlist customers now, or open the case file to review first.
       </p>
 
       <div
@@ -110,7 +100,7 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
           padding: "12px 14px",
           borderRadius: 14,
           border: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(0,0,0,0.18)",
+          background: "rgba(0,0,0,0.14)",
           fontSize: 13,
           lineHeight: 1.55,
           display: "grid",
@@ -139,31 +129,22 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 16 }}>
-        <button
-          type="button"
-          onClick={() => void handleSendOffers()}
-          disabled={sending}
-          style={{
-            ...pressablePrimary,
-            opacity: sending ? 0.65 : 1,
-            cursor: sending ? "not-allowed" : "pointer",
-          }}
-          {...pressableHandlers(sending)}
-        >
-          {sending ? "Sending…" : "Send offers now"}
-        </button>
-        <Link
-          href={slotsDetailPath(slotId, {})}
-          style={{
-            ...pressableSecondary,
-            display: "inline-flex",
-            alignItems: "center",
-            textDecoration: "none",
-          }}
-        >
-          Open opening
-        </Link>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 16, alignItems: "center" }}>
+        <MotionAction>
+          <button
+            type="button"
+            className="pf-desk-save-access"
+            disabled={sending}
+            onClick={() => void handleSendOffers()}
+          >
+            {sending ? "Sending…" : "Send offers"}
+          </button>
+        </MotionAction>
+        <MotionAction>
+          <Link href={slotsDetailPath(slotId, {})} prefetch={false} className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+            View opening
+          </Link>
+        </MotionAction>
       </div>
 
       {sendError ? <p style={{ margin: "12px 0 0", fontSize: 13, color: "#f87171" }}>{sendError}</p> : null}
@@ -178,35 +159,20 @@ export function OpenSlotCreatedPanel({ summary, onCreateAnother }: Props) {
       ) : null}
       {noStandbyMatch ? (
         <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--muted)" }}>
-          <Link
-            href={slotsDetailPath(slotId, {})}
-            style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}
-          >
-            Open opening detail
+          <Link href={slotsDetailPath(slotId, {})} prefetch={false} className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
+            View opening
           </Link>{" "}
-          to retry after you have matching standby customers.
+          to retry after you have matching waitlist customers.
         </p>
       ) : null}
 
       {onCreateAnother ? (
         <p style={{ margin: "16px 0 0", fontSize: 13, color: "var(--muted)" }}>
-          <button
-            type="button"
-            onClick={onCreateAnother}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--primary)",
-              cursor: "pointer",
-              padding: 0,
-              font: "inherit",
-              textDecoration: "underline",
-            }}
-          >
+          <button type="button" onClick={onCreateAnother} className="pf-desk-quiet-link" style={{ background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}>
             Create another opening
           </button>
         </p>
       ) : null}
-    </div>
+    </DeskHeroCard>
   );
 }
