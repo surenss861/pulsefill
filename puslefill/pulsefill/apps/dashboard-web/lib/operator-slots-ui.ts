@@ -36,11 +36,14 @@ export function getOperatorSlotCounts(slots: OperatorSlotsListItem[]) {
 
 export function getOperatorSlotAttentionLabel(slot: OperatorSlotsListItem) {
   const st = (slot.status || "").toLowerCase();
+  if (st === "open") {
+    return "Waiting for offers";
+  }
   if (st === "claimed") {
     return "Awaiting confirmation";
   }
   if (st === "offered") {
-    return "Offers active";
+    return "Offers sent — waiting on replies";
   }
   return null;
 }
@@ -48,18 +51,18 @@ export function getOperatorSlotAttentionLabel(slot: OperatorSlotsListItem) {
 export function getOperatorSlotEmptyCopy(filter: OperatorSlotsFilter) {
   switch (filter) {
     case "open":
-      return "No openings currently open.";
+      return "No openings are waiting for offers in this view.";
     case "offered":
-      return "No offered openings right now.";
+      return "No openings have active offers right now.";
     case "claimed":
-      return "No claimed openings awaiting confirmation.";
+      return "No openings are waiting for you to confirm the booking.";
     case "booked":
-      return "No booked openings yet.";
+      return "No confirmed bookings in this view yet.";
     case "expired":
-      return "No expired openings yet.";
+      return "No expired appointment times here.";
     case "cancelled":
-      return "No cancelled openings.";
+      return "No cancelled appointment times here.";
     default:
-      return "No openings yet.";
+      return "No openings match this view.";
   }
 }

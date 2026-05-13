@@ -2,6 +2,8 @@
 
 type Props = {
   counts: Record<string, number>;
+  /** Desk pages: human labels, calmer copy. */
+  tone?: "default" | "desk";
 };
 
 function SummaryChip({
@@ -27,7 +29,17 @@ function SummaryChip({
   );
 }
 
-export function OperatorSlotListSummary({ counts }: Props) {
+const DESK_LABELS: Record<string, string> = {
+  open: "Waiting for offers",
+  offered: "Offers sent",
+  claimed: "Awaiting confirmation",
+  booked: "Confirmed",
+  expired: "Expired",
+};
+
+export function OperatorSlotListSummary({ counts, tone = "default" }: Props) {
+  const lab = (key: string, fallback: string) => (tone === "desk" ? (DESK_LABELS[key] ?? fallback) : fallback);
+
   return (
     <div
       style={{
@@ -37,11 +49,11 @@ export function OperatorSlotListSummary({ counts }: Props) {
         paddingBottom: 4,
       }}
     >
-      <SummaryChip label="Open" value={counts.open ?? 0} />
-      <SummaryChip label="Offered" value={counts.offered ?? 0} />
-      <SummaryChip label="Claimed" value={counts.claimed ?? 0} />
-      <SummaryChip label="Booked" value={counts.booked ?? 0} />
-      <SummaryChip label="Expired" value={counts.expired ?? 0} />
+      <SummaryChip label={lab("open", "Open")} value={counts.open ?? 0} />
+      <SummaryChip label={lab("offered", "Offered")} value={counts.offered ?? 0} />
+      <SummaryChip label={lab("claimed", "Claimed")} value={counts.claimed ?? 0} />
+      <SummaryChip label={lab("booked", "Booked")} value={counts.booked ?? 0} />
+      <SummaryChip label={lab("expired", "Expired")} value={counts.expired ?? 0} />
     </div>
   );
 }

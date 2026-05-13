@@ -2376,6 +2376,42 @@ main.pf-auth-shell .pf-auth-submit {
   max-width: 1180px;
 }
 
+.pf-page-openings.pf-desk-page {
+  max-width: min(1180px, 100%);
+}
+
+.pf-openings-digest-banner {
+  padding: 14px 16px;
+  border-radius: var(--pf-radius-md);
+  border: 1px solid var(--pf-accent-primary-border);
+  background: rgba(255, 122, 24, 0.06);
+}
+
+.pf-openings-digest-banner__meta {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pf-openings-digest-banner__title {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.pf-desk-openings-split {
+  display: grid;
+  gap: clamp(14px, 2vw, 18px);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .pf-desk-openings-split {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  }
+}
+
 .pf-page-settings,
 .pf-page-customers {
   max-width: 1120px;

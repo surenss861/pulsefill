@@ -21,13 +21,15 @@ import { useOperatorRefreshSubscription } from "@/hooks/useOperatorRefreshSubscr
 import { useOperatorSlotsList } from "@/hooks/useOperatorSlotsList";
 import { runOperatorBulkAction } from "@/lib/operator-bulk-actions";
 import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
-import { OperatorEmptyState } from "@/components/operator/operator-empty-state";
+import { DashboardRecoveryPathSection } from "@/components/dashboard/dashboard-recovery-path-section";
+import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
+import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
+import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
+import type { RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
-import { RecoveryPipeline } from "@/components/operator/recovery-pipeline";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { MotionAction } from "@/components/operator/operator-motion-primitives";
-import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import { matchesOperatorFilters } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
 import { digestSectionBannerTitle } from "@/lib/morning-recovery-digest-ui";
@@ -149,6 +151,35 @@ export default function OpenSlotsPageClient() {
           }
         : null;
 
+  const openingsPipelineStep = useMemo((): RecoveryPipelineStepId => {
+    if (slots.length === 0) return "opening";
+    if ((counts.claimed ?? 0) > 0) return "confirmed";
+    if ((counts.offered ?? 0) > 0) return "claim";
+    if ((counts.open ?? 0) > 0) return "offers";
+    if ((counts.booked ?? 0) > 0) return "confirmed";
+    return "matched";
+  }, [slots.length, counts.claimed, counts.offered, counts.open, counts.booked]);
+
+  const headerActions = (
+    <button
+      type="button"
+      onClick={() => void reload()}
+      disabled={reloading}
+      style={{
+        background: "transparent",
+        border: "1px solid rgba(255,255,255,0.2)",
+        color: "var(--text)",
+        borderRadius: 12,
+        padding: "8px 14px",
+        cursor: reloading ? "wait" : "pointer",
+        fontSize: 13,
+        fontWeight: 600,
+      }}
+    >
+      {reloading ? "Refreshing…" : "Refresh"}
+    </button>
+  );
+
   async function confirmBulk() {
     if (!bulkPendingAction || selectedIds.length === 0) return;
     const ids = [...selectedIds];
@@ -191,261 +222,204 @@ export default function OpenSlotsPageClient() {
   }
 
   return (
-    <main className="pf-page-openings" style={{ padding: "0 0 24px", paddingBottom: selectedIds.length > 0 ? 120 : 24 }}>
+    <main className="pf-page-openings pf-desk-page" style={{ padding: 0, paddingBottom: selectedIds.length > 0 ? 120 : 0 }}>
       <OperatorPageTransition>
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-        <button
-          type="button"
-          onClick={() => void reload()}
-          disabled={reloading}
-          style={{
-            background: "transparent",
-            border: "1px solid rgba(255,255,255,0.2)",
-            color: "var(--text)",
-            borderRadius: 12,
-            padding: "8px 14px",
-            cursor: reloading ? "wait" : "pointer",
-          }}
-        >
-          {reloading ? "Refreshing…" : "Refresh"}
-        </button>
-      </div>
+        <div className="pf-overview-desk-stack">
+          <DeskPageHeader
+            title="Openings"
+            subtitle="Create and manage cancelled appointment times."
+            actions={headerActions}
+          />
 
-      {digestBanner ? (
-        <div
-          style={{
-            marginTop: 16,
-            padding: 14,
-            borderRadius: 14,
-            border: "1px solid var(--pf-accent-primary-border)",
-            background: "rgba(255, 122, 24, 0.08)",
-          }}
-        >
-          <div style={{ fontSize: 12, color: "var(--pf-chip-primary-text)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-            Morning Recovery Digest
-          </div>
-          <div style={{ fontSize: 16, fontWeight: 650, marginTop: 4 }}>{digestBanner.title}</div>
-          <p style={{ margin: "8px 0 0 0", fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>{digestBanner.subtitle}</p>
-          <Link
-            href="/open-slots"
-            style={{ display: "inline-block", marginTop: 10, fontSize: 13, color: "var(--primary)", fontWeight: 600 }}
-          >
-            Clear digest view
-          </Link>
-        </div>
-      ) : null}
+          <DeskHeroCard title="Create an opening" titleId="pf-openings-hero-title" eyebrow="When someone cancels">
+            <p className="pf-desk-hero-card__meta">
+              When someone cancels, add the appointment time here. PulseFill can send it to waiting customers.
+            </p>
+            <MotionAction>
+              <Link href="/open-slots/create" className="pf-desk-save-access pf-desk-save-access--link">
+                Create opening
+              </Link>
+            </MotionAction>
+          </DeskHeroCard>
 
-      {loading ? (
-        <div style={{ marginTop: 8 }}>
-          <OperatorLoadingState variant="section" skeleton="rows" title="Loading openings…" />
-        </div>
-      ) : null}
-      {error ? (
-        <div style={{ marginTop: 12 }}>
-          <OperatorErrorState rawMessage={error} />
-        </div>
-      ) : null}
+          {digestBanner ? (
+            <aside className="pf-openings-digest-banner" aria-label="Digest context">
+              <p className="pf-openings-digest-banner__meta">From your morning digest</p>
+              <div className="pf-openings-digest-banner__title">{digestBanner.title}</div>
+              <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.5 }}>
+                {digestBanner.subtitle}
+              </p>
+              <Link href="/open-slots" className="pf-desk-quiet-link" style={{ display: "inline-block", marginTop: 10 }}>
+                Clear digest view
+              </Link>
+            </aside>
+          ) : null}
 
-      {!loading && !error && slots.length === 0 ? (
-        <div style={{ marginTop: 20 }}>
-          <OperatorEmptyState
-            boardSplit
-            title="No openings yet"
-            description="Create an appointment opening when a cancellation appears. PulseFill will help match it to standby customers."
-            visual={
-              <div
-                aria-hidden
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  border: "1px solid rgba(255, 122, 24, 0.28)",
-                  background:
-                    "radial-gradient(circle at 32% 28%, rgba(255, 200, 150, 0.35), rgba(255, 122, 24, 0.1) 45%, rgba(8, 7, 6, 0.85))",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.35)",
-                }}
-              />
-            }
-            primaryAction={
-              <MotionAction>
-                <Link href="/open-slots/create" style={actionLinkStyle("primary")}>
-                  Create opening
-                </Link>
-              </MotionAction>
-            }
-            secondaryContent={
-              <>
-                <div className="pf-openings-empty-pipeline-wrap">
-                  <RecoveryPipeline
-                    activeStep="opening"
-                    compact
-                    animated
-                    interactive
-                    showFlowLabel={false}
-                    style={{
-                      background: "transparent",
-                      boxShadow: "none",
-                      border: "1px solid rgba(255,255,255,0.055)",
-                    }}
-                  />
-                </div>
-                <p className="pf-eyebrow-plain" style={{ margin: "16px 0 8px" }}>
-                  What happens next
-                </p>
-                <ol className="pf-openings-next-stack">
-                  <li>Post the cancelled time</li>
-                  <li>PulseFill checks your waiting list</li>
-                  <li>Send offers to customers</li>
-                  <li>Someone claims, then you confirm</li>
-                </ol>
-                <MotionAction>
-                  <Link href="/customers" style={{ ...actionLinkStyle("ghost"), display: "inline-block", marginTop: 14, fontSize: 13 }}>
+          {loading ? (
+            <OperatorLoadingState variant="section" skeleton="rows" title="Loading openings…" />
+          ) : null}
+          {error ? <OperatorErrorState rawMessage={error} /> : null}
+
+          {!loading && !error && slots.length === 0 ? (
+            <div className="pf-desk-openings-split">
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <DeskSecondaryCard title="No openings yet">
+                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+                    When someone cancels, add the appointment time here. PulseFill can send it to waiting customers on your list.
+                  </p>
+                  <MotionAction style={{ marginTop: 12 }}>
+                    <Link href="/open-slots/create" className="pf-desk-save-access pf-desk-save-access--link">
+                      Create opening
+                    </Link>
+                  </MotionAction>
+                  <Link href="/customers" className="pf-desk-quiet-link" style={{ display: "inline-block", marginTop: 14, fontSize: 13 }}>
                     Invite standby customers
                   </Link>
-                </MotionAction>
-                <details className="pf-overview-edu" style={{ marginTop: 16 }}>
-                  <summary>Show how recovery works</summary>
-                  <p className="pf-overview-edu__body">
-                    Staff posts a cancelled time as an opening, PulseFill matches standby preferences, you send offers, a customer claims, and
-                    you confirm once the appointment exists on the calendar.
-                  </p>
-                </details>
-              </>
-            }
-          />
-        </div>
-      ) : null}
-
-      {!loading && !error && slots.length > 0 ? (
-        <div style={{ marginTop: 20, display: "grid", gap: 18 }}>
-          <SendOffersPrereqCallout />
-          <OperatorSlotListSummary counts={counts} />
-          <OperatorSlotListToolbar selectedFilter={filter} onChange={commitListFilter} counts={counts} />
-
-          {filterOptions.error ? (
-            <p style={{ color: "#f87171", fontSize: 13 }}>Filters: {filterOptions.error}</p>
-          ) : null}
-          {!filterOptions.loading ? (
-            <>
-              <OperatorFilterBar
-                filters={filterState.filters}
-                onChange={filterState.setFilters}
-                providers={filterOptions.providers}
-                locations={filterOptions.locations}
-                services={filterOptions.services}
-              />
-              <OperatorSavedViews
-                views={filterState.views}
-                onApply={filterState.setFilters}
-                onCreate={filterState.createView}
-                onDelete={filterState.deleteView}
-              />
-            </>
-          ) : (
-            <p style={{ color: "var(--muted)", fontSize: 13 }}>Loading filter options…</p>
-          )}
-
-          {slotsForList.length === 0 ? (
-            <div
-              style={{
-                padding: 18,
-                borderRadius: 18,
-                border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(255,255,255,0.03)",
-                fontSize: 14,
-                opacity: 0.75,
-              }}
-            >
-              {digestSlotSet && digestFilteredSlots.length === 0
-                ? "No digest openings in this filtered view."
-                : getOperatorSlotEmptyCopy(filter)}
-            </div>
-          ) : (
-            <>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  fontSize: 14,
-                  cursor: "pointer",
-                  userSelect: "none",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={allVisibleSelected}
-                  onChange={() => toggleAll(visibleIds)}
-                  style={{ width: 18, height: 18 }}
-                />
-                <span>
-                  Select all visible ({visibleIds.length}
-                  {digestSlotSet ? ` · digest filter` : ""})
-                </span>
-              </label>
-              <div style={{ display: "grid", gap: 12 }}>
-                {slotsForList.map((slot) => (
-                  <OperatorSlotListRow
-                    key={slot.id}
-                    slot={slot}
-                    busy={rowAction.busyId === slot.id}
-                    onPrimaryAction={handlePrimaryAction}
-                    detailHref={slotsDetailPath(
-                      slot.id,
-                      slotsDetailParamsFromListContext({
-                        filter,
-                        slot,
-                        digestKind,
-                        digestSlotIds: digestSlotIdsParam ?? undefined,
-                        q: searchParams.get("q"),
-                      }),
-                    )}
-                    selection={{
-                      selected: isSelected(slot.id),
-                      onToggle: () => toggle(slot.id),
-                    }}
-                  />
-                ))}
+                  <details className="pf-overview-edu" style={{ marginTop: 16 }}>
+                    <summary>Show how recovery works</summary>
+                    <p className="pf-overview-edu__body">
+                      Staff posts a cancelled time as an opening, PulseFill matches standby preferences, you send offers, a customer claims, and
+                      you confirm once the appointment exists on the calendar.
+                    </p>
+                  </details>
+                </DeskSecondaryCard>
               </div>
-            </>
-          )}
+              <DeskSecondaryCard title="What happens next">
+                <DashboardRecoveryPathSection hideTitle activeStep="opening" />
+              </DeskSecondaryCard>
+            </div>
+          ) : null}
+
+          {!loading && !error && slots.length > 0 ? (
+            <div className="pf-desk-openings-split">
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <SendOffersPrereqCallout />
+                <DeskSecondaryCard title="Status and filters">
+                  <OperatorSlotListSummary counts={counts} tone="desk" />
+                  <div style={{ marginTop: 14 }}>
+                    <OperatorSlotListToolbar selectedFilter={filter} onChange={commitListFilter} counts={counts} tone="desk" />
+                  </div>
+                  {filterOptions.error ? <p style={{ color: "#f87171", fontSize: 13 }}>Filters: {filterOptions.error}</p> : null}
+                  {!filterOptions.loading ? (
+                    <>
+                      <div style={{ marginTop: 14 }}>
+                        <OperatorFilterBar
+                          filters={filterState.filters}
+                          onChange={filterState.setFilters}
+                          providers={filterOptions.providers}
+                          locations={filterOptions.locations}
+                          services={filterOptions.services}
+                        />
+                      </div>
+                      <OperatorSavedViews
+                        views={filterState.views}
+                        onApply={filterState.setFilters}
+                        onCreate={filterState.createView}
+                        onDelete={filterState.deleteView}
+                      />
+                    </>
+                  ) : (
+                    <p style={{ color: "var(--muted)", fontSize: 13 }}>Loading filter options…</p>
+                  )}
+                </DeskSecondaryCard>
+
+                <DeskSecondaryCard title="Your openings">
+                  {slotsForList.length === 0 ? (
+                    <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+                      {digestSlotSet && digestFilteredSlots.length === 0
+                        ? "No digest openings in this filtered view."
+                        : getOperatorSlotEmptyCopy(filter)}
+                    </p>
+                  ) : (
+                    <>
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          fontSize: 14,
+                          cursor: "pointer",
+                          userSelect: "none",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={allVisibleSelected}
+                          onChange={() => toggleAll(visibleIds)}
+                          style={{ width: 18, height: 18 }}
+                        />
+                        <span>
+                          Select all visible ({visibleIds.length}
+                          {digestSlotSet ? ", digest filter" : ""})
+                        </span>
+                      </label>
+                      <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+                        {slotsForList.map((slot) => (
+                          <OperatorSlotListRow
+                            key={slot.id}
+                            variant="desk"
+                            slot={slot}
+                            busy={rowAction.busyId === slot.id}
+                            onPrimaryAction={handlePrimaryAction}
+                            detailHref={slotsDetailPath(
+                              slot.id,
+                              slotsDetailParamsFromListContext({
+                                filter,
+                                slot,
+                                digestKind,
+                                digestSlotIds: digestSlotIdsParam ?? undefined,
+                                q: searchParams.get("q"),
+                              }),
+                            )}
+                            selection={{
+                              selected: isSelected(slot.id),
+                              onToggle: () => toggle(slot.id),
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </DeskSecondaryCard>
+              </div>
+              <DeskSecondaryCard title="What happens next">
+                <DashboardRecoveryPathSection hideTitle activeStep={openingsPipelineStep} />
+              </DeskSecondaryCard>
+            </div>
+          ) : null}
         </div>
-      ) : null}
 
-      <OperatorBulkActionBar
-        count={selectedIds.length}
-        busy={bulkRunning}
-        onRetryOffers={() => {
-          if (selectedIds.length === 0) return;
-          setBulkPendingAction("retry_offers");
-          setBulkConfirmOpen(true);
-        }}
-        onExpire={() => {
-          if (selectedIds.length === 0) return;
-          setBulkPendingAction("expire");
-          setBulkConfirmOpen(true);
-        }}
-        onClear={() => clearBulkSelection()}
-      />
+        <OperatorBulkActionBar
+          count={selectedIds.length}
+          busy={bulkRunning}
+          onRetryOffers={() => {
+            if (selectedIds.length === 0) return;
+            setBulkPendingAction("retry_offers");
+            setBulkConfirmOpen(true);
+          }}
+          onExpire={() => {
+            if (selectedIds.length === 0) return;
+            setBulkPendingAction("expire");
+            setBulkConfirmOpen(true);
+          }}
+          onClear={() => clearBulkSelection()}
+        />
 
-      <OperatorBulkActionConfirmModal
-        open={bulkConfirmOpen}
-        action={bulkPendingAction}
-        count={selectedIds.length}
-        busy={bulkRunning}
-        onCancel={() => {
-          if (!bulkRunning) {
-            setBulkConfirmOpen(false);
-            setBulkPendingAction(null);
-          }
-        }}
-        onConfirm={() => void confirmBulk()}
-      />
+        <OperatorBulkActionConfirmModal
+          open={bulkConfirmOpen}
+          action={bulkPendingAction}
+          count={selectedIds.length}
+          busy={bulkRunning}
+          onCancel={() => {
+            if (!bulkRunning) {
+              setBulkConfirmOpen(false);
+              setBulkPendingAction(null);
+            }
+          }}
+          onConfirm={() => void confirmBulk()}
+        />
 
-      <OperatorBulkActionResult
-        result={bulkResult}
-        onDismiss={() => setBulkResult(null)}
-      />
+        <OperatorBulkActionResult result={bulkResult} onDismiss={() => setBulkResult(null)} />
       </OperatorPageTransition>
     </main>
   );

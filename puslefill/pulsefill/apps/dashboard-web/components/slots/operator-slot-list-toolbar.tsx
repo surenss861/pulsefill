@@ -7,12 +7,25 @@ type Props = {
   selectedFilter: OperatorSlotsFilter;
   onChange: (value: OperatorSlotsFilter) => void;
   counts: Record<string, number>;
+  /** Desk pages: quieter, sentence-style tab labels. */
+  tone?: "default" | "desk";
+};
+
+const DESK_FILTER_LABEL: Partial<Record<OperatorSlotsFilter, string>> = {
+  all: "All",
+  open: "Waiting for offers",
+  offered: "Offers sent",
+  claimed: "Awaiting confirmation",
+  booked: "Confirmed",
+  expired: "Expired",
+  cancelled: "Cancelled",
 };
 
 export function OperatorSlotListToolbar({
   selectedFilter,
   onChange,
   counts,
+  tone = "default",
 }: Props) {
   return (
     <div
@@ -25,6 +38,9 @@ export function OperatorSlotListToolbar({
       {OPERATOR_SLOT_FILTERS.map((filter) => {
         const active = filter.key === selectedFilter;
         const count = counts[filter.key] ?? 0;
+
+        const label =
+          tone === "desk" ? (DESK_FILTER_LABEL[filter.key] ?? filter.label) : filter.label;
 
         return (
           <button
@@ -40,7 +56,7 @@ export function OperatorSlotListToolbar({
               color: "var(--text)",
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{filter.label}</span>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
             <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 8 }}>{count}</span>
           </button>
         );
