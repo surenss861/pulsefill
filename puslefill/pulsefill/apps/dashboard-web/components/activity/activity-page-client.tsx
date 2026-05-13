@@ -1,21 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { FadeUp } from "@/components/motion/operator-motion";
+import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
+import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { ActivityEmptySection } from "@/components/activity/activity-empty-section";
-import { ActivityHero } from "@/components/activity/activity-hero";
-import { ActivitySummaryStrip } from "@/components/activity/activity-summary-strip";
-import { ActionButton } from "@/components/ui/action-button";
-import { PageState } from "@/components/ui/page-state";
-import { SectionCard } from "@/components/ui/section-card";
 import { OperatorActivityBulkActionBar } from "@/components/activity/operator-activity-bulk-action-bar";
 import { OperatorActivityCard } from "@/components/activity/operator-activity-card";
 import { OperatorBulkActionConfirmModal } from "@/components/slots/operator-bulk-action-confirm-modal";
 import { OperatorBulkActionResult } from "@/components/slots/operator-bulk-action-result";
 import { RefreshIndicator } from "@/components/ui/refresh-indicator";
+import { PageState } from "@/components/ui/page-state";
 import { useToast } from "@/components/ui/toast-provider";
 import { useOperatorActivityBulkSelection } from "@/hooks/useOperatorActivityBulkSelection";
 import { useOperatorActivityFeed } from "@/hooks/useOperatorActivityFeed";
@@ -24,17 +22,14 @@ import {
   openSlotsUrlForActivitySelection,
   retrySelectedActivitySlots,
 } from "@/lib/operator-activity-bulk-actions";
-import { buildOperatorActivitySemanticSections } from "@/lib/operator-activity-semantic-sections";
+import { activityFeedErrorUi } from "@/lib/operator-activity-feed-errors";
 import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
-import { summarizeOperatorActivityFeed } from "@/lib/operator-activity-summary";
+import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import {
   matchesOperatorActivityFilter,
   operatorActivityFilterOptions,
   type OperatorActivityFilter,
 } from "@/types/operator-activity-filter";
-import { activityFeedErrorUi } from "@/lib/operator-activity-feed-errors";
-import Link from "next/link";
-import { actionLinkStyle } from "@/lib/operator-action-link-styles";
 import type { BulkSlotActionResponse } from "@/types/bulk-actions";
 
 export function ActivityPageClient() {
@@ -59,12 +54,6 @@ export function ActivityPageClient() {
   const filteredItems = useMemo(
     () => items.filter((item) => matchesOperatorActivityFilter(filter, item)),
     [items, filter],
-  );
-
-  const summary = useMemo(() => summarizeOperatorActivityFeed(items), [items]);
-  const semanticSections = useMemo(
-    () => buildOperatorActivitySemanticSections(filteredItems),
-    [filteredItems],
   );
 
   const bulkSelection = useOperatorActivityBulkSelection(filteredItems);
@@ -128,94 +117,121 @@ export function ActivityPageClient() {
     );
   }, [error]);
 
-  const heroActions = (
-    <>
+  const headerActions = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        flexWrap: "wrap",
+        justifyContent: "flex-end",
+      }}
+    >
       <RefreshIndicator updatedAt={refreshedAt} />
-      <ActionButton
-        variant="secondary"
+      <Link href="/open-slots/create" className="pf-desk-save-access pf-desk-save-access--link">
+        Create opening
+      </Link>
+      <button
+        type="button"
         onClick={() => {
           void (async () => {
             await reload();
             setRefreshedAt(new Date());
           })();
         }}
+        style={{
+          background: "transparent",
+          border: "1px solid rgba(255,255,255,0.2)",
+          color: "var(--text)",
+          borderRadius: 12,
+          padding: "8px 14px",
+          cursor: "pointer",
+          fontSize: 13,
+          fontWeight: 600,
+        }}
       >
         Refresh
-      </ActionButton>
-    </>
+      </button>
+    </div>
   );
 
+  const bulkSelected = bulk.selectedIds.length > 0;
+
   return (
-    <main className="pf-page-activity" style={{ padding: 0 }}>
+    <main
+      className="pf-page-activity pf-desk-page"
+      style={{ padding: 0, paddingBottom: bulkSelected ? 100 : 0 }}
+    >
       <OperatorPageTransition>
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <FadeUp>
-          <ActivityHero actions={heroActions} />
-        </FadeUp>
-        <FadeUp delay={0.05}>
-          <ActivitySummaryStrip summary={summary} />
-        </FadeUp>
+        <div className="pf-overview-desk-stack">
+          <DeskPageHeader
+            title="Activity"
+            subtitle="See openings, offers, claims, and confirmed bookings."
+            actions={headerActions}
+          />
 
-        <div className={`pf-filter-rail${items.length === 0 ? " pf-filter-rail--quiet" : ""}`}>
-          {operatorActivityFilterOptions.map((opt) => {
-            const on = filter === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setFilter(opt.value)}
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  padding: "8px 14px",
-                  borderRadius: 999,
-                  border: on ? "1px solid rgba(255, 255, 255, 0.14)" : "1px solid var(--pf-border-subtle)",
-                  background: on ? "rgba(255, 122, 24, 0.08)" : "rgba(255,255,255,0.03)",
-                  color: on ? "var(--pf-text-primary)" : "rgba(245, 247, 250, 0.7)",
-                  cursor: "pointer",
-                  transition: "background 150ms ease, border-color 150ms ease, transform 120ms ease",
-                }}
-              >
-                {opt.label}
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => bulk.selectAllVisible()}
-            disabled={!filteredItems.some((i) => i.bulk_selectable)}
-            style={{
-              fontSize: 13,
-              marginLeft: "auto",
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid var(--pf-border-subtle)",
-              background: "transparent",
-              color: "rgba(245, 247, 250, 0.45)",
-              cursor: filteredItems.some((i) => i.bulk_selectable) ? "pointer" : "not-allowed",
-              opacity: filteredItems.some((i) => i.bulk_selectable) ? 1 : 0.5,
-            }}
-          >
-            Select all visible
-          </button>
-        </div>
+          {activityLoadError ? (
+            activityLoadError
+          ) : loading && items.length === 0 ? (
+            <OperatorLoadingState
+              variant="section"
+              skeleton="rows"
+              title="Loading activity…"
+              description="Fetching recent openings, offers, claims, and confirmations."
+            />
+          ) : (
+            <DeskSecondaryCard title="Recent activity">
+              <div className={`pf-filter-rail${items.length === 0 ? " pf-filter-rail--quiet" : ""}`}>
+                {operatorActivityFilterOptions.map((opt) => {
+                  const on = filter === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setFilter(opt.value)}
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        padding: "8px 14px",
+                        borderRadius: 999,
+                        border: on ? "1px solid rgba(255, 255, 255, 0.14)" : "1px solid var(--pf-border-subtle)",
+                        background: on ? "rgba(255, 122, 24, 0.08)" : "rgba(255,255,255,0.03)",
+                        color: on ? "var(--pf-text-primary)" : "rgba(245, 247, 250, 0.7)",
+                        cursor: "pointer",
+                        transition: "background 150ms ease, border-color 150ms ease, transform 120ms ease",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => bulk.selectAllVisible()}
+                  disabled={!filteredItems.some((i) => i.bulk_selectable)}
+                  style={{
+                    fontSize: 13,
+                    marginLeft: "auto",
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    border: "1px solid var(--pf-border-subtle)",
+                    background: "transparent",
+                    color: "rgba(245, 247, 250, 0.45)",
+                    cursor: filteredItems.some((i) => i.bulk_selectable) ? "pointer" : "not-allowed",
+                    opacity: filteredItems.some((i) => i.bulk_selectable) ? 1 : 0.5,
+                  }}
+                >
+                  Select all visible
+                </button>
+              </div>
 
-        {activityLoadError ? (
-          activityLoadError
-        ) : loading && items.length === 0 ? (
-          <OperatorLoadingState variant="section" skeleton="rows" title="Loading activity…" description="Fetching recent recovery events." />
-        ) : items.length === 0 ? (
-          <ActivityEmptySection />
-        ) : filteredItems.length === 0 ? (
-          <ActivityEmptySection variant="filtered" />
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-            {semanticSections.map((section) => (
-              <SectionCard key={section.key} eyebrow={section.label} title={section.title} description={section.body}>
-                {section.items.length === 0 ? (
+              <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 12 }}>
+                {items.length === 0 ? (
                   <ActivityEmptySection />
+                ) : filteredItems.length === 0 ? (
+                  <ActivityEmptySection variant="filtered" />
                 ) : (
-                  section.items.map((item) => (
+                  filteredItems.map((item) => (
                     <OperatorActivityCard
                       key={item.id}
                       item={item}
@@ -225,10 +241,10 @@ export function ActivityPageClient() {
                     />
                   ))
                 )}
-              </SectionCard>
-            ))}
-          </div>
-        )}
+              </div>
+            </DeskSecondaryCard>
+          )}
+        </div>
 
         <OperatorActivityBulkActionBar
           count={bulk.selectedIds.length}
@@ -251,7 +267,6 @@ export function ActivityPageClient() {
         />
 
         {bulkResult ? <OperatorBulkActionResult result={bulkResult} onDismiss={() => setBulkResult(null)} /> : null}
-      </div>
       </OperatorPageTransition>
     </main>
   );

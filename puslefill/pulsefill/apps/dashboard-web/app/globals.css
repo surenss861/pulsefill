@@ -2376,6 +2376,10 @@ main.pf-auth-shell .pf-auth-submit {
   max-width: 1180px;
 }
 
+.pf-page-activity.pf-desk-page {
+  max-width: min(1180px, 100%);
+}
+
 .pf-page-openings.pf-desk-page {
   max-width: min(1180px, 100%);
 }

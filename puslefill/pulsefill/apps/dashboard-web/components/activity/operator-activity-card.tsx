@@ -5,36 +5,13 @@ import Link from "next/link";
 import type { OperatorActivityItem } from "@/types/operator-activity-feed";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import {
-  operatorActivityActorLabel,
-  operatorActivityKindEmphasis,
-  operatorActivityKindLabel,
+  operatorActivityDeskContextLine,
+  operatorActivityDeskExplanation,
+  operatorActivityDeskHeadline,
+  operatorActivityKindAccentColor,
 } from "@/lib/operator-activity-presentation";
-import type { OperatorActivityEmphasis } from "@/lib/operator-activity-presentation";
 import { activityDetailPath } from "@/lib/open-slot-routes";
 import { RecordRowCard } from "@/components/ui/record-row-card";
-import { StatusPill } from "@/components/ui/status-pill";
-import type { StatusPillVariant } from "@/components/ui/status-pill";
-
-function formatSlotWindow(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
-}
-
-function pillVariant(e: OperatorActivityEmphasis): StatusPillVariant {
-  if (e === "primary") return "primary";
-  if (e === "danger") return "danger";
-  if (e === "resolved") return "resolved";
-  return "default";
-}
 
 export function OperatorActivityCard(props: {
   item: OperatorActivityItem;
@@ -49,51 +26,11 @@ export function OperatorActivityCard(props: {
   const slotHref =
     allowSlotDetailNav && item.open_slot_id ? activityDetailPath(item.open_slot_id) : null;
 
-  const metaParts: string[] = [];
-  if (item.provider_name) metaParts.push(item.provider_name);
-  if (item.location_name) metaParts.push(item.location_name);
-  if (item.starts_at) metaParts.push(formatSlotWindow(item.starts_at));
-  const contextLine = metaParts.length > 0 ? metaParts.join(" · ") : null;
-
-  const emphasis = operatorActivityKindEmphasis(item.kind);
+  const headline = operatorActivityDeskHeadline(item.kind);
+  const contextLine = operatorActivityDeskContextLine(item);
+  const explanation = operatorActivityDeskExplanation(item);
   const relative = formatRelativeTime(item.occurred_at);
-  const actor = operatorActivityActorLabel(item.kind);
-
-  const why =
-    item.priority_summary?.trim() ||
-    item.recovery_recommendation_title?.trim() ||
-    item.detail?.trim() ||
-    null;
-
-  const topMeta = (
-    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, rowGap: 6 }}>
-      <StatusPill variant={pillVariant(emphasis)} caps>
-        {operatorActivityKindLabel(item.kind)}
-      </StatusPill>
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: "rgba(245, 247, 250, 0.34)",
-        }}
-      >
-        {relative}
-      </span>
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: "rgba(245, 247, 250, 0.28)",
-        }}
-      >
-        {actor}
-      </span>
-    </div>
-  );
+  const accent = operatorActivityKindAccentColor(item.kind);
 
   const leading =
     showSelection && item.bulk_selectable && item.open_slot_id ? (
@@ -103,15 +40,30 @@ export function OperatorActivityCard(props: {
         onChange={onToggleSelect}
         onClick={(e) => e.stopPropagation()}
         aria-label="Select row for bulk actions"
+        style={{ marginTop: 4, width: 18, height: 18, cursor: "pointer", flexShrink: 0 }}
       />
     ) : showSelection ? (
       <span style={{ width: 18 }} />
     ) : undefined;
 
+  const titleNode = <span style={{ fontSize: 16, fontWeight: 650, letterSpacing: "-0.02em", lineHeight: 1.35 }}>{headline}</span>;
+
+  const detailNode =
+    contextLine != null && contextLine.length > 0 ? (
+      <span style={{ fontSize: 13, color: "rgba(245, 247, 250, 0.52)", lineHeight: 1.45 }}>{contextLine}</span>
+    ) : undefined;
+
+  const bodyNode = (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <p style={{ margin: 0, fontSize: 13, color: "rgba(245, 247, 250, 0.62)", lineHeight: 1.55 }}>{explanation}</p>
+      <p style={{ margin: 0, fontSize: 12, color: "rgba(245, 247, 250, 0.38)" }}>{relative}</p>
+    </div>
+  );
+
   const linkStyle: CSSProperties = {
     fontSize: 13,
-    fontWeight: 650,
-    color: "#ffb070",
+    fontWeight: 600,
+    color: "var(--pf-text-primary)",
     textDecoration: "none",
     whiteSpace: "nowrap",
     padding: "8px 12px",
@@ -120,18 +72,33 @@ export function OperatorActivityCard(props: {
     background: "rgba(255,255,255,0.03)",
   };
 
+  const trailing = slotHref ? (
+    <Link href={slotHref} prefetch={false} style={linkStyle} title="View opening">
+      View opening →
+    </Link>
+  ) : undefined;
+
+  const selectedShell: CSSProperties | undefined =
+    selected === true
+      ? {
+          border: "1px solid rgba(255, 255, 255, 0.14)",
+          background: "rgba(255, 122, 24, 0.06)",
+        }
+      : undefined;
+
+  const shell: CSSProperties = {
+    ...selectedShell,
+    borderLeft: `3px solid ${accent}`,
+  };
+
   return (
     <RecordRowCard
       leading={leading}
-      topMeta={topMeta}
-      title={item.title}
-      detail={contextLine}
-      body={why}
-      actions={slotHref ? (
-        <Link href={slotHref} prefetch={false} style={linkStyle} title="Open detail">
-          Open detail
-        </Link>
-      ) : undefined}
+      title={titleNode}
+      detail={detailNode}
+      body={bodyNode}
+      actions={trailing}
+      style={shell}
     />
   );
 }

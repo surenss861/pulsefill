@@ -8,7 +8,7 @@ export default async function ActivityPage() {
   return (
     <Suspense
       fallback={
-        <main className="pf-page-activity" style={{ padding: 0 }}>
+        <main className="pf-page-activity pf-desk-page" style={{ padding: 0 }}>
           <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14 }}>
             Loading activity…
           </p>
