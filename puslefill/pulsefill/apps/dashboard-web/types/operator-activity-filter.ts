@@ -10,12 +10,12 @@ export type OperatorActivityFilter =
   | "notes";
 
 export const operatorActivityFilterOptions: Array<{ value: OperatorActivityFilter; label: string }> = [
-  { value: "all", label: "All" },
+  { value: "all", label: "All activity" },
   { value: "openings", label: "Openings" },
   { value: "offers", label: "Offers" },
   { value: "claims", label: "Claims" },
-  { value: "notifications", label: "Notifications" },
-  { value: "notes", label: "Notes" },
+  { value: "notifications", label: "Delivery issues" },
+  { value: "notes", label: "Team notes" },
 ];
 
 export function matchesOperatorActivityFilter(

@@ -87,7 +87,7 @@ function OnboardingPlaybook() {
           Use this to move invited customers from &quot;sent invite&quot; to &quot;ready for openings.&quot;
         </p>
         <div style={{ ...rowStyle, paddingTop: 12, borderTop: "none" }}>
-          <p style={kicker}>Pending</p>
+          <p style={kicker}>Invite pending</p>
           <p style={body}>Customer has not accepted the invite yet.</p>
           <p style={action}>
             <span style={{ color: "rgba(245,247,250,0.42)" }}>Action: </span>
@@ -95,7 +95,7 @@ function OnboardingPlaybook() {
           </p>
         </div>
         <div style={rowStyle}>
-          <p style={kicker}>Needs standby</p>
+          <p style={kicker}>Needs preferences</p>
           <p style={body}>Customer accepted but has not set standby preferences.</p>
           <p style={action}>
             <span style={{ color: "rgba(245,247,250,0.42)" }}>Action: </span>
@@ -103,7 +103,7 @@ function OnboardingPlaybook() {
           </p>
         </div>
         <div style={rowStyle}>
-          <p style={kicker}>Not reachable</p>
+          <p style={kicker}>Hard to reach</p>
           <p style={body}>Customer is on standby, but alerts may not reach them.</p>
           <p style={action}>
             <span style={{ color: "rgba(245,247,250,0.42)" }}>Action: </span>
@@ -111,7 +111,7 @@ function OnboardingPlaybook() {
           </p>
         </div>
         <div style={rowStyle}>
-          <p style={kicker}>Active</p>
+          <p style={kicker}>Ready for openings</p>
           <p style={body}>Customer is connected, on standby, and reachable.</p>
           <p style={action}>
             <span style={{ color: "rgba(245,247,250,0.42)" }}>Action: </span>
@@ -583,57 +583,57 @@ export default function CustomersPage() {
                 stripClassName="pf-onboarding-metric-strip--customers"
                 items={[
                   {
-                    label: "Pending",
+                    label: "Invite pending",
                     value: onboardingCounts.pending,
                     emphasis: onboardingCounts.pending > 0 ? "primary" : "default",
                     signal: onboardingCounts.pending > 0 ? "live" : "idle",
-                    hint: "Awaiting acceptance",
+                    hint: "Not accepted yet",
                     onClick: () => setInviteFilter("pending"),
-                    ariaLabel: "Show pending invites",
+                    ariaLabel: "View waiting customers with a pending invite",
                     ariaPressed: inviteFilter === "pending",
                   },
                   {
-                    label: "Needs standby",
+                    label: "Needs preferences",
                     value: onboardingCounts.needsStandby,
                     emphasis: onboardingCounts.needsStandby > 0 ? "primary" : "default",
                     signal: onboardingCounts.needsStandby > 0 ? "live" : "idle",
-                    hint: "Connected, no prefs",
+                    hint: "Connected, no standby choices",
                     onClick: () => setInviteFilter("needs_standby"),
-                    ariaLabel: "Show invites that need standby setup",
+                    ariaLabel: "View customers who need standby preferences",
                     ariaPressed: inviteFilter === "needs_standby",
                   },
                   {
-                    label: "Not reachable",
+                    label: "Hard to reach",
                     value: onboardingCounts.notReachable,
                     emphasis: onboardingCounts.notReachable > 0 ? "primary" : "default",
                     signal: onboardingCounts.notReachable > 0 ? "live" : "idle",
-                    hint: "Reach gaps",
+                    hint: "Alerts may miss them",
                     onClick: () => setInviteFilter("not_reachable"),
-                    ariaLabel: "Show invites that are not reachable or have limited reach",
+                    ariaLabel: "View customers who are hard to reach on alerts",
                     ariaPressed: inviteFilter === "not_reachable",
                   },
                   {
-                    label: "Active",
+                    label: "Ready for openings",
                     value: onboardingCounts.active,
                     emphasis: onboardingCounts.active > 0 ? "primary" : "default",
                     signal: onboardingCounts.active > 0 ? "live" : "idle",
-                    hint: "Standby + reachable",
+                    hint: "Standby on and reachable",
                     onClick: () => setInviteFilter("active"),
-                    ariaLabel: "Show active standby invites",
+                    ariaLabel: "View customers ready for openings",
                     ariaPressed: inviteFilter === "active",
                   },
                 ]}
               />
             ) : null}
             {!loading && !listError && invites.length > 0 ? (
-              <div className="pf-invite-filter-pills" role="tablist" aria-label="Filter invites by onboarding">
+              <div className="pf-invite-filter-pills" role="tablist" aria-label="View waiting customers by invite progress">
                 {(
                   [
-                    ["all", "All"],
-                    ["pending", "Pending"],
-                    ["needs_standby", "Needs standby"],
-                    ["not_reachable", "Not reachable"],
-                    ["active", "Active"],
+                    ["all", "All invites"],
+                    ["pending", "Invite pending"],
+                    ["needs_standby", "Needs preferences"],
+                    ["not_reachable", "Hard to reach"],
+                    ["active", "Ready for openings"],
                   ] as const
                 ).map(([id, label]) => (
                   <button
@@ -641,22 +641,9 @@ export default function CustomersPage() {
                     type="button"
                     role="tab"
                     aria-selected={inviteFilter === id}
+                    aria-pressed={inviteFilter === id}
+                    className="pf-desk-status-pill"
                     onClick={() => setInviteFilter(id)}
-                    style={{
-                      borderRadius: 999,
-                      border:
-                        inviteFilter === id
-                          ? "1px solid rgba(249,115,22,0.55)"
-                          : "1px solid rgba(255,255,255,0.12)",
-                      background:
-                        inviteFilter === id ? "rgba(249,115,22,0.14)" : "rgba(255,255,255,0.05)",
-                      color: "var(--text)",
-                      padding: "6px 12px",
-                      fontSize: 12,
-                      fontWeight: inviteFilter === id ? 650 : 500,
-                      cursor: "pointer",
-                      lineHeight: 1.2,
-                    }}
                   >
                     {label}
                   </button>

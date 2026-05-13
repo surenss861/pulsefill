@@ -36,7 +36,7 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
       <details className="pf-overview-edu" style={{ marginTop: 16 }}>
         <summary>What shows up here?</summary>
         <p className="pf-overview-edu__body">
-          Openings, offers, claims, confirmations, delivery attempts, and staff notes appear in order so your team can see what happened.
+          Openings, offers, claims, confirmations, delivery issues, and team notes appear in order so your team can see what happened.
         </p>
       </details>
     </div>

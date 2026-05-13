@@ -40,7 +40,7 @@ export function getOperatorSlotAttentionLabel(slot: OperatorSlotsListItem) {
     return "Waiting for offers";
   }
   if (st === "claimed") {
-    return "Awaiting confirmation";
+    return "Needs confirmation";
   }
   if (st === "offered") {
     return "Offers sent — waiting on replies";

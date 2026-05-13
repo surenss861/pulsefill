@@ -166,7 +166,7 @@ export function ActivityPageClient() {
         <div className="pf-overview-desk-stack">
           <DeskPageHeader
             title="Activity"
-            subtitle="See openings, offers, claims, and confirmed bookings."
+            subtitle="See openings, offers, claims, confirmations, delivery issues, and team notes."
             actions={headerActions}
           />
 
@@ -177,51 +177,58 @@ export function ActivityPageClient() {
               variant="section"
               skeleton="rows"
               title="Loading activity…"
-              description="Fetching recent openings, offers, claims, and confirmations."
+              description="Fetching recent openings, offers, claims, confirmations, delivery issues, and team notes."
             />
           ) : (
             <DeskSecondaryCard title="Recent activity">
-              <div className={`pf-filter-rail${items.length === 0 ? " pf-filter-rail--quiet" : ""}`}>
+              <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.55 }}>
+                Choose what you want to scan first, then open a row for the full story.
+              </p>
+              <div
+                className={`pf-filter-rail${items.length === 0 ? " pf-filter-rail--quiet" : ""}`}
+                role="tablist"
+                aria-label="Activity categories"
+              >
                 {operatorActivityFilterOptions.map((opt) => {
                   const on = filter === opt.value;
                   return (
                     <button
                       key={opt.value}
                       type="button"
+                      role="tab"
+                      className="pf-desk-status-pill"
+                      aria-selected={on}
                       onClick={() => setFilter(opt.value)}
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        padding: "8px 14px",
-                        borderRadius: 999,
-                        border: on ? "1px solid rgba(255, 255, 255, 0.14)" : "1px solid var(--pf-border-subtle)",
-                        background: on ? "rgba(255, 122, 24, 0.08)" : "rgba(255,255,255,0.03)",
-                        color: on ? "var(--pf-text-primary)" : "rgba(245, 247, 250, 0.7)",
-                        cursor: "pointer",
-                        transition: "background 150ms ease, border-color 150ms ease, transform 120ms ease",
-                      }}
                     >
                       {opt.label}
                     </button>
                   );
                 })}
+                <span style={{ flex: "1 1 12px", minWidth: 8 }} aria-hidden />
+                {filter !== "all" ? (
+                  <button type="button" className="pf-desk-quiet-link" style={{ fontSize: 13, whiteSpace: "nowrap" }} onClick={() => setFilter("all")}>
+                    Show all activity
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => bulk.selectAllVisible()}
                   disabled={!filteredItems.some((i) => i.bulk_selectable)}
                   style={{
                     fontSize: 13,
-                    marginLeft: "auto",
-                    padding: "8px 12px",
+                    whiteSpace: "nowrap",
+                    padding: "8px 14px",
                     borderRadius: 10,
                     border: "1px solid var(--pf-border-subtle)",
                     background: "transparent",
-                    color: "rgba(245, 247, 250, 0.45)",
+                    color: "rgba(245, 247, 250, 0.78)",
                     cursor: filteredItems.some((i) => i.bulk_selectable) ? "pointer" : "not-allowed",
                     opacity: filteredItems.some((i) => i.bulk_selectable) ? 1 : 0.5,
+                    fontWeight: 600,
+                    fontFamily: "inherit",
                   }}
                 >
-                  Select all visible
+                  Select listed items
                 </button>
               </div>
 

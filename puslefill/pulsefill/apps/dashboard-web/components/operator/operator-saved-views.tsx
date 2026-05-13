@@ -14,81 +14,54 @@ export function OperatorSavedViews({ views, onApply, onCreate, onDelete }: Props
   const [name, setName] = useState("");
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Save current view"
-          style={{
-            borderRadius: 12,
-            padding: "10px 12px",
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            color: "var(--text)",
-            minWidth: 200,
-          }}
-        />
-        <button
-          type="button"
-          onClick={() => {
-            const trimmed = name.trim();
-            if (!trimmed) return;
-            onCreate(trimmed);
-            setName("");
-          }}
-          style={{
-            borderRadius: 999,
-            padding: "9px 12px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            background: "rgba(255,255,255,0.10)",
-            color: "var(--text)",
-            cursor: "pointer",
-          }}
-        >
-          Save view
-        </button>
+    <div style={{ display: "grid", gap: 14, marginTop: 4 }}>
+      <div>
+        <p className="pf-desk-invite-label" style={{ margin: "0 0 10px" }}>
+          Saved views
+          <span className="pf-desk-invite-label__hint">Save this combination of provider, location, and visit type to reuse later.</span>
+        </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "stretch" }}>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Name this view (e.g. Dr. Lee — downtown cleanings)"
+            aria-label="Name for saved view"
+            className="pf-desk-invite-input"
+            style={{ flex: "1 1 240px", minWidth: 0 }}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const trimmed = name.trim();
+              if (!trimmed) return;
+              onCreate(trimmed);
+              setName("");
+            }}
+            className="pf-desk-save-access"
+            style={{ alignSelf: "center" }}
+          >
+            Save view
+          </button>
+        </div>
       </div>
 
       {views.length > 0 ? (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <span className="pf-muted-copy" style={{ fontSize: 13, width: "100%", margin: 0 }}>
+            Tap a view to apply it. Remove deletes it from this device only.
+          </span>
           {views.map((view) => (
-            <div
-              key={view.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                borderRadius: 999,
-                padding: "8px 10px",
-                border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(255,255,255,0.03)",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => onApply(view.filters)}
-                style={{
-                  background: "transparent",
-                  border: 0,
-                  cursor: "pointer",
-                  color: "var(--text)",
-                }}
-              >
+            <div key={view.id} className="pf-desk-saved-view-chip">
+              <button type="button" className="pf-desk-saved-view-chip__apply" onClick={() => onApply(view.filters)}>
                 {view.name}
               </button>
               <button
                 type="button"
+                className="pf-desk-saved-view-chip__remove"
                 onClick={() => onDelete(view.id)}
-                style={{
-                  background: "transparent",
-                  border: 0,
-                  cursor: "pointer",
-                  opacity: 0.7,
-                  color: "var(--text)",
-                }}
+                aria-label={`Remove saved view ${view.name}`}
               >
-                ×
+                Remove
               </button>
             </div>
           ))}

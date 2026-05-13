@@ -30,7 +30,7 @@ import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { MotionAction } from "@/components/operator/operator-motion-primitives";
-import { matchesOperatorFilters } from "@/lib/operator-filters";
+import { matchesOperatorFilters, DEFAULT_OPERATOR_FILTERS } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
 import { digestSectionBannerTitle } from "@/lib/morning-recovery-digest-ui";
 import { OPERATOR_SLOT_FILTERS, getOperatorSlotEmptyCopy } from "@/lib/operator-slots-ui";
@@ -294,18 +294,26 @@ export default function OpenSlotsPageClient() {
             <div className="pf-desk-openings-split">
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <SendOffersPrereqCallout />
-                <DeskSecondaryCard title="Status and filters">
+                <DeskSecondaryCard title="Find openings">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.55 }}>
+                    Pick a status to match the front desk moment, then narrow by provider, location, or visit type.
+                  </p>
                   <OperatorSlotListSummary counts={counts} tone="desk" />
                   <div style={{ marginTop: 14 }}>
                     <OperatorSlotListToolbar selectedFilter={filter} onChange={commitListFilter} counts={counts} tone="desk" />
                   </div>
-                  {filterOptions.error ? <p style={{ color: "#f87171", fontSize: 13 }}>Filters: {filterOptions.error}</p> : null}
+                  {filterOptions.error ? (
+                    <div className="pf-desk-invite-error" role="alert" style={{ marginTop: 12 }}>
+                      Filter options did not load. Refresh the page or try again in a moment.
+                    </div>
+                  ) : null}
                   {!filterOptions.loading ? (
                     <>
                       <div style={{ marginTop: 14 }}>
                         <OperatorFilterBar
                           filters={filterState.filters}
                           onChange={filterState.setFilters}
+                          onClear={() => filterState.setFilters(DEFAULT_OPERATOR_FILTERS)}
                           providers={filterOptions.providers}
                           locations={filterOptions.locations}
                           services={filterOptions.services}

@@ -12,10 +12,10 @@ type Props = {
 };
 
 const DESK_FILTER_LABEL: Partial<Record<OperatorSlotsFilter, string>> = {
-  all: "All",
+  all: "All openings",
   open: "Waiting for offers",
   offered: "Offers sent",
-  claimed: "Awaiting confirmation",
+  claimed: "Needs confirmation",
   booked: "Confirmed",
   expired: "Expired",
   cancelled: "Cancelled",
@@ -34,6 +34,8 @@ export function OperatorSlotListToolbar({
         gap: 8,
         flexWrap: "wrap",
       }}
+      role="tablist"
+      aria-label="Opening status"
     >
       {OPERATOR_SLOT_FILTERS.map((filter) => {
         const active = filter.key === selectedFilter;
@@ -46,18 +48,29 @@ export function OperatorSlotListToolbar({
           <button
             key={filter.key}
             type="button"
+            role="tab"
+            aria-selected={active}
+            className={tone === "desk" ? "pf-desk-status-pill" : undefined}
             onClick={() => onChange(filter.key)}
-            style={{
-              borderRadius: 999,
-              padding: "9px 12px",
-              border: active ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.08)",
-              background: active ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
-              cursor: "pointer",
-              color: "var(--text)",
-            }}
+            style={
+              tone === "desk"
+                ? undefined
+                : {
+                    borderRadius: 999,
+                    padding: "9px 12px",
+                    border: active ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.08)",
+                    background: active ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+                    cursor: "pointer",
+                    color: "var(--text)",
+                  }
+            }
           >
             <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
-            <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 8 }}>{count}</span>
+            {tone === "desk" ? (
+              <span className="pf-desk-status-pill__count">{count}</span>
+            ) : (
+              <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 8 }}>{count}</span>
+            )}
           </button>
         );
       })}

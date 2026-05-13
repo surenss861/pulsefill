@@ -32,9 +32,10 @@ function SummaryChip({
 const DESK_LABELS: Record<string, string> = {
   open: "Waiting for offers",
   offered: "Offers sent",
-  claimed: "Awaiting confirmation",
+  claimed: "Needs confirmation",
   booked: "Confirmed",
   expired: "Expired",
+  cancelled: "Cancelled",
 };
 
 export function OperatorSlotListSummary({ counts, tone = "default" }: Props) {
@@ -54,6 +55,7 @@ export function OperatorSlotListSummary({ counts, tone = "default" }: Props) {
       <SummaryChip label={lab("claimed", "Claimed")} value={counts.claimed ?? 0} />
       <SummaryChip label={lab("booked", "Booked")} value={counts.booked ?? 0} />
       <SummaryChip label={lab("expired", "Expired")} value={counts.expired ?? 0} />
+      {tone === "desk" ? <SummaryChip label={lab("cancelled", "Cancelled")} value={counts.cancelled ?? 0} /> : null}
     </div>
   );
 }
