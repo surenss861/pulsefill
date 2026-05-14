@@ -38,10 +38,10 @@ export function GettingStartedCard({
       cta: "Create opening",
     },
     {
-      label: "Invite standby customers",
+      label: "Invite the waitlist",
       done: state.hasOffersSent,
       href: "/customers",
-      cta: "Invite customer",
+      cta: "Invite to waitlist",
     },
     {
       label: "Confirm your first recovered booking",
@@ -66,9 +66,9 @@ export function GettingStartedCard({
       detail: "Service, provider, and time window",
     },
     {
-      label: "3. Standby customers",
+      label: "3. Waitlist",
       done: state.hasOffersSent,
-      detail: "Customer accepts invite and enables standby",
+      detail: "They accept the invite and enable standby",
     },
     {
       label: "4. Recovered booking",
@@ -130,7 +130,7 @@ export function GettingStartedCard({
                 color: step.done ? "rgba(209,250,229,0.92)" : "rgba(245,247,250,0.52)",
               }}
             >
-              {step.label.replace(/^\d+\.\s*/, "").replace("Workspace basics", "Basics").replace("First opening", "Opening").replace("Standby customers", "Standby").replace("Recovered booking", "Booked")}
+              {step.label.replace(/^\d+\.\s*/, "").replace("Workspace basics", "Basics").replace("First opening", "Opening").replace("Recovered booking", "Booked")}
             </span>
           ))}
         </div>
@@ -153,7 +153,7 @@ export function GettingStartedCard({
       return "Create your first opening when a cancellation appears.";
     }
     if (firstIncomplete.href === "/customers") {
-      return "Openings need active standby customers before offers can be sent.";
+      return "Appointment files need people on the waitlist with standby on before offers can be sent.";
     }
     if (firstIncomplete.href === "/claims") {
       return "When a customer books from an offer, confirm the appointment here.";
@@ -166,7 +166,7 @@ export function GettingStartedCard({
       <div style={styles.headerRow}>
         <div>
           <h2 style={styles.title}>Workspace setup</h2>
-          <p style={styles.subtitle}>Complete the basics so PulseFill can send openings to the right standby customers.</p>
+          <p style={styles.subtitle}>Complete the basics so PulseFill can route openings to the right people on your waitlist.</p>
         </div>
         <div style={styles.progressPill}>
           {completed}/{steps.length} complete

@@ -118,7 +118,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
 
         <SectionCard surfaceTone="operational" density="dense" eyebrow="Waitlist" title="Standby access">
           {business.loading ? (
-            <PageState variant="info" title="Loading" description="Fetching workspace settings…" style={{ maxWidth: "100%" }} />
+            <PageState variant="info" title="Loading" description="Loading workspace…" style={{ maxWidth: "100%" }} />
           ) : business.error ? (
             <PageState variant="error" title="Could not load" description={business.error} style={{ maxWidth: "100%" }} />
           ) : business.data ? (

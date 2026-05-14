@@ -27,13 +27,25 @@ export function AppShell({ children, user, profile }: AppShellProps) {
         <AppSidebar profile={profile} />
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
           <AppHeader user={user} profile={profile} />
-          <div className="pf-app-mobile-quick" style={{ display: "none", borderBottom: "1px solid var(--pf-border-subtle)", padding: "10px 12px", gap: 8, overflowX: "auto" }}>
+          <div
+            className="pf-app-mobile-quick"
+            style={{
+              display: "none",
+              borderBottom: "1px solid var(--pf-border-subtle)",
+              padding: "8px 10px",
+              gap: 6,
+              overflowX: "auto",
+              flexWrap: "nowrap",
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "thin",
+            }}
+          >
             <MobileQuick href="/overview" label="Today" />
-            <MobileQuick href="/open-slots" label="Appointment files" />
+            <MobileQuick href="/open-slots" label="Appt files" title="Appointment files" />
             <MobileQuick href="/customers" label="Waitlist" />
             <MobileQuick href="/activity" label="Log" />
             <MobileQuick href="/settings" label="Workspace" />
-            <MobileQuick href="/billing" label="Billing file" />
+            <MobileQuick href="/billing" label="Billing" title="Billing file" />
           </div>
           <div className="pf-workspace-field">
             <div className="pf-workspace-inner pf-workspace-desk-sheet">
@@ -56,20 +68,24 @@ export function AppShell({ children, user, profile }: AppShellProps) {
   );
 }
 
-function MobileQuick({ href, label }: { href: string; label: string }) {
+function MobileQuick({ href, label, title }: { href: string; label: string; title?: string }) {
+  const accessibleName = title ?? label;
   return (
     <Link
       href={href}
+      title={accessibleName}
+      aria-label={accessibleName}
       style={{
-        flexShrink: 0,
-        fontSize: 12,
+        flex: "0 0 auto",
+        whiteSpace: "nowrap",
+        fontSize: 11,
         fontWeight: 600,
-        letterSpacing: "0.06em",
+        letterSpacing: "0.05em",
         textTransform: "uppercase",
         color: "var(--pf-text-secondary)",
         textDecoration: "none",
-        padding: "6px 10px",
-        borderRadius: 10,
+        padding: "5px 9px",
+        borderRadius: 9,
         border: "1px solid var(--pf-brand-border-warm)",
         background: "var(--pf-surface-tint-04)",
       }}

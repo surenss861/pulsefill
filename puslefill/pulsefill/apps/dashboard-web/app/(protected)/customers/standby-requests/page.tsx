@@ -98,18 +98,18 @@ export default function StandbyRequestsPage() {
         <div style={{ marginTop: 16 }}>
           <OperatorListEmptyState
             title="No standby requests"
-            description='Customer requests will appear here when your access mode is request-to-join and your business is listed.'
+            description="Waitlist requests will appear here when your access mode is request-to-join and your business is listed."
             primaryAction={
               <MotionAction>
                 <Link href="/settings" style={actionLinkStyle("primary")}>
-                  Review access settings
+                  Open workspace
                 </Link>
               </MotionAction>
             }
             secondaryAction={
               <MotionAction>
                 <Link href="/customers" style={actionLinkStyle("secondary")}>
-                  Back to customers
+                  Back to waitlist
                 </Link>
               </MotionAction>
             }

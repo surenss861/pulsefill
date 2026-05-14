@@ -46,7 +46,7 @@ export function PulseFillWordmark() {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 12,
+        gap: 10,
         textDecoration: "none",
         color: "inherit",
         minWidth: 0,
@@ -55,7 +55,7 @@ export function PulseFillWordmark() {
       <PulseMark style={{ flexShrink: 0 }} />
       <span
         style={{
-          fontSize: 19,
+          fontSize: 18,
           fontWeight: 700,
           letterSpacing: "-0.03em",
           lineHeight: 1.05,
@@ -64,7 +64,7 @@ export function PulseFillWordmark() {
         }}
       >
         Pulse
-        <span style={{ color: "var(--pf-accent-primary-hover)" }}>Fill</span>
+        <span style={{ color: "rgba(253, 186, 116, 0.88)" }}>Fill</span>
       </span>
     </Link>
   );

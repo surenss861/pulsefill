@@ -288,7 +288,7 @@ export default function BillingPage() {
         <div className="pf-overview-desk-stack">
           <DeskPageHeader
             title="Billing file"
-            subtitle="Turn on billing when you’re ready to use PulseFill with customers."
+            subtitle="Turn on billing when you’re ready to use PulseFill with your waitlist."
             actions={
               <Link href="/settings" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
                 Workspace
