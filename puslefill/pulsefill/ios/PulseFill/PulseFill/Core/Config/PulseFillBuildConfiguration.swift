@@ -1,5 +1,14 @@
 import Foundation
 
+/// Safe, non-secret fields for the launch misconfiguration screen (TestFlight / support).
+struct PulseFillClientLaunchDiagnostics: Equatable {
+    let tierLabel: String
+    let apiHost: String
+    let supabaseHost: String
+    let anonKeyStatus: String
+    let safeFailureSummary: String?
+}
+
 /// Deployment tier for API + Supabase defaults. Does not affect Xcode Debug vs Release by itself;
 /// use `PULSEFILL_TIER` in the Run scheme (or TestFlight / CI env) to point at Railway staging.
 enum PulseFillDeploymentTier: String, CaseIterable {
@@ -15,7 +24,8 @@ enum PulseFillDeploymentTier: String, CaseIterable {
 ///
 /// **Precedence (highest first)**  
 /// 1. Process env vars (Xcode scheme, `simctl`, CI)  
-/// 2. Tier defaults (`PULSEFILL_TIER` + `#if DEBUG`)  
+/// 2. Info.plist (`PulseFillAPIBaseURL`, `PulseFillSupabaseURL`, `PulseFillSupabaseAnonKey`, `PulseFillTier`) — substituted at build time from `PULSEFILL_*` in Release `.xcconfig` (Archive / TestFlight)  
+/// 3. Tier defaults (`PULSEFILL_TIER` + `#if DEBUG`) and Swift fallbacks  
 ///
 /// Env vars:
 /// - `PULSEFILL_TIER` — `local` | `staging` | `production` (overrides Debug/Release default tier)
@@ -43,6 +53,17 @@ enum PulseFillBuildConfiguration {
         return (v?.isEmpty == false) ? v : nil
     }
 
+    /// Values merged from `Info.plist` (typically `$(PULSEFILL_*)` from Release xcconfig). Ignores empty strings and unsubstituted `$(VAR)` placeholders.
+    private static func infoPlistString(_ key: String) -> String? {
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: key) as? String else { return nil }
+        let v = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !v.isEmpty else { return nil }
+        if v.hasPrefix("$(") {
+            return nil
+        }
+        return v
+    }
+
     /// Ensures `PULSEFILL_API_BASE_URL` is usable with `URL(relativeTo:)`: adds `https://` when the host
     /// was given without a scheme (a common Xcode scheme mistake that yields NSURLError -1002 / relative `/v1/...` URLs).
     static func normalizedAPIBaseURLString(_ raw: String) -> String {
@@ -62,6 +83,11 @@ enum PulseFillBuildConfiguration {
     /// Release builds always use production unless `PULSEFILL_TIER` / `PULSEFILL_API_BASE_URL` overrides.
     static var deploymentTier: PulseFillDeploymentTier {
         if let raw = env("PULSEFILL_TIER")?.lowercased(),
+           let tier = PulseFillDeploymentTier(rawValue: raw)
+        {
+            return tier
+        }
+        if let raw = infoPlistString("PulseFillTier")?.lowercased(),
            let tier = PulseFillDeploymentTier(rawValue: raw)
         {
             return tier
@@ -86,6 +112,12 @@ enum PulseFillBuildConfiguration {
                 return url
             }
         }
+        if let s = infoPlistString("PulseFillAPIBaseURL") {
+            let normalized = normalizedAPIBaseURLString(s)
+            if let url = URL(string: normalized) {
+                return url
+            }
+        }
         switch deploymentTier {
         case .local:
             return URL(string: "http://127.0.0.1:3001")!
@@ -104,12 +136,18 @@ enum PulseFillBuildConfiguration {
         if let s = env("PULSEFILL_SUPABASE_URL"), let url = URL(string: s) {
             return url
         }
+        if let s = infoPlistString("PulseFillSupabaseURL"), let url = URL(string: s) {
+            return url
+        }
         return URL(string: Defaults.supabaseProject)!
     }
 
     /// Supabase **anon** key (safe to ship in the client; replace placeholder before App Store).
     static var supabaseAnonKey: String {
         if let s = env("PULSEFILL_SUPABASE_ANON_KEY") {
+            return s
+        }
+        if let s = infoPlistString("PulseFillSupabaseAnonKey") {
             return s
         }
         return Defaults.supabaseAnonPlaceholder
@@ -131,6 +169,10 @@ enum PulseFillBuildConfiguration {
         let tier = deploymentTier
         let key = supabaseAnonKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let anonFromScheme = envNonEmpty("PULSEFILL_SUPABASE_ANON_KEY")
+        let apiFromPlist = infoPlistString("PulseFillAPIBaseURL") != nil
+        let supFromPlist = infoPlistString("PulseFillSupabaseURL") != nil
+        let tierFromPlist = infoPlistString("PulseFillTier") != nil
+        let anonFromPlist = infoPlistString("PulseFillSupabaseAnonKey") != nil
 
         let anonSummary: String
         if key.isEmpty {
@@ -146,7 +188,14 @@ enum PulseFillBuildConfiguration {
         } else if key.hasPrefix("eyJ"), jwtPayloadContainsServiceRole(key) {
             anonSummary = "invalid (JWT role is service_role)"
         } else {
-            let src = anonFromScheme ? "scheme" : "compiled default"
+            let src: String
+            if anonFromScheme {
+                src = "scheme env"
+            } else if anonFromPlist {
+                src = "Info.plist"
+            } else {
+                src = "compiled default"
+            }
             anonSummary = "set (\(key.count) chars, source: \(src))"
         }
 
@@ -155,6 +204,7 @@ enum PulseFillBuildConfiguration {
 
         print("PulseFill DEBUG config — tier=\(tier.rawValue)")
         print("PulseFill DEBUG config — env set: PULSEFILL_SUPABASE_URL=\(envNonEmpty("PULSEFILL_SUPABASE_URL")) PULSEFILL_SUPABASE_ANON_KEY=\(envNonEmpty("PULSEFILL_SUPABASE_ANON_KEY")) PULSEFILL_API_BASE_URL=\(envNonEmpty("PULSEFILL_API_BASE_URL")) PULSEFILL_TIER=\(envNonEmpty("PULSEFILL_TIER"))")
+        print("PulseFill DEBUG config — Info.plist keys present: PulseFillAPIBaseURL=\(apiFromPlist) PulseFillSupabaseURL=\(supFromPlist) PulseFillTier=\(tierFromPlist) PulseFillSupabaseAnonKey=\(anonFromPlist)")
         print("PulseFill DEBUG config — supabaseURL=\(sup.absoluteString)")
         if !looksLikeSupabase {
             print("PulseFill DEBUG config — WARNING: host is not *.supabase.co. Auth calls go to \(sup.absoluteString)/auth/v1/... — a Next.js/marketing host returns HTML 404; use Project Settings → API → Project URL.")
@@ -171,6 +221,8 @@ enum PulseFillBuildConfiguration {
         let blockingCustomerMessage: String?
         /// Technical summary for `#if DEBUG` logging only.
         let debugSummary: String?
+        /// Same technical reasons as `debugSummary`, safe to show on the blocking screen (no secrets).
+        let safeFailureSummary: String?
     }
 
     /// Validates URLs and keys **before** networking so misbuilt TestFlight/local builds don’t leak Supabase hints in auth errors.
@@ -182,7 +234,7 @@ enum PulseFillBuildConfiguration {
     ) -> LaunchConfigurationResult {
         #if DEBUG
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-            return LaunchConfigurationResult(blockingCustomerMessage: nil, debugSummary: nil)
+            return LaunchConfigurationResult(blockingCustomerMessage: nil, debugSummary: nil, safeFailureSummary: nil)
         }
         #endif
 
@@ -240,10 +292,39 @@ enum PulseFillBuildConfiguration {
             let summary = reasons.joined(separator: " ")
             return LaunchConfigurationResult(
                 blockingCustomerMessage: "We couldn’t connect to PulseFill. Please try again shortly.",
-                debugSummary: summary
+                debugSummary: summary,
+                safeFailureSummary: summary
             )
         }
-        return LaunchConfigurationResult(blockingCustomerMessage: nil, debugSummary: nil)
+        return LaunchConfigurationResult(blockingCustomerMessage: nil, debugSummary: nil, safeFailureSummary: nil)
+    }
+
+    /// Builds non-secret diagnostics for the misconfigured-client blocking UI.
+    static func clientLaunchDiagnostics(
+        apiBaseURL: URL,
+        supabaseURL: URL,
+        supabaseAnonKey: String,
+        deploymentTier: PulseFillDeploymentTier,
+        safeFailureSummary: String?
+    ) -> PulseFillClientLaunchDiagnostics {
+        let key = supabaseAnonKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let anonStatus: String
+        if key.isEmpty {
+            anonStatus = "missing"
+        } else if key == Defaults.supabaseAnonPlaceholder || key.localizedCaseInsensitiveContains("YOUR_PUBLISHABLE")
+            || key.localizedCaseInsensitiveContains("YOUR_ANON")
+        {
+            anonStatus = "placeholder"
+        } else {
+            anonStatus = "present"
+        }
+        return PulseFillClientLaunchDiagnostics(
+            tierLabel: deploymentTier.rawValue,
+            apiHost: apiBaseURL.host ?? "—",
+            supabaseHost: supabaseURL.host ?? "—",
+            anonKeyStatus: anonStatus,
+            safeFailureSummary: safeFailureSummary
+        )
     }
 
     /// One line for operator-facing Account / debug (tier + marketing version + build).

@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
-import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
 import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
+import { DeskFilePage, DeskActionSlip, DeskBillingStamp, DeskLedgerSection } from "@/components/dashboard/desk/desk-artifacts";
 import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
@@ -143,7 +142,7 @@ function defaultHeroMeta(data: BillingSummaryResponse): string {
   }
   const sub = data.subscription;
   if (!sub) {
-    return "Turn on billing when you’re ready to use PulseFill with customers.";
+    return "Turn on billing when you’re ready to use PulseFill with your waitlist.";
   }
   if (subscriptionIsLive(sub)) {
     return `Your workspace is on the ${planLabel(sub.plan)} plan. Payment details stay in Stripe — PulseFill stores plan and status only.`;
@@ -158,6 +157,15 @@ function defaultHeroMeta(data: BillingSummaryResponse): string {
     return "You can start a new subscription when checkout is available, or manage past invoices in the billing portal.";
   }
   return "Review plan and billing below.";
+}
+
+function billingDeskStampStatus(data: BillingSummaryResponse): "active" | "inactive" | "attention" {
+  if (!data.stripe_billing_available) return "inactive";
+  if (data.entitlements?.billing_notice_required && data.entitlements?.notice) return "attention";
+  const sub = data.subscription;
+  if (sub?.status === "past_due") return "attention";
+  if (sub && subscriptionIsLive(sub)) return "active";
+  return "inactive";
 }
 
 export default function BillingPage() {
@@ -285,17 +293,19 @@ export default function BillingPage() {
   return (
     <main className="pf-page-billing pf-desk-page" style={{ padding: 0 }}>
       <OperatorPageTransition>
-        <div className="pf-overview-desk-stack">
-          <DeskPageHeader
-            title="Billing file"
-            subtitle="Turn on billing when you’re ready to use PulseFill with your waitlist."
-            actions={
+        <DeskFilePage
+          filingLine="05 · Billing file"
+          title="Billing file"
+          subtitle="Turn on billing when you’re ready to use PulseFill with your waitlist."
+          coverAside={
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              {!loading && !error && data ? <DeskBillingStamp status={billingDeskStampStatus(data)} /> : null}
               <Link href="/settings" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
                 Workspace
               </Link>
-            }
-          />
-
+            </div>
+          }
+        >
           {loading ? (
             <OperatorLoadingState variant="section" skeleton="rows" title="Loading billing file…" />
           ) : null}
@@ -311,7 +321,7 @@ export default function BillingPage() {
 
           {!loading && !error && data ? (
             <>
-              <DeskHeroCard title={heroTitle} titleId="pf-billing-hero-title" eyebrow={heroEyebrow}>
+              <DeskActionSlip title={heroTitle} titleId="pf-billing-hero-title" eyebrow={heroEyebrow}>
                 <p className="pf-desk-hero-card__meta">{heroMeta}</p>
                 {heroExtraLine ? (
                   <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
@@ -362,11 +372,11 @@ export default function BillingPage() {
                     Billing actions aren’t available for this workspace yet. Check back after setup is finished.
                   </p>
                 ) : null}
-              </DeskHeroCard>
+              </DeskActionSlip>
 
               <div className="pf-desk-secondary-grid">
                 {sub ? (
-                  <DeskSecondaryCard title="Plan">
+                  <DeskSecondaryCard variant="slip" title="Plan">
                     <p className="pf-muted-copy" style={{ margin: "0 0 8px", fontSize: 13, lineHeight: 1.55 }}>
                       Current plan and renewal details for this workspace.
                     </p>
@@ -397,7 +407,7 @@ export default function BillingPage() {
                   </DeskSecondaryCard>
                 ) : null}
 
-                <DeskSecondaryCard title="Billing portal">
+                <DeskSecondaryCard variant="slip" title="Billing portal">
                   <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55 }}>
                     Manage payment method, invoices, and subscription in Stripe.
                   </p>
@@ -431,15 +441,15 @@ export default function BillingPage() {
               </div>
 
               {workspaceNote ? (
-                <DeskSecondaryCard title="Workspace note">
+                <DeskLedgerSection title="Workspace note">
                   <p className="pf-muted-copy" style={{ margin: 0, fontSize: 13, lineHeight: 1.55 }}>
                     {workspaceNote}
                   </p>
-                </DeskSecondaryCard>
+                </DeskLedgerSection>
               ) : null}
             </>
           ) : null}
-        </div>
+        </DeskFilePage>
       </OperatorPageTransition>
       <OperatorDeskConfirmDialog
         open={checkoutConfirmOpen}

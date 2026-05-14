@@ -5,6 +5,8 @@ import Foundation
 final class AppEnvironment: ObservableObject {
     /// When non-nil, client URL/key validation failed at launch — show `blockingCustomerMessage` and avoid auth bootstrap.
     @Published private(set) var clientConfigurationBlockingMessage: String?
+    /// Non-secret fields for the blocking screen (TestFlight diagnostics).
+    @Published private(set) var clientConfigurationDiagnostics: PulseFillClientLaunchDiagnostics?
     private var cancellables = Set<AnyCancellable>()
 
     let sessionStore: SessionStore
@@ -46,6 +48,17 @@ final class AppEnvironment: ObservableObject {
 
         let sessionStore = SessionStore()
         self.clientConfigurationBlockingMessage = launchCheck.blockingCustomerMessage
+        if launchCheck.blockingCustomerMessage != nil {
+            self.clientConfigurationDiagnostics = PulseFillBuildConfiguration.clientLaunchDiagnostics(
+                apiBaseURL: apiBaseURL,
+                supabaseURL: supabaseURL,
+                supabaseAnonKey: supabaseAnonKey,
+                deploymentTier: PulseFillBuildConfiguration.deploymentTier,
+                safeFailureSummary: launchCheck.safeFailureSummary
+            )
+        } else {
+            self.clientConfigurationDiagnostics = nil
+        }
         self.sessionStore = sessionStore
         let api = APIClient(baseURL: apiBaseURL, sessionStore: sessionStore)
         self.apiClient = api

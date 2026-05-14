@@ -2071,6 +2071,14 @@ main.pf-auth-shell .pf-auth-submit {
   color: rgba(253, 186, 116, 0.88);
 }
 
+.pf-desk-status-stamp--attention {
+  border-style: solid;
+  border-color: rgba(251, 191, 36, 0.45);
+  color: rgba(253, 224, 140, 0.95);
+  background: rgba(251, 191, 36, 0.08);
+  transform: rotate(-1.5deg);
+}
+
 .pf-desk-action-slip {
   position: relative;
   padding: clamp(18px, 2.4vw, 24px) clamp(18px, 2.4vw, 26px);

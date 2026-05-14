@@ -38,7 +38,25 @@ export function DeskStatusStamp(props: { live: boolean }) {
   );
 }
 
-/** Dominant next action — left accent, lighter than the old hero “card”. */
+/** Custom desk stamp (waitlist state, billing state, etc.). */
+export function DeskFileStamp(props: { children: ReactNode; tone?: "live" | "setup" | "attention" }) {
+  const tone = props.tone ?? "setup";
+  const extra =
+    tone === "live"
+      ? " pf-desk-status-stamp--live"
+      : tone === "attention"
+        ? " pf-desk-status-stamp--attention"
+        : " pf-desk-status-stamp--setup";
+  return <span className={`pf-desk-status-stamp${extra}`}>{props.children}</span>;
+}
+
+export function DeskBillingStamp(props: { status: "active" | "inactive" | "attention" }) {
+  const label =
+    props.status === "active" ? "Billing active" : props.status === "attention" ? "Needs attention" : "Billing inactive";
+  const tone: "live" | "setup" | "attention" =
+    props.status === "active" ? "live" : props.status === "attention" ? "attention" : "setup";
+  return <DeskFileStamp tone={tone}>{label}</DeskFileStamp>;
+}
 export function DeskActionSlip(props: {
   title: string;
   titleId?: string;

@@ -27,6 +27,7 @@
 		21D4528D2F90C0C300818129 /* PulseFill.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PulseFill.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		21D4529E2F90C0C500818129 /* PulseFillTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PulseFillTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		21D452A82F90C0C500818129 /* PulseFillUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PulseFillUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7F8A9012F90D10000818129 /* PulseFillRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PulseFillRelease.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,11 +89,20 @@
 		21D452842F90C0C300818129 = {
 			isa = PBXGroup;
 			children = (
+				E7F8A9022F90D10000818129 /* Config */,
 				21D4528F2F90C0C300818129 /* PulseFill */,
 				21D452A12F90C0C500818129 /* PulseFillTests */,
 				21D452AB2F90C0C500818129 /* PulseFillUITests */,
 				21D4528E2F90C0C300818129 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		E7F8A9022F90D10000818129 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				E7F8A9012F90D10000818129 /* PulseFillRelease.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		21D4528E2F90C0C300818129 /* Products */ = {
@@ -322,6 +332,7 @@
 		};
 		21D452B32F90C0C500818129 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E7F8A9012F90D10000818129 /* PulseFillRelease.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
