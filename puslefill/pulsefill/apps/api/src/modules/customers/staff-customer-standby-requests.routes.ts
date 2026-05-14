@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
+import type { Env } from "../../config/env.js";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { assertStaffBillingCapability } from "../billing/billing-guard.js";
 import { sendJson } from "../../lib/http-errors.js";
 import { requireStaff } from "../../plugins/guards.js";
 import { rateLimitTier } from "../../plugins/rate-limit.js";
@@ -106,6 +108,10 @@ async function reviewStandbyRequest(
   decision: "approve" | "decline",
 ) {
   const admin = createServiceSupabase(req.server.env);
+  const env = req.server.env as Env;
+  if (!(await assertStaffBillingCapability(req, reply, admin, env, req.staff!.business_id, "review_standby_requests"))) {
+    return;
+  }
   const businessId = req.staff!.business_id;
   const staffId = req.staff!.id;
   const now = new Date().toISOString();

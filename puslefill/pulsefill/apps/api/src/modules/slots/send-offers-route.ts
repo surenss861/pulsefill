@@ -1,6 +1,8 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
+import type { Env } from "../../config/env.js";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { assertStaffBillingCapability } from "../billing/billing-guard.js";
 import { sendJson } from "../../lib/http-errors.js";
 import { sendActionError, sendSendOffersSuccess } from "../../lib/action-replies.js";
 import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
@@ -28,6 +30,10 @@ const sendOffersBody = z
 
 export async function sendOpenSlotOffersRouteHandler(req: FastifyRequest, reply: FastifyReply) {
   const admin = createServiceSupabase(req.server.env);
+  const env = req.server.env as Env;
+  if (!(await assertStaffBillingCapability(req, reply, admin, env, req.staff!.business_id, "send_offers"))) {
+    return;
+  }
   const id = z.string().uuid().parse((req.params as { id?: string }).id);
   const opts = sendOffersBody.parse(req.body ?? {});
 

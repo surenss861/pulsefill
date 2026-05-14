@@ -24,8 +24,8 @@
  * Requires DB migration `0025_public_discovery_profile.sql` (and prior migrations) so
  * `businesses.public_*` columns exist.
  *
- * standby_access_mode: `public` = instant join; `private` = invite-only; any other value
- * (this script uses `request`) = request-to-join + staff approval (matches API routing).
+ * standby_access_mode: `public` = instant join; `private` = invite-only; `request_to_join`
+ * = request-to-join + staff approval (matches API PATCH + routing).
  */
 import { config } from "dotenv";
 import { dirname, resolve } from "node:path";
@@ -36,8 +36,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, "../.env") });
 
-/** Third mode: waitlist / staff approval (not `public` or `private`). */
-const STANDBY_WAITLIST = "request" as const;
+/** DB value for waitlist-first join (matches `PATCH /v1/businesses/mine` enum). */
+const STANDBY_WAITLIST = "request_to_join" as const;
 
 const DEMO_PASSWORD = "Pulsefill-Demo-2026-Aa!";
 

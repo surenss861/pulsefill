@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { countPendingStandbyRequestsForBusiness } from "../customers/standby-request-count.js";
+
 export type DailyOpsSummaryResponse = {
   date: string;
   timezone: string;
@@ -10,6 +12,7 @@ export type DailyOpsSummaryResponse = {
     delivery_failures_today: number;
     no_matches_today: number;
     active_offered_slots_count: number;
+    pending_standby_request_count: number;
   };
   breakdown: {
     by_status: Record<string, number>;
@@ -54,6 +57,7 @@ export function neutralDailyOpsSummary(): DailyOpsSummaryResponse {
       delivery_failures_today: 0,
       no_matches_today: 0,
       active_offered_slots_count: 0,
+      pending_standby_request_count: 0,
     },
     breakdown: {
       by_status: {
@@ -102,7 +106,7 @@ export async function buildDailyOpsSummary(
       ? win.calendar_date.slice(0, 10)
       : String(win.calendar_date).slice(0, 10);
 
-  const [statusRows, awaitingRow, offeredRow, noMatchRow, bizSlotIds] = await Promise.all([
+  const [statusRows, awaitingRow, offeredRow, noMatchRow, bizSlotIds, standbyPendingRow] = await Promise.all([
     admin.from("open_slots").select("status").eq("business_id", businessId),
     admin
       .from("open_slots")
@@ -122,6 +126,7 @@ export async function buildDailyOpsSummary(
       .gte("created_at", startUtc)
       .lt("created_at", endUtc),
     admin.from("open_slots").select("id").eq("business_id", businessId),
+    countPendingStandbyRequestsForBusiness(admin, businessId),
   ]);
 
   const slotIdList = bizSlotIds.error ? [] : (bizSlotIds.data ?? []).map((r) => (r as { id: string }).id);
@@ -218,6 +223,7 @@ export async function buildDailyOpsSummary(
       delivery_failures_today,
       no_matches_today: noMatchRow.error ? 0 : noMatchRow.count ?? 0,
       active_offered_slots_count: offeredRow.error ? 0 : offeredRow.count ?? 0,
+      pending_standby_request_count: standbyPendingRow,
     },
     breakdown: {
       by_status: byStatus,

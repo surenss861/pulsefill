@@ -13,6 +13,7 @@ test("neutralDailyOpsSummary returns stable iOS-safe metrics + breakdown", () =>
   assert.equal(n.metrics.delivery_failures_today, 0);
   assert.equal(n.metrics.no_matches_today, 0);
   assert.equal(n.metrics.active_offered_slots_count, 0);
+  assert.equal(n.metrics.pending_standby_request_count, 0);
   assert.deepEqual(Object.keys(n.breakdown.by_status).sort(), [
     "booked",
     "cancelled",
@@ -33,6 +34,7 @@ test("neutralActionQueueResponse returns empty sections + zero summary", () => {
   assert.equal(q.summary.resolved_count, 0);
   assert.equal(q.summary.awaiting_confirmation_count, 0);
   assert.equal(q.summary.customer_follow_up_due_count, 0);
+  assert.equal(q.summary.pending_standby_request_count, 0);
   assert.equal(q.sections.needs_action.length, 0);
   assert.equal(q.sections.review.length, 0);
   assert.equal(q.sections.resolved.length, 0);

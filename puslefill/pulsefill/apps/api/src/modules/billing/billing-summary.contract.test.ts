@@ -67,6 +67,8 @@ test("GET /v1/billing/summary returns stable shape and no Stripe id leakage", as
   assert.equal(body.entitlements.can_create_openings, true);
   assert.equal(body.entitlements.can_send_offers, true);
   assert.equal(body.entitlements.can_invite_customers, true);
+  assert.equal(body.entitlements.can_review_standby_requests, true);
+  assert.equal(body.entitlements.can_confirm_bookings, true);
 });
 
 test("GET /v1/billing/summary allows null subscription", async () => {

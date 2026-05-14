@@ -99,6 +99,16 @@ const patchBody = z
     website: z.string().max(512).optional(),
     standby_access_mode: z.enum(["private", "request_to_join", "public"]).optional(),
     customer_discovery_enabled: z.boolean().optional(),
+    public_display_name: z.string().max(200).nullable().optional(),
+    public_description: z.string().max(4000).nullable().optional(),
+    public_category: z.string().max(120).nullable().optional(),
+    public_city: z.string().max(120).nullable().optional(),
+    public_neighborhood: z.string().max(120).nullable().optional(),
+    public_website: z.string().max(512).nullable().optional(),
+    public_phone: z.string().max(40).nullable().optional(),
+    public_logo_url: z.string().max(2048).nullable().optional(),
+    public_cover_image_url: z.string().max(2048).nullable().optional(),
+    public_join_note: z.string().max(500).nullable().optional(),
   })
   .strict();
 
@@ -629,10 +639,13 @@ export async function registerBusinessRoutes(app: FastifyInstance) {
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
       const body = patchBody.parse(req.body ?? {});
+      const updateRow = Object.fromEntries(
+        Object.entries(body).filter(([, v]) => v !== undefined),
+      ) as Record<string, unknown>;
 
       const { data, error } = await admin
         .from("businesses")
-        .update(body)
+        .update(updateRow)
         .eq("id", req.staff!.business_id)
         .select("*")
         .maybeSingle();

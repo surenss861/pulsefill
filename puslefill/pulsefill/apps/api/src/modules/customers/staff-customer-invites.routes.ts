@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
 import type { Env } from "../../config/env.js";
+import { assertStaffBillingCapability } from "../billing/billing-guard.js";
 import { sendJson } from "../../lib/http-errors.js";
 import { requireStaff } from "../../plugins/guards.js";
 import { rateLimitTier } from "../../plugins/rate-limit.js";
@@ -51,6 +52,19 @@ export async function registerStaffCustomerInviteRoutes(app: FastifyInstance) {
           parsed = postBody.parse(req.body ?? {});
         } catch {
           return sendJson(req, reply, 400, { error: "validation_error", message: "Invalid request body." });
+        }
+
+        if (
+          !(await assertStaffBillingCapability(
+            req,
+            reply,
+            admin,
+            env,
+            req.staff!.business_id,
+            "invite_customers",
+          ))
+        ) {
+          return;
         }
 
         try {

@@ -12,6 +12,8 @@ struct OperatorActionQueueSummary: Codable {
     let awaitingConfirmationCount: Int
     let deliveryFailedCount: Int
     let retryRecommendedCount: Int
+    /// From action-queue summary; matches pending waitlist request count when API provides it.
+    let pendingStandbyRequestCount: Int?
 }
 
 struct OperatorActionQueueSections: Codable {

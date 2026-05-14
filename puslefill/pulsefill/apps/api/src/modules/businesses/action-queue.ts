@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { countPendingStandbyRequestsForBusiness } from "../customers/standby-request-count.js";
 import {
   buildAvailableActions,
   buildQueueContext,
@@ -45,6 +46,8 @@ export type ActionQueueSummary = {
   retry_recommended_count: number;
   /** Due or overdue internal customer note follow-ups (staff workspace). */
   customer_follow_up_due_count: number;
+  /** Pending directory / waitlist join requests for this business. */
+  pending_standby_request_count: number;
 };
 
 /** Staff-only reminder from `customer_notes`; not slot-based. */
@@ -80,6 +83,7 @@ export function neutralActionQueueResponse(): ActionQueueResponse {
       delivery_failed_count: 0,
       retry_recommended_count: 0,
       customer_follow_up_due_count: 0,
+      pending_standby_request_count: 0,
     },
     sections: {
       needs_action: [],
@@ -484,18 +488,21 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
   const retry_recommended_count = needsAction.filter((i) => i.kind === "retry_recommended").length;
 
   const nowIso = new Date().toISOString();
-  const { data: followRows, error: followErr } = await admin
-    .from("customer_notes")
-    .select(
-      "id, body, follow_up_at, created_at, customer_id, customers ( full_name, email, phone ), staff_users ( full_name )",
-    )
-    .eq("business_id", businessId)
-    .is("deleted_at", null)
-    .not("follow_up_at", "is", null)
-    .is("follow_up_completed_at", null)
-    .lte("follow_up_at", nowIso)
-    .order("follow_up_at", { ascending: true })
-    .limit(50);
+  const [{ data: followRows, error: followErr }, pendingStandbyRequestCount] = await Promise.all([
+    admin
+      .from("customer_notes")
+      .select(
+        "id, body, follow_up_at, created_at, customer_id, customers ( full_name, email, phone ), staff_users ( full_name )",
+      )
+      .eq("business_id", businessId)
+      .is("deleted_at", null)
+      .not("follow_up_at", "is", null)
+      .is("follow_up_completed_at", null)
+      .lte("follow_up_at", nowIso)
+      .order("follow_up_at", { ascending: true })
+      .limit(50),
+    countPendingStandbyRequestsForBusiness(admin, businessId),
+  ]);
 
   const customer_follow_ups: CustomerFollowUpQueueItem[] = !followErr
     ? (followRows ?? []).map((raw) => {
@@ -542,6 +549,7 @@ export async function buildActionQueue(admin: SupabaseClient, businessId: string
       delivery_failed_count,
       retry_recommended_count,
       customer_follow_up_due_count,
+      pending_standby_request_count: pendingStandbyRequestCount,
     },
     sections: {
       needs_action: needsAction,

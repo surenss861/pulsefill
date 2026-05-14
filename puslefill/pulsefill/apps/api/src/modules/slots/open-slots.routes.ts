@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
+import type { Env } from "../../config/env.js";
 import { createServiceSupabase } from "../../config/supabase.js";
+import { assertStaffBillingCapability } from "../billing/billing-guard.js";
 import { sendActionError, sendConfirmSuccess } from "../../lib/action-replies.js";
 import { sendJson } from "../../lib/http-errors.js";
 import { requireCustomer, requireStaff } from "../../plugins/guards.js";
@@ -254,6 +256,15 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         });
       }
       const admin = createServiceSupabase(req.server.env);
+      const env = req.server.env as Env;
+      if (parsed.data.action === "retry_offers") {
+        if (
+          !(await assertStaffBillingCapability(req, reply, admin, env, req.staff!.business_id, "send_offers"))
+        ) {
+          return;
+        }
+      }
+
       const out = await executeBulkOpenSlotAction(admin, req.server.env, {
         businessId: req.staff!.business_id,
         staffId: req.staff!.id,
@@ -387,6 +398,10 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
     { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
+      const env = req.server.env as Env;
+      if (!(await assertStaffBillingCapability(req, reply, admin, env, req.staff!.business_id, "create_openings"))) {
+        return;
+      }
       const body = createSlotBody.parse(req.body ?? {});
 
       const { data, error } = await admin
@@ -542,6 +557,10 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
     { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
+      const env = req.server.env as Env;
+      if (!(await assertStaffBillingCapability(req, reply, admin, env, req.staff!.business_id, "confirm_bookings"))) {
+        return;
+      }
       const slotId = z.string().uuid().parse((req.params as { id?: string }).id);
       const parsed = confirmBody.safeParse(req.body ?? {});
       if (!parsed.success) {
