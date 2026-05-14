@@ -9,9 +9,7 @@ import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import type { OperatorStatusKind } from "@/components/operator/operator-status-chip";
 import { MotionAction } from "@/components/operator/operator-motion-primitives";
-import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
-import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
-import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
+import { DeskFilePage, DeskActionSlip, DeskFileStamp, DeskLedgerSection } from "@/components/dashboard/desk/desk-artifacts";
 import { CustomerFollowUpActions } from "@/components/customers/customer-follow-up-actions";
 import { CustomerInternalNotes } from "@/components/customers/customer-internal-notes";
 import { CustomerTimelineSection } from "@/components/customers/customer-timeline-section";
@@ -130,6 +128,54 @@ function deskStatRow(label: string, value: number, emphasize: boolean) {
   );
 }
 
+function waitlistFileStampTone(data: CustomerProfilePayload): "live" | "setup" | "attention" {
+  const e = deskWaitlistEyebrow(data);
+  if (e === "Ready for openings") return "live";
+  if (e === "Not on your waitlist") return "setup";
+  return "attention";
+}
+
+/** Action slip answers “what should staff do now?” — cover stamp carries raw waitlist state. */
+function deskCustomerNextStepSlip(data: CustomerProfilePayload): { title: string; intro: string } {
+  const state = deskWaitlistEyebrow(data);
+  if (state === "Ready for openings") {
+    return {
+      title: "Ready for openings",
+      intro:
+        "This customer can receive openings that match their preferences when something fits and their alert channels are on.",
+    };
+  }
+  if (state === "Needs preferences") {
+    return {
+      title: "Finish their setup",
+      intro:
+        "This customer needs standby preferences (and working contact channels) before PulseFill can safely send them openings.",
+    };
+  }
+  if (state === "Invite pending") {
+    return {
+      title: "Wait for them to join",
+      intro: "They have not finished accepting your invite. Follow up out of band if it has been a while.",
+    };
+  }
+  if (state === "Needs invite") {
+    return {
+      title: "Send an invite",
+      intro: "They are not on your waitlist yet. Send an invite when you want them eligible for openings from this workspace.",
+    };
+  }
+  if (state === "Not on your waitlist") {
+    return {
+      title: "Not available for openings",
+      intro: "They are no longer connected for openings from this workspace. Re-add them only if that is intentional.",
+    };
+  }
+  return {
+    title: "Review this file",
+    intro: "Check invite status, preferences, and contact below before sending openings.",
+  };
+}
+
 export default function CustomerProfilePage() {
   const params = useParams();
   const customerId = typeof params?.customerId === "string" ? params.customerId : undefined;
@@ -144,6 +190,7 @@ export default function CustomerProfilePage() {
 
   const reachDesk = data ? reachabilityDeskCopy(data.reachability.status) : null;
   const interestLine = data ? interestSentence(data) : null;
+  const nextStepSlip = data ? deskCustomerNextStepSlip(data) : null;
 
   const headerActions = (
     <Link href="/customers" prefetch={false} className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
@@ -162,13 +209,37 @@ export default function CustomerProfilePage() {
   return (
     <main className="pf-page-customer-profile pf-desk-page" style={{ padding: 0 }}>
       <OperatorPageTransition>
-        <div className="pf-overview-desk-stack">
-          <DeskPageHeader
-            title="Customer"
-            subtitle="Who they are, whether they can get openings, and what already happened."
-            actions={headerActions}
-          />
-
+        <DeskFilePage
+          filingLine="Waitlist profile"
+          title={data?.customer.display_name ?? "Waitlist profile"}
+          subtitle={
+            data ? (
+              <>
+                <p className="pf-desk-hero-card__meta" style={{ margin: 0 }}>
+                  {[data.customer.email, data.customer.phone].filter(Boolean).join(" · ") || "No masked contact on file"}
+                </p>
+                <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.5 }}>
+                  Joined PulseFill {new Date(data.customer.created_at).toLocaleDateString()}
+                </p>
+                <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.55 }}>
+                  {channelsReachLine(data.reachability)}
+                </p>
+              </>
+            ) : (
+              <p className="pf-muted-copy" style={{ margin: 0 }}>
+                Who they are, whether they can get openings, and what already happened.
+              </p>
+            )
+          }
+          coverAside={
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              {data ? (
+                <DeskFileStamp tone={waitlistFileStampTone(data)}>{deskWaitlistEyebrow(data)}</DeskFileStamp>
+              ) : null}
+              {headerActions}
+            </div>
+          }
+        >
           {error ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
               <OperatorErrorState rawMessage={error} />
@@ -196,19 +267,16 @@ export default function CustomerProfilePage() {
 
           {!loading && !error && data ? (
             <>
-              <DeskHeroCard title={data.customer.display_name} titleId="pf-customer-desk-hero-title" eyebrow={deskWaitlistEyebrow(data)}>
-                <p className="pf-desk-hero-card__meta">
-                  {[data.customer.email, data.customer.phone].filter(Boolean).join(" · ") ||
-                    "No masked contact on file"}
-                </p>
-                <p className="pf-muted-copy" style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.5 }}>
-                  Joined PulseFill {new Date(data.customer.created_at).toLocaleDateString()}
-                </p>
-                <p className="pf-muted-copy" style={{ margin: "12px 0 0", fontSize: 14, lineHeight: 1.55 }}>
-                  {channelsReachLine(data.reachability)}
+              <DeskActionSlip
+                eyebrow="Next step"
+                title={nextStepSlip!.title}
+                titleId="pf-customer-desk-action-slip-title"
+              >
+                <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+                  {nextStepSlip!.intro}
                 </p>
                 {interestLine ? (
-                  <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.55 }}>
+                  <p className="pf-muted-copy" style={{ margin: "12px 0 0", fontSize: 14, lineHeight: 1.55 }}>
                     {interestLine}
                   </p>
                 ) : null}
@@ -240,13 +308,13 @@ export default function CustomerProfilePage() {
                     ))}
                   </div>
                 ) : null}
-              </DeskHeroCard>
+              </DeskActionSlip>
 
-              <DeskSecondaryCard title="Contact">
+              <DeskLedgerSection title="Contact">
                 <CustomerFollowUpActions follow_up={data.follow_up} embedded />
-              </DeskSecondaryCard>
+              </DeskLedgerSection>
 
-              <DeskSecondaryCard title="Preferences">
+              <DeskLedgerSection title="Preferences">
                 {data.standby.active_preferences_count === 0 ? (
                   <>
                     <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Preferences missing</p>
@@ -278,15 +346,15 @@ export default function CustomerProfilePage() {
                     </p>
                   </div>
                 )}
-              </DeskSecondaryCard>
+              </DeskLedgerSection>
 
-              <DeskSecondaryCard title="Invite status">
+              <DeskLedgerSection title="Invite status">
                 <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
                   {membershipBody(data)}
                 </p>
-              </DeskSecondaryCard>
+              </DeskLedgerSection>
 
-              <DeskSecondaryCard title="What happened">
+              <DeskLedgerSection title="What happened">
                 <CustomerTimelineSection
                   embedded
                   items={timelineState.data?.items ?? []}
@@ -295,18 +363,18 @@ export default function CustomerProfilePage() {
                   notes={notesState.notes}
                   onRetry={() => void timelineState.reload()}
                 />
-              </DeskSecondaryCard>
+              </DeskLedgerSection>
 
-              <DeskSecondaryCard title="Claims and bookings">
+              <DeskLedgerSection title="Claims and bookings">
                 <div style={{ display: "grid", gap: 10 }}>
                   {deskStatRow("Booking confirmed", data.claims.confirmed, data.claims.confirmed > 0)}
                   {deskStatRow("Waiting on customer", data.claims.waiting, data.claims.waiting > 0)}
                   {deskStatRow("Missed or expired", data.claims.expired_or_missed, data.claims.expired_or_missed > 0)}
                   {deskStatRow("Total claims", data.claims.total, false)}
                 </div>
-              </DeskSecondaryCard>
+              </DeskLedgerSection>
 
-              <DeskSecondaryCard title="Messages (last 30 days)">
+              <DeskLedgerSection title="Messages (last 30 days)">
                 <p className="pf-muted-copy" style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.5 }}>
                   Staff-safe counts only — no device or token details.
                 </p>
@@ -315,9 +383,9 @@ export default function CustomerProfilePage() {
                   {deskStatRow("Failed", data.notification_delivery.failed_30d, data.notification_delivery.failed_30d > 0)}
                   {deskStatRow("Skipped", data.notification_delivery.skipped_30d, false)}
                 </div>
-              </DeskSecondaryCard>
+              </DeskLedgerSection>
 
-              <DeskSecondaryCard title="Team notes">
+              <DeskLedgerSection title="Team notes">
                 <CustomerInternalNotes
                   embedded
                   notes={notesState.notes}
@@ -328,10 +396,10 @@ export default function CustomerProfilePage() {
                   onCompleteFollowUp={notesState.completeFollowUp}
                   onRetry={() => void notesState.reload()}
                 />
-              </DeskSecondaryCard>
+              </DeskLedgerSection>
             </>
           ) : null}
-        </div>
+        </DeskFilePage>
       </OperatorPageTransition>
     </main>
   );
