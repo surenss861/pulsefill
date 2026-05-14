@@ -3266,3 +3266,146 @@ a.pf-desk-save-access--link:hover {
     rgba(60, 90, 72, 0.35) 100%
   );
 }
+
+/* —— App shell route morph + sidebar active pill —— */
+
+.pf-workspace-route-slot {
+  min-width: 0;
+}
+
+.pf-nav-dock-link__row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pf-nav-dock-active-pill-morph {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 1px solid var(--pf-brand-border-warm-mid);
+  background: linear-gradient(90deg, rgba(255, 122, 24, 0.1), var(--pf-surface-tint-03));
+  box-shadow: inset 3px 0 0 var(--pf-accent-primary);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.pf-nav-dock-link--pill-track.pf-nav-dock-link--active {
+  background: transparent;
+  border-color: transparent;
+}
+
+.pf-nav-dock-link--pill-track.pf-nav-dock-link--active::before {
+  display: none;
+}
+
+/* —— Activity recovery ledger —— */
+
+.pf-activity-scan-rail {
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: var(--pf-surface-tint-04);
+  border: 1px solid var(--pf-border-subtle);
+}
+
+.pf-activity-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.pf-activity-ledger-day-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-activity-ledger-day-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pf-activity-ledger-day-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pf-text-muted);
+  flex-shrink: 0;
+}
+
+.pf-activity-ledger-day-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--pf-border-default), transparent);
+  min-width: 0;
+}
+
+.pf-activity-ledger-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pf-activity-ledger-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+@media (max-width: 640px) {
+  .pf-activity-ledger-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+}
+
+.pf-activity-ledger-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10px;
+  gap: 8px;
+  position: relative;
+}
+
+.pf-activity-ledger-rail::after {
+  content: "";
+  position: absolute;
+  top: 22px;
+  bottom: 6px;
+  width: 1px;
+  background: linear-gradient(180deg, var(--pf-border-default), rgba(255, 226, 190, 0.04));
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pf-activity-ledger-time {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  color: var(--pf-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pf-activity-ledger-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+  z-index: 1;
+}
+
+.pf-activity-ledger-card {
+  min-width: 0;
+}
+
+.pf-activity-ledger-empty {
+  padding-top: 2px;
+}

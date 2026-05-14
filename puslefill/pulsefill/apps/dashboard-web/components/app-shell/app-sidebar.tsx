@@ -1,5 +1,6 @@
 "use client";
 
+import { LayoutGroup } from "framer-motion";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import type { ProfileRow } from "@/lib/get-current-user";
@@ -89,22 +90,24 @@ export function AppSidebar({ profile }: AppSidebarProps) {
 
       <nav className="pf-sidebar-nav">
         <p className="pf-kicker pf-sidebar-nav__kicker">Primary</p>
-        {primaryNav.map((item) => (
-          <div key={item.href} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <AppNavItem href={item.href} label={item.label} icon={item.icon} />
+        <LayoutGroup id="pf-primary-sidebar-nav">
+          {primaryNav.map((item) => (
+            <div key={item.href} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <AppNavItem href={item.href} label={item.label} icon={item.icon} />
+              </div>
+              {item.href === "/open-slots" && counts.open > 0 ? (
+                <span style={emberBadge}>{counts.open}</span>
+              ) : null}
+              {item.href === "/open-slots" && counts.claimed > 0 ? (
+                <span style={emberBadgeMuted}>{counts.claimed}</span>
+              ) : null}
+              {item.href === "/customers" && standbyPending.count > 0 ? (
+                <span style={emberBadge}>{standbyPending.count}</span>
+              ) : null}
             </div>
-            {item.href === "/open-slots" && counts.open > 0 ? (
-              <span style={emberBadge}>{counts.open}</span>
-            ) : null}
-            {item.href === "/open-slots" && counts.claimed > 0 ? (
-              <span style={emberBadgeMuted}>{counts.claimed}</span>
-            ) : null}
-            {item.href === "/customers" && standbyPending.count > 0 ? (
-              <span style={emberBadge}>{standbyPending.count}</span>
-            ) : null}
-          </div>
-        ))}
+          ))}
+        </LayoutGroup>
       </nav>
 
       <div className="pf-sidebar-footer">

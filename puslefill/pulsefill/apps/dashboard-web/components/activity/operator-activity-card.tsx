@@ -18,8 +18,10 @@ export function OperatorActivityCard(props: {
   showSelection?: boolean;
   selected?: boolean;
   onToggleSelect?: () => void;
+  /** When false, hide the relative timestamp row (e.g. ledger rail shows clock time). */
+  showRelativeTime?: boolean;
 }) {
-  const { item, showSelection, selected, onToggleSelect } = props;
+  const { item, showSelection, selected, onToggleSelect, showRelativeTime = true } = props;
   const actions = item.available_actions;
   const allowSlotDetailNav =
     Boolean(item.open_slot_id) && (!actions?.length || actions.includes("open_detail"));
@@ -56,7 +58,9 @@ export function OperatorActivityCard(props: {
   const bodyNode = (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <p style={{ margin: 0, fontSize: 13, color: "rgba(245, 247, 250, 0.62)", lineHeight: 1.55 }}>{explanation}</p>
-      <p style={{ margin: 0, fontSize: 12, color: "rgba(245, 247, 250, 0.38)" }}>{relative}</p>
+      {showRelativeTime ? (
+        <p style={{ margin: 0, fontSize: 12, color: "rgba(245, 247, 250, 0.38)" }}>{relative}</p>
+      ) : null}
     </div>
   );
 

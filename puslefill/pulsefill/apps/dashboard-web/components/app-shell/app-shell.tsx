@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ProfileRow } from "@/lib/get-current-user";
 import { AppHeader } from "./app-header";
 import { AppSidebar } from "./app-sidebar";
+import { WorkspaceRouteMorph } from "./workspace-route-morph";
 
 export type AppShellUser = { id: string; email: string };
 
@@ -34,19 +35,15 @@ export function AppShell({ children, user, profile }: AppShellProps) {
             <MobileQuick href="/settings" label="Settings" />
           </div>
           <div className="pf-workspace-field">
-            <div className="pf-workspace-inner" style={{ animation: "pf-page-enter 180ms ease-out" }}>
-              {children}
+            <div className="pf-workspace-inner">
+              <WorkspaceRouteMorph>{children}</WorkspaceRouteMorph>
             </div>
           </div>
         </div>
       </div>
       <style>{`
-        @keyframes pf-page-enter {
-          from { opacity: 0; transform: translateY(3px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
         @media (prefers-reduced-motion: reduce) {
-          .pf-app-shell-row * { animation: none !important; transition: none !important; }
+          .pf-workspace-inner { scroll-behavior: auto; }
         }
         @media (max-width: 1023px) {
           .pf-app-sidebar { display: none !important; }

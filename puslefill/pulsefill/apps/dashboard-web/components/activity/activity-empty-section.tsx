@@ -17,12 +17,16 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
   }
 
   return (
-    <div className="pf-activity-desk-empty">
-      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55, color: "var(--pf-text-primary)" }}>
+    <div className="pf-activity-ledger-empty">
+      <div className="pf-activity-ledger-day-head">
+        <span className="pf-activity-ledger-day-label">Today</span>
+        <span className="pf-activity-ledger-day-rule" aria-hidden />
+      </div>
+      <p style={{ margin: "14px 0 0", fontSize: 15, lineHeight: 1.55, color: "var(--pf-text-primary)" }}>
         <span style={{ fontWeight: 650 }}>No activity yet</span>
         <span className="pf-muted-copy" style={{ fontWeight: 400 }}>
           {" "}
-          — Openings, offers, claims, and confirmations will show here.
+          — The first opening, offer, claim, or confirmation will appear here.
         </span>
       </p>
       <MotionAction style={{ marginTop: 14 }}>

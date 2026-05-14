@@ -31,6 +31,41 @@ import {
   type OperatorActivityFilter,
 } from "@/types/operator-activity-filter";
 import type { BulkSlotActionResponse } from "@/types/bulk-actions";
+import type { OperatorActivityItem } from "@/types/operator-activity-feed";
+import { operatorActivityKindAccentColor } from "@/lib/operator-activity-presentation";
+
+function startOfLocalDay(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+function formatLedgerDayLabel(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffDays = Math.round((startOfLocalDay(now) - startOfLocalDay(d)) / 86400000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+}
+
+function formatLedgerClock(iso: string): string {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function groupActivityByLocalDay(items: OperatorActivityItem[]): { dayLabel: string; items: OperatorActivityItem[] }[] {
+  const map = new Map<string, OperatorActivityItem[]>();
+  for (const item of items) {
+    const d = new Date(item.occurred_at);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(item);
+  }
+  const keys = [...map.keys()].sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+  return keys.map((key) => {
+    const list = map.get(key)!;
+    list.sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime());
+    return { dayLabel: formatLedgerDayLabel(list[0].occurred_at), items: list };
+  });
+}
 
 export function ActivityPageClient() {
   const router = useRouter();
@@ -55,6 +90,8 @@ export function ActivityPageClient() {
     () => items.filter((item) => matchesOperatorActivityFilter(filter, item)),
     [items, filter],
   );
+
+  const ledgerGroups = useMemo(() => groupActivityByLocalDay(filteredItems), [filteredItems]);
 
   const bulkSelection = useOperatorActivityBulkSelection(filteredItems);
   const { clear: clearBulkSelection, ...bulk } = bulkSelection;
@@ -166,7 +203,7 @@ export function ActivityPageClient() {
         <div className="pf-overview-desk-stack">
           <DeskPageHeader
             title="Activity"
-            subtitle="See openings, offers, claims, confirmations, delivery issues, and team notes."
+            subtitle="The paper trail for openings, offers, claims, messages, and team notes."
             actions={headerActions}
           />
 
@@ -180,14 +217,14 @@ export function ActivityPageClient() {
               description="Fetching recent openings, offers, claims, confirmations, delivery issues, and team notes."
             />
           ) : (
-            <DeskSecondaryCard title="Recent activity">
+            <DeskSecondaryCard title="Recovery log">
               <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.55 }}>
-                Choose what you want to scan first, then open a row for the full story.
+                Use the scan controls to filter, then open a row for the full story.
               </p>
               <div
-                className={`pf-filter-rail${items.length === 0 ? " pf-filter-rail--quiet" : ""}`}
+                className={`pf-filter-rail pf-activity-scan-rail${items.length === 0 ? " pf-filter-rail--quiet" : ""}`}
                 role="tablist"
-                aria-label="Activity categories"
+                aria-label="Activity scan controls"
               >
                 {operatorActivityFilterOptions.map((opt) => {
                   const on = filter === opt.value;
@@ -232,21 +269,48 @@ export function ActivityPageClient() {
                 </button>
               </div>
 
-              <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 16 }}>
                 {items.length === 0 ? (
                   <ActivityEmptySection />
                 ) : filteredItems.length === 0 ? (
                   <ActivityEmptySection variant="filtered" />
                 ) : (
-                  filteredItems.map((item) => (
-                    <OperatorActivityCard
-                      key={item.id}
-                      item={item}
-                      showSelection
-                      selected={bulk.selectedIds.includes(item.id)}
-                      onToggleSelect={() => bulk.toggle(item.id)}
-                    />
-                  ))
+                  <div className="pf-activity-ledger">
+                    {ledgerGroups.map((group) => (
+                      <section
+                        key={group.items[0]?.occurred_at.slice(0, 10) ?? group.dayLabel}
+                        className="pf-activity-ledger-day-block"
+                        aria-label={group.dayLabel}
+                      >
+                        <div className="pf-activity-ledger-day-head">
+                          <span className="pf-activity-ledger-day-label">{group.dayLabel}</span>
+                          <span className="pf-activity-ledger-day-rule" aria-hidden />
+                        </div>
+                        <div className="pf-activity-ledger-rows">
+                          {group.items.map((item) => (
+                            <div key={item.id} className="pf-activity-ledger-row">
+                              <div className="pf-activity-ledger-rail" aria-hidden>
+                                <span className="pf-activity-ledger-time">{formatLedgerClock(item.occurred_at)}</span>
+                                <span
+                                  className="pf-activity-ledger-dot"
+                                  style={{ background: operatorActivityKindAccentColor(item.kind) }}
+                                />
+                              </div>
+                              <div className="pf-activity-ledger-card">
+                                <OperatorActivityCard
+                                  item={item}
+                                  showSelection
+                                  selected={bulk.selectedIds.includes(item.id)}
+                                  onToggleSelect={() => bulk.toggle(item.id)}
+                                  showRelativeTime={false}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
                 )}
               </div>
             </DeskSecondaryCard>
