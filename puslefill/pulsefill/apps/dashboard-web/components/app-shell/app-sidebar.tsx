@@ -3,6 +3,7 @@
 import { LayoutGroup } from "framer-motion";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { signOutAction } from "@/app/actions/auth";
 import type { ProfileRow } from "@/lib/get-current-user";
 import { useLiveCounts } from "@/hooks/useLiveCounts";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
@@ -22,15 +23,15 @@ type AppSidebarProps = {
 };
 
 const deskFilesNav = [
-  { href: "/overview", label: "Today", icon: <NavIconCommandCenter /> },
-  { href: "/open-slots", label: "Appointment files", icon: <NavIconOpenings /> },
-  { href: "/customers", label: "Waitlist", icon: <NavIconCustomers /> },
-  { href: "/activity", label: "Log", icon: <NavIconActivity /> },
+  { href: "/overview", label: "Today", fileIndex: "01", icon: <NavIconCommandCenter /> },
+  { href: "/open-slots", label: "Appointment files", fileIndex: "02", icon: <NavIconOpenings /> },
+  { href: "/customers", label: "Waitlist", fileIndex: "03", icon: <NavIconCustomers /> },
+  { href: "/activity", label: "Log", fileIndex: "04", icon: <NavIconActivity /> },
 ] as const;
 
 const workspaceNav = [
-  { href: "/settings", label: "Workspace", icon: <NavIconSettings /> },
-  { href: "/billing", label: "Billing file", icon: <NavIconBilling /> },
+  { href: "/settings", label: "Workspace", fileIndex: "05", icon: <NavIconSettings /> },
+  { href: "/billing", label: "Billing file", fileIndex: "06", icon: <NavIconBilling /> },
 ] as const;
 
 const badgeBase: CSSProperties = {
@@ -48,10 +49,17 @@ function truncateEmail(email: string, max = 32): string {
   return `${t.slice(0, max - 1)}…`;
 }
 
+function roleLabel(role: string) {
+  if (!role) return "Operator";
+  return role.charAt(0).toUpperCase() + role.slice(1);
+}
+
 export function AppSidebar({ profile }: AppSidebarProps) {
   const counts = useLiveCounts();
   const standbyPending = usePendingStandbyRequests(60_000);
   const live = profile.onboarding_completed;
+  const accountEmail = profile.email ?? "";
+  const accountInitial = (profile.full_name?.trim() || accountEmail || "P").slice(0, 1).toUpperCase();
 
   const emberBadge: CSSProperties = {
     ...badgeBase,
@@ -95,7 +103,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           {deskFilesNav.map((item) => (
             <div key={item.href} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <AppNavItem href={item.href} label={item.label} icon={item.icon} />
+                <AppNavItem href={item.href} label={item.label} icon={item.icon} fileIndex={item.fileIndex} />
               </div>
               {item.href === "/open-slots" && counts.open > 0 ? <span style={emberBadge}>{counts.open}</span> : null}
               {item.href === "/open-slots" && counts.claimed > 0 ? <span style={emberBadgeMuted}>{counts.claimed}</span> : null}
@@ -107,7 +115,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           {workspaceNav.map((item) => (
             <div key={item.href} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <AppNavItem href={item.href} label={item.label} icon={item.icon} />
+                <AppNavItem href={item.href} label={item.label} icon={item.icon} fileIndex={item.fileIndex} />
               </div>
             </div>
           ))}
@@ -115,43 +123,52 @@ export function AppSidebar({ profile }: AppSidebarProps) {
       </LayoutGroup>
 
       <div className="pf-sidebar-footer">
-        <div className="pf-sidebar-footer__card">
-          <p className="pf-sidebar-footer__eyebrow">Account</p>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 650, color: "var(--pf-text-primary)", lineHeight: 1.25 }}>
-            {profile.full_name?.trim() || "Operator"}
-          </p>
-          <p className="pf-muted-copy" style={{ margin: "6px 0 0", fontSize: 12 }}>
-            {truncateEmail(profile.email ?? "", 36)}
-          </p>
-          <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--pf-accent-primary-hover)",
-              }}
-            >
-              {profile.role}
+        <details className="pf-sidebar-account-drawer">
+          <summary className="pf-sidebar-account-drawer__summary" aria-label="Account and sign out">
+            <span className="pf-sidebar-account-drawer__mark" aria-hidden>
+              {accountInitial}
             </span>
-            <span
-              style={{
-                borderRadius: 999,
-                padding: "4px 10px",
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                border: live ? "1px solid var(--pf-accent-primary-border)" : "1px solid var(--pf-brand-border-warm)",
-                background: live ? "var(--pf-accent-primary-soft)" : "var(--pf-surface-tint-05)",
-                color: live ? "var(--pf-accent-primary-hover)" : "var(--pf-text-muted)",
-              }}
-            >
-              {live ? "Live" : "Setup"}
+            <span className="pf-sidebar-account-drawer__chev" aria-hidden>
+              ▾
             </span>
+          </summary>
+          <div className="pf-sidebar-account-drawer__panel">
+            <p className="pf-sidebar-footer__eyebrow" style={{ margin: "0 0 8px" }}>
+              Account
+            </p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 650, color: "var(--pf-text-primary)", lineHeight: 1.25 }}>
+              {profile.full_name?.trim() || "Operator"}
+            </p>
+            <p className="pf-muted-copy" style={{ margin: "6px 0 0", fontSize: 12 }}>
+              {truncateEmail(accountEmail, 36)}
+            </p>
+            <p className="pf-muted-copy" style={{ margin: "8px 0 0", fontSize: 12 }}>
+              {roleLabel(profile.role)}
+            </p>
+            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span
+                style={{
+                  borderRadius: 999,
+                  padding: "4px 10px",
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  border: live ? "1px solid var(--pf-accent-primary-border)" : "1px solid var(--pf-brand-border-warm)",
+                  background: live ? "var(--pf-accent-primary-soft)" : "var(--pf-surface-tint-05)",
+                  color: live ? "var(--pf-accent-primary-hover)" : "var(--pf-text-muted)",
+                }}
+              >
+                {live ? "Live" : "Setup"}
+              </span>
+            </div>
+            <form action={signOutAction} style={{ marginTop: 14 }}>
+              <button type="submit" className="pf-sidebar-account-drawer__signout">
+                Sign out
+              </button>
+            </form>
           </div>
-        </div>
+        </details>
         {!live ? (
           <Link href="/overview#getting-started" className="pf-sidebar-next-step">
             Continue setup →

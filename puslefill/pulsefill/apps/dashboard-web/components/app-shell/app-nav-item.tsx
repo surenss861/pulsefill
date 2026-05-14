@@ -9,9 +9,11 @@ type AppNavItemProps = {
   href: string;
   label: string;
   icon?: ReactNode;
+  /** File-drawer index, e.g. "01" — shown as a muted tabular prefix. */
+  fileIndex?: string;
 };
 
-export function AppNavItem({ href, label, icon }: AppNavItemProps) {
+export function AppNavItem({ href, label, icon, fileIndex }: AppNavItemProps) {
   const pathname = usePathname();
   const active = pathname === href || pathname.startsWith(`${href}/`);
 
@@ -29,6 +31,11 @@ export function AppNavItem({ href, label, icon }: AppNavItemProps) {
         />
       ) : null}
       <span className="pf-nav-dock-link__row">
+        {fileIndex ? (
+          <span className="pf-nav-dock-link__index" aria-hidden>
+            {fileIndex}
+          </span>
+        ) : null}
         {icon ? <span className="pf-nav-dock-link__glyph">{icon}</span> : null}
         <span className="pf-nav-dock-link__label">{label}</span>
       </span>

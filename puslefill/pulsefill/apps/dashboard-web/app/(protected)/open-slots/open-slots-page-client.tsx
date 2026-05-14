@@ -22,9 +22,8 @@ import { useOperatorSlotsList } from "@/hooks/useOperatorSlotsList";
 import { runOperatorBulkAction } from "@/lib/operator-bulk-actions";
 import { emitOperatorRefreshAfterBulkSlotAction } from "@/lib/operator-refresh-events";
 import { DashboardRecoveryPathSection } from "@/components/dashboard/dashboard-recovery-path-section";
-import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
-import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
 import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
+import { DeskFilePage, DeskActionSlip, DeskLedgerSection } from "@/components/dashboard/desk/desk-artifacts";
 import type { RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
@@ -231,14 +230,13 @@ export default function OpenSlotsPageClient() {
   return (
     <main className="pf-page-openings pf-desk-page" style={{ padding: 0, paddingBottom: selectedIds.length > 0 ? 120 : 0 }}>
       <OperatorPageTransition>
-        <div className="pf-overview-desk-stack">
-          <DeskPageHeader
-            title="Appointment files"
-            subtitle="Cancelled times on your desk — grouped by what to do next."
-            actions={headerActions}
-          />
-
-          <DeskHeroCard title="Create an opening" titleId="pf-openings-hero-title" eyebrow="When someone cancels">
+        <DeskFilePage
+          filingLine="02 · Appointment files"
+          title="Appointment files"
+          subtitle="Cancelled times on your desk — grouped by what to do next."
+          coverAside={headerActions}
+        >
+          <DeskActionSlip title="Create an opening" titleId="pf-openings-hero-title" eyebrow="When someone cancels">
             <p className="pf-desk-hero-card__meta">
               When someone cancels, add the appointment time here. PulseFill can send it to waiting customers.
             </p>
@@ -247,7 +245,7 @@ export default function OpenSlotsPageClient() {
                 Create opening
               </Link>
             </MotionAction>
-          </DeskHeroCard>
+          </DeskActionSlip>
 
           {digestBanner ? (
             <aside className="pf-openings-digest-banner" aria-label="Digest context">
@@ -270,7 +268,7 @@ export default function OpenSlotsPageClient() {
           {!loading && !error && slots.length === 0 ? (
             <div className="pf-desk-openings-split">
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <DeskSecondaryCard title="No openings yet">
+                <DeskSecondaryCard variant="slip" title="No openings yet">
                   <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
                     When someone cancels, add the appointment time here. PulseFill can send it to waiting customers on your list.
                   </p>
@@ -291,9 +289,9 @@ export default function OpenSlotsPageClient() {
                   </details>
                 </DeskSecondaryCard>
               </div>
-              <DeskSecondaryCard title="What happens next">
+              <DeskLedgerSection title="What happens next">
                 <DashboardRecoveryPathSection hideTitle activeStep="opening" />
-              </DeskSecondaryCard>
+              </DeskLedgerSection>
             </div>
           ) : null}
 
@@ -301,7 +299,7 @@ export default function OpenSlotsPageClient() {
             <div className="pf-desk-openings-split">
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <SendOffersPrereqCallout />
-                <DeskSecondaryCard title="Find openings">
+                <DeskSecondaryCard variant="slip" title="Find openings">
                   <p className="pf-muted-copy" style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.55 }}>
                     Pick a status to match the front desk moment, then narrow by provider, location, or visit type.
                   </p>
@@ -338,7 +336,7 @@ export default function OpenSlotsPageClient() {
                   )}
                 </DeskSecondaryCard>
 
-                <DeskSecondaryCard title="Appointment files">
+                <DeskSecondaryCard variant="slip" title="Appointment files">
                   {slotsForList.length === 0 ? (
                     <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
                       {digestSlotSet && digestFilteredSlots.length === 0
@@ -423,12 +421,12 @@ export default function OpenSlotsPageClient() {
                   )}
                 </DeskSecondaryCard>
               </div>
-              <DeskSecondaryCard title="What happens next">
+              <DeskLedgerSection title="What happens next">
                 <DashboardRecoveryPathSection hideTitle activeStep={openingsPipelineStep} />
-              </DeskSecondaryCard>
+              </DeskLedgerSection>
             </div>
           ) : null}
-        </div>
+        </DeskFilePage>
 
         <OperatorBulkActionBar
           count={selectedIds.length}

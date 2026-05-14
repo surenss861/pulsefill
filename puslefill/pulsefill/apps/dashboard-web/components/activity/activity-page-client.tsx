@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
 import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
+import { DeskFilePage } from "@/components/dashboard/desk/desk-artifacts";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
 import { ActivityEmptySection } from "@/components/activity/activity-empty-section";
@@ -200,13 +200,12 @@ export function ActivityPageClient() {
       style={{ padding: 0, paddingBottom: bulkSelected ? 100 : 0 }}
     >
       <OperatorPageTransition>
-        <div className="pf-overview-desk-stack">
-          <DeskPageHeader
-            title="Recovery log"
-            subtitle="The paper trail for openings, offers, claims, messages, and team notes."
-            actions={headerActions}
-          />
-
+        <DeskFilePage
+          filingLine="04 · Recovery log"
+          title="Recovery log"
+          subtitle="The paper trail for openings, offers, claims, messages, and team notes."
+          coverAside={headerActions}
+        >
           {activityLoadError ? (
             activityLoadError
           ) : loading && items.length === 0 ? (
@@ -217,7 +216,7 @@ export function ActivityPageClient() {
               description="Fetching recent openings, offers, claims, confirmations, delivery issues, and team notes."
             />
           ) : (
-            <DeskSecondaryCard title="Recovery log">
+            <DeskSecondaryCard variant="ledger" title="Chronicle">
               <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.55 }}>
                 Use the scan controls to filter, then open a row for the full story.
               </p>
@@ -315,7 +314,7 @@ export function ActivityPageClient() {
               </div>
             </DeskSecondaryCard>
           )}
-        </div>
+        </DeskFilePage>
 
         <OperatorActivityBulkActionBar
           count={bulk.selectedIds.length}

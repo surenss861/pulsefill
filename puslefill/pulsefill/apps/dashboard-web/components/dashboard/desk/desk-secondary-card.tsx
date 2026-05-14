@@ -9,6 +9,8 @@ type DeskSecondaryCardProps = {
   title: string;
   /** Optional right-aligned control in the card header row. */
   headerAction?: ReactNode;
+  /** `slip` / `ledger` = lighter desk artifacts on the sheet; `panel` = legacy elevated block. */
+  variant?: "panel" | "slip" | "ledger";
   children: ReactNode;
 };
 
@@ -20,9 +22,11 @@ function slugId(title: string): string {
 }
 
 /** Quieter supporting blocks — account, profile, checklist, security. */
-export function DeskSecondaryCard({ title, headerAction, children }: DeskSecondaryCardProps) {
+export function DeskSecondaryCard({ title, headerAction, variant = "panel", children }: DeskSecondaryCardProps) {
   const id = slugId(title);
   const reduce = useReducedMotion();
+  const surfaceClass =
+    variant === "slip" ? " pf-desk-secondary-card--slip" : variant === "ledger" ? " pf-desk-secondary-card--ledger" : "";
 
   const inner = (
     <>
@@ -38,7 +42,7 @@ export function DeskSecondaryCard({ title, headerAction, children }: DeskSeconda
 
   if (reduce) {
     return (
-      <section className="pf-desk-secondary-card" aria-labelledby={id}>
+      <section className={`pf-desk-secondary-card${surfaceClass}`} aria-labelledby={id}>
         {inner}
       </section>
     );
@@ -46,7 +50,7 @@ export function DeskSecondaryCard({ title, headerAction, children }: DeskSeconda
 
   return (
     <motion.section
-      className="pf-desk-secondary-card"
+      className={`pf-desk-secondary-card${surfaceClass}`}
       aria-labelledby={id}
       layout
       transition={{ layout: { duration: 0.24, ease: layoutEase } }}

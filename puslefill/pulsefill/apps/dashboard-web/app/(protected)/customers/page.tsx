@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { DeskHeroCard } from "@/components/dashboard/desk/desk-hero-card";
-import { DeskPageHeader } from "@/components/dashboard/desk/desk-page-header";
 import { DeskSecondaryCard } from "@/components/dashboard/desk/desk-secondary-card";
+import { DeskFilePage, DeskActionSlip } from "@/components/dashboard/desk/desk-artifacts";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { MotionAction, MotionTapSurface } from "@/components/operator/operator-motion-primitives";
 import { OperatorMetricStrip } from "@/components/operator/operator-metric-strip";
@@ -370,14 +369,13 @@ export default function CustomersPage() {
   return (
     <main className="pf-page-customers pf-desk-page" style={{ padding: 0 }}>
       <OperatorPageTransition>
-        <div className="pf-overview-desk-stack">
-          <DeskPageHeader
-            title="Waitlist"
-            subtitle="Invite people so they can get openings when someone cancels."
-            actions={headerActions}
-          />
-
-          <DeskHeroCard title="Build the waitlist" titleId="pf-customers-hero-title" eyebrow="Who can get openings">
+        <DeskFilePage
+          filingLine="03 · Waitlist book"
+          title="Waitlist"
+          subtitle="Invite people so they can get openings when someone cancels."
+          coverAside={headerActions}
+        >
+          <DeskActionSlip title="Build the waitlist" titleId="pf-customers-hero-title" eyebrow="Who can get openings">
             <p className="pf-desk-hero-card__meta">
               Send an invite link to people you want on the waitlist. When someone cancels, they can get a shot at the
               opening.
@@ -390,28 +388,28 @@ export default function CustomersPage() {
                 Invite to waitlist
               </Link>
             </MotionAction>
-          </DeskHeroCard>
+          </DeskActionSlip>
 
           <div className="pf-desk-customers-metrics">
-            <DeskSecondaryCard title="Invited">
+            <DeskSecondaryCard variant="slip" title="Invited">
               <p className="pf-desk-customers-metric-value">{pendingInvites}</p>
               <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
                 Waiting on them to join
               </p>
             </DeskSecondaryCard>
-            <DeskSecondaryCard title="Ready for openings">
+            <DeskSecondaryCard variant="slip" title="Ready for openings">
               <p className="pf-desk-customers-metric-value">{coverageLoading ? "—" : (standbyCoverage?.eligible_customer_count ?? "—")}</p>
               <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
                 Joined and set up to hear from you
               </p>
             </DeskSecondaryCard>
-            <DeskSecondaryCard title="Can be reached">
+            <DeskSecondaryCard variant="slip" title="Can be reached">
               <p className="pf-desk-customers-metric-value">{coverageLoading ? "—" : (standbyCoverage?.reachable_customer_count ?? "—")}</p>
               <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
                 Can get texts or emails when you send offers
               </p>
             </DeskSecondaryCard>
-            <DeskSecondaryCard title="Needs setup">
+            <DeskSecondaryCard variant="slip" title="Needs setup">
               <p className="pf-desk-customers-metric-value">{coverageLoading ? "—" : (needsSetupCount ?? "—")}</p>
               <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
                 Finish preferences or membership
@@ -908,7 +906,7 @@ export default function CustomersPage() {
               </OperatorRowList>
             ) : null}
           </DeskSecondaryCard>
-        </div>
+        </DeskFilePage>
       </OperatorPageTransition>
     </main>
   );
