@@ -3409,3 +3409,79 @@ a.pf-desk-save-access--link:hover {
 .pf-activity-ledger-empty {
   padding-top: 2px;
 }
+
+/* —— Openings case-file board —— */
+
+.pf-openings-case-board {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.pf-openings-case-band__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--pf-border-subtle);
+  margin-bottom: 4px;
+}
+
+.pf-openings-case-band__copy {
+  min-width: 0;
+}
+
+.pf-openings-case-band__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pf-accent-primary-hover);
+}
+
+.pf-openings-case-band__subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--pf-text-muted);
+  max-width: 52rem;
+}
+
+.pf-openings-case-band__count {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pf-text-muted);
+  border: 1px solid var(--pf-border-subtle);
+  border-radius: 999px;
+  padding: 5px 11px;
+  background: var(--pf-surface-tint-04);
+}
+
+.pf-openings-case-band__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.pf-openings-case-file-row {
+  position: relative;
+  padding-left: 12px;
+}
+
+.pf-openings-case-file-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(255, 122, 24, 0.45), rgba(255, 226, 190, 0.12));
+  opacity: 0.85;
+}

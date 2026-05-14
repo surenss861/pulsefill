@@ -153,8 +153,14 @@ export function OperatorSlotListRow({
     const contextParts = [slot.location_name?.trim(), slot.provider_name_snapshot?.trim()].filter(Boolean);
     const contextLine = contextParts.join(" · ");
     const bodyBits: ReactNode[] = [];
-    if (attentionLabel) bodyBits.push(<div key="a">{attentionLabel}</div>);
-    if (st === "open" || st === "offered") {
+    if (attentionLabel && st !== "claimed") bodyBits.push(<div key="a">{attentionLabel}</div>);
+    if (st === "claimed") {
+      bodyBits.push(
+        <div key="cl" style={{ color: "rgba(245, 247, 250, 0.58)" }}>
+          Someone asked for this opening. Confirm the booking so the time stays filled.
+        </div>,
+      );
+    } else if (st === "open" || st === "offered") {
       bodyBits.push(
         <div key="nc" style={{ color: "rgba(245, 247, 250, 0.58)" }}>
           No claim yet

@@ -33,6 +33,11 @@ import { MotionAction } from "@/components/operator/operator-motion-primitives";
 import { matchesOperatorFilters, DEFAULT_OPERATOR_FILTERS } from "@/lib/operator-filters";
 import type { DerivedOperatorPrimaryAction } from "@/lib/operator-primary-action";
 import { digestSectionBannerTitle } from "@/lib/morning-recovery-digest-ui";
+import {
+  caseFileBandCopy,
+  groupSlotsByCaseFileBand,
+  OPENING_CASE_BAND_ORDER,
+} from "@/lib/operator-open-slots-case-bands";
 import { OPERATOR_SLOT_FILTERS, getOperatorSlotEmptyCopy } from "@/lib/operator-slots-ui";
 import { slotsDetailPath, slotsDetailParamsFromListContext } from "@/lib/open-slot-routes";
 import type { BulkSlotActionKind, BulkSlotActionResponse } from "@/types/bulk-actions";
@@ -93,6 +98,8 @@ export default function OpenSlotsPageClient() {
   }, [visibleSlots, digestSlotSet]);
 
   const slotsForList = digestSlotSet ? digestFilteredSlots : visibleSlots;
+
+  const caseFileGroups = useMemo(() => groupSlotsByCaseFileBand(slotsForList), [slotsForList]);
 
   const visibleIds = useMemo(() => slotsForList.map((s) => s.id), [slotsForList]);
 
@@ -227,7 +234,7 @@ export default function OpenSlotsPageClient() {
         <div className="pf-overview-desk-stack">
           <DeskPageHeader
             title="Openings"
-            subtitle="Create and manage cancelled appointment times."
+            subtitle="Cancelled appointment times on your desk — grouped by what to do next."
             actions={headerActions}
           />
 
@@ -331,7 +338,7 @@ export default function OpenSlotsPageClient() {
                   )}
                 </DeskSecondaryCard>
 
-                <DeskSecondaryCard title="Your openings">
+                <DeskSecondaryCard title="Appointment files">
                   {slotsForList.length === 0 ? (
                     <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
                       {digestSlotSet && digestFilteredSlots.length === 0
@@ -340,6 +347,9 @@ export default function OpenSlotsPageClient() {
                     </p>
                   ) : (
                     <>
+                      <p className="pf-muted-copy" style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.55 }}>
+                        Grouped by what the front desk should do next. Filters above still apply.
+                      </p>
                       <label
                         style={{
                           display: "flex",
@@ -361,30 +371,53 @@ export default function OpenSlotsPageClient() {
                           {digestSlotSet ? ", digest filter" : ""})
                         </span>
                       </label>
-                      <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-                        {slotsForList.map((slot) => (
-                          <OperatorSlotListRow
-                            key={slot.id}
-                            variant="desk"
-                            slot={slot}
-                            busy={rowAction.busyId === slot.id}
-                            onPrimaryAction={handlePrimaryAction}
-                            detailHref={slotsDetailPath(
-                              slot.id,
-                              slotsDetailParamsFromListContext({
-                                filter,
-                                slot,
-                                digestKind,
-                                digestSlotIds: digestSlotIdsParam ?? undefined,
-                                q: searchParams.get("q"),
-                              }),
-                            )}
-                            selection={{
-                              selected: isSelected(slot.id),
-                              onToggle: () => toggle(slot.id),
-                            }}
-                          />
-                        ))}
+                      <div className="pf-openings-case-board" style={{ marginTop: 12 }}>
+                        {OPENING_CASE_BAND_ORDER.map((band) => {
+                          const rows = caseFileGroups.get(band) ?? [];
+                          if (rows.length === 0) return null;
+                          const copy = caseFileBandCopy(band);
+                          return (
+                            <section key={band} className="pf-openings-case-band" aria-labelledby={`pf-openings-case-${band}`}>
+                              <header className="pf-openings-case-band__head">
+                                <div className="pf-openings-case-band__copy">
+                                  <h3 className="pf-openings-case-band__title" id={`pf-openings-case-${band}`}>
+                                    {copy.title}
+                                  </h3>
+                                  <p className="pf-openings-case-band__subtitle">{copy.subtitle}</p>
+                                </div>
+                                <span className="pf-openings-case-band__count" aria-hidden>
+                                  {rows.length}
+                                </span>
+                              </header>
+                              <div className="pf-openings-case-band__rows">
+                                {rows.map((slot) => (
+                                  <div key={slot.id} className="pf-openings-case-file-row">
+                                    <OperatorSlotListRow
+                                      variant="desk"
+                                      slot={slot}
+                                      busy={rowAction.busyId === slot.id}
+                                      onPrimaryAction={handlePrimaryAction}
+                                      detailHref={slotsDetailPath(
+                                        slot.id,
+                                        slotsDetailParamsFromListContext({
+                                          filter,
+                                          slot,
+                                          digestKind,
+                                          digestSlotIds: digestSlotIdsParam ?? undefined,
+                                          q: searchParams.get("q"),
+                                        }),
+                                      )}
+                                      selection={{
+                                        selected: isSelected(slot.id),
+                                        onToggle: () => toggle(slot.id),
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </section>
+                          );
+                        })}
                       </div>
                     </>
                   )}
