@@ -7,6 +7,10 @@ struct PulseFillClientLaunchDiagnostics: Equatable {
     let supabaseHost: String
     let anonKeyStatus: String
     let safeFailureSummary: String?
+    /// e.g. `1.0 (42)` from marketing version + bundle build.
+    let appVersionLabel: String
+    /// From Info.plist `PulseFillSourceRevision` (set per-archive / CI), else `unknown`.
+    let sourceRevision: String
 }
 
 /// Deployment tier for API + Supabase defaults. Does not affect Xcode Debug vs Release by itself;
@@ -323,8 +327,38 @@ enum PulseFillBuildConfiguration {
             apiHost: apiBaseURL.host ?? "—",
             supabaseHost: supabaseURL.host ?? "—",
             anonKeyStatus: anonStatus,
-            safeFailureSummary: safeFailureSummary
+            safeFailureSummary: safeFailureSummary,
+            appVersionLabel: appVersionLabelFromBundle(),
+            sourceRevision: resolvedSourceRevisionFromBundle(),
         )
+    }
+
+    /// Non-secret one-liner for Sign in / Create account (TestFlight build verification).
+    static var authScreenQAFootnote: String {
+        let marketing = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"
+        let rev = resolvedSourceRevisionFromBundle()
+        let tier = deploymentTier.rawValue
+        let api = apiBaseURL.host ?? "—"
+        let sb = supabaseURL.host ?? "—"
+        return "Build \(marketing) (\(build)) · \(rev) · \(tier) · API \(api) · Supabase \(sb)"
+    }
+
+    private static func appVersionLabelFromBundle() -> String {
+        let marketing = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"
+        return "\(marketing) (\(build))"
+    }
+
+    private static func resolvedSourceRevisionFromBundle() -> String {
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: "PulseFillSourceRevision") as? String else {
+            return "unknown"
+        }
+        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if t.isEmpty || t.hasPrefix("$(") {
+            return "unknown"
+        }
+        return t
     }
 
     /// One line for operator-facing Account / debug (tier + marketing version + build).

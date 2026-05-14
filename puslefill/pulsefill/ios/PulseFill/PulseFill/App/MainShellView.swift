@@ -67,6 +67,8 @@ private struct ClientConfigurationBlockingView: View {
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundStyle(PFColor.textPrimary)
                             Group {
+                                Text("Build: \(d.appVersionLabel)")
+                                Text("Commit: \(d.sourceRevision)")
                                 Text("Tier: \(d.tierLabel)")
                                 Text("API: \(d.apiHost)")
                                 Text("Supabase: \(d.supabaseHost)")

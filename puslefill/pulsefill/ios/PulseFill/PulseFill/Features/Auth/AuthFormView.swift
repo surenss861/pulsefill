@@ -17,31 +17,43 @@ struct AuthFormView: View {
     }
 
     var body: some View {
-        ZStack {
-            PFScreenBackground()
+        GeometryReader { proxy in
+            ZStack {
+                PFScreenBackground()
+                    .ignoresSafeArea()
 
-            authScrim
+                authScrim
 
-            VStack(spacing: 0) {
-                customTopBar
+                VStack(spacing: 0) {
+                    customTopBar
 
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 24) {
-                        header
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 24) {
+                            header
 
-                        modeSwitch
+                            modeSwitch
 
-                        formCard
+                            formCard
 
-                        switchModeFooter
+                            switchModeFooter
+
+                            Text(PulseFillBuildConfiguration.authScreenQAFootnote)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(PFColor.textMuted.opacity(0.85))
+                                .lineSpacing(3)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, 8)
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.top, 36)
+                        .padding(.bottom, 36)
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 12)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 30)
-                    .padding(.bottom, 36)
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 12)
                 }
+                .padding(.top, proxy.safeAreaInsets.top)
             }
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
         }
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
@@ -359,13 +371,20 @@ struct AuthFormView: View {
 
     private func submit() {
         guard !authManager.isBusy else { return }
+        authManager.banner = nil
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let localBanner = AuthFormValidation.localBannerIfInvalid(email: trimmedEmail, password: password, mode: mode) {
+            authManager.banner = localBanner
+            PFHaptics.warning()
+            return
+        }
         PFHaptics.mediumImpact()
         Task {
             switch mode {
             case .signIn:
-                await authManager.signIn(email: email, password: password)
+                await authManager.signIn(email: trimmedEmail, password: password)
             case .signUp:
-                await authManager.signUp(email: email, password: password)
+                await authManager.signUp(email: trimmedEmail, password: password)
             }
         }
     }

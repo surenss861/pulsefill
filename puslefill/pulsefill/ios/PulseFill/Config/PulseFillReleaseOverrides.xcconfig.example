@@ -9,3 +9,4 @@
 // PULSEFILL_SUPABASE_URL = https:/$()/$(/)xxxx.supabase.co
 // PULSEFILL_TIER = staging
 // PULSEFILL_SUPABASE_ANON_KEY = your_publishable_or_anon_key
+// PULSEFILL_SOURCE_REVISION = abc1234

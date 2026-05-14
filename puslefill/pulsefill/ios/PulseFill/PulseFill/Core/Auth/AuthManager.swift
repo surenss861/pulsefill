@@ -74,11 +74,15 @@ final class AuthManager: ObservableObject {
 
     func signIn(email: String, password: String) async {
         banner = nil
-        if let validationBanner = Self.signInInputValidationBanner(email: email, password: password) {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let validationBanner = AuthFormValidation.localBannerIfInvalid(
+            email: trimmedEmail,
+            password: password,
+            mode: .signIn
+        ) {
             banner = validationBanner
             return
         }
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         #if DEBUG
         print("AuthManager.signIn: validation OK, Supabase password grant starting")
         #endif
@@ -111,14 +115,13 @@ final class AuthManager: ObservableObject {
 
     func signUp(email: String, password: String) async {
         banner = nil
-        if let validationBanner = Self.signInInputValidationBanner(email: email, password: password) {
-            banner = validationBanner
-            return
-        }
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmedPassword.count >= 6 else {
-            banner = "Use a password with at least 6 characters."
+        if let validationBanner = AuthFormValidation.localBannerIfInvalid(
+            email: trimmedEmail,
+            password: password,
+            mode: .signUp
+        ) {
+            banner = validationBanner
             return
         }
         #if DEBUG
@@ -162,7 +165,7 @@ final class AuthManager: ObservableObject {
             banner = "Enter your email."
             return
         }
-        guard Self.isValidSingleEmailFormat(trimmed) else {
+        guard AuthFormValidation.isValidSingleEmailFormat(trimmed) else {
             banner = "Enter a valid email address."
             return
         }
@@ -250,32 +253,6 @@ final class AuthManager: ObservableObject {
             banner = message
             return .failure(message)
         }
-    }
-    /// Local validation before any Supabase call (bad email shape, empty password).
-    private static func signInInputValidationBanner(email: String, password: String) -> String? {
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedEmail.isEmpty {
-            return "Enter your email."
-        }
-        if !isValidSingleEmailFormat(trimmedEmail) {
-            return "Enter a valid email address."
-        }
-        if password.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "Enter your password."
-        }
-        return nil
-    }
-
-    /// Exactly one `@`, non-empty local + domain, domain contains a dot (rejects `a@b`, `x@@y.com`).
-    private static func isValidSingleEmailFormat(_ email: String) -> Bool {
-        guard email.filter({ $0 == "@" }).count == 1 else { return false }
-        let parts = email.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: false)
-        guard parts.count == 2 else { return false }
-        let local = String(parts[0])
-        let domain = String(parts[1])
-        guard !local.isEmpty, !domain.isEmpty else { return false }
-        guard domain.contains(".") else { return false }
-        return true
     }
 }
 

@@ -26,5 +26,7 @@
 	<string>$(PULSEFILL_SUPABASE_ANON_KEY)</string>
 	<key>PulseFillTier</key>
 	<string>$(PULSEFILL_TIER)</string>
+	<key>PulseFillSourceRevision</key>
+	<string>$(PULSEFILL_SOURCE_REVISION)</string>
 </dict>
 </plist>

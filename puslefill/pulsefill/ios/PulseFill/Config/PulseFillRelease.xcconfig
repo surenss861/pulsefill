@@ -6,6 +6,8 @@
 PULSEFILL_API_BASE_URL = https:/$()/$(/)pulsefill-production.up.railway.app
 PULSEFILL_SUPABASE_URL = https:/$()/$(/)tlowrfeburobfgpaeins.supabase.co
 PULSEFILL_TIER = production
+// Optional: short git SHA for TestFlight QA (shown on auth + blocking diagnostics). CI can set this.
+PULSEFILL_SOURCE_REVISION = unknown
 // Do not commit a real anon / publishable key here. For Archive / TestFlight, copy
 // PulseFillReleaseOverrides.xcconfig.example → PulseFillReleaseOverrides.xcconfig (gitignored)
 // and set PULSEFILL_SUPABASE_ANON_KEY there, or inject via CI secrets.
