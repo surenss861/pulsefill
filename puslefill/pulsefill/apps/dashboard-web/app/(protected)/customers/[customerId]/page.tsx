@@ -9,7 +9,7 @@ import { OperatorErrorState } from "@/components/operator/operator-error-state";
 import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import type { OperatorStatusKind } from "@/components/operator/operator-status-chip";
 import { MotionAction } from "@/components/operator/operator-motion-primitives";
-import { DeskFilePage, DeskActionSlip, DeskFileStamp, DeskLedgerSection } from "@/components/dashboard/desk/desk-artifacts";
+import { DeskFilePage, DeskActionSlip, DeskStatusStamp, DeskLedgerSection } from "@/components/dashboard/desk/desk-artifacts";
 import { CustomerFollowUpActions } from "@/components/customers/customer-follow-up-actions";
 import { CustomerInternalNotes } from "@/components/customers/customer-internal-notes";
 import { CustomerTimelineSection } from "@/components/customers/customer-timeline-section";
@@ -128,13 +128,6 @@ function deskStatRow(label: string, value: number, emphasize: boolean) {
   );
 }
 
-function waitlistFileStampTone(data: CustomerProfilePayload): "live" | "setup" | "attention" {
-  const e = deskWaitlistEyebrow(data);
-  if (e === "Ready for openings") return "live";
-  if (e === "Not on your waitlist") return "setup";
-  return "attention";
-}
-
 /** Action slip answers “what should staff do now?” — cover stamp carries raw waitlist state. */
 function deskCustomerNextStepSlip(data: CustomerProfilePayload): { title: string; intro: string } {
   const state = deskWaitlistEyebrow(data);
@@ -234,7 +227,14 @@ export default function CustomerProfilePage() {
           coverAside={
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
               {data ? (
-                <DeskFileStamp tone={waitlistFileStampTone(data)}>{deskWaitlistEyebrow(data)}</DeskFileStamp>
+                <>
+                  <DeskStatusStamp live={deskWaitlistEyebrow(data) === "Ready for openings"} />
+                  {deskWaitlistEyebrow(data) !== "Ready for openings" ? (
+                    <span className="pf-muted-copy" style={{ fontSize: 12, fontWeight: 650, textAlign: "right", lineHeight: 1.35 }}>
+                      {deskWaitlistEyebrow(data)}
+                    </span>
+                  ) : null}
+                </>
               ) : null}
               {headerActions}
             </div>
