@@ -91,9 +91,9 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
         <PageCommandHeader
           animate={false}
           tone="default"
-          eyebrow="Settings"
-          title="Account and workspace settings"
-          description="Manage your account and business details used across daily recovery workflows."
+          eyebrow="Workspace"
+          title="Your workspace"
+          description="Account, business details, and how PulseFill runs for your team."
           meta={
             <span style={{ display: "inline-flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <StatusPill variant="default" caps>
@@ -107,7 +107,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
           secondaryAction={
             <>
               <Link href="/overview" style={actionLinkStyle("secondary")}>
-                Back to overview
+                Back to Today
               </Link>
               <Link href="/forgot-password" style={actionLinkStyle("ghost")}>
                 Forgot password
@@ -116,7 +116,7 @@ export function SettingsPageClient({ authEmail, profile, lastSignInAt }: Setting
           }
         />
 
-        <SectionCard surfaceTone="operational" density="dense" eyebrow="Customers" title="Standby access">
+        <SectionCard surfaceTone="operational" density="dense" eyebrow="Waitlist" title="Standby access">
           {business.loading ? (
             <PageState variant="info" title="Loading" description="Fetching workspace settings…" style={{ maxWidth: "100%" }} />
           ) : business.error ? (

@@ -254,7 +254,7 @@ export default function CustomersPage() {
     const r = standbyCoverage.reachable_customer_count;
     if (e === 0) {
       return acceptedInvites > 0
-        ? "Customers are connected — have them finish their preferences so they can get offers."
+        ? "People on the waitlist are connected — have them finish their preferences so they can get offers."
         : "Invite people first, then make sure they accept and turn on how they want to hear from you.";
     }
     if (r < e) {
@@ -263,7 +263,7 @@ export default function CustomersPage() {
     if (standbyCoverage.uncovered_services.length > 0) {
       return `${e} ready — a few services don’t have anyone watching yet; widen preferences or invite more people.`;
     }
-    return `${e} customers can get openings, and they can all be reached.`;
+    return `${e} on the waitlist can get openings, and they can all be reached.`;
   }, [coverageLoading, coverageError, standbyCoverage, acceptedInvites]);
 
   const needsSetupCount = useMemo(() => {
@@ -371,19 +371,23 @@ export default function CustomersPage() {
     <main className="pf-page-customers pf-desk-page" style={{ padding: 0 }}>
       <OperatorPageTransition>
         <div className="pf-overview-desk-stack">
-          <DeskPageHeader title="Customers" subtitle="Invite customers so they can get openings when someone cancels." actions={headerActions} />
+          <DeskPageHeader
+            title="Waitlist"
+            subtitle="Invite people so they can get openings when someone cancels."
+            actions={headerActions}
+          />
 
-          <DeskHeroCard title="Build your waiting list" titleId="pf-customers-hero-title" eyebrow="Waiting customers">
+          <DeskHeroCard title="Build the waitlist" titleId="pf-customers-hero-title" eyebrow="Who can get openings">
             <p className="pf-desk-hero-card__meta">
-              Send an invite link to customers you want on your waiting list. When someone cancels, they can get a shot
-              at the opening.
+              Send an invite link to people you want on the waitlist. When someone cancels, they can get a shot at the
+              opening.
             </p>
             <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
               People can also ask to join — use waitlist requests when you approve them.
             </p>
             <MotionAction>
               <Link href="#invite-customer" className="pf-desk-save-access pf-desk-save-access--link">
-                Invite customer
+                Invite to waitlist
               </Link>
             </MotionAction>
           </DeskHeroCard>
@@ -420,7 +424,7 @@ export default function CustomersPage() {
           </p>
 
           <div className="pf-desk-customers-split">
-            <DeskSecondaryCard title={lastCreated ? "Invite sent" : "Invite customer"}>
+            <DeskSecondaryCard title={lastCreated ? "Invite sent" : "Invite to waitlist"}>
               <div id="invite-customer">
                 {!billingSummary.loading && billingSummary.data ? (
                   <BillingInlineGuardrail summary={billingSummary.data} />
@@ -564,7 +568,7 @@ export default function CustomersPage() {
               </div>
             </DeskSecondaryCard>
 
-            <DeskSecondaryCard title="Customer coverage">
+            <DeskSecondaryCard title="Waitlist coverage">
               <StandbyCoveragePanel
                 embedded
                 data={standbyCoverage}

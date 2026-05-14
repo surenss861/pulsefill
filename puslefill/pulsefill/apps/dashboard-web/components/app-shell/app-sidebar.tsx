@@ -23,14 +23,14 @@ type AppSidebarProps = {
 
 const deskFilesNav = [
   { href: "/overview", label: "Today", icon: <NavIconCommandCenter /> },
-  { href: "/open-slots", label: "Openings", icon: <NavIconOpenings /> },
+  { href: "/open-slots", label: "Appointment files", icon: <NavIconOpenings /> },
   { href: "/customers", label: "Waitlist", icon: <NavIconCustomers /> },
   { href: "/activity", label: "Log", icon: <NavIconActivity /> },
 ] as const;
 
 const workspaceNav = [
-  { href: "/settings", label: "Settings", icon: <NavIconSettings /> },
-  { href: "/billing", label: "Billing", icon: <NavIconBilling /> },
+  { href: "/settings", label: "Workspace", icon: <NavIconSettings /> },
+  { href: "/billing", label: "Billing file", icon: <NavIconBilling /> },
 ] as const;
 
 const badgeBase: CSSProperties = {

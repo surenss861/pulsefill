@@ -252,12 +252,12 @@ export function OverviewPageContent({
         <>
           <span style={{ fontWeight: 650, color: "var(--pf-text-primary)" }}>Finish your setup first.</span>
           <span className="pf-muted-copy" style={{ display: "block", marginTop: 10 }}>
-            PulseFill needs your services, providers, and locations before it can send openings to customers.
+            PulseFill needs your services, providers, and locations before it can send openings to your waitlist.
           </span>
         </>
       );
     }
-    return "See openings, offers, and what still needs a reply.";
+    return "Appointment files, waitlist replies, and what still needs attention.";
   }, [loading, setupComplete]);
 
   const nextBest = useMemo(() => {
@@ -360,7 +360,7 @@ export function OverviewPageContent({
       description: "Nothing urgent right now. The next thing to do will show in the card above.",
       pipelineStep: "confirmed" as const,
       supportingStats: baseStats,
-      primaryAction: <Link href="/activity" style={actionLinkStyle("secondary")}>View activity</Link>,
+      primaryAction: <Link href="/activity" style={actionLinkStyle("secondary")}>View log</Link>,
     };
   }, [
     loading,
@@ -482,10 +482,10 @@ export function OverviewPageContent({
         />
       </DeskSecondaryCard>
       <DeskSecondaryCard
-        title="Recent activity"
+        title="Recent log"
         headerAction={
           <Link href="/activity" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
-            View all →
+            Open log →
           </Link>
         }
       >
@@ -526,7 +526,7 @@ export function OverviewPageContent({
 
         {!billingSummary.loading && billingSummary.data ? (
           <FadeUp delay={0.02}>
-            <DeskSecondaryCard title="Billing">
+            <DeskSecondaryCard title="Billing file">
               <BillingNoticeBanner summary={billingSummary.data} tone="administrative" />
             </DeskSecondaryCard>
           </FadeUp>

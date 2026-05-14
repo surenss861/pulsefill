@@ -11,7 +11,7 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
   if (variant === "filtered") {
     return (
       <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
-        No activity matches this filter. Try another filter or refresh to check for new events.
+        No log entries match this filter. Try another filter or refresh to check for new events.
       </p>
     );
   }
@@ -23,10 +23,10 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
         <span className="pf-activity-ledger-day-rule" aria-hidden />
       </div>
       <p style={{ margin: "14px 0 0", fontSize: 15, lineHeight: 1.55, color: "var(--pf-text-primary)" }}>
-        <span style={{ fontWeight: 650 }}>No activity yet</span>
+        <span style={{ fontWeight: 650 }}>Nothing in the log yet</span>
         <span className="pf-muted-copy" style={{ fontWeight: 400 }}>
           {" "}
-          — The first opening, offer, claim, or confirmation will appear here.
+          — The first opening, offer, claim, or confirmation will line up here.
         </span>
       </p>
       <MotionAction style={{ marginTop: 14 }}>
@@ -40,7 +40,7 @@ export function ActivityEmptySection({ variant = "section" }: ActivityEmptySecti
       <details className="pf-overview-edu" style={{ marginTop: 16 }}>
         <summary>What shows up here?</summary>
         <p className="pf-overview-edu__body">
-          Openings, offers, claims, confirmations, delivery issues, and team notes appear in order so your team can see what happened.
+          Appointment files, offers, claims, confirmations, delivery issues, and team notes appear in order so your team can follow the recovery story.
         </p>
       </details>
     </div>

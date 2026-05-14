@@ -233,8 +233,8 @@ export default function OpenSlotsPageClient() {
       <OperatorPageTransition>
         <div className="pf-overview-desk-stack">
           <DeskPageHeader
-            title="Openings"
-            subtitle="Cancelled appointment times on your desk — grouped by what to do next."
+            title="Appointment files"
+            subtitle="Cancelled times on your desk — grouped by what to do next."
             actions={headerActions}
           />
 
@@ -280,7 +280,7 @@ export default function OpenSlotsPageClient() {
                     </Link>
                   </MotionAction>
                   <Link href="/customers" className="pf-desk-quiet-link" style={{ display: "inline-block", marginTop: 14, fontSize: 13 }}>
-                    Invite standby customers
+                    Build the waitlist
                   </Link>
                   <details className="pf-overview-edu" style={{ marginTop: 16 }}>
                     <summary>Show how recovery works</summary>

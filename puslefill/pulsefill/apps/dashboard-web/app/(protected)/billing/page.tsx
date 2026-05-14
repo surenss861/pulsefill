@@ -287,17 +287,17 @@ export default function BillingPage() {
       <OperatorPageTransition>
         <div className="pf-overview-desk-stack">
           <DeskPageHeader
-            title="Billing"
+            title="Billing file"
             subtitle="Turn on billing when you’re ready to use PulseFill with customers."
             actions={
               <Link href="/settings" className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
-                Settings
+                Workspace
               </Link>
             }
           />
 
           {loading ? (
-            <OperatorLoadingState variant="section" skeleton="rows" title="Loading billing…" />
+            <OperatorLoadingState variant="section" skeleton="rows" title="Loading billing file…" />
           ) : null}
 
           {!loading && error ? (

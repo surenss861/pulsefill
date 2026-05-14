@@ -56,7 +56,7 @@ function activityKindKicker(kind: OperatorActivityKind): string {
     case "recovery_feedback_added":
       return "Recovery feedback";
     default:
-      return "Activity";
+      return "Log";
   }
 }
 
@@ -89,18 +89,18 @@ export function CommandCenterRecentActivity({ hideHeader = false }: CommandCente
     <section className="pf-command-feed">
       {hideHeader ? (
         <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13 }}>
-          Openings, offers, claims, and confirmations show up here.
+          Appointment files, offers, claims, and confirmations show up here.
         </p>
       ) : (
         <div className="pf-command-feed__head">
           <div>
-            <h2 className="pf-section-title">See what happened</h2>
+            <h2 className="pf-section-title">Recovery log preview</h2>
             <p className="pf-muted-copy pf-command-feed__lede">
-              Openings, offers, claims, and confirmations appear here.
+              Appointment files, offers, claims, and confirmations appear here.
             </p>
           </div>
           <Link href="/activity" className="pf-command-feed__all">
-            View all →
+            Open log →
           </Link>
         </div>
       )}
@@ -112,7 +112,7 @@ export function CommandCenterRecentActivity({ hideHeader = false }: CommandCente
       ) : null}
       {loading && !error ? (
         <div style={{ marginTop: 10 }}>
-          <OperatorLoadingState variant="inline" skeleton="none" title="Loading recent events…" />
+          <OperatorLoadingState variant="inline" skeleton="none" title="Loading recovery log…" />
         </div>
       ) : null}
 
@@ -120,9 +120,9 @@ export function CommandCenterRecentActivity({ hideHeader = false }: CommandCente
         <div className="pf-activity-empty-timeline" style={{ marginTop: 12 }}>
           <div className="pf-activity-empty-timeline__spine" aria-hidden style={{ minHeight: 72 }} />
           <div className="pf-activity-empty-timeline__body">
-            <p className="pf-section-title pf-activity-empty-timeline__title">No activity yet</p>
+            <p className="pf-section-title pf-activity-empty-timeline__title">Nothing in the log yet</p>
             <p className="pf-muted-copy pf-activity-empty-timeline__detail">
-              Openings, offers, claims, and confirmations appear here.
+              Appointment files, offers, claims, and confirmations appear here.
             </p>
           </div>
         </div>

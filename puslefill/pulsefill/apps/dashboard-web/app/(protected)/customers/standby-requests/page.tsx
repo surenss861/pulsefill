@@ -72,11 +72,11 @@ export default function StandbyRequestsPage() {
         tone="default"
         eyebrow="Standby access"
         title="Standby requests"
-        description="Review customers who asked to join your standby pool. Approve when you are ready for them to set preferences and receive openings."
+        description="Review people on the waitlist who asked to join your standby pool. Approve when you are ready for them to set preferences and receive openings."
         secondaryAction={
           <MotionAction>
             <Link href="/customers" style={actionLinkStyle("secondary")}>
-              Back to customers
+              Back to waitlist
             </Link>
           </MotionAction>
         }
@@ -147,7 +147,7 @@ export default function StandbyRequestsPage() {
                 {r.customer_id ? (
                   <MotionAction>
                     <Link href={`/customers/${r.customer_id}`} style={actionLinkStyle("secondary")}>
-                      View customer
+                      Open waitlist profile
                     </Link>
                   </MotionAction>
                 ) : null}

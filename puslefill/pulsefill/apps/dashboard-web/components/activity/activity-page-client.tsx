@@ -202,7 +202,7 @@ export function ActivityPageClient() {
       <OperatorPageTransition>
         <div className="pf-overview-desk-stack">
           <DeskPageHeader
-            title="Activity"
+            title="Recovery log"
             subtitle="The paper trail for openings, offers, claims, messages, and team notes."
             actions={headerActions}
           />
@@ -213,7 +213,7 @@ export function ActivityPageClient() {
             <OperatorLoadingState
               variant="section"
               skeleton="rows"
-              title="Loading activity…"
+              title="Loading recovery log…"
               description="Fetching recent openings, offers, claims, confirmations, delivery issues, and team notes."
             />
           ) : (
@@ -224,7 +224,7 @@ export function ActivityPageClient() {
               <div
                 className={`pf-filter-rail pf-activity-scan-rail${items.length === 0 ? " pf-filter-rail--quiet" : ""}`}
                 role="tablist"
-                aria-label="Activity scan controls"
+                aria-label="Log scan controls"
               >
                 {operatorActivityFilterOptions.map((opt) => {
                   const on = filter === opt.value;
@@ -244,7 +244,7 @@ export function ActivityPageClient() {
                 <span style={{ flex: "1 1 12px", minWidth: 8 }} aria-hidden />
                 {filter !== "all" ? (
                   <button type="button" className="pf-desk-quiet-link" style={{ fontSize: 13, whiteSpace: "nowrap" }} onClick={() => setFilter("all")}>
-                    Show all activity
+                    Show entire log
                   </button>
                 ) : null}
                 <button

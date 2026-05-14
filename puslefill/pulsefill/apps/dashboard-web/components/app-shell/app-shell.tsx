@@ -29,11 +29,11 @@ export function AppShell({ children, user, profile }: AppShellProps) {
           <AppHeader user={user} profile={profile} />
           <div className="pf-app-mobile-quick" style={{ display: "none", borderBottom: "1px solid var(--pf-border-subtle)", padding: "10px 12px", gap: 8, overflowX: "auto" }}>
             <MobileQuick href="/overview" label="Today" />
-            <MobileQuick href="/open-slots" label="Openings" />
+            <MobileQuick href="/open-slots" label="Appointment files" />
             <MobileQuick href="/customers" label="Waitlist" />
             <MobileQuick href="/activity" label="Log" />
-            <MobileQuick href="/settings" label="Settings" />
-            <MobileQuick href="/billing" label="Billing" />
+            <MobileQuick href="/settings" label="Workspace" />
+            <MobileQuick href="/billing" label="Billing file" />
           </div>
           <div className="pf-workspace-field">
             <div className="pf-workspace-inner pf-workspace-desk-sheet">

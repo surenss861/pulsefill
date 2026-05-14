@@ -147,7 +147,7 @@ export default function CustomerProfilePage() {
 
   const headerActions = (
     <Link href="/customers" prefetch={false} className="pf-desk-quiet-link" style={{ marginTop: 0 }}>
-      Back to customers
+      Back to waitlist
     </Link>
   );
 
@@ -191,7 +191,7 @@ export default function CustomerProfilePage() {
           ) : null}
 
           {loading && !data ? (
-            <OperatorLoadingState variant="section" skeleton="rows" title="Loading customer…" />
+            <OperatorLoadingState variant="section" skeleton="rows" title="Loading waitlist profile…" />
           ) : null}
 
           {!loading && !error && data ? (

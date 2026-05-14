@@ -5,7 +5,7 @@ export function deskContextForPath(pathname: string): { kicker: string; subtitle
   if (p === "/" || p.startsWith("/overview")) {
     return {
       kicker: "Today's desk",
-      subtitle: "What needs attention — openings, waitlist, confirmations.",
+      subtitle: "What needs attention — appointment files, waitlist, confirmations.",
     };
   }
   if (p.startsWith("/open-slots")) {
@@ -23,7 +23,7 @@ export function deskContextForPath(pathname: string): { kicker: string; subtitle
   if (p.startsWith("/activity")) {
     return {
       kicker: "Recovery log",
-      subtitle: "Openings, offers, claims, and notes — newest first.",
+      subtitle: "Appointment files, offers, claims, and notes — newest first.",
     };
   }
   if (p.startsWith("/settings")) {
@@ -65,6 +65,6 @@ export function deskContextForPath(pathname: string): { kicker: string; subtitle
 
   return {
     kicker: "Operations desk",
-    subtitle: "Openings, waitlist, recovery, and workspace.",
+    subtitle: "Appointment files, waitlist, recovery log, and workspace.",
   };
 }

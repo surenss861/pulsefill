@@ -185,7 +185,7 @@ export function GettingStartedCard({
       ) : null}
 
       <p style={styles.progressLine}>
-        Location → Provider → Service → Opening → Customers → Recovered booking
+        Location → Provider → Service → Opening → Waitlist → Recovered booking
       </p>
 
       <div style={styles.stagesList}>

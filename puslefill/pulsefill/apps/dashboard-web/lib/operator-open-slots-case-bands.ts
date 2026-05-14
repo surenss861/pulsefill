@@ -83,7 +83,7 @@ export function caseFileBandCopy(band: OpeningCaseFileBand): { title: string; su
     default:
       return {
         title: "Other",
-        subtitle: "Openings that do not fit the stacks above — still review as needed.",
+        subtitle: "Appointment files that do not fit the stacks above — still review as needed.",
       };
   }
 }
