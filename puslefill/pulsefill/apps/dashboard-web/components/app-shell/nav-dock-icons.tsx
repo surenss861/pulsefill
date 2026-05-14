@@ -56,3 +56,13 @@ export function NavIconSettings(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function NavIconBilling(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...iconProps} {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 10h18" />
+      <path d="M7 15h5" opacity={0.55} />
+    </svg>
+  );
+}

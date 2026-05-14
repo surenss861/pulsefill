@@ -7,8 +7,10 @@ import type { ProfileRow } from "@/lib/get-current-user";
 import { useLiveCounts } from "@/hooks/useLiveCounts";
 import { usePendingStandbyRequests } from "@/hooks/usePendingStandbyRequests";
 import { AppNavItem } from "./app-nav-item";
+import { PulseFillWordmark } from "./pulse-fill-wordmark";
 import {
   NavIconActivity,
+  NavIconBilling,
   NavIconCommandCenter,
   NavIconCustomers,
   NavIconOpenings,
@@ -19,12 +21,16 @@ type AppSidebarProps = {
   profile: ProfileRow;
 };
 
-const primaryNav = [
+const deskFilesNav = [
   { href: "/overview", label: "Today", icon: <NavIconCommandCenter /> },
   { href: "/open-slots", label: "Openings", icon: <NavIconOpenings /> },
-  { href: "/customers", label: "Customers", icon: <NavIconCustomers /> },
-  { href: "/activity", label: "Activity", icon: <NavIconActivity /> },
+  { href: "/customers", label: "Waitlist", icon: <NavIconCustomers /> },
+  { href: "/activity", label: "Log", icon: <NavIconActivity /> },
+] as const;
+
+const workspaceNav = [
   { href: "/settings", label: "Settings", icon: <NavIconSettings /> },
+  { href: "/billing", label: "Billing", icon: <NavIconBilling /> },
 ] as const;
 
 const badgeBase: CSSProperties = {
@@ -75,46 +81,42 @@ export function AppSidebar({ profile }: AppSidebarProps) {
         flexDirection: "column",
       }}
     >
-      <div className="pf-sidebar-brand">
-        <div className="pf-sidebar-brand__mark" aria-hidden />
-        <div style={{ minWidth: 0 }}>
-          <p className="pf-sidebar-brand__name">PulseFill</p>
-          <p className="pf-kicker pf-sidebar-brand__tag">Staff tools</p>
-        </div>
+      <div className="pf-sidebar-brand pf-sidebar-brand--wordmark">
+        <PulseFillWordmark />
       </div>
 
-      <div className="pf-sidebar-workspace">
-        <p className="pf-kicker pf-sidebar-workspace__line">This workspace</p>
-        <p className="pf-sidebar-workspace__email">{truncateEmail(profile.email ?? "")}</p>
+      <div className="pf-sidebar-context-line">
+        <p className="pf-sidebar-context-line__email">{truncateEmail(profile.email ?? "", 38)}</p>
       </div>
 
-      <nav className="pf-sidebar-nav">
-        <p className="pf-kicker pf-sidebar-nav__kicker">Primary</p>
-        <LayoutGroup id="pf-primary-sidebar-nav">
-          {primaryNav.map((item) => (
+      <LayoutGroup id="pf-primary-sidebar-nav">
+        <nav className="pf-sidebar-nav">
+          <p className="pf-kicker pf-sidebar-nav__kicker pf-sidebar-nav__kicker--desk">Desk files</p>
+          {deskFilesNav.map((item) => (
             <div key={item.href} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <AppNavItem href={item.href} label={item.label} icon={item.icon} />
               </div>
-              {item.href === "/open-slots" && counts.open > 0 ? (
-                <span style={emberBadge}>{counts.open}</span>
-              ) : null}
-              {item.href === "/open-slots" && counts.claimed > 0 ? (
-                <span style={emberBadgeMuted}>{counts.claimed}</span>
-              ) : null}
-              {item.href === "/customers" && standbyPending.count > 0 ? (
-                <span style={emberBadge}>{standbyPending.count}</span>
-              ) : null}
+              {item.href === "/open-slots" && counts.open > 0 ? <span style={emberBadge}>{counts.open}</span> : null}
+              {item.href === "/open-slots" && counts.claimed > 0 ? <span style={emberBadgeMuted}>{counts.claimed}</span> : null}
+              {item.href === "/customers" && standbyPending.count > 0 ? <span style={emberBadge}>{standbyPending.count}</span> : null}
             </div>
           ))}
-        </LayoutGroup>
-      </nav>
+
+          <p className="pf-kicker pf-sidebar-nav__kicker pf-sidebar-nav__kicker--workspace">Workspace</p>
+          {workspaceNav.map((item) => (
+            <div key={item.href} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <AppNavItem href={item.href} label={item.label} icon={item.icon} />
+              </div>
+            </div>
+          ))}
+        </nav>
+      </LayoutGroup>
 
       <div className="pf-sidebar-footer">
         <div className="pf-sidebar-footer__card">
-          <p className="pf-meta-row" style={{ margin: "0 0 6px", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-            Signed in
-          </p>
+          <p className="pf-sidebar-footer__eyebrow">Account</p>
           <p style={{ margin: 0, fontSize: 14, fontWeight: 650, color: "var(--pf-text-primary)", lineHeight: 1.25 }}>
             {profile.full_name?.trim() || "Operator"}
           </p>
@@ -126,7 +128,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
               style={{
                 fontSize: 11,
                 fontWeight: 600,
-                letterSpacing: "0.12em",
+                letterSpacing: "0.08em",
                 textTransform: "uppercase",
                 color: "var(--pf-accent-primary-hover)",
               }}
@@ -139,7 +141,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
                 padding: "4px 10px",
                 fontSize: 10,
                 fontWeight: 600,
-                letterSpacing: "0.14em",
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
                 border: live ? "1px solid var(--pf-accent-primary-border)" : "1px solid var(--pf-brand-border-warm)",
                 background: live ? "var(--pf-accent-primary-soft)" : "var(--pf-surface-tint-05)",
@@ -151,17 +153,9 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           </div>
         </div>
         {!live ? (
-          <>
-            <p className="pf-meta-row pf-sidebar-next-step-label" style={{ margin: "16px 4px 0", textTransform: "uppercase", letterSpacing: "0.14em" }}>
-              Next step
-            </p>
-            <Link
-              href="/overview#getting-started"
-              className="pf-sidebar-next-step"
-            >
-              Continue setup →
-            </Link>
-          </>
+          <Link href="/overview#getting-started" className="pf-sidebar-next-step">
+            Continue setup →
+          </Link>
         ) : (
           <Link
             href="/open-slots/create"
