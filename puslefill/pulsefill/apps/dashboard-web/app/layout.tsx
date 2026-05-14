@@ -6,7 +6,11 @@ export const metadata: Metadata = {
   description:
     "When someone cancels, PulseFill matches your waitlist, sends timed offers, and helps staff confirm the booking so revenue does not walk out the door.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.png", sizes: "1024x1024", type: "image/png" },
+    ],
+    apple: "/favicon.png",
   },
 };
 
