@@ -318,9 +318,7 @@ struct AuthFormView: View {
     }
 
     private var canSubmit: Bool {
-        !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            !password.isEmpty &&
-            !authManager.isBusy
+        !authManager.isBusy
     }
 
     /// Primary ember CTA chrome while the form can submit or a submit is in flight.
@@ -360,18 +358,14 @@ struct AuthFormView: View {
     }
 
     private func submit() {
-        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, !password.isEmpty, !authManager.isBusy else {
-            PFHaptics.warning()
-            return
-        }
+        guard !authManager.isBusy else { return }
         PFHaptics.mediumImpact()
         Task {
             switch mode {
             case .signIn:
-                await authManager.signIn(email: trimmed, password: password)
+                await authManager.signIn(email: email, password: password)
             case .signUp:
-                await authManager.signUp(email: trimmed, password: password)
+                await authManager.signUp(email: email, password: password)
             }
         }
     }

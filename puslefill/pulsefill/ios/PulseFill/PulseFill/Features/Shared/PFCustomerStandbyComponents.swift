@@ -354,6 +354,21 @@ struct PFCustomerInfoCallout: View {
 // MARK: - Error copy sanitization (never show raw host/API lines to customers)
 
 enum PFCustomerFacingErrorCopy {
+    /// Sign-in / sign-up / session sync: map credential and server errors without blaming connectivity for bad input.
+    static func sanitizeSignInFlowError(_ error: Error) -> String {
+        if let urlErr = error as? URLError {
+            return signInConnectionMessage(for: urlErr)
+        }
+        if let api = error as? APIError {
+            return sanitizeSignInAPIError(api)
+        }
+        let text = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.isEmpty {
+            return "We couldn’t connect to PulseFill. Please try again shortly."
+        }
+        return sanitizeCustomerMessage(text)
+    }
+
     /// Sign-in / sign-up / Supabase auth: never surface raw Supabase JSON, API key hints, or HTTP envelopes.
     static func sanitizeAuthMessage(_ raw: String) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -398,17 +413,87 @@ enum PFCustomerFacingErrorCopy {
         return sanitizeCustomerMessage(base)
     }
 
+    private static func signInConnectionMessage(for err: URLError) -> String {
+        switch err.code {
+        case .notConnectedToInternet, .networkConnectionLost, .cannotFindHost, .cannotConnectToHost,
+             .dnsLookupFailed, .timedOut, .dataNotAllowed:
+            return "We couldn’t connect to PulseFill. Please try again shortly."
+        case .unsupportedURL, .userAuthenticationRequired:
+            return "We couldn’t connect to PulseFill. Please try again shortly."
+        case .cancelled:
+            return "The request was cancelled."
+        default:
+            return "We couldn’t connect to PulseFill. Please try again shortly."
+        }
+    }
+
+    private static func sanitizeSignInAPIError(_ api: APIError) -> String {
+        switch api {
+        case let .structured(statusCode, _, message, _):
+            let m = message.lowercased()
+            if (500 ..< 600).contains(statusCode) {
+                return "We couldn’t connect to PulseFill. Please try again shortly."
+            }
+            if signInResponseIndicatesUnverifiedEmail(m) {
+                return "Check your email to verify your account, then sign in."
+            }
+            if (400 ... 499).contains(statusCode), signInResponseIndicatesInvalidCredentials(m) {
+                return "Email or password is incorrect."
+            }
+            return sanitizeCustomerMessage(message)
+        case let .status(code, body):
+            let b = (body ?? "").lowercased()
+            if signInResponseIndicatesInvalidCredentials(b) {
+                return "Email or password is incorrect."
+            }
+            if signInResponseIndicatesUnverifiedEmail(b) {
+                return "Check your email to verify your account, then sign in."
+            }
+            if (500 ..< 600).contains(code) || code == -1 {
+                return "We couldn’t connect to PulseFill. Please try again shortly."
+            }
+            if code == 401, looksLikeInvalidSupabaseClientOrKey(body ?? "") {
+                return "We couldn’t connect to PulseFill. Please try again shortly."
+            }
+            if (400 ... 499).contains(code) {
+                return sanitizeCustomerMessage("HTTP \(code): \(body ?? "")")
+            }
+            return sanitizeCustomerMessage(api.localizedDescription)
+        case .invalidURL:
+            return "We couldn’t connect to PulseFill. Please try again shortly."
+        case .decoding:
+            return "We couldn’t finish signing in. Try again."
+        case let .notImplemented(msg):
+            return sanitizeCustomerMessage(msg)
+        }
+    }
+
+    private static func signInResponseIndicatesInvalidCredentials(_ lower: String) -> Bool {
+        lower.contains("invalid_grant")
+            || lower.contains("invalid_login")
+            || lower.contains("invalid login credentials")
+            || lower.contains("invalid_credentials")
+            || lower.contains("invalid credential")
+            || lower.contains("wrong password")
+            || lower.contains("invalid email or password")
+            || lower.contains("invalid password")
+            || lower.contains("error_description\":\"invalid")
+            || lower.contains("user not found")
+    }
+
+    private static func signInResponseIndicatesUnverifiedEmail(_ lower: String) -> Bool {
+        lower.contains("email_not_confirmed") || lower.contains("email not confirmed")
+    }
+
     /// Supabase misconfiguration (wrong anon key, wrong project URL) and similar — never show verbatim to customers.
+    /// Avoid matching normal auth JSON (e.g. bodies mentioning `*.supabase.co`) so invalid login is not shown as “connection”.
     private static func looksLikeInvalidSupabaseClientOrKey(_ raw: String) -> Bool {
         let lower = raw.lowercased()
         if lower.contains("invalid api key") { return true }
         if lower.contains("service_role") || lower.contains("service role") { return true }
         if lower.contains("`anon`") || lower.contains("anon key") || lower.contains("anon`") { return true }
         if lower.contains("double check your supabase") { return true }
-        if lower.contains("\"message\""), lower.contains("invalid") { return true }
         if lower.contains("http 401"), lower.contains("api key") { return true }
-        if lower.contains("http 401"), lower.contains("\"message\"") { return true }
-        if lower.contains("supabase.co") { return true }
         return false
     }
 }

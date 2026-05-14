@@ -74,10 +74,21 @@ final class AuthManager: ObservableObject {
 
     func signIn(email: String, password: String) async {
         banner = nil
+        if let validationBanner = Self.signInInputValidationBanner(email: email, password: password) {
+            banner = validationBanner
+            return
+        }
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        #if DEBUG
+        print("AuthManager.signIn: validation OK, Supabase password grant starting")
+        #endif
         isBusy = true
         defer { isBusy = false }
         do {
-            let bundle = try await authClient.signInWithPassword(email: email, password: password)
+            let bundle = try await authClient.signInWithPassword(email: trimmedEmail, password: password)
+            #if DEBUG
+            print("AuthManager.signIn: Supabase OK, session sync starting")
+            #endif
             sessionStore.applySession(
                 accessToken: bundle.accessToken,
                 refreshToken: bundle.refreshToken,
@@ -85,22 +96,38 @@ final class AuthManager: ObservableObject {
                 email: bundle.email
             )
             try await syncCustomerSession()
+            #if DEBUG
+            print("AuthManager.signIn: session sync OK, refreshing role context")
+            #endif
             await refreshStaffAccess()
             await userRoleContext.refreshFromServer(legacyMigrationHint: false)
         } catch {
             #if DEBUG
             print("AuthManager.signIn error: \(error)")
             #endif
-            banner = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
+            banner = PFCustomerFacingErrorCopy.sanitizeSignInFlowError(error)
         }
     }
 
     func signUp(email: String, password: String) async {
         banner = nil
+        if let validationBanner = Self.signInInputValidationBanner(email: email, password: password) {
+            banner = validationBanner
+            return
+        }
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedPassword.count >= 6 else {
+            banner = "Use a password with at least 6 characters."
+            return
+        }
+        #if DEBUG
+        print("AuthManager.signUp: validation OK, Supabase signup starting")
+        #endif
         isBusy = true
         defer { isBusy = false }
         do {
-            if let bundle = try await authClient.signUpWithPassword(email: email, password: password) {
+            if let bundle = try await authClient.signUpWithPassword(email: trimmedEmail, password: password) {
                 sessionStore.applySession(
                     accessToken: bundle.accessToken,
                     refreshToken: bundle.refreshToken,
@@ -117,7 +144,7 @@ final class AuthManager: ObservableObject {
             #if DEBUG
             print("AuthManager.signUp error: \(error)")
             #endif
-            banner = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
+            banner = PFCustomerFacingErrorCopy.sanitizeSignInFlowError(error)
         }
     }
 
@@ -132,7 +159,11 @@ final class AuthManager: ObservableObject {
     func requestPasswordReset(email: String) async {
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            banner = "Enter the email you use with PulseFill."
+            banner = "Enter your email."
+            return
+        }
+        guard Self.isValidSingleEmailFormat(trimmed) else {
+            banner = "Enter a valid email address."
             return
         }
         banner = nil
@@ -145,7 +176,7 @@ final class AuthManager: ObservableObject {
             #if DEBUG
             print("AuthManager.requestPasswordReset error: \(error)")
             #endif
-            banner = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
+            banner = PFCustomerFacingErrorCopy.sanitizeSignInFlowError(error)
         }
     }
 
@@ -219,6 +250,32 @@ final class AuthManager: ObservableObject {
             banner = message
             return .failure(message)
         }
+    }
+    /// Local validation before any Supabase call (bad email shape, empty password).
+    private static func signInInputValidationBanner(email: String, password: String) -> String? {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedEmail.isEmpty {
+            return "Enter your email."
+        }
+        if !isValidSingleEmailFormat(trimmedEmail) {
+            return "Enter a valid email address."
+        }
+        if password.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return "Enter your password."
+        }
+        return nil
+    }
+
+    /// Exactly one `@`, non-empty local + domain, domain contains a dot (rejects `a@b`, `x@@y.com`).
+    private static func isValidSingleEmailFormat(_ email: String) -> Bool {
+        guard email.filter({ $0 == "@" }).count == 1 else { return false }
+        let parts = email.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: false)
+        guard parts.count == 2 else { return false }
+        let local = String(parts[0])
+        let domain = String(parts[1])
+        guard !local.isEmpty, !domain.isEmpty else { return false }
+        guard domain.contains(".") else { return false }
+        return true
     }
 }
 
