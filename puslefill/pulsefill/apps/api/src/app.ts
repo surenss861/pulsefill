@@ -5,6 +5,7 @@ import errorHandler from "./plugins/error-handler.js";
 import authPlugin from "./plugins/auth.js";
 import rateLimitPlugin from "./plugins/rate-limit.js";
 import requestIdPlugin from "./plugins/request-id.js";
+import structuredRequestLogPlugin from "./plugins/structured-request-log.js";
 import { registerRoutes } from "./routes/index.js";
 
 function corsOriginForEnv(env: Env): boolean | string[] {
@@ -47,6 +48,7 @@ export async function buildApp(env: Env) {
   }
 
   await app.register(requestIdPlugin);
+  await app.register(structuredRequestLogPlugin);
   await app.register(errorHandler);
   await app.register(cors, { origin: corsOriginForEnv(env) });
   await app.register(authPlugin, { env });
