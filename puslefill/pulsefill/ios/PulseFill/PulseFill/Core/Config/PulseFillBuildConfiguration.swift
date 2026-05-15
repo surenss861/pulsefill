@@ -33,6 +33,7 @@ enum PulseFillDeploymentTier: String, CaseIterable {
 ///
 /// Env vars:
 /// - `PULSEFILL_TIER` — `local` | `staging` | `production` (overrides Debug/Release default tier)
+/// - `PULSEFILL_BACKEND_BASE_URL` — optional synonym for the PulseFill API root (same as `PULSEFILL_API_BASE_URL`; customer + staff both use this backend)
 /// - `PULSEFILL_API_BASE_URL` — full API root, e.g. `https://xxx.up.railway.app`
 /// - `PULSEFILL_SUPABASE_URL` — Supabase project URL
 /// - `PULSEFILL_SUPABASE_ANON_KEY` — Supabase **publishable** / anon key for client use only.
@@ -108,9 +109,28 @@ enum PulseFillBuildConfiguration {
         #endif
     }
 
-    /// Fastify `v1` API base URL (no trailing slash).
+    /// When true, email/password auth uses `POST /v1/mobile/auth/*` on the PulseFill API (no Supabase Auth calls from the app).
+    /// Override with `PULSEFILL_USE_BACKEND_PASSWORD_AUTH` or Info.plist `PulseFillUseBackendPasswordAuth` (`1` / `true` / `yes` / `on` to force on; `0` / `false` / `no` / `off` to force off).
+    static var useBackendPasswordAuth: Bool {
+        if let raw = env("PULSEFILL_USE_BACKEND_PASSWORD_AUTH")?.lowercased(), !raw.isEmpty {
+            if ["0", "false", "no", "off"].contains(raw) { return false }
+            if ["1", "true", "yes", "on"].contains(raw) { return true }
+        }
+        if let raw = infoPlistString("PulseFillUseBackendPasswordAuth")?.lowercased(), !raw.isEmpty {
+            if ["0", "false", "no", "off"].contains(raw) { return false }
+            if ["1", "true", "yes", "on"].contains(raw) { return true }
+        }
+        switch deploymentTier {
+        case .local:
+            return false
+        case .staging, .production:
+            return true
+        }
+    }
+
+    /// Fastify `v1` API base URL (no trailing slash). This is the **PulseFill backend** (auth, customers, staff), not a “business-only” host.
     static var apiBaseURL: URL {
-        if let s = env("PULSEFILL_API_BASE_URL") {
+        if let s = env("PULSEFILL_BACKEND_BASE_URL") ?? env("PULSEFILL_API_BASE_URL") {
             let normalized = normalizedAPIBaseURLString(s)
             if let url = URL(string: normalized) {
                 return url
@@ -244,34 +264,36 @@ enum PulseFillBuildConfiguration {
 
         var reasons: [String] = []
 
-        let key = supabaseAnonKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        if key.isEmpty {
-            reasons.append("Supabase anon key is empty.")
-        } else if key == Defaults.supabaseAnonPlaceholder || key.localizedCaseInsensitiveContains("YOUR_PUBLISHABLE")
-            || key.localizedCaseInsensitiveContains("YOUR_ANON")
-        {
-            reasons.append("Supabase anon key is still the placeholder.")
-        } else if key.lowercased().hasPrefix("sb_secret_") {
-            reasons.append("Supabase key looks like a secret (sb_secret_) — never ship in the app.")
-        } else if key.localizedCaseInsensitiveContains("service_role") {
-            reasons.append("Supabase key string mentions service_role.")
-        } else if key.hasPrefix("eyJ") {
-            if jwtPayloadContainsServiceRole(key) {
-                reasons.append("JWT role is service_role (use anon/publishable key only).")
+        if !useBackendPasswordAuth {
+            let key = supabaseAnonKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            if key.isEmpty {
+                reasons.append("Supabase anon key is empty.")
+            } else if key == Defaults.supabaseAnonPlaceholder || key.localizedCaseInsensitiveContains("YOUR_PUBLISHABLE")
+                || key.localizedCaseInsensitiveContains("YOUR_ANON")
+            {
+                reasons.append("Supabase anon key is still the placeholder.")
+            } else if key.lowercased().hasPrefix("sb_secret_") {
+                reasons.append("Supabase key looks like a secret (sb_secret_) — never ship in the app.")
+            } else if key.localizedCaseInsensitiveContains("service_role") {
+                reasons.append("Supabase key string mentions service_role.")
+            } else if key.hasPrefix("eyJ") {
+                if jwtPayloadContainsServiceRole(key) {
+                    reasons.append("JWT role is service_role (use anon/publishable key only).")
+                }
+            } else if key.lowercased().hasPrefix("sb_publishable_") {
+                if key.count < 16 {
+                    reasons.append("Supabase publishable key looks truncated.")
+                }
+            } else if key.count < 32 {
+                reasons.append("Supabase key format unrecognized (too short).")
             }
-        } else if key.lowercased().hasPrefix("sb_publishable_") {
-            if key.count < 16 {
-                reasons.append("Supabase publishable key looks truncated.")
-            }
-        } else if key.count < 32 {
-            reasons.append("Supabase key format unrecognized (too short).")
-        }
 
-        if supabaseURL.scheme?.lowercased() != "https" {
-            reasons.append("Supabase URL must use https.")
-        }
-        if (supabaseURL.host ?? "").isEmpty {
-            reasons.append("Supabase URL has no host.")
+            if supabaseURL.scheme?.lowercased() != "https" {
+                reasons.append("Supabase URL must use https.")
+            }
+            if (supabaseURL.host ?? "").isEmpty {
+                reasons.append("Supabase URL has no host.")
+            }
         }
 
         let apiScheme = apiBaseURL.scheme?.lowercased() ?? ""
@@ -313,7 +335,9 @@ enum PulseFillBuildConfiguration {
     ) -> PulseFillClientLaunchDiagnostics {
         let key = supabaseAnonKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let anonStatus: String
-        if key.isEmpty {
+        if useBackendPasswordAuth {
+            anonStatus = "not_required"
+        } else if key.isEmpty {
             anonStatus = "missing"
         } else if key == Defaults.supabaseAnonPlaceholder || key.localizedCaseInsensitiveContains("YOUR_PUBLISHABLE")
             || key.localizedCaseInsensitiveContains("YOUR_ANON")
@@ -340,8 +364,8 @@ enum PulseFillBuildConfiguration {
         let rev = resolvedSourceRevisionFromBundle()
         let tier = deploymentTier.rawValue
         let api = apiBaseURL.host ?? "—"
-        let sb = supabaseURL.host ?? "—"
-        return "Build \(marketing) (\(build)) · \(rev) · \(tier) · API \(api) · Supabase \(sb)"
+        let authMode = useBackendPasswordAuth ? "API broker" : "Supabase \(supabaseURL.host ?? "—")"
+        return "Build \(marketing) (\(build)) · \(rev) · \(tier) · API \(api) · Auth \(authMode)"
     }
 
     /// Release-safe auth submit breadcrumbs (`Logger` / Console). Set `PulseFillAuthQaLogs` via `PULSEFILL_AUTH_QA_LOGS` in Release xcconfig (YES/NO).
