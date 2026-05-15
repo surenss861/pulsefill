@@ -59,6 +59,7 @@ struct AuthFormView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
+            authManager.banner = nil
             if reduceMotion {
                 appeared = true
             } else {
@@ -66,6 +67,12 @@ struct AuthFormView: View {
                     appeared = true
                 }
             }
+        }
+        .onChange(of: email) { _, _ in
+            authManager.banner = nil
+        }
+        .onChange(of: password) { _, _ in
+            authManager.banner = nil
         }
     }
 
@@ -186,6 +193,7 @@ struct AuthFormView: View {
                         Spacer(minLength: 0)
                         Button {
                             PFHaptics.lightImpact()
+                            authManager.banner = nil
                             Task { await authManager.requestPasswordReset(email: email) }
                         } label: {
                             Text("Reset password")
@@ -370,14 +378,26 @@ struct AuthFormView: View {
     }
 
     private func submit() {
-        guard !authManager.isBusy else { return }
         authManager.banner = nil
+        guard !authManager.isBusy else { return }
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        #if DEBUG
+        let pwTrim = password.trimmingCharacters(in: .whitespacesAndNewlines)
+        print(
+            "AuthFormView.submit tapped mode=\(mode.rawValue) emailEmpty=\(trimmedEmail.isEmpty) emailFormatOK=\(AuthFormValidation.isValidSingleEmailFormat(trimmedEmail)) passwordEmpty=\(pwTrim.isEmpty) signUpPwLen=\(mode == .signUp ? pwTrim.count : -1)"
+        )
+        #endif
         if let localBanner = AuthFormValidation.localBannerIfInvalid(email: trimmedEmail, password: password, mode: mode) {
+            #if DEBUG
+            print("AuthFormView.submit local validation failed → \(localBanner)")
+            #endif
             authManager.banner = localBanner
             PFHaptics.warning()
             return
         }
+        #if DEBUG
+        print("AuthFormView.submit local validation passed → starting auth Task")
+        #endif
         PFHaptics.mediumImpact()
         Task {
             switch mode {
