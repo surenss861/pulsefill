@@ -29,8 +29,13 @@ enum AuthFormBanner: Equatable {
         if text == "Email or password is incorrect." {
             return .auth(text)
         }
-        let lower = text.lowercased()
-        if lower.contains("couldn’t connect") || lower.contains("couldn't connect") || lower.contains("try again shortly") {
+        // Normalize curly apostrophe (common in customer-facing strings) so one branch covers "couldn't" / "couldn't".
+        let lower = text.lowercased().replacingOccurrences(of: "\u{2019}", with: "'")
+        if lower.contains("couldn't connect")
+            || lower.contains("could not connect")
+            || lower.contains("try again shortly")
+            || lower.contains("check your connection")
+        {
             return .connection(text)
         }
         if text.hasPrefix("Check your email to verify") {
