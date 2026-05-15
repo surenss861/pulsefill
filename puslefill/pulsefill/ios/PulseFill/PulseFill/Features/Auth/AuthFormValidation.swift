@@ -1,23 +1,39 @@
 import Foundation
 
+/// Result of synchronous submit-time validation (before any network).
+enum AuthFormSubmitValidationResult: Equatable {
+    case ok
+    /// `qaReason` is a stable token for non-secret logging only (e.g. `empty_password`).
+    case failure(banner: String, qaReason: String)
+}
+
 /// Local email/password checks for Sign in / Create account — must run **before** any Supabase or API call.
 enum AuthFormValidation {
-    /// Returns a customer-facing banner string when input should block submit, otherwise `nil`.
-    static func localBannerIfInvalid(email trimmedEmail: String, password: String, mode: AuthFormMode) -> String? {
+    static func submitValidation(email trimmedEmail: String, password: String, mode: AuthFormMode) -> AuthFormSubmitValidationResult {
         if trimmedEmail.isEmpty {
-            return "Enter your email."
+            return .failure(banner: "Enter your email.", qaReason: "empty_email")
         }
         if !isValidSingleEmailFormat(trimmedEmail) {
-            return "Enter a valid email address."
+            return .failure(banner: "Enter a valid email address.", qaReason: "invalid_email")
         }
         let pwTrim = password.trimmingCharacters(in: .whitespacesAndNewlines)
         if pwTrim.isEmpty {
-            return "Enter your password."
+            return .failure(banner: "Enter your password.", qaReason: "empty_password")
         }
         if mode == .signUp, pwTrim.count < 6 {
-            return "Use a password with at least 6 characters."
+            return .failure(banner: "Use a password with at least 6 characters.", qaReason: "password_short")
         }
-        return nil
+        return .ok
+    }
+
+    /// Returns a customer-facing banner string when input should block submit, otherwise `nil`.
+    static func localBannerIfInvalid(email trimmedEmail: String, password: String, mode: AuthFormMode) -> String? {
+        switch submitValidation(email: trimmedEmail, password: password, mode: mode) {
+        case .ok:
+            return nil
+        case .failure(let banner, _):
+            return banner
+        }
     }
 
     /// Exactly one `@`, non-empty local + domain, domain contains a dot (rejects `a@b`, `x@@y.com`).

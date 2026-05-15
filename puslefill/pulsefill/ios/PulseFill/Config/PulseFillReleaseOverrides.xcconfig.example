@@ -10,3 +10,5 @@
 // PULSEFILL_TIER = staging
 // PULSEFILL_SUPABASE_ANON_KEY = your_publishable_or_anon_key
 // PULSEFILL_SOURCE_REVISION = abc1234
+// TestFlight QA: auth submit / validation os_log (no PII). Omit or NO for App Store.
+// PULSEFILL_AUTH_QA_LOGS = YES

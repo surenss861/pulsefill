@@ -344,6 +344,16 @@ enum PulseFillBuildConfiguration {
         return "Build \(marketing) (\(build)) · \(rev) · \(tier) · API \(api) · Supabase \(sb)"
     }
 
+    /// Release-safe auth submit breadcrumbs (`Logger` / Console). Set `PulseFillAuthQaLogs` via `PULSEFILL_AUTH_QA_LOGS` in Release xcconfig (YES/NO).
+    static var isAuthQaLoggingEnabled: Bool {
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: "PulseFillAuthQaLogs") as? String else { return false }
+        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if t.isEmpty || t.hasPrefix("$(") {
+            return false
+        }
+        return t == "yes" || t == "true" || t == "1"
+    }
+
     private static func appVersionLabelFromBundle() -> String {
         let marketing = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"

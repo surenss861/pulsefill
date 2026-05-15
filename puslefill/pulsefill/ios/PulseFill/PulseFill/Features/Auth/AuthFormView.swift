@@ -1,3 +1,4 @@
+import OSLog
 import SwiftUI
 
 struct AuthFormView: View {
@@ -11,6 +12,8 @@ struct AuthFormView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var appeared = false
+    /// View-local validation / UX messages take precedence over `authManager.banner` (e.g. stale connection copy).
+    @State private var localBanner: String?
 
     init(initialMode: AuthFormMode) {
         _mode = State(initialValue: initialMode)
@@ -59,7 +62,7 @@ struct AuthFormView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            authManager.banner = nil
+            clearBanners()
             if reduceMotion {
                 appeared = true
             } else {
@@ -69,10 +72,13 @@ struct AuthFormView: View {
             }
         }
         .onChange(of: email) { _, _ in
-            authManager.banner = nil
+            clearBanners()
         }
         .onChange(of: password) { _, _ in
-            authManager.banner = nil
+            clearBanners()
+        }
+        .onChange(of: mode) { _, _ in
+            clearBanners()
         }
     }
 
@@ -193,7 +199,7 @@ struct AuthFormView: View {
                         Spacer(minLength: 0)
                         Button {
                             PFHaptics.lightImpact()
-                            authManager.banner = nil
+                            clearBanners()
                             Task { await authManager.requestPasswordReset(email: email) }
                         } label: {
                             Text("Reset password")
@@ -208,7 +214,7 @@ struct AuthFormView: View {
                 }
             }
 
-            if let banner = authManager.banner, !banner.isEmpty {
+            if let banner = visibleBanner, !banner.isEmpty {
                 let isPositiveAuthHint =
                     banner.contains("If we find an account")
                     || banner.contains("Check your inbox to verify")
@@ -274,7 +280,7 @@ struct AuthFormView: View {
             .buttonStyle(CustomerCardPressButtonStyle())
             .disabled(authManager.isBusy)
         }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: authManager.banner)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: visibleBannerAnimationKey)
         .padding(18)
         .background {
             RoundedRectangle(cornerRadius: 30, style: .continuous)
@@ -337,6 +343,19 @@ struct AuthFormView: View {
         reduceMotion ? nil : .spring(response: 0.48, dampingFraction: 0.86)
     }
 
+    private var visibleBanner: String? {
+        localBanner ?? authManager.banner
+    }
+
+    private var visibleBannerAnimationKey: String {
+        "\(localBanner ?? "")|\(authManager.banner ?? "")"
+    }
+
+    private func clearBanners() {
+        localBanner = nil
+        authManager.banner = nil
+    }
+
     private var canSubmit: Bool {
         !authManager.isBusy
     }
@@ -365,7 +384,7 @@ struct AuthFormView: View {
 
     private func switchMode(_ next: AuthFormMode) {
         guard next != mode else { return }
-        authManager.banner = nil
+        clearBanners()
         PFHaptics.selection()
 
         if reduceMotion {
@@ -378,35 +397,69 @@ struct AuthFormView: View {
     }
 
     private func submit() {
-        authManager.banner = nil
+        clearBanners()
         guard !authManager.isBusy else { return }
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        #if DEBUG
         let pwTrim = password.trimmingCharacters(in: .whitespacesAndNewlines)
-        print(
-            "AuthFormView.submit tapped mode=\(mode.rawValue) emailEmpty=\(trimmedEmail.isEmpty) emailFormatOK=\(AuthFormValidation.isValidSingleEmailFormat(trimmedEmail)) passwordEmpty=\(pwTrim.isEmpty) signUpPwLen=\(mode == .signUp ? pwTrim.count : -1)"
+        AuthSubmitQALog.logSubmitTapped(
+            mode: mode,
+            emailEmpty: trimmedEmail.isEmpty,
+            emailFormatOK: AuthFormValidation.isValidSingleEmailFormat(trimmedEmail),
+            passwordEmpty: pwTrim.isEmpty,
+            signUpPwLen: mode == .signUp ? pwTrim.count : -1
         )
-        #endif
-        if let localBanner = AuthFormValidation.localBannerIfInvalid(email: trimmedEmail, password: password, mode: mode) {
-            #if DEBUG
-            print("AuthFormView.submit local validation failed → \(localBanner)")
-            #endif
-            authManager.banner = localBanner
-            PFHaptics.warning()
-            return
-        }
-        #if DEBUG
-        print("AuthFormView.submit local validation passed → starting auth Task")
-        #endif
-        PFHaptics.mediumImpact()
-        Task {
-            switch mode {
-            case .signIn:
-                await authManager.signIn(email: trimmedEmail, password: password)
-            case .signUp:
-                await authManager.signUp(email: trimmedEmail, password: password)
+        switch AuthFormValidation.submitValidation(email: trimmedEmail, password: password, mode: mode) {
+        case .ok:
+            AuthSubmitQALog.logLocalValidationPassed()
+            PFHaptics.mediumImpact()
+            Task {
+                switch mode {
+                case .signIn:
+                    await authManager.signIn(email: trimmedEmail, password: password)
+                case .signUp:
+                    await authManager.signUp(email: trimmedEmail, password: password)
+                }
             }
+        case .failure(let banner, let qaReason):
+            localBanner = banner
+            AuthSubmitQALog.logLocalValidationFailed(qaReason: qaReason)
+            PFHaptics.warning()
         }
+    }
+}
+
+// MARK: - Auth submit QA log
+
+private enum AuthSubmitQALog {
+    private static let log = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "PulseFill",
+        category: "auth-submit"
+    )
+
+    static func logSubmitTapped(
+        mode: AuthFormMode,
+        emailEmpty: Bool,
+        emailFormatOK: Bool,
+        passwordEmpty: Bool,
+        signUpPwLen: Int
+    ) {
+        guard PulseFillBuildConfiguration.isAuthQaLoggingEnabled else { return }
+        let ee = emailEmpty ? "true" : "false"
+        let ef = emailFormatOK ? "true" : "false"
+        let pe = passwordEmpty ? "true" : "false"
+        log.info(
+            "Auth submit tapped mode=\(mode.rawValue, privacy: .public) emailEmpty=\(ee, privacy: .public) emailFormatOK=\(ef, privacy: .public) passwordEmpty=\(pe, privacy: .public) signUpPwLen=\(String(signUpPwLen), privacy: .public)"
+        )
+    }
+
+    static func logLocalValidationFailed(qaReason: String) {
+        guard PulseFillBuildConfiguration.isAuthQaLoggingEnabled else { return }
+        log.info("Auth local validation failed reason=\(qaReason, privacy: .public)")
+    }
+
+    static func logLocalValidationPassed() {
+        guard PulseFillBuildConfiguration.isAuthQaLoggingEnabled else { return }
+        log.info("Auth local validation passed, starting auth task")
     }
 }
 

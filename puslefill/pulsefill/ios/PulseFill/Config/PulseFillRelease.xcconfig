@@ -8,6 +8,8 @@ PULSEFILL_SUPABASE_URL = https:/$()/$(/)tlowrfeburobfgpaeins.supabase.co
 PULSEFILL_TIER = production
 // Optional: short git SHA for TestFlight QA (shown on auth + blocking diagnostics). Bump when cutting a build.
 PULSEFILL_SOURCE_REVISION = fc27fcf
+// YES = os_log auth submit / validation breadcrumbs (no PII). Default NO; set YES in gitignored overrides for TestFlight QA.
+PULSEFILL_AUTH_QA_LOGS = NO
 // Do not commit a real anon / publishable key here. For Archive / TestFlight, copy
 // PulseFillReleaseOverrides.xcconfig.example → PulseFillReleaseOverrides.xcconfig (gitignored)
 // and set PULSEFILL_SUPABASE_ANON_KEY there, or inject via CI secrets.

@@ -28,5 +28,7 @@
 	<string>$(PULSEFILL_TIER)</string>
 	<key>PulseFillSourceRevision</key>
 	<string>$(PULSEFILL_SOURCE_REVISION)</string>
+	<key>PulseFillAuthQaLogs</key>
+	<string>$(PULSEFILL_AUTH_QA_LOGS)</string>
 </dict>
 </plist>
