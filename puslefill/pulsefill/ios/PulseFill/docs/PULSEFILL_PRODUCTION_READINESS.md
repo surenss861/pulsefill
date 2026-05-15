@@ -54,6 +54,8 @@ Single place to track what must be green before treating PulseFill as **producti
 - [ ] Clear 401 vs 403 vs 5xx semantics verified end-to-end for each client surface
 - [ ] Supabase **same project** as iOS: `SUPABASE_URL` / service role / JWT validation aligned with customer tokens
 
+**Breaking change:** In `NODE_ENV=production`, the API process **exits on boot** if `API_CORS_ORIGINS` is unset/empty, `SUPABASE_URL` is not `https`, or Stripe-related env is missing while billing/webhook flags are enabled. Fix Railway/Vercel env before deploying.
+
 ---
 
 ## Database
