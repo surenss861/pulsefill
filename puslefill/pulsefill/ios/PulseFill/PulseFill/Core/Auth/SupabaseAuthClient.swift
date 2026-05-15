@@ -1,5 +1,13 @@
 import Foundation
 
+/// Thrown by `SupabaseAuthClient` before any HTTP when credentials are unusable (defense-in-depth vs UI bugs).
+enum SupabaseAuthClientValidationError: Error, Equatable {
+    case emptyEmail
+    case invalidEmail
+    case emptyPassword
+    case passwordTooShortForSignUp
+}
+
 /// Supabase Auth over HTTPS (password grant) so the app builds without the Swift SDK.
 /// Add `https://github.com/supabase/supabase-swift` later if you want richer session APIs.
 struct AuthSessionBundle {
@@ -47,12 +55,29 @@ struct SupabaseAuthClient {
         return d
     }
 
+    private func validateCredentialInputs(email: String, password: String, mode: AuthFormMode) throws {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pw = password.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedEmail.isEmpty { throw SupabaseAuthClientValidationError.emptyEmail }
+        if !AuthFormValidation.isValidSingleEmailFormat(trimmedEmail) { throw SupabaseAuthClientValidationError.invalidEmail }
+        if pw.isEmpty { throw SupabaseAuthClientValidationError.emptyPassword }
+        if mode == .signUp, pw.count < 6 { throw SupabaseAuthClientValidationError.passwordTooShortForSignUp }
+    }
+
+    private func validateRecoveryEmail(_ email: String) throws {
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { throw SupabaseAuthClientValidationError.emptyEmail }
+        if !AuthFormValidation.isValidSingleEmailFormat(trimmed) { throw SupabaseAuthClientValidationError.invalidEmail }
+    }
+
     func signInWithPassword(email: String, password: String) async throws -> AuthSessionBundle {
-        try await passwordGrant(email: email, password: password)
+        try validateCredentialInputs(email: email, password: password, mode: .signIn)
+        return try await passwordGrant(email: email, password: password)
     }
 
     /// Sends Supabase’s password-recovery email (same as `resetPasswordForEmail` in the JS client).
     func requestPasswordRecovery(email: String) async throws {
+        try validateRecoveryEmail(email)
         guard let url = URL(string: "auth/v1/recover", relativeTo: supabaseURL)?.absoluteURL else {
             throw APIError.invalidURL
         }
@@ -68,6 +93,7 @@ struct SupabaseAuthClient {
     }
 
     func signUpWithPassword(email: String, password: String) async throws -> AuthSessionBundle? {
+        try validateCredentialInputs(email: email, password: password, mode: .signUp)
         guard let url = URL(string: "auth/v1/signup", relativeTo: supabaseURL)?.absoluteURL else {
             throw APIError.invalidURL
         }
@@ -209,3 +235,18 @@ protocol PulseFillPasswordAuthClient: Sendable {
 }
 
 extension SupabaseAuthClient: PulseFillPasswordAuthClient {}
+
+extension SupabaseAuthClientValidationError {
+    var authFormBanner: AuthFormBanner {
+        switch self {
+        case .emptyEmail:
+            return .validation("Enter your email.")
+        case .invalidEmail:
+            return .validation("Enter a valid email address.")
+        case .emptyPassword:
+            return .validation("Enter your password.")
+        case .passwordTooShortForSignUp:
+            return .validation("Use a password with at least 6 characters.")
+        }
+    }
+}

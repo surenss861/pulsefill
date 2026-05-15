@@ -99,6 +99,8 @@ final class AuthManager: ObservableObject {
             await refreshStaffAccess()
             await userRoleContext.refreshFromServer(legacyMigrationHint: false)
             return .signedIn
+        } catch let v as SupabaseAuthClientValidationError {
+            return .failed(v.authFormBanner)
         } catch {
             #if DEBUG
             print("AuthManager.performSignIn error: \(error)")
@@ -131,6 +133,8 @@ final class AuthManager: ObservableObject {
                 return .signedIn
             }
             return .verifyEmailInbox
+        } catch let v as SupabaseAuthClientValidationError {
+            return .failed(v.authFormBanner)
         } catch {
             #if DEBUG
             print("AuthManager.performSignUp error: \(error)")
@@ -148,11 +152,19 @@ final class AuthManager: ObservableObject {
     /// Password reset email via Supabase Auth (`/auth/v1/recover`). Caller validates email; maps errors into `AuthFormBanner`.
     func performPasswordReset(email: String) async -> AuthFormBanner {
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return .validation("Enter your email.")
+        }
+        if !AuthFormValidation.isValidSingleEmailFormat(trimmed) {
+            return .validation("Enter a valid email address.")
+        }
         isBusy = true
         defer { isBusy = false }
         do {
             try await passwordAuth.requestPasswordRecovery(email: trimmed)
             return .info("If we find an account for that email, we’ll send reset instructions.")
+        } catch let v as SupabaseAuthClientValidationError {
+            return v.authFormBanner
         } catch {
             #if DEBUG
             print("AuthManager.performPasswordReset error: \(error)")

@@ -187,3 +187,95 @@ struct AuthFormBannerMappingTests {
         }
     }
 }
+
+struct SupabaseAuthClientValidationRegressionTests {
+    private var client: SupabaseAuthClient {
+        SupabaseAuthClient(
+            supabaseURL: URL(string: "https://unit-test.supabase.co")!,
+            anonKey: "anon"
+        )
+    }
+
+    @Test func signIn_emptyPassword_throwsBeforeAwaitingNetwork() async {
+        do {
+            _ = try await client.signInWithPassword(email: "a@b.com", password: "")
+            Issue.record("expected throw")
+        } catch let e as SupabaseAuthClientValidationError {
+            #expect(e == .emptyPassword)
+        } catch {
+            Issue.record("wrong error: \(error)")
+        }
+    }
+
+    @Test func signIn_invalidEmail_throws() async {
+        do {
+            _ = try await client.signInWithPassword(email: "nope", password: "secret12")
+            Issue.record("expected throw")
+        } catch let e as SupabaseAuthClientValidationError {
+            #expect(e == .invalidEmail)
+        } catch {
+            Issue.record("wrong error: \(error)")
+        }
+    }
+
+    @Test func signUp_shortPassword_throws() async {
+        do {
+            _ = try await client.signUpWithPassword(email: "a@b.com", password: "12345")
+            Issue.record("expected throw")
+        } catch let e as SupabaseAuthClientValidationError {
+            #expect(e == .passwordTooShortForSignUp)
+        } catch {
+            Issue.record("wrong error: \(error)")
+        }
+    }
+
+    @Test func recover_emptyEmail_throws() async {
+        do {
+            try await client.requestPasswordRecovery(email: "")
+            Issue.record("expected throw")
+        } catch let e as SupabaseAuthClientValidationError {
+            #expect(e == .emptyEmail)
+        } catch {
+            Issue.record("wrong error: \(error)")
+        }
+    }
+}
+
+@MainActor
+struct AuthManagerPasswordResetRegressionTests {
+    @Test func performPasswordReset_invalidEmail_doesNotCallRecover() async {
+        let spy = SpyPasswordAuthClient()
+        let sessionStore = SessionStore()
+        let api = APIClient(baseURL: URL(string: "https://example.invalid")!, sessionStore: sessionStore)
+        let userRoleContext = UserRoleContext(apiClient: api, sessionStore: sessionStore)
+        let push = PushRegistrationManager(apiClient: api)
+        let mgr = AuthManager(
+            authClient: spy,
+            sessionStore: sessionStore,
+            apiClient: api,
+            pushRegistrationManager: push,
+            userRoleContext: userRoleContext
+        )
+        let banner = await mgr.performPasswordReset(email: "not-email")
+        #expect(banner == .validation("Enter a valid email address."))
+        #expect(spy.recoverCallCount == 0)
+    }
+
+    @Test func performPasswordReset_emptyEmail_doesNotCallRecover() async {
+        let spy = SpyPasswordAuthClient()
+        let sessionStore = SessionStore()
+        let api = APIClient(baseURL: URL(string: "https://example.invalid")!, sessionStore: sessionStore)
+        let userRoleContext = UserRoleContext(apiClient: api, sessionStore: sessionStore)
+        let push = PushRegistrationManager(apiClient: api)
+        let mgr = AuthManager(
+            authClient: spy,
+            sessionStore: sessionStore,
+            apiClient: api,
+            pushRegistrationManager: push,
+            userRoleContext: userRoleContext
+        )
+        let banner = await mgr.performPasswordReset(email: "   ")
+        #expect(banner == .validation("Enter your email."))
+        #expect(spy.recoverCallCount == 0)
+    }
+}

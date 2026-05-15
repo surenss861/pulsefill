@@ -14,6 +14,10 @@ struct AuthFormView: View {
     @State private var appeared = false
     /// Sole source of truth for the auth form banner (validation + remote outcomes).
     @State private var formBanner: AuthFormBanner?
+    /// Bumped whenever the user changes intent (submit, field edit, mode); stale `Task` completions must not write `formBanner`.
+    @State private var authSubmitGeneration = 0
+    /// On-screen auth pipeline state when `PulseFillAuthQaLogs` is YES (no secrets).
+    @State private var authQADebugState: AuthFormQADebugState = .idle
 
     init(initialMode: AuthFormMode) {
         _mode = State(initialValue: initialMode)
@@ -46,6 +50,15 @@ struct AuthFormView: View {
                                 .lineSpacing(3)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 8)
+
+                            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                                Text(authQADebugState.compactLine)
+                                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                    .foregroundStyle(PFColor.textMuted.opacity(0.75))
+                                    .lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.top, 4)
+                            }
                         }
                         .padding(.horizontal, 24)
                         .padding(.top, 36)
@@ -62,7 +75,7 @@ struct AuthFormView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            clearFormBanner()
+            invalidateStaleAuthWork(reason: "appear")
             if reduceMotion {
                 appeared = true
             } else {
@@ -72,13 +85,13 @@ struct AuthFormView: View {
             }
         }
         .onChange(of: email) { _, _ in
-            clearFormBanner()
+            invalidateStaleAuthWork(reason: "email")
         }
         .onChange(of: password) { _, _ in
-            clearFormBanner()
+            invalidateStaleAuthWork(reason: "password")
         }
         .onChange(of: mode) { _, _ in
-            clearFormBanner()
+            invalidateStaleAuthWork(reason: "mode")
         }
     }
 
@@ -199,7 +212,6 @@ struct AuthFormView: View {
                         Spacer(minLength: 0)
                         Button {
                             PFHaptics.lightImpact()
-                            clearFormBanner()
                             Task { await submitPasswordReset() }
                         } label: {
                             Text("Reset password")
@@ -341,18 +353,62 @@ struct AuthFormView: View {
         reduceMotion ? nil : .spring(response: 0.48, dampingFraction: 0.86)
     }
 
-    private var formBannerAnimationKey: String {
-        guard let formBanner else { return "" }
-        switch formBanner {
-        case .validation(let s): return "v:\(s)"
-        case .info(let s): return "i:\(s)"
-        case .auth(let s): return "a:\(s)"
-        case .connection(let s): return "c:\(s)"
+    private func invalidateStaleAuthWork(reason: String) {
+        authSubmitGeneration += 1
+        formBanner = nil
+        if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+            authQADebugState = .staleIgnored(network: reason)
+        } else {
+            authQADebugState = .idle
         }
     }
 
-    private func clearFormBanner() {
-        formBanner = nil
+    private func currentLocalValidationFailure() -> (banner: AuthFormBanner, reason: String)? {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch AuthFormValidation.submitValidation(email: trimmedEmail, password: password, mode: mode) {
+        case .ok:
+            return nil
+        case .failure(let banner, let qaReason):
+            return (banner, qaReason)
+        }
+    }
+
+    private func applyRemoteBannerIfStillCurrent(
+        _ banner: AuthFormBanner,
+        generation: Int,
+        networkAttempted: String
+    ) {
+        guard generation == authSubmitGeneration else {
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .staleIgnored(network: networkAttempted)
+            }
+            return
+        }
+
+        if let local = currentLocalValidationFailure() {
+            formBanner = local.banner
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .validationOverride(reason: local.reason, network: networkAttempted)
+            }
+            PFHaptics.warning()
+            return
+        }
+
+        formBanner = banner
+        if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+            authQADebugState = .remoteOutcome(kind: banner.qaKind, network: networkAttempted)
+        }
+        PFHaptics.warning()
+    }
+
+    private var formBannerAnimationKey: String {
+        guard let formBanner else { return "\(authSubmitGeneration)" }
+        switch formBanner {
+        case .validation(let s): return "v:\(s)|g:\(authSubmitGeneration)"
+        case .info(let s): return "i:\(s)|g:\(authSubmitGeneration)"
+        case .auth(let s): return "a:\(s)|g:\(authSubmitGeneration)"
+        case .connection(let s): return "c:\(s)|g:\(authSubmitGeneration)"
+        }
     }
 
     private var canSubmit: Bool {
@@ -383,7 +439,7 @@ struct AuthFormView: View {
 
     private func switchMode(_ next: AuthFormMode) {
         guard next != mode else { return }
-        clearFormBanner()
+        invalidateStaleAuthWork(reason: "mode_switch")
         PFHaptics.selection()
 
         if reduceMotion {
@@ -396,30 +452,72 @@ struct AuthFormView: View {
     }
 
     private func submitPasswordReset() async {
+        invalidateStaleAuthWork(reason: "password_reset")
+        let generation = authSubmitGeneration
+
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
             formBanner = .validation("Enter your email.")
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .localFailed(reason: "empty_email")
+            }
             PFHaptics.warning()
             return
         }
         if !AuthFormValidation.isValidSingleEmailFormat(trimmed) {
             formBanner = .validation("Enter a valid email address.")
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .localFailed(reason: "invalid_email")
+            }
             PFHaptics.warning()
             return
         }
+
         let remote = await authManager.performPasswordReset(email: trimmed)
+
+        guard generation == authSubmitGeneration else {
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .staleIgnored(network: "password_reset_response")
+            }
+            return
+        }
+
+        let nowTrimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard nowTrimmed == trimmed, AuthFormValidation.isValidSingleEmailFormat(nowTrimmed) else {
+            formBanner = .validation("Enter a valid email address.")
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .validationOverride(reason: "email_changed", network: "password_reset")
+            }
+            PFHaptics.warning()
+            return
+        }
+
         formBanner = remote
         switch remote {
         case .info:
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .remoteOutcome(kind: "info", network: "supabase_recover")
+            }
             PFHaptics.lightImpact()
         case .validation, .auth, .connection:
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .remoteOutcome(kind: remote.qaKind, network: "supabase_recover")
+            }
             PFHaptics.warning()
         }
     }
 
     private func submit() {
-        clearFormBanner()
-        guard !authManager.isBusy else { return }
+        invalidateStaleAuthWork(reason: "submit")
+        let generation = authSubmitGeneration
+
+        guard !authManager.isBusy else {
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .blockedBusy
+            }
+            return
+        }
+
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         let pwTrim = password.trimmingCharacters(in: .whitespacesAndNewlines)
         AuthSubmitQALog.logSubmitTapped(
@@ -429,36 +527,113 @@ struct AuthFormView: View {
             passwordEmpty: pwTrim.isEmpty,
             signUpPwLen: mode == .signUp ? pwTrim.count : -1
         )
+
         switch AuthFormValidation.submitValidation(email: trimmedEmail, password: password, mode: mode) {
-        case .ok:
-            AuthSubmitQALog.logLocalValidationPassed()
-            PFHaptics.mediumImpact()
-            Task {
-                switch mode {
-                case .signIn:
-                    let outcome = await authManager.performSignIn(email: trimmedEmail, password: password)
-                    if case .failed(let b) = outcome {
-                        formBanner = b
-                        PFHaptics.warning()
-                    }
-                case .signUp:
-                    let outcome = await authManager.performSignUp(email: trimmedEmail, password: password)
-                    switch outcome {
-                    case .signedIn:
-                        break
-                    case .verifyEmailInbox:
-                        formBanner = .info("Check your inbox to verify your email, then sign in.")
-                        PFHaptics.lightImpact()
-                    case .failed(let b):
-                        formBanner = b
-                        PFHaptics.warning()
-                    }
-                }
-            }
         case .failure(let banner, let qaReason):
             formBanner = banner
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .localFailed(reason: qaReason)
+            }
             AuthSubmitQALog.logLocalValidationFailed(qaReason: qaReason)
             PFHaptics.warning()
+            return
+
+        case .ok:
+            if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                authQADebugState = .localPassed
+            }
+            AuthSubmitQALog.logLocalValidationPassed()
+            PFHaptics.mediumImpact()
+        }
+
+        Task { @MainActor in
+            switch mode {
+            case .signIn:
+                let outcome = await authManager.performSignIn(email: trimmedEmail, password: password)
+
+                guard generation == authSubmitGeneration else {
+                    if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                        authQADebugState = .staleIgnored(network: "supabase_signIn")
+                    }
+                    return
+                }
+
+                switch outcome {
+                case .signedIn:
+                    if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                        authQADebugState = .signedIn(network: "supabase+sessionSync")
+                    }
+                case .failed(let banner):
+                    applyRemoteBannerIfStillCurrent(banner, generation: generation, networkAttempted: "supabase+sessionSync")
+                }
+
+            case .signUp:
+                let outcome = await authManager.performSignUp(email: trimmedEmail, password: password)
+
+                guard generation == authSubmitGeneration else {
+                    if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                        authQADebugState = .staleIgnored(network: "supabase_signUp")
+                    }
+                    return
+                }
+
+                switch outcome {
+                case .signedIn:
+                    if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                        authQADebugState = .signedIn(network: "supabase+sessionSync")
+                    }
+                case .verifyEmailInbox:
+                    if let local = currentLocalValidationFailure() {
+                        formBanner = local.banner
+                        if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                            authQADebugState = .validationOverride(reason: local.reason, network: "supabase_signUp")
+                        }
+                        PFHaptics.warning()
+                    } else {
+                        formBanner = .info("Check your inbox to verify your email, then sign in.")
+                        if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
+                            authQADebugState = .remoteOutcome(kind: "verifyEmailInbox", network: "supabase_signUp")
+                        }
+                        PFHaptics.lightImpact()
+                    }
+                case .failed(let banner):
+                    applyRemoteBannerIfStillCurrent(banner, generation: generation, networkAttempted: "supabase+sessionSync")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Auth QA on-screen state (PulseFillAuthQaLogs)
+
+private enum AuthFormQADebugState: Equatable {
+    case idle
+    case blockedBusy
+    case localFailed(reason: String)
+    case localPassed
+    case staleIgnored(network: String)
+    case validationOverride(reason: String, network: String)
+    case remoteOutcome(kind: String, network: String)
+    case signedIn(network: String)
+
+    var compactLine: String {
+        switch self {
+        case .idle:
+            return "Auth: idle"
+        case .blockedBusy:
+            return "Auth: blocked=busy"
+        case .localFailed(let reason):
+            return "Auth: local=\(reason) · net=blocked"
+        case .localPassed:
+            return "Auth: local=ok · net=starting"
+        case .staleIgnored(let network):
+            return "Auth: stale_ignored · was=\(network)"
+        case .validationOverride(let reason, let network):
+            return "Auth: override=\(reason) · net=\(network)"
+        case .remoteOutcome(let kind, let network):
+            return "Auth: outcome=\(kind) · net=\(network)"
+        case .signedIn(let network):
+            return "Auth: signedIn · net=\(network)"
         }
     }
 }

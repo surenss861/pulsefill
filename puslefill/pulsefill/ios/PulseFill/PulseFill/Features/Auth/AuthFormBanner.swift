@@ -20,6 +20,16 @@ enum AuthFormBanner: Equatable {
         return false
     }
 
+    /// Non-secret label for QA footer / logging (e.g. `validation`, `connection`).
+    var qaKind: String {
+        switch self {
+        case .validation: return "validation"
+        case .info: return "info"
+        case .auth: return "auth"
+        case .connection: return "connection"
+        }
+    }
+
     /// Maps sanitized sign-in / sign-up / session-sync / password-recovery errors to a semantic banner.
     static func fromSignInFlowError(_ error: Error) -> AuthFormBanner {
         let text = PFCustomerFacingErrorCopy.sanitizeSignInFlowError(error)
