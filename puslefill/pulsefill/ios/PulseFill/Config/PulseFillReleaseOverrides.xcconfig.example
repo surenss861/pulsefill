@@ -1,6 +1,9 @@
 // Rename to PulseFillReleaseOverrides.xcconfig (see .gitignore) to override Release
 // build settings without editing the committed PulseFillRelease.xcconfig.
 //
+// For TestFlight: from the `pulsefill` repo root run `bash scripts/archive-testflight.sh`
+// to stamp `PULSEFILL_SOURCE_REVISION` + enable auth QA logs, then archive in Xcode.
+//
 // IMPORTANT: In .xcconfig, `//` starts a comment. Escape URLs like this:
 //   https:/$()/$(/)your-host.example.com
 //

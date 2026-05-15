@@ -4,9 +4,8 @@ import Foundation
 @MainActor
 final class AuthManager: ObservableObject {
     @Published private(set) var isBusy = false
-    @Published var banner: String?
 
-    private let authClient: SupabaseAuthClient
+    private let passwordAuth: any PulseFillPasswordAuthClient
     private let sessionStore: SessionStore
     private let apiClient: APIClient
     private let pushRegistrationManager: PushRegistrationManager
@@ -18,13 +17,13 @@ final class AuthManager: ObservableObject {
     }
 
     init(
-        authClient: SupabaseAuthClient,
+        authClient: any PulseFillPasswordAuthClient,
         sessionStore: SessionStore,
         apiClient: APIClient,
         pushRegistrationManager: PushRegistrationManager,
         userRoleContext: UserRoleContext
     ) {
-        self.authClient = authClient
+        self.passwordAuth = authClient
         self.sessionStore = sessionStore
         self.apiClient = apiClient
         self.pushRegistrationManager = pushRegistrationManager
@@ -54,44 +53,38 @@ final class AuthManager: ObservableObject {
             #endif
             sessionStore.clear()
             userRoleContext.resetForSignOut()
-            banner = nil
         }
     }
 
     private func restoreSessionBundle(accessToken: String?, refreshToken: String?) async throws -> AuthSessionBundle {
         if let accessToken {
             do {
-                return try await authClient.fetchUserIfSessionValid(accessToken: accessToken)
+                return try await passwordAuth.fetchUserIfSessionValid(accessToken: accessToken)
             } catch {
                 guard let refreshToken else { throw error }
-                return try await authClient.refreshSession(refreshToken: refreshToken)
+                return try await passwordAuth.refreshSession(refreshToken: refreshToken)
             }
         }
 
         guard let refreshToken else { throw APIError.status(code: 401, body: nil) }
-        return try await authClient.refreshSession(refreshToken: refreshToken)
+        return try await passwordAuth.refreshSession(refreshToken: refreshToken)
     }
 
-    func signIn(email: String, password: String) async {
-        banner = nil
+    /// Sign-in after the form passes local validation. Returns `.failed(.validation)` if inputs are empty (defense-in-depth).
+    func performSignIn(email: String, password: String) async -> AuthFormSignInOutcome {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let validationBanner = AuthFormValidation.localBannerIfInvalid(
-            email: trimmedEmail,
-            password: password,
-            mode: .signIn
-        ) {
-            banner = validationBanner
-            return
+        if let b = AuthFormValidation.localFormBannerIfInvalid(email: trimmedEmail, password: password, mode: .signIn) {
+            return .failed(b)
         }
         #if DEBUG
-        print("AuthManager.signIn: validation OK, Supabase password grant starting")
+        print("AuthManager.performSignIn: validation OK, Supabase password grant starting")
         #endif
         isBusy = true
         defer { isBusy = false }
         do {
-            let bundle = try await authClient.signInWithPassword(email: trimmedEmail, password: password)
+            let bundle = try await passwordAuth.signInWithPassword(email: trimmedEmail, password: password)
             #if DEBUG
-            print("AuthManager.signIn: Supabase OK, session sync starting")
+            print("AuthManager.performSignIn: Supabase OK, session sync starting")
             #endif
             sessionStore.applySession(
                 accessToken: bundle.accessToken,
@@ -101,36 +94,31 @@ final class AuthManager: ObservableObject {
             )
             try await syncCustomerSession()
             #if DEBUG
-            print("AuthManager.signIn: session sync OK, refreshing role context")
+            print("AuthManager.performSignIn: session sync OK, refreshing role context")
             #endif
             await refreshStaffAccess()
             await userRoleContext.refreshFromServer(legacyMigrationHint: false)
+            return .signedIn
         } catch {
             #if DEBUG
-            print("AuthManager.signIn error: \(error)")
+            print("AuthManager.performSignIn error: \(error)")
             #endif
-            banner = PFCustomerFacingErrorCopy.sanitizeSignInFlowError(error)
+            return .failed(AuthFormBanner.fromSignInFlowError(error))
         }
     }
 
-    func signUp(email: String, password: String) async {
-        banner = nil
+    func performSignUp(email: String, password: String) async -> AuthFormSignUpOutcome {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let validationBanner = AuthFormValidation.localBannerIfInvalid(
-            email: trimmedEmail,
-            password: password,
-            mode: .signUp
-        ) {
-            banner = validationBanner
-            return
+        if let b = AuthFormValidation.localFormBannerIfInvalid(email: trimmedEmail, password: password, mode: .signUp) {
+            return .failed(b)
         }
         #if DEBUG
-        print("AuthManager.signUp: validation OK, Supabase signup starting")
+        print("AuthManager.performSignUp: validation OK, Supabase signup starting")
         #endif
         isBusy = true
         defer { isBusy = false }
         do {
-            if let bundle = try await authClient.signUpWithPassword(email: trimmedEmail, password: password) {
+            if let bundle = try await passwordAuth.signUpWithPassword(email: trimmedEmail, password: password) {
                 sessionStore.applySession(
                     accessToken: bundle.accessToken,
                     refreshToken: bundle.refreshToken,
@@ -140,14 +128,14 @@ final class AuthManager: ObservableObject {
                 try await syncCustomerSession()
                 await refreshStaffAccess()
                 await userRoleContext.refreshFromServer(legacyMigrationHint: false)
-            } else {
-                banner = "Check your inbox to verify your email, then sign in."
+                return .signedIn
             }
+            return .verifyEmailInbox
         } catch {
             #if DEBUG
-            print("AuthManager.signUp error: \(error)")
+            print("AuthManager.performSignUp error: \(error)")
             #endif
-            banner = PFCustomerFacingErrorCopy.sanitizeSignInFlowError(error)
+            return .failed(AuthFormBanner.fromSignInFlowError(error))
         }
     }
 
@@ -155,31 +143,21 @@ final class AuthManager: ObservableObject {
         await pushRegistrationManager.deactivateCurrentDeviceIfNeeded()
         sessionStore.clear()
         userRoleContext.resetForSignOut()
-        banner = nil
     }
 
-    /// Password reset email via Supabase Auth (`/auth/v1/recover`). Errors are customer-sanitized on `banner`.
-    func requestPasswordReset(email: String) async {
+    /// Password reset email via Supabase Auth (`/auth/v1/recover`). Caller validates email; maps errors into `AuthFormBanner`.
+    func performPasswordReset(email: String) async -> AuthFormBanner {
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            banner = "Enter your email."
-            return
-        }
-        guard AuthFormValidation.isValidSingleEmailFormat(trimmed) else {
-            banner = "Enter a valid email address."
-            return
-        }
-        banner = nil
         isBusy = true
         defer { isBusy = false }
         do {
-            try await authClient.requestPasswordRecovery(email: trimmed)
-            banner = "If we find an account for that email, we’ll send reset instructions."
+            try await passwordAuth.requestPasswordRecovery(email: trimmed)
+            return .info("If we find an account for that email, we’ll send reset instructions.")
         } catch {
             #if DEBUG
-            print("AuthManager.requestPasswordReset error: \(error)")
+            print("AuthManager.performPasswordReset error: \(error)")
             #endif
-            banner = PFCustomerFacingErrorCopy.sanitizeSignInFlowError(error)
+            return AuthFormBanner.fromSignInFlowError(error)
         }
     }
 
@@ -226,7 +204,6 @@ final class AuthManager: ObservableObject {
             print("AuthManager.acceptPendingInviteIfNeeded error: \(error)")
             #endif
             sessionStore.inviteSuccessBanner = nil
-            banner = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
         }
     }
 
@@ -234,7 +211,6 @@ final class AuthManager: ObservableObject {
     func acceptInviteTokenNow(_ token: String) async -> InviteAcceptResult {
         let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return .failure("Enter the invite code from the business.") }
-        banner = nil
         isBusy = true
         defer { isBusy = false }
         do {
@@ -250,7 +226,6 @@ final class AuthManager: ObservableObject {
             print("AuthManager.acceptInviteTokenNow error: \(error)")
             #endif
             let message = PFCustomerFacingErrorCopy.sanitizeAuthMessage(error.localizedDescription)
-            banner = message
             return .failure(message)
         }
     }

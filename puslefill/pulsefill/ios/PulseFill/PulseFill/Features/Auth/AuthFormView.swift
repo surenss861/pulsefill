@@ -12,8 +12,8 @@ struct AuthFormView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var appeared = false
-    /// View-local validation / UX messages take precedence over `authManager.banner` (e.g. stale connection copy).
-    @State private var localBanner: String?
+    /// Sole source of truth for the auth form banner (validation + remote outcomes).
+    @State private var formBanner: AuthFormBanner?
 
     init(initialMode: AuthFormMode) {
         _mode = State(initialValue: initialMode)
@@ -62,7 +62,7 @@ struct AuthFormView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            clearBanners()
+            clearFormBanner()
             if reduceMotion {
                 appeared = true
             } else {
@@ -72,13 +72,13 @@ struct AuthFormView: View {
             }
         }
         .onChange(of: email) { _, _ in
-            clearBanners()
+            clearFormBanner()
         }
         .onChange(of: password) { _, _ in
-            clearBanners()
+            clearFormBanner()
         }
         .onChange(of: mode) { _, _ in
-            clearBanners()
+            clearFormBanner()
         }
     }
 
@@ -199,8 +199,8 @@ struct AuthFormView: View {
                         Spacer(minLength: 0)
                         Button {
                             PFHaptics.lightImpact()
-                            clearBanners()
-                            Task { await authManager.requestPasswordReset(email: email) }
+                            clearFormBanner()
+                            Task { await submitPasswordReset() }
                         } label: {
                             Text("Reset password")
                                 .font(.system(size: 14, weight: .semibold))
@@ -214,22 +214,20 @@ struct AuthFormView: View {
                 }
             }
 
-            if let banner = visibleBanner, !banner.isEmpty {
-                let isPositiveAuthHint =
-                    banner.contains("If we find an account")
-                    || banner.contains("Check your inbox to verify")
+            if let formBanner {
+                let isPositive = formBanner.usesSuccessChrome
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: isPositiveAuthHint ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    Image(systemName: isPositive ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(isPositiveAuthHint ? PFColor.success : PFColor.error)
+                        .foregroundStyle(isPositive ? PFColor.success : PFColor.error)
 
-                    Text(banner)
+                    Text(formBanner.message)
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(isPositiveAuthHint ? PFColor.success : PFColor.error)
+                        .foregroundStyle(isPositive ? PFColor.success : PFColor.error)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(13)
-                .background((isPositiveAuthHint ? PFColor.success : PFColor.error).opacity(0.11))
+                .background((isPositive ? PFColor.success : PFColor.error).opacity(0.11))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
@@ -280,7 +278,7 @@ struct AuthFormView: View {
             .buttonStyle(CustomerCardPressButtonStyle())
             .disabled(authManager.isBusy)
         }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: visibleBannerAnimationKey)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: formBannerAnimationKey)
         .padding(18)
         .background {
             RoundedRectangle(cornerRadius: 30, style: .continuous)
@@ -343,17 +341,18 @@ struct AuthFormView: View {
         reduceMotion ? nil : .spring(response: 0.48, dampingFraction: 0.86)
     }
 
-    private var visibleBanner: String? {
-        localBanner ?? authManager.banner
+    private var formBannerAnimationKey: String {
+        guard let formBanner else { return "" }
+        switch formBanner {
+        case .validation(let s): return "v:\(s)"
+        case .info(let s): return "i:\(s)"
+        case .auth(let s): return "a:\(s)"
+        case .connection(let s): return "c:\(s)"
+        }
     }
 
-    private var visibleBannerAnimationKey: String {
-        "\(localBanner ?? "")|\(authManager.banner ?? "")"
-    }
-
-    private func clearBanners() {
-        localBanner = nil
-        authManager.banner = nil
+    private func clearFormBanner() {
+        formBanner = nil
     }
 
     private var canSubmit: Bool {
@@ -384,7 +383,7 @@ struct AuthFormView: View {
 
     private func switchMode(_ next: AuthFormMode) {
         guard next != mode else { return }
-        clearBanners()
+        clearFormBanner()
         PFHaptics.selection()
 
         if reduceMotion {
@@ -396,8 +395,30 @@ struct AuthFormView: View {
         }
     }
 
+    private func submitPasswordReset() async {
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            formBanner = .validation("Enter your email.")
+            PFHaptics.warning()
+            return
+        }
+        if !AuthFormValidation.isValidSingleEmailFormat(trimmed) {
+            formBanner = .validation("Enter a valid email address.")
+            PFHaptics.warning()
+            return
+        }
+        let remote = await authManager.performPasswordReset(email: trimmed)
+        formBanner = remote
+        switch remote {
+        case .info:
+            PFHaptics.lightImpact()
+        case .validation, .auth, .connection:
+            PFHaptics.warning()
+        }
+    }
+
     private func submit() {
-        clearBanners()
+        clearFormBanner()
         guard !authManager.isBusy else { return }
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         let pwTrim = password.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -415,13 +436,27 @@ struct AuthFormView: View {
             Task {
                 switch mode {
                 case .signIn:
-                    await authManager.signIn(email: trimmedEmail, password: password)
+                    let outcome = await authManager.performSignIn(email: trimmedEmail, password: password)
+                    if case .failed(let b) = outcome {
+                        formBanner = b
+                        PFHaptics.warning()
+                    }
                 case .signUp:
-                    await authManager.signUp(email: trimmedEmail, password: password)
+                    let outcome = await authManager.performSignUp(email: trimmedEmail, password: password)
+                    switch outcome {
+                    case .signedIn:
+                        break
+                    case .verifyEmailInbox:
+                        formBanner = .info("Check your inbox to verify your email, then sign in.")
+                        PFHaptics.lightImpact()
+                    case .failed(let b):
+                        formBanner = b
+                        PFHaptics.warning()
+                    }
                 }
             }
         case .failure(let banner, let qaReason):
-            localBanner = banner
+            formBanner = banner
             AuthSubmitQALog.logLocalValidationFailed(qaReason: qaReason)
             PFHaptics.warning()
         }

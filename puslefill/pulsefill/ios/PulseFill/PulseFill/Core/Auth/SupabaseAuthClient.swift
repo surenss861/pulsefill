@@ -197,3 +197,15 @@ struct SupabaseAuthClient {
         )
     }
 }
+
+// MARK: - Test seam (production uses `SupabaseAuthClient`)
+
+protocol PulseFillPasswordAuthClient: Sendable {
+    func signInWithPassword(email: String, password: String) async throws -> AuthSessionBundle
+    func signUpWithPassword(email: String, password: String) async throws -> AuthSessionBundle?
+    func requestPasswordRecovery(email: String) async throws
+    func fetchUserIfSessionValid(accessToken: String) async throws -> AuthSessionBundle
+    func refreshSession(refreshToken: String) async throws -> AuthSessionBundle
+}
+
+extension SupabaseAuthClient: PulseFillPasswordAuthClient {}
