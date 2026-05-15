@@ -42,10 +42,16 @@ Single place to track what must be green before treating PulseFill as **producti
 
 ## API
 
-- [ ] Structured request logging + request id on responses (or documented trace strategy)
-- [ ] Clear 401 vs 403 vs 5xx semantics for clients
-- [ ] Health / readiness endpoint for deploy checks
-- [ ] Production env validation on startup (required secrets, URLs)
+**Implemented in repo (verify on your deploy):**
+
+- [x] Structured request logging (`apps/api/src/plugins/structured-request-log.ts`) + `x-request-id` on every response (`plugins/request-id.ts`); JSON errors include `request_id` (`plugins/error-handler.ts`).
+- [x] Health + readiness: `GET /health` (liveness, no DB) and `GET /ready` (Supabase service-role `businesses` probe). Both return non-secret metadata: `service`, `version`, optional `revision` (from `RAILWAY_GIT_COMMIT_SHA` / `VERCEL_GIT_COMMIT_SHA` / `GITHUB_SHA` / `COMMIT_SHA`), `node_env`, `time`, `supabase_host`, Stripe/APNs flags (`apps/api/src/routes/index.ts`, `apps/api/src/lib/service-meta.ts`).
+- [x] Production startup validation: `assertProductionStartup` (`apps/api/src/config/production-readiness.ts`, called from `apps/api/src/server.ts`) — in `NODE_ENV=production` requires `https` `SUPABASE_URL`, non-empty `API_CORS_ORIGINS`, and Stripe env when `ENABLE_BILLING_ROUTES` / `ENABLE_STRIPE_WEBHOOK_ROUTES` are on.
+- [x] Automated checks: `apps/api/src/routes/health.readiness.test.ts`.
+
+**Still your ops / QA responsibility:**
+
+- [ ] Clear 401 vs 403 vs 5xx semantics verified end-to-end for each client surface
 - [ ] Supabase **same project** as iOS: `SUPABASE_URL` / service role / JWT validation aligned with customer tokens
 
 ---
