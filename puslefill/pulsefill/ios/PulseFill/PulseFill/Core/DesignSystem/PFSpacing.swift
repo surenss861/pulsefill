@@ -1,5 +1,10 @@
 import CoreGraphics
 
+/// Shared scroll insets so root tab content clears the floating tab bar + home indicator.
+enum PFSafeArea {
+    static let floatingTabBottomPadding: CGFloat = 140
+}
+
 enum PFSpacing {
     static let xxs: CGFloat = 2
     static let xs: CGFloat = 4

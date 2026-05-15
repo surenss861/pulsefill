@@ -201,18 +201,17 @@ struct PFCustomerSecondaryButton: View {
         } label: {
             Text(title)
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(PFColor.primaryText)
+                .foregroundStyle(isEnabled ? PFColor.primaryText : PFColor.textMuted)
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 50)
-                .background(Color.clear)
+                .background(isEnabled ? Color.clear : PFColor.surface2)
                 .overlay(
                     RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
-                        .stroke(PFColor.primaryBorder, lineWidth: 1)
+                        .stroke(isEnabled ? PFColor.primaryBorder : PFColor.hairline, lineWidth: 1)
                 )
         }
         .buttonStyle(CustomerCardPressButtonStyle())
         .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.45)
     }
 }
 

@@ -74,7 +74,7 @@ struct ProfileView: View {
                         }
                         .padding(.horizontal, PFCustomerShellMetrics.horizontalPadding)
                         .padding(.top, 24)
-                        .padding(.bottom, PFCustomerShellMetrics.tabBarContentInset + 36)
+                        .pfCustomerTabBarContentInset()
                     }
                     .onAppear {
                         clearCompletionBannerLaterIfNeeded()

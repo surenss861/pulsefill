@@ -28,7 +28,10 @@ struct BusinessTabView: View {
                 .tabItem { Label("Openings", systemImage: "calendar") }
                 .tag(BusinessShellTab.openings)
 
-            OperatorCreateOpeningView(businessAPI: env.businessOperatorAPI)
+            OperatorCreateOpeningView(
+                businessAPI: env.businessOperatorAPI,
+                businessShellSelectedTab: $selectedTab
+            )
                 .environmentObject(env)
                 .tabItem { Label("Add", systemImage: "plus.circle.fill") }
                 .tag(BusinessShellTab.create)
@@ -37,7 +40,7 @@ struct BusinessTabView: View {
                 .environmentObject(env)
                 .tabItem {
                     Label("Claims", systemImage: "checkmark.seal")
-                        .accessibilityLabel("Customer claims")
+                        .accessibilityLabel("Customers waiting")
                 }
                 .tag(BusinessShellTab.claims)
 

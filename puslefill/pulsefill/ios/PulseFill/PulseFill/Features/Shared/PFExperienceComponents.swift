@@ -6,7 +6,14 @@ enum PFCustomerShellMetrics {
     static let cardPadding: CGFloat = 20
     static let compactCardPadding: CGFloat = 16
     static let buttonMinHeight: CGFloat = 50
-    static let tabBarContentInset: CGFloat = 52
+    static let tabBarContentInset: CGFloat = PFSafeArea.floatingTabBottomPadding
+}
+
+extension View {
+    /// Bottom padding for customer tab root scroll content.
+    func pfCustomerTabBarContentInset() -> some View {
+        padding(.bottom, PFCustomerShellMetrics.tabBarContentInset)
+    }
 }
 
 /// Shared premium hero for both customer and business surfaces.
@@ -59,6 +66,8 @@ struct PFEmptyMoment: View {
     let message: String
     var actionTitle: String?
     var action: (() -> Void)?
+    var secondaryTitle: String?
+    var secondaryAction: (() -> Void)?
 
     var body: some View {
         CustomerEmptyStateCard(
@@ -67,12 +76,19 @@ struct PFEmptyMoment: View {
             message: message,
             footnote: nil,
             primaryActionTitle: actionTitle,
-            primaryAction: {
-                PFHaptics.selection()
-                action?()
+            primaryAction: action.map { handler in
+                {
+                    PFHaptics.selection()
+                    handler()
+                }
             },
-            secondaryActionTitle: nil,
-            secondaryAction: nil
+            secondaryActionTitle: secondaryTitle,
+            secondaryAction: secondaryAction.map { handler in
+                {
+                    PFHaptics.selection()
+                    handler()
+                }
+            }
         )
     }
 }

@@ -147,7 +147,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, PFCustomerShellMetrics.horizontalPadding)
                 .padding(.top, 24)
-                .padding(.bottom, PFCustomerShellMetrics.tabBarContentInset)
+                .pfCustomerTabBarContentInset()
             }
             .refreshable {
                 await refresh(kind: .userPull)

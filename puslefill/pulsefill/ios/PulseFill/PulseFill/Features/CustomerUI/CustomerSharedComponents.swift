@@ -189,7 +189,7 @@ struct CustomerPrimaryButton: View {
                     PFHaptics.fire(hapticImpact)
                     action()
                 } label: {
-                    label
+                    enabledLabel
                 }
                 .buttonStyle(CustomerCardPressButtonStyle())
             } else if let onDisabledTap {
@@ -197,12 +197,12 @@ struct CustomerPrimaryButton: View {
                     PFHaptics.warning()
                     onDisabledTap()
                 } label: {
-                    label.opacity(0.5)
+                    disabledLabel
                 }
                 .buttonStyle(CustomerCardPressButtonStyle())
             } else {
                 Button(action: {}) {
-                    label.opacity(0.5)
+                    disabledLabel
                 }
                 .buttonStyle(.plain)
                 .disabled(true)
@@ -210,7 +210,24 @@ struct CustomerPrimaryButton: View {
         }
     }
 
-    private var label: some View {
+    private var enabledLabel: some View {
+        primaryChromeLabel
+    }
+
+    private var disabledLabel: some View {
+        PFTypography.Customer.button(title)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 54)
+            .foregroundStyle(PFColor.textMuted)
+            .background(PFColor.surface2)
+            .overlay(
+                RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous)
+                    .stroke(PFColor.hairline, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: PFRadius.controlLarge, style: .continuous))
+    }
+
+    private var primaryChromeLabel: some View {
         PFTypography.Customer.button(title)
             .frame(maxWidth: .infinity)
             .frame(minHeight: 54)

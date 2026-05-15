@@ -8,9 +8,15 @@ struct BusinessOperatorAPIClient {
 
     /// Parallel bundle for the Business **Today** tab.
     func loadBusinessTodayDashboard() async throws -> BusinessTodayDashboardPayload {
-        async let daily = underlying.getOperatorDailyOpsSummary()
-        async let queue = underlying.getOperatorActionQueue()
-        async let slots = underlying.getStaffOpenSlots()
+        async let daily = labeled("GET /v1/businesses/mine/daily-ops-summary") {
+            try await underlying.getOperatorDailyOpsSummary()
+        }
+        async let queue = labeled("GET /v1/businesses/mine/action-queue") {
+            try await underlying.getOperatorActionQueue()
+        }
+        async let slots = labeled("GET /v1/open-slots/mine") {
+            try await underlying.getStaffOpenSlots()
+        }
         async let digest = underlying.getMorningRecoveryDigestIfAvailable()
         async let recoveryHealth = underlying.getOperatorRecoveryHealthIfAvailable()
 
@@ -27,6 +33,16 @@ struct BusinessOperatorAPIClient {
             morningDigest: digestRes,
             recoveryHealth: recoveryRes
         )
+    }
+
+    private func labeled<T>(_ endpoint: String, _ work: () async throws -> T) async throws -> T {
+        do {
+            return try await work()
+        } catch let labeled as LabeledAPIFailure {
+            throw labeled
+        } catch {
+            throw LabeledAPIFailure(endpoint: endpoint, underlying: error)
+        }
     }
 
     // MARK: - Openings / slot actions (used beyond Today; keeps operator naming in one place)

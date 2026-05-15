@@ -7,7 +7,7 @@ final class BusinessTodayViewModel: ObservableObject {
         case idle
         case loading
         case loaded
-        case failed(String)
+        case failed(friendly: String, technical: String?)
     }
 
     @Published var loadState: LoadState = .idle
@@ -91,7 +91,19 @@ final class BusinessTodayViewModel: ObservableObject {
             loadState = .loaded
         } catch {
             if dailySummary == nil && queueResponse == nil {
-                loadState = .failed(APIErrorCopy.message(for: error))
+                let technical: String? = {
+                    if let labeled = error as? LabeledAPIFailure { return labeled.qaDetail }
+                    if let api = error as? APIError {
+                        return api.qaDetailLines(endpoint: "GET /v1/businesses/mine/daily-ops-summary")
+                    }
+                    return error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        ? nil
+                        : error.localizedDescription
+                }()
+                loadState = .failed(
+                    friendly: APIErrorCopy.message(for: error),
+                    technical: technical
+                )
             } else {
                 loadState = .loaded
             }

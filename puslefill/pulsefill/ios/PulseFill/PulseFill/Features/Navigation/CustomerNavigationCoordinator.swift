@@ -52,6 +52,12 @@ final class CustomerNavigationCoordinator: ObservableObject {
         focusProfileInviteSection = true
     }
 
+    func openFindBusinesses() {
+        selectedTab = .find
+        pendingCustomerDestination = nil
+        pendingOfferRouting = nil
+    }
+
     func acknowledgeProfileInviteFocus() {
         focusProfileInviteSection = false
     }

@@ -52,9 +52,9 @@ struct StandbyPreferencesView: View {
             return "Edit standby"
         }
         if viewModel.businessSelectionLocked {
-            return "Set up standby"
+            return "Tell us what times work"
         }
-        return navigationTitleOverride ?? "Standby preferences"
+        return navigationTitleOverride ?? "Times that work"
     }
 
     private var customerSubtitle: String? {
@@ -66,6 +66,10 @@ struct StandbyPreferencesView: View {
             return StandbySetupCustomerCopy.subtitleSetupLocked
         }
         return StandbySetupCustomerCopy.subtitleSetupOpen
+    }
+
+    private var needsBusinessConnection: Bool {
+        !viewModel.businessSelectionLocked && !viewModel.draft.isBusinessIdValid
     }
 
     var body: some View {
@@ -110,33 +114,37 @@ struct StandbyPreferencesView: View {
                         lockedBusinessContextCard
                     }
 
-                    if !onboardingMode, !viewModel.businessSelectionLocked {
+                    if !onboardingMode, !viewModel.businessSelectionLocked, !needsBusinessConnection {
                         StandbyIntroCard()
                     }
 
-                    ServiceSelectionView(viewModel: viewModel)
+                    if needsBusinessConnection {
+                        businessConnectionBlockedCard
+                    } else {
+                        ServiceSelectionView(viewModel: viewModel)
 
-                    if onboardingMode {
-                        Text(StandbyOnboardingCopy.Preference.availabilityHelper)
-                            .font(.system(size: 13, weight: .regular))
-                            .foregroundStyle(PFColor.textSecondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if onboardingMode {
+                            Text(StandbyOnboardingCopy.Preference.availabilityHelper)
+                                .font(.system(size: 13, weight: .regular))
+                                .foregroundStyle(PFColor.textSecondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        AvailabilitySelectionView(draft: $viewModel.draft)
+
+                        if onboardingMode {
+                            Text(StandbyOnboardingCopy.Preference.noticeHelper)
+                                .font(.system(size: 13, weight: .regular))
+                                .foregroundStyle(PFColor.textSecondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        NoticeWindowSelectionView(draft: $viewModel.draft)
+                        NotificationPreferenceView(draft: $viewModel.draft)
+                        StandbyPreferenceReviewCard(draft: viewModel.draft, resolved: viewModel.draftResolvedLabels)
+
+                        saveSection
                     }
-
-                    AvailabilitySelectionView(draft: $viewModel.draft)
-
-                    if onboardingMode {
-                        Text(StandbyOnboardingCopy.Preference.noticeHelper)
-                            .font(.system(size: 13, weight: .regular))
-                            .foregroundStyle(PFColor.textSecondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    NoticeWindowSelectionView(draft: $viewModel.draft)
-                    NotificationPreferenceView(draft: $viewModel.draft)
-                    StandbyPreferenceReviewCard(draft: viewModel.draft, resolved: viewModel.draftResolvedLabels)
-
-                    saveSection
 
                     if !onboardingMode || !viewModel.existingPreferences.isEmpty {
                         savedPreferencesSection
@@ -144,6 +152,7 @@ struct StandbyPreferencesView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 20)
+                .pfCustomerTabBarContentInset()
             }
         }
         .navigationTitle(navigationTitleText)
@@ -205,6 +214,18 @@ struct StandbyPreferencesView: View {
         } message: {
             Text("This can’t be undone.")
         }
+    }
+
+    private var businessConnectionBlockedCard: some View {
+        CustomerEmptyStateCard(
+            systemImage: "building.2",
+            title: StandbySetupCustomerCopy.businessBlockedTitle,
+            message: StandbySetupCustomerCopy.businessBlockedBody,
+            primaryActionTitle: StandbySetupCustomerCopy.businessBlockedPrimary,
+            primaryAction: { env.customerNavigation.openFindBusinesses() },
+            secondaryActionTitle: StandbySetupCustomerCopy.businessBlockedSecondary,
+            secondaryAction: { env.customerNavigation.openProfileInviteEntry() }
+        )
     }
 
     private var customerFlowHeader: some View {

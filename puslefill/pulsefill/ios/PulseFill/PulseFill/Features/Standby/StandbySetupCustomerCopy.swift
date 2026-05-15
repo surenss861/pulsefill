@@ -1,28 +1,33 @@
 import Foundation
 
-/// Customer-facing strings for the standby preferences / setup flow (no IDs or backend jargon in UI).
+/// Customer-facing strings for the “times that work” / standby setup flow (simple words, no backend jargon).
 enum StandbySetupCustomerCopy {
-    static let subtitleSetupLocked = "Choose the openings you want this business to send you."
-    static let subtitleSetupOpen = "Choose a business, then tell us which openings and times work for you."
-    static let subtitleEdit = "Update the openings you want to hear about."
+    static let subtitleSetupLocked = "Choose the appointment times you want this business to send you."
+    static let subtitleSetupOpen = "Connect to a business first, then tell us what times work for you."
+    static let subtitleEdit = "Update the times you want to hear about."
 
-    static let savePrimaryNew = "Save standby preferences"
+    static let savePrimaryNew = "Save my times"
     static let savePrimaryEdit = "Save changes"
 
     static let validationIncomplete =
-        "Choose a business, pick at least one day you’re usually available, and make sure your latest time is after your earliest time."
+        "Connect to a business, pick at least one day you’re usually free, and make sure your latest time is after your earliest time."
     static let validationTimeOrder = "Set your latest time after your earliest time."
 
-    static let businessMissingTitle = "Choose a business"
-    static let businessMissingBody = "Pick a business before setting your standby preferences."
+    static let businessBlockedTitle = "Connect to a business first"
+    static let businessBlockedBody =
+        "You need to join or request access to a business before you can tell us what times work."
+    static let businessBlockedPrimary = "Find businesses"
+    static let businessBlockedSecondary = "Use invite code"
 
-    static let businessIdInvalid = "Enter the connection code the business shared with you."
+    static let businessMissingTitle = "Step 1: Connect to a business"
+    static let businessMissingBody = "Join a business before you set what times work for you."
 
-    /// Text field placeholder — never imply we show raw UUIDs elsewhere in the form.
-    static let businessFieldPlaceholder = "Connection code from the business"
+    static let businessIdInvalid = "Enter the invite code the business shared with you."
+
+    static let businessFieldPlaceholder = "Invite code from the business"
 
     static let servicesEmpty = "No services listed yet"
-    static let servicesEmptyBody = "This business has not listed services for standby. You can still choose “Any service” below."
+    static let servicesEmptyBody = "This business has not listed services yet. You can still choose “Any service” below."
 
     static let advancedOptionsTitle = "More matching options (optional)"
     static let advancedOptionsCaption =
@@ -31,7 +36,6 @@ enum StandbySetupCustomerCopy {
     static let locationFieldLabel = "Location reference (optional)"
     static let providerFieldLabel = "Provider reference (optional)"
 
-    /// Short label for notice presets in grids.
     static func noticePresetShortLabel(hours: Int) -> String {
         switch hours {
         case 1: return "1 hour"
@@ -47,7 +51,6 @@ enum StandbySetupCustomerCopy {
         }
     }
 
-    /// Review row / summary line for minimum notice.
     static func noticeSummaryLabel(hours: Int) -> String {
         switch hours {
         case 1: return "About 1 hour"
@@ -61,13 +64,13 @@ enum StandbySetupCustomerCopy {
         }
     }
 
-    static let distanceCaption = "How far you’re willing to go for an earlier time."
-    static let depositToggle = "I’m OK if a deposit is required to claim an opening"
+    static let distanceCaption = "How far you’re willing to go for an earlier appointment."
+    static let depositToggle = "I’m OK if a deposit is required to claim a time"
 
-    static let successTitle = "You’re on standby"
+    static let successTitle = "You’re all set"
     static let successBody =
-        "We’ll show openings from this business when they match your preferences."
+        "We’ll show you appointment times from this business when they match what works for you."
 
-    static let successViewOpenings = "View openings"
+    static let successViewOpenings = "View appointments"
     static let successDone = "Done"
 }

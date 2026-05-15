@@ -23,10 +23,10 @@ struct BusinessTodayView: View {
     var body: some View {
         NavigationStack(path: $slotPath) {
             Group {
-                if case let .failed(message) = viewModel.loadState,
+                if case let .failed(_, technical) = viewModel.loadState,
                    viewModel.dailySummary == nil,
                    viewModel.queueResponse == nil {
-                    errorView(message)
+                    errorView(technical: technical)
                 } else if viewModel.dailySummary == nil && viewModel.queueResponse == nil {
                     loadingView
                 } else {
@@ -60,15 +60,15 @@ struct BusinessTodayView: View {
         }
     }
 
-    private func errorView(_ message: String) -> some View {
+    private func errorView(technical: String?) -> some View {
         VStack {
             Spacer()
             PFOperatorErrorMoment(
                 title: "Today could not load",
                 message: "We couldn’t load your Today screen. Try again.",
-                technicalMessage: message,
+                technicalMessage: technical,
                 actionTitle: "Reload Today",
-                footerHint: "Openings and claims still work from the tabs below.",
+                footerHint: "Cancelled times and customers waiting still work from the tabs below.",
                 onAction: { await viewModel.load() }
             )
             .padding(.horizontal, 20)
@@ -85,10 +85,10 @@ struct BusinessTodayView: View {
                 PFOperatorHero(
                     overline: "Today",
                     title: "What needs you",
-                    subtitle: "Add openings, send offers, and confirm bookings.",
+                    subtitle: "Add cancelled times, send offers, and confirm bookings.",
                     showLivePulse: true,
                     uppercaseOverline: false,
-                    primaryActionTitle: "Add opening",
+                    primaryActionTitle: "Add cancelled time",
                     primaryAction: { selectedTab = .create }
                 )
 

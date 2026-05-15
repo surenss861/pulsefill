@@ -86,7 +86,7 @@ struct CustomerActivityFeedView: View {
                     }
                     .padding(.horizontal, PFCustomerShellMetrics.horizontalPadding)
                     .padding(.top, 24)
-                    .padding(.bottom, PFCustomerShellMetrics.tabBarContentInset)
+                    .pfCustomerTabBarContentInset()
                 }
             }
             .navigationTitle("Activity")

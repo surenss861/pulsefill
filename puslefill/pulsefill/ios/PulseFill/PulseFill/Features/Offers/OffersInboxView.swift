@@ -58,11 +58,11 @@ struct OffersInboxView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: PFCustomerShellMetrics.sectionSpacing) {
                         PFEmberHero(
-                            overline: "Offers",
+                            overline: "Openings",
                             title: "Appointments you can claim",
-                            subtitle: "Openings from your connected businesses show up here.",
+                            subtitle: "Cancelled times from your businesses show up here.",
                             uppercaseOverline: false,
-                            primaryActionTitle: "Standby preferences",
+                            primaryActionTitle: "Tell us what times work",
                             primaryAction: { env.customerNavigation.open(.standbyStatus) }
                         )
                         .customerAppearAnimation(staggerIndex: 0)
@@ -94,9 +94,11 @@ struct OffersInboxView: View {
                             PFEmptyMoment(
                                 systemImage: "bell.badge",
                                 title: "No openings yet",
-                                message: "Openings from your connected businesses show up here.",
-                                actionTitle: "Standby preferences",
-                                action: { env.customerNavigation.open(.standbyStatus) }
+                                message: "When a business accepts you and your times are set, claimable appointments will show up here.",
+                                actionTitle: "Find businesses",
+                                action: { env.customerNavigation.openFindBusinesses() },
+                                secondaryTitle: "Tell us what times work",
+                                secondaryAction: { env.customerNavigation.open(.standbyStatus) }
                             )
                         } else {
                             if loading {
@@ -164,7 +166,7 @@ struct OffersInboxView: View {
                     }
                     .padding(.horizontal, PFCustomerShellMetrics.horizontalPadding)
                     .padding(.top, 24)
-                    .padding(.bottom, PFCustomerShellMetrics.tabBarContentInset)
+                    .pfCustomerTabBarContentInset()
                 }
             }
             .navigationBarTitleDisplayMode(.inline)

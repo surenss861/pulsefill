@@ -4,9 +4,11 @@ import SwiftUI
 struct OperatorCreateOpeningView: View {
     @EnvironmentObject private var env: AppEnvironment
     @StateObject private var viewModel: OperatorCreateOpeningViewModel
+    @Binding var businessShellSelectedTab: BusinessShellTab
     @State private var path = NavigationPath()
 
-    init(businessAPI: BusinessOperatorAPIClient) {
+    init(businessAPI: BusinessOperatorAPIClient, businessShellSelectedTab: Binding<BusinessShellTab>) {
+        _businessShellSelectedTab = businessShellSelectedTab
         _viewModel = StateObject(wrappedValue: OperatorCreateOpeningViewModel(businessAPI: businessAPI))
     }
 
@@ -19,11 +21,15 @@ struct OperatorCreateOpeningView: View {
                 case let .failed(message):
                     errorBody(message)
                 case .loaded:
-                    formScroll
+                    if viewModel.isWorkspaceSetupIncomplete {
+                        workspaceSetupGate
+                    } else {
+                        formScroll
+                    }
                 }
             }
             .background(PFScreenBackground())
-            .navigationTitle("Add opening")
+            .navigationTitle("Add cancelled time")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(PFColor.surface1, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -86,6 +92,27 @@ struct OperatorCreateOpeningView: View {
         }
     }
 
+    private var workspaceSetupGate: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                BusinessWorkspaceStrip()
+                    .environmentObject(env)
+
+                PFOperatorEmptyMoment(
+                    systemImage: "wrench.and.screwdriver",
+                    title: "Finish setup first",
+                    message: "Add at least one location, provider, and service before you create cancelled times.",
+                    actionTitle: "Open workspace",
+                    action: { businessShellSelectedTab = .more }
+                )
+                .padding(.top, 8)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .pfOperatorTabBarContentInset()
+        }
+    }
+
     private var formScroll: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -93,9 +120,9 @@ struct OperatorCreateOpeningView: View {
                     .environmentObject(env)
 
                 PFOperatorHero(
-                    overline: "Add opening",
+                    overline: "Add cancelled time",
                     title: "Tell PulseFill which time opened up",
-                    subtitle: "Pick the time and service. Then send offers so a waiting customer can claim it. You confirm the booking in Customer claims.",
+                    subtitle: "Pick the time and service. Send it to waiting customers. Confirm the booking when someone claims it.",
                     showLivePulse: true,
                     uppercaseOverline: false
                 )

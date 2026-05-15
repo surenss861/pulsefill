@@ -34,6 +34,10 @@ final class OperatorCreateOpeningViewModel: ObservableObject {
         self.businessAPI = businessAPI
     }
 
+    var isWorkspaceSetupIncomplete: Bool {
+        serviceOptions.isEmpty || providerOptions.isEmpty || locationOptions.isEmpty
+    }
+
     func loadReferenceData() async {
         loadState = .loading
         validationMessage = nil

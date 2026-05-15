@@ -7,7 +7,7 @@ enum PFOperatorShellMetrics {
     static let sectionSpacing: CGFloat = 24
     static let stackSpacing: CGFloat = 16
     /// Extra scroll bottom inset so last CTAs clear the tab bar + home indicator comfortably.
-    static let tabBarContentInset: CGFloat = 52
+    static let tabBarContentInset: CGFloat = PFSafeArea.floatingTabBottomPadding
     static let buttonMinHeight: CGFloat = 50
 }
 

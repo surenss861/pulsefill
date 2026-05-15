@@ -50,17 +50,22 @@ struct BusinessPickerView: View {
                         CustomerEmptyStateCard(
                             systemImage: "building.2",
                             title: "No businesses yet",
-                            message: "Businesses that accept standby customers will appear here.",
-                            footnote: nil
+                            message: "Join a business to get alerts when someone cancels an appointment.",
+                            footnote: nil,
+                            primaryActionTitle: "Use invite code",
+                            primaryAction: { env.customerNavigation.openProfileInviteEntry() },
+                            secondaryActionTitle: "Refresh",
+                            secondaryAction: { Task { await load() } }
                         )
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
+                        .pfCustomerTabBarContentInset()
                     }
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 20) {
                             PFTypography.Customer.screenLead(
-                                "Browse businesses and join their waiting lists. When a slot opens, you’ll get an offer in Openings."
+                                "Find businesses and join their waiting lists. When someone cancels, you’ll get an alert in Openings."
                             )
                             .fixedSize(horizontal: false, vertical: true)
 
@@ -98,6 +103,7 @@ struct BusinessPickerView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 24)
+                        .pfCustomerTabBarContentInset()
                     }
                 }
             }

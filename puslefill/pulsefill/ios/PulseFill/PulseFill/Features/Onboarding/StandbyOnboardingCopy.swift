@@ -48,7 +48,7 @@ enum StandbyOnboardingCopy {
         static let availabilityHelper = "A broader window usually means more chances to match."
         static let noticeHelper = "Short notice can work well, but it may reduce how many openings you see."
 
-        static let saveCTA = "Save standby preference"
+        static let saveCTA = "Save my times"
         static let saveChangesCTA = "Save changes"
 
         static let successTitle = "You’re on standby"
