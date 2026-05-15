@@ -73,47 +73,108 @@ final class AuthManager: ObservableObject {
     /// Sign-in after the form passes local validation. Returns `.failed(.validation)` if inputs are empty (defense-in-depth).
     func performSignIn(email: String, password: String) async -> AuthFormSignInOutcome {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let b = AuthFormValidation.localFormBannerIfInvalid(email: trimmedEmail, password: password, mode: .signIn) {
-            return .failed(b)
+
+        switch AuthFormValidation.submitValidation(email: trimmedEmail, password: password, mode: .signIn) {
+        case let .failure(banner, reason):
+            let qa = AuthPipelineQAExport.make(
+                email: email,
+                password: password,
+                mode: .signIn,
+                validationReason: reason,
+                phase: "localValidation",
+                outcomeKind: "validation"
+            )
+            return .failed(banner: banner, qa: qa)
+        case .ok:
+            break
         }
+
         #if DEBUG
         print("AuthManager.performSignIn: validation OK, Supabase password grant starting")
         #endif
         isBusy = true
         defer { isBusy = false }
+
+        let bundle: AuthSessionBundle
         do {
-            let bundle = try await passwordAuth.signInWithPassword(email: trimmedEmail, password: password)
-            #if DEBUG
-            print("AuthManager.performSignIn: Supabase OK, session sync starting")
-            #endif
-            sessionStore.applySession(
-                accessToken: bundle.accessToken,
-                refreshToken: bundle.refreshToken,
-                userId: bundle.userId,
-                email: bundle.email
-            )
-            try await syncCustomerSession()
-            #if DEBUG
-            print("AuthManager.performSignIn: session sync OK, refreshing role context")
-            #endif
-            await refreshStaffAccess()
-            await userRoleContext.refreshFromServer(legacyMigrationHint: false)
-            return .signedIn
+            bundle = try await passwordAuth.signInWithPassword(email: trimmedEmail, password: password)
         } catch let v as SupabaseAuthClientValidationError {
-            return .failed(v.authFormBanner)
+            let qa = AuthPipelineQAExport.make(
+                email: email,
+                password: password,
+                mode: .signIn,
+                validationReason: Self.qaReason(for: v),
+                phase: "supabase",
+                outcomeKind: "validation"
+            )
+            return .failed(banner: v.authFormBanner, qa: qa)
         } catch {
             #if DEBUG
-            print("AuthManager.performSignIn error: \(error)")
+            print("AuthManager.performSignIn: Supabase password grant failed: \(error)")
             #endif
-            return .failed(AuthFormBanner.fromSignInFlowError(error))
+            let mapped = AuthRemoteFailureMapper.mapSupabasePasswordGrantFailure(
+                error: error,
+                email: email,
+                password: password,
+                mode: .signIn
+            )
+            return .failed(banner: mapped.banner, qa: mapped.qa)
         }
+
+        #if DEBUG
+        print("AuthManager.performSignIn: Supabase OK, session sync starting")
+        #endif
+
+        sessionStore.applySession(
+            accessToken: bundle.accessToken,
+            refreshToken: bundle.refreshToken,
+            userId: bundle.userId,
+            email: bundle.email
+        )
+
+        do {
+            _ = try await syncCustomerSession()
+        } catch {
+            sessionStore.clear()
+            userRoleContext.resetForSignOut()
+            #if DEBUG
+            print("AuthManager.performSignIn: session sync failed, cleared local session: \(error)")
+            #endif
+            let mapped = AuthRemoteFailureMapper.mapSessionSyncFailure(
+                error: error,
+                email: email,
+                password: password,
+                mode: .signIn
+            )
+            return .failed(banner: mapped.banner, qa: mapped.qa)
+        }
+
+        #if DEBUG
+        print("AuthManager.performSignIn: session sync OK, refreshing role context")
+        #endif
+        await refreshStaffAccess()
+        await userRoleContext.refreshFromServer(legacyMigrationHint: false)
+        return .signedIn
     }
 
     func performSignUp(email: String, password: String) async -> AuthFormSignUpOutcome {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let b = AuthFormValidation.localFormBannerIfInvalid(email: trimmedEmail, password: password, mode: .signUp) {
-            return .failed(b)
+
+        switch AuthFormValidation.submitValidation(email: trimmedEmail, password: password, mode: .signUp) {
+        case let .failure(banner, reason):
+            let qa = AuthPipelineQAExport.make(
+                email: email,
+                password: password,
+                mode: .signUp,
+                validationReason: reason,
+                phase: "localValidation",
+                outcomeKind: "validation"
+            )
+            return .failed(banner: banner, qa: qa)
+        case .ok:
+            break
         }
+
         #if DEBUG
         print("AuthManager.performSignUp: validation OK, Supabase signup starting")
         #endif
@@ -127,19 +188,48 @@ final class AuthManager: ObservableObject {
                     userId: bundle.userId,
                     email: bundle.email
                 )
-                try await syncCustomerSession()
+                do {
+                    _ = try await syncCustomerSession()
+                } catch {
+                    sessionStore.clear()
+                    userRoleContext.resetForSignOut()
+                    #if DEBUG
+                    print("AuthManager.performSignUp: session sync failed, cleared local session: \(error)")
+                    #endif
+                    let mapped = AuthRemoteFailureMapper.mapSessionSyncFailure(
+                        error: error,
+                        email: email,
+                        password: password,
+                        mode: .signUp
+                    )
+                    return .failed(banner: mapped.banner, qa: mapped.qa)
+                }
                 await refreshStaffAccess()
                 await userRoleContext.refreshFromServer(legacyMigrationHint: false)
                 return .signedIn
             }
             return .verifyEmailInbox
         } catch let v as SupabaseAuthClientValidationError {
-            return .failed(v.authFormBanner)
+            let qa = AuthPipelineQAExport.make(
+                email: email,
+                password: password,
+                mode: .signUp,
+                validationReason: Self.qaReason(for: v),
+                phase: "supabase",
+                outcomeKind: "validation"
+            )
+            return .failed(banner: v.authFormBanner, qa: qa)
         } catch {
             #if DEBUG
             print("AuthManager.performSignUp error: \(error)")
             #endif
-            return .failed(AuthFormBanner.fromSignInFlowError(error))
+            let mapped = AuthRemoteFailureMapper.mapSupabasePasswordGrantFailure(
+                error: error,
+                email: email,
+                password: password,
+                mode: .signUp
+            )
+            return .failed(banner: mapped.banner, qa: mapped.qa)
         }
     }
 
@@ -188,7 +278,7 @@ final class AuthManager: ObservableObject {
     }
 
     private func syncCustomerSession() async throws {
-        _ = try await apiClient.post("/v1/auth/session/sync", body: EmptyJSON(), as: SessionSyncResponse.self)
+        _ = try await apiClient.postAuthSessionSync()
         await acceptPendingInviteIfNeeded()
     }
 
@@ -247,5 +337,16 @@ private extension String {
     var nilIfEmpty: String? {
         let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
+private extension AuthManager {
+    static func qaReason(for error: SupabaseAuthClientValidationError) -> String {
+        switch error {
+        case .emptyEmail: "empty_email"
+        case .invalidEmail: "invalid_email"
+        case .emptyPassword: "empty_password"
+        case .passwordTooShortForSignUp: "password_short"
+        }
     }
 }

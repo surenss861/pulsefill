@@ -1,6 +1,6 @@
 import Foundation
 
-enum AuthFormMode: String, CaseIterable, Identifiable {
+enum AuthFormMode: String, CaseIterable, Identifiable, Sendable {
     case signIn
     case signUp
 

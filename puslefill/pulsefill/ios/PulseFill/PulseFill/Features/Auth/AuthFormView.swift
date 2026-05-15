@@ -17,7 +17,7 @@ struct AuthFormView: View {
     /// Bumped whenever the user changes intent (submit, field edit, mode); stale `Task` completions must not write `formBanner`.
     @State private var authSubmitGeneration = 0
     /// On-screen auth pipeline state when `PulseFillAuthQaLogs` is YES (no secrets).
-    @State private var authQADebugState: AuthFormQADebugState = .idle
+    @State private var authQADebugExport: AuthPipelineQAExport = .idle
 
     init(initialMode: AuthFormMode) {
         _mode = State(initialValue: initialMode)
@@ -52,12 +52,17 @@ struct AuthFormView: View {
                                 .padding(.top, 8)
 
                             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                                Text(authQADebugState.compactLine)
-                                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                                    .foregroundStyle(PFColor.textMuted.opacity(0.75))
-                                    .lineSpacing(2)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .padding(.top, 4)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(authQADebugExport.primaryLine)
+                                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                        .foregroundStyle(PFColor.textMuted.opacity(0.75))
+                                    Text(authQADebugExport.secondaryLine)
+                                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                        .foregroundStyle(PFColor.textMuted.opacity(0.75))
+                                }
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, 4)
                             }
                         }
                         .padding(.horizontal, 24)
@@ -204,7 +209,10 @@ struct AuthFormView: View {
                     text: $password,
                     systemImage: "lock",
                     keyboardType: .default,
-                    isSecure: true
+                    isSecure: true,
+                    qaAccessory: PulseFillBuildConfiguration.isAuthQaLoggingEnabled
+                        ? AuthPipelineQAExport.passwordQaRow(email: email, password: password, mode: mode)
+                        : nil
                 )
 
                 if mode == .signIn {
@@ -357,9 +365,16 @@ struct AuthFormView: View {
         authSubmitGeneration += 1
         formBanner = nil
         if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-            authQADebugState = .staleIgnored(network: reason)
+            let safeReason = reason.replacingOccurrences(of: " ", with: "_")
+            authQADebugExport = AuthPipelineQAExport.make(
+                email: email,
+                password: password,
+                mode: mode,
+                phase: "stale(\(safeReason))",
+                outcomeKind: "staleIgnored"
+            )
         } else {
-            authQADebugState = .idle
+            authQADebugExport = .idle
         }
     }
 
@@ -373,14 +388,32 @@ struct AuthFormView: View {
         }
     }
 
-    private func applyRemoteBannerIfStillCurrent(
-        _ banner: AuthFormBanner,
+    private func applyRemoteAuthFailureIfStillRelevant(
+        banner: AuthFormBanner,
+        qa: AuthPipelineQAExport,
         generation: Int,
-        networkAttempted: String
+        submittedEmail: String,
+        submittedPassword: String,
+        submittedMode: AuthFormMode
     ) {
-        guard generation == authSubmitGeneration else {
+        guard AuthFormRemoteApplyPolicy.shouldApplyRemoteAuthResult(
+            generation: generation,
+            currentGeneration: authSubmitGeneration,
+            submittedMode: submittedMode,
+            currentMode: mode,
+            submittedEmail: submittedEmail,
+            currentEmailRaw: email,
+            submittedPassword: submittedPassword,
+            currentPasswordRaw: password
+        ) else {
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .staleIgnored(network: networkAttempted)
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    phase: "stale(asyncResult)",
+                    outcomeKind: "staleIgnored"
+                )
             }
             return
         }
@@ -388,7 +421,11 @@ struct AuthFormView: View {
         if let local = currentLocalValidationFailure() {
             formBanner = local.banner
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .validationOverride(reason: local.reason, network: networkAttempted)
+                var q = qa
+                q.validationReason = local.reason
+                q.phase = "validationOverride"
+                q.outcomeKind = "validation"
+                authQADebugExport = q
             }
             PFHaptics.warning()
             return
@@ -396,7 +433,7 @@ struct AuthFormView: View {
 
         formBanner = banner
         if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-            authQADebugState = .remoteOutcome(kind: banner.qaKind, network: networkAttempted)
+            authQADebugExport = qa
         }
         PFHaptics.warning()
     }
@@ -459,7 +496,14 @@ struct AuthFormView: View {
         if trimmed.isEmpty {
             formBanner = .validation("Enter your email.")
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .localFailed(reason: "empty_email")
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    validationReason: "empty_email",
+                    phase: "localValidation",
+                    outcomeKind: "validation"
+                )
             }
             PFHaptics.warning()
             return
@@ -467,7 +511,14 @@ struct AuthFormView: View {
         if !AuthFormValidation.isValidSingleEmailFormat(trimmed) {
             formBanner = .validation("Enter a valid email address.")
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .localFailed(reason: "invalid_email")
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    validationReason: "invalid_email",
+                    phase: "localValidation",
+                    outcomeKind: "validation"
+                )
             }
             PFHaptics.warning()
             return
@@ -477,7 +528,13 @@ struct AuthFormView: View {
 
         guard generation == authSubmitGeneration else {
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .staleIgnored(network: "password_reset_response")
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    phase: "stale(passwordReset)",
+                    outcomeKind: "staleIgnored"
+                )
             }
             return
         }
@@ -486,7 +543,14 @@ struct AuthFormView: View {
         guard nowTrimmed == trimmed, AuthFormValidation.isValidSingleEmailFormat(nowTrimmed) else {
             formBanner = .validation("Enter a valid email address.")
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .validationOverride(reason: "email_changed", network: "password_reset")
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    validationReason: "email_changed",
+                    phase: "validationOverride",
+                    outcomeKind: "validation"
+                )
             }
             PFHaptics.warning()
             return
@@ -496,12 +560,26 @@ struct AuthFormView: View {
         switch remote {
         case .info:
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .remoteOutcome(kind: "info", network: "supabase_recover")
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    validationReason: "ok",
+                    phase: "supabase_recover",
+                    outcomeKind: "info"
+                )
             }
             PFHaptics.lightImpact()
         case .validation, .auth, .connection:
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .remoteOutcome(kind: remote.qaKind, network: "supabase_recover")
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    validationReason: "ok",
+                    phase: "supabase_recover",
+                    outcomeKind: remote.qaKind
+                )
             }
             PFHaptics.warning()
         }
@@ -513,7 +591,13 @@ struct AuthFormView: View {
 
         guard !authManager.isBusy else {
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .blockedBusy
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    phase: "idle",
+                    outcomeKind: "blockedBusy"
+                )
             }
             return
         }
@@ -532,7 +616,14 @@ struct AuthFormView: View {
         case .failure(let banner, let qaReason):
             formBanner = banner
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .localFailed(reason: qaReason)
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    validationReason: qaReason,
+                    phase: "localValidation",
+                    outcomeKind: "validation"
+                )
             }
             AuthSubmitQALog.logLocalValidationFailed(qaReason: qaReason)
             PFHaptics.warning()
@@ -540,20 +631,46 @@ struct AuthFormView: View {
 
         case .ok:
             if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                authQADebugState = .localPassed
+                authQADebugExport = AuthPipelineQAExport.make(
+                    email: email,
+                    password: password,
+                    mode: mode,
+                    validationReason: "ok",
+                    phase: "supabase",
+                    outcomeKind: "inFlight"
+                )
             }
             AuthSubmitQALog.logLocalValidationPassed()
             PFHaptics.mediumImpact()
         }
 
+        let submittedEmail = trimmedEmail
+        let submittedPassword = password
+        let submittedMode = mode
+
         Task { @MainActor in
             switch mode {
             case .signIn:
-                let outcome = await authManager.performSignIn(email: trimmedEmail, password: password)
+                let outcome = await authManager.performSignIn(email: submittedEmail, password: submittedPassword)
 
-                guard generation == authSubmitGeneration else {
+                guard AuthFormRemoteApplyPolicy.shouldApplyRemoteAuthResult(
+                    generation: generation,
+                    currentGeneration: authSubmitGeneration,
+                    submittedMode: submittedMode,
+                    currentMode: mode,
+                    submittedEmail: submittedEmail,
+                    currentEmailRaw: email,
+                    submittedPassword: submittedPassword,
+                    currentPasswordRaw: password
+                ) else {
                     if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                        authQADebugState = .staleIgnored(network: "supabase_signIn")
+                        authQADebugExport = AuthPipelineQAExport.make(
+                            email: email,
+                            password: password,
+                            mode: mode,
+                            phase: "stale(signInResult)",
+                            outcomeKind: "staleIgnored"
+                        )
                     }
                     return
                 }
@@ -561,18 +678,47 @@ struct AuthFormView: View {
                 switch outcome {
                 case .signedIn:
                     if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                        authQADebugState = .signedIn(network: "supabase+sessionSync")
+                        authQADebugExport = AuthPipelineQAExport.make(
+                            email: email,
+                            password: password,
+                            mode: mode,
+                            validationReason: "ok",
+                            phase: "complete",
+                            outcomeKind: "signedIn"
+                        )
                     }
-                case .failed(let banner):
-                    applyRemoteBannerIfStillCurrent(banner, generation: generation, networkAttempted: "supabase+sessionSync")
+                case let .failed(banner, qa):
+                    applyRemoteAuthFailureIfStillRelevant(
+                        banner: banner,
+                        qa: qa,
+                        generation: generation,
+                        submittedEmail: submittedEmail,
+                        submittedPassword: submittedPassword,
+                        submittedMode: submittedMode
+                    )
                 }
 
             case .signUp:
-                let outcome = await authManager.performSignUp(email: trimmedEmail, password: password)
+                let outcome = await authManager.performSignUp(email: submittedEmail, password: submittedPassword)
 
-                guard generation == authSubmitGeneration else {
+                guard AuthFormRemoteApplyPolicy.shouldApplyRemoteAuthResult(
+                    generation: generation,
+                    currentGeneration: authSubmitGeneration,
+                    submittedMode: submittedMode,
+                    currentMode: mode,
+                    submittedEmail: submittedEmail,
+                    currentEmailRaw: email,
+                    submittedPassword: submittedPassword,
+                    currentPasswordRaw: password
+                ) else {
                     if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                        authQADebugState = .staleIgnored(network: "supabase_signUp")
+                        authQADebugExport = AuthPipelineQAExport.make(
+                            email: email,
+                            password: password,
+                            mode: mode,
+                            phase: "stale(signUpResult)",
+                            outcomeKind: "staleIgnored"
+                        )
                     }
                     return
                 }
@@ -580,61 +726,77 @@ struct AuthFormView: View {
                 switch outcome {
                 case .signedIn:
                     if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                        authQADebugState = .signedIn(network: "supabase+sessionSync")
+                        authQADebugExport = AuthPipelineQAExport.make(
+                            email: email,
+                            password: password,
+                            mode: mode,
+                            validationReason: "ok",
+                            phase: "complete",
+                            outcomeKind: "signedIn"
+                        )
                     }
                 case .verifyEmailInbox:
                     if let local = currentLocalValidationFailure() {
                         formBanner = local.banner
                         if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                            authQADebugState = .validationOverride(reason: local.reason, network: "supabase_signUp")
+                            authQADebugExport = AuthPipelineQAExport.make(
+                                email: email,
+                                password: password,
+                                mode: mode,
+                                validationReason: local.reason,
+                                phase: "validationOverride",
+                                outcomeKind: "validation"
+                            )
                         }
                         PFHaptics.warning()
                     } else {
                         formBanner = .info("Check your inbox to verify your email, then sign in.")
                         if PulseFillBuildConfiguration.isAuthQaLoggingEnabled {
-                            authQADebugState = .remoteOutcome(kind: "verifyEmailInbox", network: "supabase_signUp")
+                            authQADebugExport = AuthPipelineQAExport.make(
+                                email: email,
+                                password: password,
+                                mode: mode,
+                                validationReason: "ok",
+                                phase: "supabase",
+                                outcomeKind: "verifyEmailInbox"
+                            )
                         }
                         PFHaptics.lightImpact()
                     }
-                case .failed(let banner):
-                    applyRemoteBannerIfStillCurrent(banner, generation: generation, networkAttempted: "supabase+sessionSync")
+                case let .failed(banner, qa):
+                    applyRemoteAuthFailureIfStillRelevant(
+                        banner: banner,
+                        qa: qa,
+                        generation: generation,
+                        submittedEmail: submittedEmail,
+                        submittedPassword: submittedPassword,
+                        submittedMode: submittedMode
+                    )
                 }
             }
         }
     }
 }
 
-// MARK: - Auth QA on-screen state (PulseFillAuthQaLogs)
+// MARK: - Stale async guard (generation + field snapshot)
 
-private enum AuthFormQADebugState: Equatable {
-    case idle
-    case blockedBusy
-    case localFailed(reason: String)
-    case localPassed
-    case staleIgnored(network: String)
-    case validationOverride(reason: String, network: String)
-    case remoteOutcome(kind: String, network: String)
-    case signedIn(network: String)
-
-    var compactLine: String {
-        switch self {
-        case .idle:
-            return "Auth: idle"
-        case .blockedBusy:
-            return "Auth: blocked=busy"
-        case .localFailed(let reason):
-            return "Auth: local=\(reason) · net=blocked"
-        case .localPassed:
-            return "Auth: local=ok · net=starting"
-        case .staleIgnored(let network):
-            return "Auth: stale_ignored · was=\(network)"
-        case .validationOverride(let reason, let network):
-            return "Auth: override=\(reason) · net=\(network)"
-        case .remoteOutcome(let kind, let network):
-            return "Auth: outcome=\(kind) · net=\(network)"
-        case .signedIn(let network):
-            return "Auth: signedIn · net=\(network)"
-        }
+enum AuthFormRemoteApplyPolicy {
+    /// Prevents a late `Task` completion from overwriting banners / QA after the user edits fields or switches mode.
+    static func shouldApplyRemoteAuthResult(
+        generation: Int,
+        currentGeneration: Int,
+        submittedMode: AuthFormMode,
+        currentMode: AuthFormMode,
+        submittedEmail: String,
+        currentEmailRaw: String,
+        submittedPassword: String,
+        currentPasswordRaw: String
+    ) -> Bool {
+        guard generation == currentGeneration else { return false }
+        guard submittedMode == currentMode else { return false }
+        let currentTrimmed = currentEmailRaw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard submittedEmail == currentTrimmed else { return false }
+        return submittedPassword == currentPasswordRaw
     }
 }
 
@@ -681,51 +843,61 @@ private struct AuthInputField: View {
     let systemImage: String
     let keyboardType: UIKeyboardType
     let isSecure: Bool
+    var qaAccessory: String? = nil
 
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(isFocused ? PFColor.emberReadable : PFColor.customerTextTertiary)
-                .frame(width: 20)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 12) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(isFocused ? PFColor.emberReadable : PFColor.customerTextTertiary)
+                    .frame(width: 20)
 
-            Group {
-                if isSecure {
-                    SecureField(
-                        "",
-                        text: $text,
-                        prompt: Text(title).foregroundStyle(PFColor.customerTextTertiary)
-                    )
-                } else {
-                    TextField(
-                        "",
-                        text: $text,
-                        prompt: Text(title).foregroundStyle(PFColor.customerTextTertiary)
-                    )
-                }
-            }
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(PFColor.textPrimary)
-            .tint(PFColor.ember)
-            .keyboardType(keyboardType)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .focused($isFocused)
-        }
-        .padding(.horizontal, 14)
-        .frame(height: 54)
-        .background {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(PFColor.customerGlassDeep)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(
-                            isFocused ? PFColor.primaryBorder.opacity(0.5) : PFColor.customerHairline,
-                            lineWidth: 1
+                Group {
+                    if isSecure {
+                        SecureField(
+                            "",
+                            text: $text,
+                            prompt: Text(title).foregroundStyle(PFColor.customerTextTertiary)
                         )
+                    } else {
+                        TextField(
+                            "",
+                            text: $text,
+                            prompt: Text(title).foregroundStyle(PFColor.customerTextTertiary)
+                        )
+                    }
                 }
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(PFColor.textPrimary)
+                .tint(PFColor.ember)
+                .keyboardType(keyboardType)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .focused($isFocused)
+            }
+            .padding(.horizontal, 14)
+            .frame(height: 54)
+            .background {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(PFColor.customerGlassDeep)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(
+                                isFocused ? PFColor.primaryBorder.opacity(0.5) : PFColor.customerHairline,
+                                lineWidth: 1
+                            )
+                    }
+            }
+
+            if let qaAccessory {
+                Text(qaAccessory)
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundStyle(PFColor.textMuted.opacity(0.72))
+                    .padding(.leading, 4)
+            }
         }
     }
 }
