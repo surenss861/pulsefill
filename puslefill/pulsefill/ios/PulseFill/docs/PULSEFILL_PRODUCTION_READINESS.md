@@ -93,9 +93,10 @@ Single place to track what must be green before treating PulseFill as **producti
 
 ## Deployment
 
-- [ ] Railway (or host) env parity with iOS and dashboard
+- [ ] Railway (or host) env parity with iOS and dashboard — see **`apps/api/README.md`** for required variables (note: **`SUPABASE_ANON_KEY` / `NEXT_PUBLIC_*` are not read by this API**; service role + URL are).
 - [ ] Vercel / web dashboard env and feature flags documented
 - [ ] Archive pipeline: `bash scripts/archive-testflight.sh` → upload `ios/PulseFill/build/PulseFill.xcarchive` (or export IPA) consistently
+- [ ] Host billing (e.g. Railway subscription) current so the service is not paused mid-QA
 
 ---
 
