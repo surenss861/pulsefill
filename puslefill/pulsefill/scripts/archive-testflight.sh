@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 # Writes git SHA + QA log flag into gitignored PulseFillReleaseOverrides.xcconfig, then archives Release.
-# Run from anywhere:  bash scripts/archive-testflight.sh
+# Run from anywhere:  bash scripts/archive-testflight.sh  (paths are derived from this script’s location).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IOS_ROOT="$ROOT/ios/PulseFill"
 OVERRIDE="$IOS_ROOT/Config/PulseFillReleaseOverrides.xcconfig"
 
-REV="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+if [[ ! -f "$IOS_ROOT/PulseFill.xcodeproj/project.pbxproj" ]]; then
+  echo "error: iOS project not found at $IOS_ROOT — is this script inside pulsefill/scripts/?" >&2
+  exit 1
+fi
+
+if ! REV="$(git -C "$ROOT" rev-parse --short HEAD)"; then
+  echo "error: not a git checkout at $ROOT (cannot stamp PULSEFILL_SOURCE_REVISION)." >&2
+  exit 1
+fi
 
 if [[ -f "$OVERRIDE" ]]; then
   { grep -vE '^(PULSEFILL_SOURCE_REVISION|PULSEFILL_AUTH_QA_LOGS)[[:space:]]*=' "$OVERRIDE" || true; } >"${OVERRIDE}.new"
@@ -22,6 +30,8 @@ fi
 } >>"$OVERRIDE"
 
 echo "Stamped $OVERRIDE with PULSEFILL_SOURCE_REVISION=$REV and PULSEFILL_AUTH_QA_LOGS=YES"
+echo "--- verify overrides (these must appear in the TestFlight app footer / auth QA) ---"
+grep -E '^(PULSEFILL_SOURCE_REVISION|PULSEFILL_AUTH_QA_LOGS)[[:space:]]*=' "$OVERRIDE" || true
 
 cd "$IOS_ROOT"
 mkdir -p build
