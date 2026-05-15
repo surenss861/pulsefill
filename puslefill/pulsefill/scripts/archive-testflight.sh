@@ -35,9 +35,18 @@ grep -E '^(PULSEFILL_SOURCE_REVISION|PULSEFILL_AUTH_QA_LOGS)[[:space:]]*=' "$OVE
 
 cd "$IOS_ROOT"
 mkdir -p build
+
+# Isolated DerivedData avoids corrupted ~/Library/Developer/Xcode/DerivedData build.db disk I/O failures.
+# Override with: PULSEFILL_ARCHIVE_DERIVED_DATA=/path/to/dd
+DERIVED="${PULSEFILL_ARCHIVE_DERIVED_DATA:-${TMPDIR:-/tmp/}PulseFillArchiveDerivedData}"
+echo "Using -derivedDataPath $DERIVED (set PULSEFILL_ARCHIVE_DERIVED_DATA to override)"
+rm -rf "$DERIVED"
+mkdir -p "$DERIVED"
+
 xcodebuild \
   -scheme PulseFill \
   -configuration Release \
   -destination 'generic/platform=iOS' \
+  -derivedDataPath "$DERIVED" \
   -archivePath "$IOS_ROOT/build/PulseFill.xcarchive" \
   clean archive
