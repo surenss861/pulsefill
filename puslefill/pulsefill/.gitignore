@@ -9,5 +9,8 @@ dist
 **/xcuserdata/
 **/*.xcuserstate
 
+# Xcode archive output (see scripts/archive-testflight.sh)
+ios/PulseFill/build/
+
 # Supabase CLI (local link / version cache; may include connection metadata)
 supabase/.temp/
