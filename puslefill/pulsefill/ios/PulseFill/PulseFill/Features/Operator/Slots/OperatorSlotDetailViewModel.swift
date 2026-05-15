@@ -306,7 +306,7 @@ final class OperatorSlotDetailViewModel: ObservableObject {
 
     private func isOperatorActionConflict(_ error: Error) -> Bool {
         guard let apiErr = error as? APIError else { return false }
-        if case let .structured(statusCode, code, _, _) = apiErr {
+        if case let .structured(statusCode, code, _, _, _) = apiErr {
             return statusCode == 409 && code == "operator_action_not_allowed"
         }
         return false

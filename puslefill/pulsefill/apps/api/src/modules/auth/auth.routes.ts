@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createServiceSupabase } from "../../config/supabase.js";
 import { sendJson } from "../../lib/http-errors.js";
 import { requireAuth } from "../../plugins/guards.js";
+import { buildAuthMePayload } from "./auth-context.js";
 
 const syncBody = z
   .object({
@@ -17,52 +18,17 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     { preHandler: requireAuth },
     async (req) => {
       const admin = createServiceSupabase(req.server.env);
-      const uid = req.authUser!.id;
-
-      const [customerRes, staffRes] = await Promise.all([
-        admin.from("customers").select("id").eq("auth_user_id", uid).maybeSingle(),
-        admin
-          .from("staff_users")
-          .select("business_id, role, businesses ( id, name )")
-          .eq("auth_user_id", uid),
-      ]);
-
-      if (customerRes.error) {
-        req.log.warn({ err: customerRes.error }, "auth_me_customer_lookup_degraded");
-      }
-      if (staffRes.error) {
-        req.log.warn({ err: staffRes.error }, "auth_me_staff_lookup_degraded");
-      }
-
-      const customerId = customerRes.error ? null : (customerRes.data?.id ?? null);
-      const staffRows = staffRes.error || !staffRes.data ? [] : staffRes.data;
-      const businesses = staffRows.map((row: Record<string, unknown>) => {
-        const rel = row.businesses as { id?: string; name?: string } | { id?: string; name?: string }[] | null;
-        const b = Array.isArray(rel) ? rel[0] : rel;
-        return {
-          business_id: String(row.business_id ?? ""),
-          business_name: b?.name ? String(b.name) : "Business",
-          role: String(row.role ?? "staff"),
-        };
-      });
-
-      const hasCustomer = Boolean(customerId);
-      const hasStaff = businesses.length > 0;
-
-      return {
-        user: {
-          id: req.authUser!.id,
-          email: req.authUser!.email,
-          app_metadata: req.authUser!.app_metadata,
-          user_metadata: req.authUser!.user_metadata,
+      const u = req.authUser!;
+      return buildAuthMePayload(
+        admin,
+        {
+          id: u.id,
+          email: u.email,
+          app_metadata: u.app_metadata as Record<string, unknown>,
+          user_metadata: u.user_metadata as Record<string, unknown>,
         },
-        roles: {
-          customer: hasCustomer,
-          staff: hasStaff,
-        },
-        customer: customerId ? { id: customerId } : null,
-        staff: hasStaff ? { businesses } : null,
-      };
+        req.log,
+      );
     },
   );
 

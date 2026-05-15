@@ -1,5 +1,19 @@
 import Foundation
 
+/// Backend-owned routing hint from `GET /v1/auth/me` and mobile broker success payloads.
+enum PulseFillAuthDefaultSurface: String, Codable, Sendable {
+    case customer
+    case business
+    case picker
+    case none
+}
+
+/// Surfaces the account may use (subset of product shells).
+enum PulseFillAuthAllowedSurface: String, Codable, Sendable {
+    case customer
+    case business
+}
+
 /// `GET /v1/auth/me` — identity plus PulseFill role capabilities for dual-mode routing.
 struct PulseFillAuthMeResponse: Codable, Sendable {
     struct AuthUser: Codable, Sendable {
@@ -30,4 +44,7 @@ struct PulseFillAuthMeResponse: Codable, Sendable {
     let roles: Roles
     let customer: Customer?
     let staff: Staff?
+    /// Present on current API; when absent, clients fall back to `roles` only.
+    let defaultSurface: PulseFillAuthDefaultSurface?
+    let allowedSurfaces: [PulseFillAuthAllowedSurface]?
 }

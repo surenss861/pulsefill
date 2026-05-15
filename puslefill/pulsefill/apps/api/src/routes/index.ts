@@ -3,6 +3,8 @@ import { createServiceSupabase } from "../config/supabase.js";
 import { sendJson } from "../lib/http-errors.js";
 import { publicServiceSurface } from "../lib/service-meta.js";
 import { registerAuthRoutes } from "../modules/auth/auth.routes.js";
+import { registerDashboardAuthRoutes } from "../modules/auth/dashboard-auth.routes.js";
+import { registerMobileAuthRoutes } from "../modules/auth/mobile-auth.routes.js";
 import { registerBillingRoutes } from "../modules/billing/billing.routes.js";
 import { registerBusinessRoutes } from "../modules/businesses/businesses.routes.js";
 import { registerCustomerRoutes } from "../modules/customers/customers.routes.js";
@@ -50,6 +52,8 @@ export async function registerRoutes(app: FastifyInstance) {
   });
 
   await registerAuthRoutes(app);
+  await registerDashboardAuthRoutes(app);
+  await registerMobileAuthRoutes(app);
   await registerBusinessRoutes(app);
   await registerLocationRoutes(app);
   await registerProviderRoutes(app);

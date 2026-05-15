@@ -7,7 +7,7 @@ enum APIErrorCopy {
             return message(forURLError: urlErr)
         }
         if let api = error as? APIError {
-            if case let .structured(_, code, message, _) = api {
+            if case let .structured(_, code, message, _, _) = api {
                 if let code, let mapped = mapOperatorActionCode(code) {
                     return mapped
                 }

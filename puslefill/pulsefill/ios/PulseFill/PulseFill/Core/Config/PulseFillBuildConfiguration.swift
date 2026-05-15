@@ -110,8 +110,16 @@ enum PulseFillBuildConfiguration {
     }
 
     /// When true, email/password auth uses `POST /v1/mobile/auth/*` on the PulseFill API (no Supabase Auth calls from the app).
-    /// Override with `PULSEFILL_USE_BACKEND_PASSWORD_AUTH` or Info.plist `PulseFillUseBackendPasswordAuth` (`1` / `true` / `yes` / `on` to force on; `0` / `false` / `no` / `off` to force off).
+    /// **Staging and production always use the broker** so TestFlight and App Store builds cannot fall back to direct Supabase password auth.
+    /// For **local** tier only, override with `PULSEFILL_USE_BACKEND_PASSWORD_AUTH` or Info.plist `PulseFillUseBackendPasswordAuth`.
     static var useBackendPasswordAuth: Bool {
+        switch deploymentTier {
+        case .staging, .production:
+            return true
+        case .local:
+            break
+        }
+
         if let raw = env("PULSEFILL_USE_BACKEND_PASSWORD_AUTH")?.lowercased(), !raw.isEmpty {
             if ["0", "false", "no", "off"].contains(raw) { return false }
             if ["1", "true", "yes", "on"].contains(raw) { return true }
@@ -120,12 +128,7 @@ enum PulseFillBuildConfiguration {
             if ["0", "false", "no", "off"].contains(raw) { return false }
             if ["1", "true", "yes", "on"].contains(raw) { return true }
         }
-        switch deploymentTier {
-        case .local:
-            return false
-        case .staging, .production:
-            return true
-        }
+        return false
     }
 
     /// Fastify `v1` API base URL (no trailing slash). This is the **PulseFill backend** (auth, customers, staff), not a “business-only” host.
@@ -364,8 +367,9 @@ enum PulseFillBuildConfiguration {
         let rev = resolvedSourceRevisionFromBundle()
         let tier = deploymentTier.rawValue
         let api = apiBaseURL.host ?? "—"
+        let authPath = useBackendPasswordAuth ? "backend" : "supabase"
         let authMode = useBackendPasswordAuth ? "API broker" : "Supabase \(supabaseURL.host ?? "—")"
-        return "Build \(marketing) (\(build)) · \(rev) · \(tier) · API \(api) · Auth \(authMode)"
+        return "Build \(marketing) (\(build)) · \(rev) · \(tier) · API \(api) · authPath=\(authPath) · Auth \(authMode)"
     }
 
     /// Release-safe auth submit breadcrumbs (`Logger` / Console). Set `PulseFillAuthQaLogs` via `PULSEFILL_AUTH_QA_LOGS` in Release xcconfig (YES/NO).

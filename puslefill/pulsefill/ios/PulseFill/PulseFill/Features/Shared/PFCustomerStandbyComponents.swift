@@ -429,7 +429,7 @@ enum PFCustomerFacingErrorCopy {
 
     private static func sanitizeSignInAPIError(_ api: APIError) -> String {
         switch api {
-        case let .structured(statusCode, _, message, _):
+        case let .structured(statusCode, _, message, _, _):
             let m = message.lowercased()
             if (500 ..< 600).contains(statusCode) {
                 return "We couldn’t connect to PulseFill. Please try again shortly."

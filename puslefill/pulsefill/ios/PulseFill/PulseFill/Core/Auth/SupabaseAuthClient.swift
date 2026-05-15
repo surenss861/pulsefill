@@ -101,7 +101,13 @@ struct SupabaseAuthClient {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(anonKey, forHTTPHeaderField: "apikey")
-        let body = ["email": email, "password": password]
+        let body: [String: Any] = [
+            "email": email,
+            "password": password,
+            "data": [
+                "signup_intent": "customer",
+            ],
+        ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw APIError.status(code: -1, body: nil) }
@@ -227,14 +233,26 @@ struct SupabaseAuthClient {
 // MARK: - Test seam (production uses `SupabaseAuthClient`)
 
 protocol PulseFillPasswordAuthClient: Sendable {
+    /// When true, sign-in / sign-up already ran customer profile sync on the API (`POST /v1/mobile/auth/*`); skip `POST /v1/auth/session/sync` on the client.
+    var performsServerSideSessionSync: Bool { get }
     func signInWithPassword(email: String, password: String) async throws -> AuthSessionBundle
     func signUpWithPassword(email: String, password: String) async throws -> AuthSessionBundle?
     func requestPasswordRecovery(email: String) async throws
     func fetchUserIfSessionValid(accessToken: String) async throws -> AuthSessionBundle
     func refreshSession(refreshToken: String) async throws -> AuthSessionBundle
+    /// Best-effort server revocation of refresh tokens (broker only). Default: no-op.
+    func signOutOnServerIfPossible(accessToken: String) async
 }
 
-extension SupabaseAuthClient: PulseFillPasswordAuthClient {}
+extension PulseFillPasswordAuthClient {
+    var performsServerSideSessionSync: Bool { false }
+
+    func signOutOnServerIfPossible(accessToken _: String) async {}
+}
+
+extension SupabaseAuthClient: PulseFillPasswordAuthClient {
+    var performsServerSideSessionSync: Bool { false }
+}
 
 extension SupabaseAuthClientValidationError {
     var authFormBanner: AuthFormBanner {

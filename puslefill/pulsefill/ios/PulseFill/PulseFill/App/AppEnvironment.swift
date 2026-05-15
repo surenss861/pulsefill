@@ -66,7 +66,9 @@ final class AppEnvironment: ObservableObject {
         self.userRoleContext = userRoleContext
         let pushRegistrationManager = PushRegistrationManager(apiClient: api)
         self.pushRegistrationManager = pushRegistrationManager
-        let authClient = SupabaseAuthClient(supabaseURL: supabaseURL, anonKey: supabaseAnonKey)
+        let authClient: any PulseFillPasswordAuthClient = PulseFillBuildConfiguration.useBackendPasswordAuth
+            ? BackendMobileAuthClient(apiBaseURL: apiBaseURL)
+            : SupabaseAuthClient(supabaseURL: supabaseURL, anonKey: supabaseAnonKey)
         self.authManager = AuthManager(
             authClient: authClient,
             sessionStore: sessionStore,

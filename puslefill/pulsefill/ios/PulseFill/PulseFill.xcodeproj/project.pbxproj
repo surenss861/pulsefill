@@ -97,14 +97,6 @@
 			);
 			sourceTree = "<group>";
 		};
-		E7F8A9022F90D10000818129 /* Config */ = {
-			isa = PBXGroup;
-			children = (
-				E7F8A9012F90D10000818129 /* PulseFillRelease.xcconfig */,
-			);
-			path = Config;
-			sourceTree = "<group>";
-		};
 		21D4528E2F90C0C300818129 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -113,6 +105,14 @@
 				21D452A82F90C0C500818129 /* PulseFillUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E7F8A9022F90D10000818129 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				E7F8A9012F90D10000818129 /* PulseFillRelease.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

@@ -34,6 +34,8 @@ const schema = z.object({
   PORT: z.coerce.number().default(3001),
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  /** Prefer for password grant / signup from the API (publishable legacy “anon” JWT). Falls back to service role in dev when unset. */
+  SUPABASE_ANON_KEY: z.string().min(1).optional(),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),

@@ -127,12 +127,16 @@ final class APIClient {
                     let message = (err["message"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
                     let code = err["code"] as? String
                     let retryable = err["retryable"] as? Bool ?? false
+                    let nestedRid = (err["request_id"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let topRid = (obj["request_id"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let requestId = [nestedRid, topRid].compactMap { $0 }.first { !$0.isEmpty }
                     if let message, !message.isEmpty {
                         throw APIError.structured(
                             statusCode: http.statusCode,
                             code: code,
                             message: message,
-                            retryable: retryable
+                            retryable: retryable,
+                            requestId: requestId
                         )
                     }
                     if let code {
@@ -140,16 +144,19 @@ final class APIClient {
                             statusCode: http.statusCode,
                             code: code,
                             message: code,
-                            retryable: retryable
+                            retryable: retryable,
+                            requestId: requestId
                         )
                     }
                 }
                 if let errStr = obj["error"] as? String, !errStr.isEmpty {
+                    let topRid = (obj["request_id"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
                     throw APIError.structured(
                         statusCode: http.statusCode,
                         code: nil,
                         message: errStr,
-                        retryable: false
+                        retryable: false,
+                        requestId: (topRid?.isEmpty == false) ? topRid : nil
                     )
                 }
             }

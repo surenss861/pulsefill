@@ -32,12 +32,26 @@ final class UserRoleContext: ObservableObject {
     }
 
     var needsRolePicker: Bool {
+        if let def = authMe?.defaultSurface {
+            if def == .picker { return surfaceChoice.isEmpty }
+            return false
+        }
         guard let m = authMe, m.roles.customer, m.roles.staff else { return false }
         return surfaceChoice.isEmpty
     }
 
     /// Business shell: staff acting as business (`surfaceChoice` / legacy toggle), including staff-only accounts (default business when `surfaceChoice` is empty).
     var shouldShowBusinessShell: Bool {
+        if let def = authMe?.defaultSurface {
+            switch def {
+            case .business:
+                return true
+            case .picker:
+                return surfaceChoice == "business"
+            case .customer, .none:
+                return false
+            }
+        }
         guard let m = authMe else { return sessionStore.isStaffUser && !isCustomerPreferredSurface }
         if m.roles.staff, !m.roles.customer { return surfaceChoice != "customer" }
         if m.roles.staff, m.roles.customer {
@@ -113,9 +127,12 @@ final class UserRoleContext: ObservableObject {
         guard let m = authMe else { return }
         guard surfaceChoice.isEmpty else { return }
         let preferCustomer = UserDefaults.standard.bool(forKey: Keys.preferCustomerTabs)
-        if m.roles.customer, m.roles.staff {
+        let isDualRole =
+            m.defaultSurface == .picker
+            || (m.defaultSurface == nil && m.roles.customer && m.roles.staff)
+        if isDualRole, m.roles.customer, m.roles.staff {
             chooseSurface(preferCustomer ? "customer" : "business")
-        } else if m.roles.staff, !m.roles.customer, preferCustomer {
+        } else if m.defaultSurface == nil, m.roles.staff, !m.roles.customer, preferCustomer {
             chooseSurface("customer")
         }
     }
