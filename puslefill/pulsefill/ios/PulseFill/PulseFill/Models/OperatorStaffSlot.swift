@@ -96,6 +96,18 @@ struct StaffSlotOfferRow: Codable, Identifiable, Hashable {
 
 struct OpenSlotsListAPIResponse: Codable {
     let openSlots: [StaffOpenSlotListRow]
+    let pagination: OpenSlotsPagination?
+
+    init(openSlots: [StaffOpenSlotListRow], pagination: OpenSlotsPagination? = nil) {
+        self.openSlots = openSlots
+        self.pagination = pagination
+    }
+}
+
+struct OpenSlotsPagination: Codable {
+    let limit: Int
+    let offset: Int
+    let hasMore: Bool
 }
 
 struct StaffOpenSlotListRow: Codable, Identifiable {

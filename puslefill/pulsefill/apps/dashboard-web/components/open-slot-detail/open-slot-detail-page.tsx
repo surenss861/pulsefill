@@ -17,6 +17,7 @@ import { OperatorInternalNoteCard } from "@/components/slots/operator-internal-n
 import { SlotAttentionCues } from "@/components/slots/slot-attention-cues";
 import { OperatorSlotActionBar } from "@/components/slots/operator-slot-action-bar";
 import { OperatorSlotOffersSummary } from "@/components/slots/operator-slot-offers-summary";
+import { PaymentStatusCard } from "@/components/slots/payment-status-card";
 import { NoMatchExplanationPanel } from "@/components/open-slot-detail/no-match-explanation-panel";
 import { OperatorSlotReasonBanner } from "@/components/slots/operator-slot-reason-banner";
 import { SlotOffersInspector } from "@/components/slots/slot-offers-inspector";
@@ -426,6 +427,8 @@ export function OpenSlotDetailPage() {
                   </p>
                 </DeskSecondaryCard>
               </section>
+
+              <PaymentStatusCard slot={slot} onRefunded={() => void refreshAll()} />
 
               {slot.notes ? (
                 <DeskSecondaryCard title="Opening notes">

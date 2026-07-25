@@ -46,7 +46,10 @@ export async function fetchCustomerOfferDetail(
         provider_name_snapshot,
         starts_at,
         ends_at,
-        status
+        status,
+        payment_required,
+        price_cents,
+        currency
       )
     `,
     )
@@ -129,6 +132,9 @@ export async function fetchCustomerOfferDetail(
     ends_at: slot.ends_at,
     matched_preference: matchedPreference,
     claim_guidance: claimGuidanceDefault(),
+    payment_required: Boolean(slot.payment_required),
+    price_cents: (slot.price_cents as number | null) ?? null,
+    currency: (slot.currency as string | null) ?? "usd",
   };
 
   return { ok: true, body: { offer } };

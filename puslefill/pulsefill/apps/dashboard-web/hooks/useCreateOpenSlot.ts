@@ -12,6 +12,8 @@ export type CreateOpenSlotPayload = {
   ends_at: string;
   estimated_value_cents?: number | null;
   notes?: string | null;
+  payment_required?: boolean;
+  price_cents?: number | null;
 };
 
 export type CreatedOpenSlot = {

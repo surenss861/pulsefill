@@ -47,6 +47,7 @@ import type {
 } from "@/components/operator/next-best-action-card";
 import { buildTodayRecoverySubtitle } from "@/lib/overview-live-copy";
 import { RecoveryHealthPanel } from "@/components/overview/recovery-health-panel";
+import { CardErrorBoundary } from "@/components/ui/card-error-boundary";
 import { type RecoveryPipelineStepId } from "@/components/operator/recovery-pipeline";
 import { OperatorPageTransition } from "@/components/operator/operator-page-transition";
 import { BillingNoticeBanner } from "@/components/billing/billing-notice-banner";
@@ -540,12 +541,14 @@ export function OverviewPageContent({
 
           <FadeUp delay={0.055}>
             <div className="pf-dashboard-recovery-health" style={{ marginTop: 4 }}>
-              <RecoveryHealthPanel
-                data={recoveryHealth.data}
-                loading={recoveryHealth.loading}
-                error={recoveryHealth.error}
-                onReload={() => void recoveryHealth.reload()}
-              />
+              <CardErrorBoundary label="Recovery health">
+                <RecoveryHealthPanel
+                  data={recoveryHealth.data}
+                  loading={recoveryHealth.loading}
+                  error={recoveryHealth.error}
+                  onReload={() => void recoveryHealth.reload()}
+                />
+              </CardErrorBoundary>
             </div>
           </FadeUp>
 
@@ -579,55 +582,65 @@ export function OverviewPageContent({
                       <p style={{ color: "var(--muted)", fontSize: 14 }}>Loading daily summary…</p>
                     </OverviewRecoveryHeroStrip>
                   ) : dailyOps.data ? (
-                    <OverviewRecoveryHeroStrip
-                      eyebrow="Today's counts for your time zone."
-                      subtitle={recoverySubtitle}
-                      aside={
-                        <OverviewOperationalPulse
-                          lines={pulseLines}
-                          contextLine={`Coverage for ${dailyOps.data.date} (${dailyOps.data.timezone}).`}
-                        />
-                      }
-                    >
-                      <DailyOpsSummaryGrid data={dailyOps.data} />
-                      <div style={{ marginTop: 14 }}>
-                        <DailyOpsStatusStrip byStatus={dailyOps.data.breakdown?.by_status} />
-                      </div>
-                    </OverviewRecoveryHeroStrip>
+                    <CardErrorBoundary label="Today's counts">
+                      <OverviewRecoveryHeroStrip
+                        eyebrow="Today's counts for your time zone."
+                        subtitle={recoverySubtitle}
+                        aside={
+                          <OverviewOperationalPulse
+                            lines={pulseLines}
+                            contextLine={`Coverage for ${dailyOps.data.date} (${dailyOps.data.timezone}).`}
+                          />
+                        }
+                      >
+                        <DailyOpsSummaryGrid data={dailyOps.data} />
+                        <div style={{ marginTop: 14 }}>
+                          <DailyOpsStatusStrip byStatus={dailyOps.data.breakdown?.by_status} />
+                        </div>
+                      </OverviewRecoveryHeroStrip>
+                    </CardErrorBoundary>
                   ) : null}
 
-                  <OperatorMorningRecoveryDigestPanel
-                    onAfterMutation={async () => {
-                      await Promise.all([
-                        actionQueue.reload({ silent: true }),
-                        dailyOps.reload({ silent: true }),
-                        opsBreakdown.reload({ silent: true }),
-                        deliveryReliability.reload({ silent: true }),
-                      ]);
-                    }}
-                  />
+                  <CardErrorBoundary label="Morning recovery digest">
+                    <OperatorMorningRecoveryDigestPanel
+                      onAfterMutation={async () => {
+                        await Promise.all([
+                          actionQueue.reload({ silent: true }),
+                          dailyOps.reload({ silent: true }),
+                          opsBreakdown.reload({ silent: true }),
+                          deliveryReliability.reload({ silent: true }),
+                        ]);
+                      }}
+                    />
+                  </CardErrorBoundary>
 
-                  {queueActivity}
+                  <CardErrorBoundary label="Queue and activity">{queueActivity}</CardErrorBoundary>
 
-                  <OverviewDeliveryReliabilityBlock data={deliveryReliability.data} loading={deliveryReliability.loading} />
-                  <OverviewOpsBreakdownBlock data={opsBreakdown.data} loading={opsBreakdown.loading} />
+                  <CardErrorBoundary label="Delivery reliability">
+                    <OverviewDeliveryReliabilityBlock data={deliveryReliability.data} loading={deliveryReliability.loading} />
+                  </CardErrorBoundary>
+                  <CardErrorBoundary label="Ops breakdown">
+                    <OverviewOpsBreakdownBlock data={opsBreakdown.data} loading={opsBreakdown.loading} />
+                  </CardErrorBoundary>
 
                   {metrics ? (
-                    <OverviewLongRangeRecoveryBlock>
-                      <div className="pf-overview-metric-grid">
-                        <OverviewMetricCard label="Openings created" value={metrics.open_slots_created} />
-                        <OverviewMetricCard label="Offers sent" value={metrics.offers_sent} />
-                        <OverviewMetricCard label="Openings booked" value={metrics.slots_booked} />
-                        <OverviewMetricCard label="Recovered revenue" value={metrics.recovered_revenue_cents} isCurrency />
-                        <OverviewMetricCard label="Openings (list)" value={setup.openSlotsCount} />
-                        {liveCounts.data ? (
-                          <>
-                            <OverviewMetricCard label="Open / offered (live)" value={liveCounts.data.counts.open} />
-                            <OverviewMetricCard label="Claimed (live)" value={liveCounts.data.counts.claimed} />
-                          </>
-                        ) : null}
-                      </div>
-                    </OverviewLongRangeRecoveryBlock>
+                    <CardErrorBoundary label="Recovery metrics">
+                      <OverviewLongRangeRecoveryBlock>
+                        <div className="pf-overview-metric-grid">
+                          <OverviewMetricCard label="Openings created" value={metrics.open_slots_created} />
+                          <OverviewMetricCard label="Offers sent" value={metrics.offers_sent} />
+                          <OverviewMetricCard label="Openings booked" value={metrics.slots_booked} />
+                          <OverviewMetricCard label="Recovered revenue" value={metrics.recovered_revenue_cents} isCurrency />
+                          <OverviewMetricCard label="Openings (list)" value={setup.openSlotsCount} />
+                          {liveCounts.data ? (
+                            <>
+                              <OverviewMetricCard label="Open / offered (live)" value={liveCounts.data.counts.open} />
+                              <OverviewMetricCard label="Claimed (live)" value={liveCounts.data.counts.claimed} />
+                            </>
+                          ) : null}
+                        </div>
+                      </OverviewLongRangeRecoveryBlock>
+                    </CardErrorBoundary>
                   ) : null}
                 </>
               ) : null}

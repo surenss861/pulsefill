@@ -154,6 +154,9 @@ importers:
       ioredis:
         specifier: ^5.6.0
         version: 5.10.1
+      stripe:
+        specifier: ^17.4.0
+        version: 17.7.0
     devDependencies:
       '@types/node':
         specifier: ^22.14.0

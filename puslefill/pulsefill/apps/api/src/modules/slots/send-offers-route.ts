@@ -5,7 +5,6 @@ import { createServiceSupabase } from "../../config/supabase.js";
 import { assertStaffBillingCapability } from "../billing/billing-guard.js";
 import { sendJson } from "../../lib/http-errors.js";
 import { sendActionError, sendSendOffersSuccess } from "../../lib/action-replies.js";
-import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
 import { computeStandbyMatchesForOpenSlot } from "../../lib/open-slot-send-offers-match.js";
 import {
   noMatchesReasonFromSummary,
@@ -15,11 +14,7 @@ import {
 import { checkSendOrRetryOffersAllowed } from "./assert-operator-action-allowed.js";
 import { getSendOffersMutationTestDelegate } from "./open-slots-route-test-seams.js";
 import { notifyCustomerOfferSent } from "./notification-hooks.js";
-import {
-  commitSendOffersAtomically,
-  markSendOfferNotificationLogs,
-  recordNoMatchesAtomically,
-} from "./send-offers-transaction.js";
+import { commitSendOffersAtomically, recordNoMatchesAtomically } from "./send-offers-transaction.js";
 
 const sendOffersBody = z
   .object({
@@ -70,17 +65,16 @@ export async function sendOpenSlotOffersRouteHandler(req: FastifyRequest, reply:
     });
     if (out.offer_customer_ids?.length) {
       for (const pair of out.offer_customer_ids) {
-        try {
-          await notifyCustomerOfferSent({
-            env: req.server.env,
-            supabase: admin,
-            businessId: req.staff!.business_id,
-            offerId: pair.offer_id,
-            customerId: pair.customer_id,
-          });
-        } catch (e) {
+        // Fire-and-forget: push delivery must not block the send-offers response.
+        notifyCustomerOfferSent({
+          env: req.server.env,
+          supabase: admin,
+          businessId: req.staff!.business_id,
+          offerId: pair.offer_id,
+          customerId: pair.customer_id,
+        }).catch((e) => {
           req.log.warn({ e, pair }, "customer_offer_sent_notification_failed");
-        }
+        });
       }
     }
     return sendSendOffersSuccess(reply, {
@@ -139,41 +133,18 @@ export async function sendOpenSlotOffersRouteHandler(req: FastifyRequest, reply:
 
   const offerRowsForQueue = committed.offer_customer_ids;
   const offerIds = committed.offer_ids;
-  const queuePayloads = offerRowsForQueue.map((o) => ({
-    offerId: o.offer_id,
-    openSlotId: id,
-    customerId: o.customer_id,
-    channel: o.channel,
-  }));
-
-  let queued = { queued: false, count: 0 };
-  let queueError: string | null = null;
-  try {
-    queued = await enqueueSendOfferNotificationJobs(req.server.env, queuePayloads);
-  } catch (e) {
-    queueError = e instanceof Error ? e.message : "queue_failed";
-    req.log.error({ e, openSlotId: id }, "send_offer_notification_queue_failed");
-  }
-
-  await markSendOfferNotificationLogs(admin, {
-    openSlotId: id,
-    offerIds,
-    status: queueError ? "queue_failed" : queued.queued ? "queued" : "skipped_no_queue",
-    metadata: queueError ? { queue_error: queueError } : {},
-  });
 
   for (const row of offerRowsForQueue) {
-    try {
-      await notifyCustomerOfferSent({
-        env: req.server.env,
-        supabase: admin,
-        businessId: req.staff!.business_id,
-        offerId: row.offer_id,
-        customerId: row.customer_id,
-      });
-    } catch (e) {
+    // Fire-and-forget: push delivery must not block the send-offers response.
+    notifyCustomerOfferSent({
+      env: req.server.env,
+      supabase: admin,
+      businessId: req.staff!.business_id,
+      offerId: row.offer_id,
+      customerId: row.customer_id,
+    }).catch((e) => {
       req.log.warn({ e, offerId: row.offer_id, customerId: row.customer_id }, "customer_offer_sent_notification_failed");
-    }
+    });
   }
 
   const count = offerIds.length;
@@ -194,7 +165,7 @@ export async function sendOpenSlotOffersRouteHandler(req: FastifyRequest, reply:
     offer_ids: offerIds,
     message,
     match_summary: computed.matchPack.summary,
-    notification_queue: { queued: queued.queued, count: queued.count },
+    notification_queue: { queued: count > 0, count },
   });
 }
 

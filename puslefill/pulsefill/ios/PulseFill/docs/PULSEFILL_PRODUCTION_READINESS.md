@@ -21,11 +21,13 @@ Single place to track what must be green before treating PulseFill as **producti
 ## iOS
 
 - [ ] Release archive succeeds (no DerivedData `build.db` I/O errors; script uses isolated `-derivedDataPath`)
-- [ ] Distribution signing: `get-task-allow` false; `aps-environment` production for App Store / TestFlight (verify exported archive / Organizer)
+- [x] `aps-environment` production entitlements file (`PulseFill-Release.entitlements`) wired to the Release build configuration — no longer relying solely on automatic-signing rewrite. Still verify the exported archive's embedded entitlements in Organizer before upload (real device/Apple Developer account required).
+- [ ] Distribution signing: `get-task-allow` false (verify exported archive / Organizer)
 - [ ] `PulseFillReleaseOverrides.xcconfig`: real Supabase URL + publishable/anon key; API base URL; tier
 - [ ] Customer loop QA (see `CUSTOMER_UI_QA_CHECKLIST.md`, `CUSTOMER_FLOW_SMOKE_TEST.md`)
 - [ ] Business / operator QA (see `IOS_OPERATOR_QA_CHECKLIST.md`, `BUSINESS_MODE_LIVE_WORKFLOW_QA.md`)
 - [ ] Push registration and notification routing smoke-tested on device
+- [x] In-app account deletion (Guideline 5.1.1(v)): `DELETE /v1/customers/me` + Profile → Account → Delete account — scrubs PII, deactivates push devices/standby preferences, deletes the Supabase auth identity; verified against a real local Postgres migration chain and a real Xcode build
 
 ---
 
@@ -102,9 +104,12 @@ Single place to track what must be green before treating PulseFill as **producti
 
 ## App Store
 
-- [ ] Privacy nutrition / privacy policy URLs
-- [ ] Support URL and metadata
-- [ ] Screenshots and copy for current flows
+- [x] `PrivacyInfo.xcprivacy` manifest added to the app target
+- [x] Privacy Policy / Terms / Support pages drafted (`apps/marketing-site/app/{privacy,terms,support}`) — fill in `[TODO]` placeholders (legal entity, address, support email) before publishing
+- [x] App Store description/keywords/review notes drafted — see `docs/APP_STORE_SUBMISSION_NOTES.md`
+- [ ] Deploy marketing site so privacy/terms/support URLs are live before submission
+- [ ] Screenshots for current flows (see checklist in `docs/APP_STORE_SUBMISSION_NOTES.md`)
+- [ ] Demo account seeded and credentials filled into submission notes
 
 ---
 
@@ -118,8 +123,10 @@ Single place to track what must be green before treating PulseFill as **producti
 
 ## Monitoring
 
-- [ ] Error reporting (e.g. Sentry) for API and optionally iOS
-- [ ] Uptime / synthetic checks or log-based alerts for critical paths
+- [x] Exact alert rules and thresholds documented — see `docs/MONITORING_AND_ALERTS.md`
+- [ ] Uptime checker actually pointed at `/health` + `/ready` (Railway) and dashboard root (Vercel) per that doc
+- [ ] Railway/Vercel deploy + log-based alerts actually configured per that doc
+- [ ] Error reporting (e.g. Sentry) wired for API/worker/dashboard once a real DSN exists (deliberately not stubbed with a placeholder — see doc §6)
 
 ---
 

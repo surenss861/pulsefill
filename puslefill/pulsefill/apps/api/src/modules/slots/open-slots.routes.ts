@@ -42,6 +42,15 @@ import {
   mergeMetadata,
   touchOpenSlotByStaff,
 } from "./staff-attribution.js";
+import { stripeClientFromEnv } from "../billing/billing-stripe.js";
+import { getConnectAccountSnapshot } from "../payments/payments-connect.js";
+import {
+  captureStripePaymentIntent,
+  createSlotClaimPaymentIntent,
+  markSlotClaimPaymentAuthorized,
+  refundStripePayment,
+  releaseAuthorizedPaymentByIntentId,
+} from "../payments/payments-intents.js";
 
 export { setNotificationEventHookTestDelegate } from "./notification-hooks.js";
 
@@ -55,8 +64,15 @@ const createSlotBody = z
     ends_at: z.string().datetime(),
     estimated_value_cents: z.number().int().min(0).nullable().optional(),
     notes: z.string().max(2000).nullable().optional(),
+    payment_required: z.boolean().optional(),
+    price_cents: z.number().int().min(1).nullable().optional(),
+    currency: z.string().length(3).optional(),
   })
-  .strict();
+  .strict()
+  .refine((v) => !v.payment_required || (v.price_cents != null && v.price_cents > 0), {
+    message: "price_cents is required when payment_required is true",
+    path: ["price_cents"],
+  });
 
 const confirmBody = z
   .object({
@@ -67,6 +83,7 @@ const confirmBody = z
 const claimBody = z
   .object({
     deposit_payment_intent_id: z.string().optional(),
+    payment_intent_id: z.string().optional(),
   })
   .strict();
 
@@ -146,7 +163,7 @@ async function loadOpenSlotDetailRoutePayload(
   const { data, error } = await admin
     .from("open_slots")
     .select(
-      "*, slot_offers(id, customer_id, channel, status, sent_at, expires_at), slot_claims(id, customer_id, claimed_at, status), last_touched_staff:staff_users!last_touched_by_staff_id(id, full_name, email)",
+      "*, slot_offers(id, customer_id, channel, status, sent_at, expires_at), slot_claims(id, customer_id, claimed_at, status), slot_claim_payments(id, claim_id, status, amount_cents, application_fee_cents, currency), last_touched_staff:staff_users!last_touched_by_staff_id(id, full_name, email)",
     )
     .eq("id", slotId)
     .single();
@@ -159,14 +176,21 @@ async function loadOpenSlotDetailRoutePayload(
   const signals = await enrichOperatorSlotDetailSignals(admin, businessId, slotId, signalsBase);
   const queue_context = buildOperatorSlotQueueContext(signals);
   const available_actions = buildOperatorAvailableActions(signals, queue_context);
-  const { slot_claims: claims, last_touched_staff: lastTouchedStaff, ...slotRest } = row;
+  const {
+    slot_claims: claims,
+    slot_claim_payments: payments,
+    last_touched_staff: lastTouchedStaff,
+    ...slotRest
+  } = row;
+  const winningClaim = pickWinningClaim(claims);
 
   return {
     kind: "ok",
     payload: {
       slot: {
         ...slotRest,
-        winning_claim: pickWinningClaim(claims),
+        winning_claim: winningClaim,
+        payment: pickRelevantPayment(payments, winningClaim),
         last_touched_by: lastTouchedStaff ?? null,
       },
       queue_context,
@@ -179,6 +203,17 @@ function pickWinningClaim(claims: unknown): Record<string, unknown> | null {
   if (!Array.isArray(claims)) return null;
   const won = claims.find((c: { status?: string }) => c.status === "won" || c.status === "confirmed");
   return (won as Record<string, unknown>) ?? null;
+}
+
+/** Prefers the payment tied to the winning claim; falls back to the most recent one otherwise. */
+function pickRelevantPayment(payments: unknown, winningClaim: Record<string, unknown> | null): Record<string, unknown> | null {
+  if (!Array.isArray(payments) || payments.length === 0) return null;
+  const winningClaimId = winningClaim?.id;
+  if (winningClaimId) {
+    const forWinner = payments.find((p: { claim_id?: string | null }) => p.claim_id === winningClaimId);
+    if (forWinner) return forWinner as Record<string, unknown>;
+  }
+  return (payments[payments.length - 1] as Record<string, unknown>) ?? null;
 }
 
 function locationNameFromEmbed(loc: unknown): string | null {
@@ -206,15 +241,35 @@ function mapSlotListRow(row: Record<string, unknown>) {
   };
 }
 
+const DEFAULT_PAGE_LIMIT = 50;
+const MAX_PAGE_LIMIT = 200;
+
+function clampLimit(raw: unknown): number {
+  const n = typeof raw === "string" ? parseInt(raw, 10) : NaN;
+  if (!Number.isFinite(n) || n <= 0) return DEFAULT_PAGE_LIMIT;
+  return Math.min(n, MAX_PAGE_LIMIT);
+}
+
+function clampOffset(raw: unknown): number {
+  const n = typeof raw === "string" ? parseInt(raw, 10) : NaN;
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return n;
+}
+
 async function listOpenSlots(req: FastifyRequest, reply: FastifyReply) {
   const admin = createServiceSupabase(req.server.env);
-  const q = req.query as { status?: string };
+  const q = req.query as { status?: string; limit?: string; offset?: string };
+
+  const limit = clampLimit(q.limit);
+  const offset = clampOffset(q.offset);
 
   let query = admin
     .from("open_slots")
     .select("*, slot_claims(id, customer_id, claimed_at, status), locations(name)")
     .eq("business_id", req.staff!.business_id)
-    .order("starts_at", { ascending: true });
+    .order("starts_at", { ascending: true })
+    // Fetch one extra row past the page to detect hasMore without a separate count query.
+    .range(offset, offset + limit);
 
   if (q.status) {
     query = query.eq("status", q.status);
@@ -222,8 +277,10 @@ async function listOpenSlots(req: FastifyRequest, reply: FastifyReply) {
 
   const { data, error } = await query;
   if (error) return sendJson(req, reply, 500, { error: "list_failed" });
-  const rows = (data ?? []).map((r) => mapSlotListRow(r as Record<string, unknown>));
-  return reply.send({ openSlots: rows });
+  const rowsRaw = data ?? [];
+  const hasMore = rowsRaw.length > limit;
+  const rows = rowsRaw.slice(0, limit).map((r) => mapSlotListRow(r as Record<string, unknown>));
+  return reply.send({ openSlots: rows, pagination: { limit, offset, hasMore } });
 }
 
 export async function registerOpenSlotRoutes(app: FastifyInstance) {
@@ -404,6 +461,13 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
       }
       const body = createSlotBody.parse(req.body ?? {});
 
+      if (body.payment_required) {
+        const connect = await getConnectAccountSnapshot(admin, req.staff!.business_id);
+        if (!connect.charges_enabled) {
+          return sendJson(req, reply, 403, { error: "business_payouts_not_enabled" });
+        }
+      }
+
       const { data, error } = await admin
         .from("open_slots")
         .insert({
@@ -503,14 +567,64 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
   );
 
   app.post(
+    "/v1/open-slots/:id/payment-intent",
+    { preHandler: requireCustomer, config: { rateLimit: rateLimitTier.strict } },
+    async (req, reply) => {
+      const env = req.server.env as Env;
+      if (!env.ENABLE_CONNECT_ROUTES) return sendJson(req, reply, 503, { error: "connect_unconfigured" });
+      const stripe = stripeClientFromEnv(env);
+      if (!stripe) return sendJson(req, reply, 503, { error: "connect_unconfigured" });
+
+      const admin = createServiceSupabase(env);
+      const openSlotId = z.string().uuid().parse((req.params as { id?: string }).id);
+
+      try {
+        const { client_secret, payment_intent_id } = await createSlotClaimPaymentIntent({
+          admin,
+          stripe,
+          env,
+          openSlotId,
+          customerId: req.customer!.id,
+        });
+        return reply.send({ client_secret, payment_intent_id });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "payment_intent_failed";
+        req.log.warn({ e, openSlotId }, "create_slot_claim_payment_intent_failed");
+        if (msg === "slot_not_found") return sendJson(req, reply, 404, { error: "not_found" });
+        if (msg === "slot_not_payable") return sendJson(req, reply, 400, { error: "slot_not_payable" });
+        if (msg === "slot_not_claimable") return sendJson(req, reply, 409, { error: "slot_not_claimable" });
+        if (msg === "business_payouts_not_enabled") {
+          return sendJson(req, reply, 503, { error: "business_payouts_not_enabled" });
+        }
+        return sendJson(req, reply, 500, { error: "payment_intent_failed" });
+      }
+    },
+  );
+
+  app.post(
     "/v1/open-slots/:id/claim",
     { preHandler: requireCustomer, config: { rateLimit: rateLimitTier.strict } },
     async (req, reply) => {
       const admin = createServiceSupabase(req.server.env);
+      const env = req.server.env as Env;
       const openSlotId = z.string().uuid().parse((req.params as { id?: string }).id);
       const body = claimBody.parse(req.body ?? {});
 
       const claimRpcDelegate = getClaimOpenSlotRpcTestDelegate();
+
+      // Confirm with Stripe (source of truth) that the intent actually
+      // authorized before letting the RPC's payment gate see it.
+      if (body.payment_intent_id && !claimRpcDelegate) {
+        const stripe = stripeClientFromEnv(env);
+        if (!stripe) return sendJson(req, reply, 503, { error: "connect_unconfigured" });
+        try {
+          await markSlotClaimPaymentAuthorized({ admin, stripe, paymentIntentId: body.payment_intent_id });
+        } catch (e) {
+          req.log.warn({ e, paymentIntentId: body.payment_intent_id }, "mark_payment_authorized_failed");
+          return sendJson(req, reply, 409, { error: "payment_not_authorized" });
+        }
+      }
+
       let data: unknown;
       let error: { message: string } | null = null;
       if (claimRpcDelegate) {
@@ -518,12 +632,14 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           openSlotId,
           customerId: req.customer!.id,
           deposit_payment_intent_id: body.deposit_payment_intent_id ?? null,
+          stripe_payment_intent_id: body.payment_intent_id ?? null,
         });
       } else {
         const rpcOut = await admin.rpc("claim_open_slot", {
           p_open_slot_id: openSlotId,
           p_customer_id: req.customer!.id,
           p_deposit_payment_intent_id: body.deposit_payment_intent_id ?? null,
+          p_stripe_payment_intent_id: body.payment_intent_id ?? null,
         });
         data = rpcOut.data;
         error = rpcOut.error;
@@ -536,6 +652,16 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       const result = data as { ok?: boolean; error?: string; claim_id?: string };
       if (!result?.ok) {
+        if (body.payment_intent_id && !claimRpcDelegate) {
+          const stripe = stripeClientFromEnv(env);
+          if (stripe) {
+            try {
+              await releaseAuthorizedPaymentByIntentId(admin, stripe, body.payment_intent_id);
+            } catch (e) {
+              req.log.warn({ e, paymentIntentId: body.payment_intent_id }, "release_payment_after_claim_reject_failed");
+            }
+          }
+        }
         return sendJson(req, reply, 409, { error: result?.error ?? "claim_rejected" });
       }
 
@@ -676,16 +802,15 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
           staffId: req.staff!.id,
           authUserId: req.authUser!.id,
         });
-        try {
-          await notifyCustomerBookingConfirmed({
-            env: req.server.env,
-            supabase: admin,
-            businessId: req.staff!.business_id,
-            claimId: body.claim_id,
-          });
-        } catch (e) {
+        // Fire-and-forget: push delivery must not block the confirm response.
+        notifyCustomerBookingConfirmed({
+          env: req.server.env,
+          supabase: admin,
+          businessId: req.staff!.business_id,
+          claimId: body.claim_id,
+        }).catch((e) => {
           req.log.warn({ e, claimId: body.claim_id }, "customer_booking_confirmed_notification_failed");
-        }
+        });
         return sendConfirmSuccess(reply, {
           ok: true,
           result: "confirmed",
@@ -696,7 +821,7 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         });
       }
 
-      const { data, error } = await admin.rpc("confirm_open_slot_claim", {
+      const { data, error } = await admin.rpc("confirm_open_slot_claim_start_capture", {
         p_open_slot_id: slotId,
         p_claim_id: body.claim_id,
         p_staff_auth_user_id: req.authUser!.id,
@@ -714,7 +839,13 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         );
       }
 
-      const result = data as { ok?: boolean; error?: string; status?: string };
+      const result = data as {
+        ok?: boolean;
+        error?: string;
+        status?: string;
+        requires_capture?: boolean;
+        payment_intent_id?: string;
+      };
       if (!result?.ok) {
         const err = result?.error ?? "";
         if (err === "forbidden") {
@@ -773,6 +904,60 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         );
       }
 
+      if (result.requires_capture) {
+        const env = req.server.env as Env;
+        const stripe = stripeClientFromEnv(env);
+        if (!stripe) {
+          await admin.rpc("confirm_open_slot_claim_finalize", {
+            p_open_slot_id: slotId,
+            p_claim_id: body.claim_id,
+            p_capture_ok: false,
+            p_failure_reason: "stripe_not_configured",
+            p_terminal: false,
+          });
+          return sendActionError(req, reply, 503, "server_error", "Payments are not configured.", true);
+        }
+
+        try {
+          await captureStripePaymentIntent(stripe, result.payment_intent_id!);
+        } catch (e) {
+          req.log.warn({ e, claimId: body.claim_id }, "confirm_capture_failed");
+          const reason = e instanceof Error ? e.message : "capture_failed";
+          await admin.rpc("confirm_open_slot_claim_finalize", {
+            p_open_slot_id: slotId,
+            p_claim_id: body.claim_id,
+            p_capture_ok: false,
+            p_failure_reason: reason,
+            p_terminal: false,
+          });
+          return sendActionError(
+            req,
+            reply,
+            409,
+            "payment_capture_failed",
+            "Could not charge the customer's card. You can try confirming again.",
+            true,
+          );
+        }
+
+        const { data: finalizeData, error: finalizeErr } = await admin.rpc("confirm_open_slot_claim_finalize", {
+          p_open_slot_id: slotId,
+          p_claim_id: body.claim_id,
+          p_capture_ok: true,
+        });
+        if (finalizeErr || !(finalizeData as { ok?: boolean } | null)?.ok) {
+          req.log.error({ finalizeErr, finalizeData }, "confirm_finalize_after_capture_failed");
+          return sendActionError(
+            req,
+            reply,
+            500,
+            "server_error",
+            "Payment captured but the booking could not be finalized. Contact support.",
+            true,
+          );
+        }
+      }
+
       await admin.from("audit_events").insert({
         business_id: req.staff!.business_id,
         actor_type: "staff",
@@ -785,16 +970,15 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
 
       await touchOpenSlotByStaff(admin, slotId, req.staff!.id);
 
-      try {
-        await notifyCustomerBookingConfirmed({
-          env: req.server.env,
-          supabase: admin,
-          businessId: req.staff!.business_id,
-          claimId: body.claim_id,
-        });
-      } catch (e) {
+      // Fire-and-forget: push delivery must not block the confirm response.
+      notifyCustomerBookingConfirmed({
+        env: req.server.env,
+        supabase: admin,
+        businessId: req.staff!.business_id,
+        claimId: body.claim_id,
+      }).catch((e) => {
         req.log.warn({ e, claimId: body.claim_id }, "customer_booking_confirmed_notification_failed");
-      }
+      });
 
       return sendConfirmSuccess(reply, {
         ok: true,
@@ -804,6 +988,82 @@ export async function registerOpenSlotRoutes(app: FastifyInstance) {
         status: "booked",
         message: "Booking confirmed.",
       });
+    },
+  );
+
+  app.post(
+    "/v1/open-slots/:id/refund",
+    { preHandler: requireStaff, config: { rateLimit: rateLimitTier.staffAction } },
+    async (req, reply) => {
+      const env = req.server.env as Env;
+      const admin = createServiceSupabase(env);
+      const slotId = z.string().uuid().parse((req.params as { id?: string }).id);
+      const parsed = confirmBody.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return sendActionError(req, reply, 400, "invalid_request", "A valid claim ID is required.", false);
+      }
+
+      const stripe = stripeClientFromEnv(env);
+      if (!stripe) {
+        return sendActionError(req, reply, 503, "server_error", "Payments are not configured.", true);
+      }
+
+      const { data, error } = await admin.rpc("refund_slot_claim_payment", {
+        p_claim_id: parsed.data.claim_id,
+        p_staff_auth_user_id: req.authUser!.id,
+      });
+      if (error) {
+        req.log.error({ error }, "refund_slot_claim_payment rpc failed");
+        return sendActionError(req, reply, 500, "server_error", "Could not refund this booking.", true);
+      }
+
+      const result = data as { ok?: boolean; error?: string; payment_intent_id?: string };
+      if (!result?.ok) {
+        if (result?.error === "forbidden") {
+          return sendActionError(
+            req,
+            reply,
+            403,
+            "forbidden",
+            "You do not have access to refund this booking.",
+            false,
+          );
+        }
+        return sendActionError(
+          req,
+          reply,
+          404,
+          "not_found",
+          "No captured payment found for this claim.",
+          false,
+        );
+      }
+
+      try {
+        await refundStripePayment(stripe, result.payment_intent_id!);
+      } catch (e) {
+        req.log.error({ e, claimId: parsed.data.claim_id }, "stripe_refund_failed");
+        return sendActionError(
+          req,
+          reply,
+          502,
+          "server_error",
+          "Refund recorded but Stripe could not be reached. Contact support.",
+          true,
+        );
+      }
+
+      await admin.from("audit_events").insert({
+        business_id: req.staff!.business_id,
+        actor_type: "staff",
+        actor_id: req.staff!.id,
+        event_type: "payment_refunded",
+        entity_type: "open_slot",
+        entity_id: slotId,
+        metadata: mergeMetadata({ claim_id: parsed.data.claim_id }, req.authUser!.id),
+      });
+
+      return reply.send({ ok: true, claim_id: parsed.data.claim_id, status: "refunded" });
     },
   );
 

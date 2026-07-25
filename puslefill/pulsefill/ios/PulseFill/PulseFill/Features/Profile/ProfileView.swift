@@ -34,6 +34,9 @@ struct ProfileView: View {
         maskedToken: nil
     )
     @State private var confirmCustomerSignOut = false
+    @State private var confirmDeleteAccount = false
+    @State private var isDeletingAccount = false
+    @State private var deleteAccountError: String?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -128,6 +131,18 @@ struct ProfileView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("You’ll need to sign in again for standby, openings, and business tools.")
+        }
+        .confirmationDialog(
+            "Delete your account?",
+            isPresented: $confirmDeleteAccount,
+            titleVisibility: .visible
+        ) {
+            Button("Delete account", role: .destructive) {
+                Task { await deleteAccount() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This permanently removes your name, email, and phone number, turns off notifications, and signs you out everywhere. This can’t be undone.")
         }
     }
 
@@ -403,6 +418,30 @@ struct ProfileView: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(PFColor.error)
+
+                if let deleteAccountError {
+                    Text(PFCustomerFacingErrorCopy.sanitizeCustomerMessage(deleteAccountError))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(PFColor.error)
+                        .lineSpacing(3)
+                }
+
+                Button {
+                    confirmDeleteAccount = true
+                } label: {
+                    HStack {
+                        if isDeletingAccount {
+                            ProgressView().tint(PFColor.error)
+                        }
+                        Text(isDeletingAccount ? "Deleting…" : "Delete account")
+                    }
+                    .font(.system(size: 14, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: PFCustomerShellMetrics.buttonMinHeight)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(PFColor.error.opacity(0.85))
+                .disabled(isDeletingAccount)
             }
         }
     }
@@ -507,6 +546,22 @@ struct ProfileView: View {
             businessInviteToken = ""
         case let .failure(message):
             inviteInlineError = message
+        }
+    }
+
+    private func deleteAccount() async {
+        guard !isDeletingAccount else { return }
+        isDeletingAccount = true
+        deleteAccountError = nil
+        PFHaptics.mediumImpact()
+        defer { isDeletingAccount = false }
+        do {
+            try await env.apiClient.deleteCustomerAccount()
+            PFHaptics.success()
+            await env.authManager.signOut()
+        } catch {
+            deleteAccountError = APIErrorCopy.message(for: error)
+            PFHaptics.warning()
         }
     }
 

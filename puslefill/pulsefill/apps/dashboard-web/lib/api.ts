@@ -65,3 +65,31 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   }
   return data as T;
 }
+
+/**
+ * Walks a paginated `{ items, pagination: { hasMore } }`-shaped endpoint until
+ * exhausted, using a large page size so aggregate/count consumers keep seeing
+ * the full collection. Bounded by `maxPages` so a runaway business size still
+ * can't turn into an unbounded fetch loop.
+ */
+export async function fetchAllPages<T>(
+  basePath: string,
+  extractPage: (page: unknown) => { items: T[]; hasMore: boolean },
+  opts: { pageLimit?: number; maxPages?: number } = {},
+): Promise<T[]> {
+  const pageLimit = opts.pageLimit ?? 200;
+  const maxPages = opts.maxPages ?? 25;
+  const items: T[] = [];
+  let offset = 0;
+
+  for (let page = 0; page < maxPages; page++) {
+    const sep = basePath.includes("?") ? "&" : "?";
+    const data = await apiFetch<unknown>(`${basePath}${sep}limit=${pageLimit}&offset=${offset}`);
+    const { items: pageItems, hasMore } = extractPage(data);
+    items.push(...pageItems);
+    if (!hasMore || pageItems.length === 0) break;
+    offset += pageLimit;
+  }
+
+  return items;
+}

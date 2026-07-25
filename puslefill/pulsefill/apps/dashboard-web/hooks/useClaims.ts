@@ -1,19 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { fetchAllPages } from "@/lib/api";
 import type { ClaimRow } from "@/types/claim";
 
+type OpenSlotRow = {
+  id: string;
+  status: string;
+  starts_at: string;
+  ends_at?: string;
+  estimated_value_cents?: number | null;
+  provider_name_snapshot?: string | null;
+  winning_claim?: ClaimRow["winning_claim"];
+};
+
 type OpenSlotsResponse = {
-  openSlots: Array<{
-    id: string;
-    status: string;
-    starts_at: string;
-    ends_at?: string;
-    estimated_value_cents?: number | null;
-    provider_name_snapshot?: string | null;
-    winning_claim?: ClaimRow["winning_claim"];
-  }>;
+  openSlots: OpenSlotRow[];
+  pagination?: { hasMore: boolean };
 };
 
 export function useClaims() {
@@ -26,8 +29,11 @@ export function useClaims() {
     try {
       if (!silent) setLoading(true);
       setError(null);
-      const data = await apiFetch<OpenSlotsResponse>("/v1/open-slots");
-      const rows: ClaimRow[] = (data.openSlots ?? [])
+      const openSlots = await fetchAllPages<OpenSlotRow>("/v1/open-slots", (page) => {
+        const p = page as OpenSlotsResponse;
+        return { items: p.openSlots ?? [], hasMore: p.pagination?.hasMore ?? false };
+      });
+      const rows: ClaimRow[] = openSlots
         .filter((s) => s.status === "claimed" || s.status === "booked")
         .map((slot) => ({
           open_slot_id: slot.id,

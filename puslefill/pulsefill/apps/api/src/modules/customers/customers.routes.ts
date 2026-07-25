@@ -115,6 +115,56 @@ export async function registerCustomerRoutes(app: FastifyInstance) {
     },
   );
 
+  app.delete(
+    "/v1/customers/me",
+    { preHandler: requireCustomer, config: { rateLimit: rateLimitTier.strict } },
+    async (req, reply) => {
+      const admin = createServiceSupabase(req.server.env);
+      const customerId = req.customer!.id;
+      const nowIso = new Date().toISOString();
+
+      // Soft-delete + scrub PII: slot_claims / slot_claim_payments / audit_events
+      // must survive for financial and audit record-keeping, so this does not
+      // hard-delete the customer row — only removes identifying info and access.
+      const { error: scrubError } = await admin
+        .from("customers")
+        .update({
+          full_name: null,
+          email: null,
+          phone: null,
+          push_enabled: false,
+          sms_enabled: false,
+          email_enabled: false,
+          deleted_at: nowIso,
+        })
+        .eq("id", customerId);
+      if (scrubError) {
+        req.log.error({ scrubError }, "delete_account_scrub_failed");
+        return sendJson(req, reply, 500, { error: "delete_account_failed" });
+      }
+
+      await admin
+        .from("customer_push_devices")
+        .update({ active: false, updated_at: nowIso })
+        .eq("customer_id", customerId);
+
+      await admin
+        .from("standby_preferences")
+        .update({ active: false, updated_at: nowIso })
+        .eq("customer_id", customerId);
+
+      const { error: authDeleteError } = await admin.auth.admin.deleteUser(req.authUser!.id);
+      if (authDeleteError) {
+        // PII is already scrubbed and access is already cut off via requireCustomer's
+        // deleted_at check, so a failure here (rare) doesn't leave the account usable —
+        // it just leaves an orphaned auth identity for manual cleanup.
+        req.log.error({ authDeleteError }, "delete_account_auth_user_delete_failed");
+      }
+
+      return reply.status(204).send();
+    },
+  );
+
   app.get(
     "/v1/customers/me/business-services",
     { preHandler: requireCustomer },

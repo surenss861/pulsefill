@@ -9,6 +9,7 @@ import { type CreateOpenSlotPayload, useCreateOpenSlot } from "@/hooks/useCreate
 import type { OpenSlotCreateDefaultsCombo } from "@/hooks/useOpenSlotCreateDefaults";
 import { useOpenSlotCreateDefaults } from "@/hooks/useOpenSlotCreateDefaults";
 import { useSlotFormOptions } from "@/hooks/useSlotFormOptions";
+import { useConnectAccount } from "@/hooks/useConnectAccount";
 import { RecoveryPipeline } from "@/components/operator/recovery-pipeline";
 import { OperatorFormShell } from "@/components/operator/operator-form-shell";
 import { OperatorLoadingState } from "@/components/operator/operator-loading-state";
@@ -101,6 +102,8 @@ export function OpenSlotForm({ onCreated }: Props) {
     reload: reloadCreateDefaults,
   } = useOpenSlotCreateDefaults(createDefaultsEnabled);
   const { create, loading: submitting, error: createError, setError } = useCreateOpenSlot();
+  const connectAccount = useConnectAccount();
+  const payoutsEnabled = connectAccount.data?.status === "enabled";
 
   const prefillFromDefaultsDone = useRef(false);
   const prefillFromQueryDone = useRef(false);
@@ -114,6 +117,8 @@ export function OpenSlotForm({ onCreated }: Props) {
   const [endsLocal, setEndsLocal] = useState(defaults.end);
   const [estimatedDollars, setEstimatedDollars] = useState("");
   const [notes, setNotes] = useState("");
+  const [chargeCustomer, setChargeCustomer] = useState(false);
+  const [priceDollars, setPriceDollars] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
 
   const setupIncomplete =
@@ -273,6 +278,16 @@ export function OpenSlotForm({ onCreated }: Props) {
       estimated_value_cents = Math.round(n * 100);
     }
 
+    let price_cents: number | null = null;
+    if (chargeCustomer) {
+      const p = Number.parseFloat(priceDollars.trim());
+      if (Number.isNaN(p) || p <= 0) {
+        setFieldError("Enter a price greater than $0 to charge the customer.");
+        return;
+      }
+      price_cents = Math.round(p * 100);
+    }
+
     const payload: CreateOpenSlotPayload = {
       starts_at: startsIso,
       ends_at: endsIso,
@@ -286,6 +301,10 @@ export function OpenSlotForm({ onCreated }: Props) {
     if (estimated_value_cents !== null) payload.estimated_value_cents = estimated_value_cents;
     const n = notes.trim();
     if (n) payload.notes = n;
+    if (chargeCustomer && price_cents !== null) {
+      payload.payment_required = true;
+      payload.price_cents = price_cents;
+    }
 
     try {
       const slot = await create(payload);
@@ -748,6 +767,42 @@ export function OpenSlotForm({ onCreated }: Props) {
                   style={{ ...inputStyle, resize: "vertical", minHeight: 72 }}
                 />
               </label>
+
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: payoutsEnabled ? "pointer" : "not-allowed" }}>
+                  <input
+                    type="checkbox"
+                    checked={chargeCustomer}
+                    disabled={!payoutsEnabled}
+                    onChange={(e) => setChargeCustomer(e.target.checked)}
+                  />
+                  <span className="pf-op-field-label" style={{ margin: 0 }}>
+                    Charge customer to claim this opening
+                  </span>
+                </label>
+                {!payoutsEnabled ? (
+                  <p className="pf-muted-copy" style={{ margin: 0, fontSize: 12 }}>
+                    Set up payouts in{" "}
+                    <Link href="/billing" style={{ color: "var(--primary)", fontWeight: 600 }}>
+                      Billing
+                    </Link>{" "}
+                    before you can charge customers for openings.
+                  </p>
+                ) : null}
+                {chargeCustomer ? (
+                  <label style={{ display: "grid", gap: 6, maxWidth: 220 }}>
+                    <span className="pf-op-field-label">Price *</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={priceDollars}
+                      onChange={(e) => setPriceDollars(e.target.value)}
+                      placeholder="0.00"
+                      style={inputStyle}
+                    />
+                  </label>
+                ) : null}
+              </div>
             </div>
           </section>
         </div>

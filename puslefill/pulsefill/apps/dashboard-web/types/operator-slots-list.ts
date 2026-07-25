@@ -30,6 +30,7 @@ export interface OperatorSlotsListItem {
 
 export interface OperatorOpenSlotsListResponse {
   openSlots: OperatorSlotsListItem[];
+  pagination?: { limit: number; offset: number; hasMore: boolean };
 }
 
 export type OperatorSlotsFilter =

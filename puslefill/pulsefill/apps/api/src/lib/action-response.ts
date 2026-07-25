@@ -12,6 +12,7 @@ export type ActionErrorCode =
   | "invalid_request"
   | "expire_slot_failed"
   | "cancel_slot_failed"
+  | "payment_capture_failed"
   | "server_error";
 
 export type ActionErrorBody = {

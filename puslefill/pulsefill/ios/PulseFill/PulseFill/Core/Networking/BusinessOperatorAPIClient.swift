@@ -6,30 +6,50 @@ import Foundation
 struct BusinessOperatorAPIClient {
     let underlying: APIClient
 
-    /// Parallel bundle for the Business **Today** tab.
+    /// Parallel bundle for the Business **Today** tab. Each section fails
+    /// independently — one card's outage must not blank the whole tab, and
+    /// the view is already built to render whichever sections came back.
     func loadBusinessTodayDashboard() async throws -> BusinessTodayDashboardPayload {
-        async let daily = labeled("GET /v1/businesses/mine/daily-ops-summary") {
+        async let daily = labeledResult("GET /v1/businesses/mine/daily-ops-summary") {
             try await underlying.getOperatorDailyOpsSummary()
         }
-        async let queue = labeled("GET /v1/businesses/mine/action-queue") {
+        async let queue = labeledResult("GET /v1/businesses/mine/action-queue") {
             try await underlying.getOperatorActionQueue()
         }
-        async let slots = labeled("GET /v1/open-slots/mine") {
-            try await underlying.getStaffOpenSlots()
+        async let slots = labeledResult("GET /v1/open-slots/mine") {
+            try await underlying.getAllStaffOpenSlots()
         }
         async let digest = underlying.getMorningRecoveryDigestIfAvailable()
         async let recoveryHealth = underlying.getOperatorRecoveryHealthIfAvailable()
 
-        let dailyRes = try await daily
-        let queueRes = try await queue
-        let slotsRes = try await slots
+        let dailyResult = await daily
+        let queueResult = await queue
+        let slotsResult = await slots
         let digestRes = await digest
         let recoveryRes = await recoveryHealth
+
+        let dailyRes = try? dailyResult.get()
+        let queueRes = try? queueResult.get()
+        let slotsRes = try? slotsResult.get()
+
+        if dailyRes == nil, queueRes == nil, slotsRes == nil {
+            // Every required section failed — surface the first real error
+            // rather than a payload that's silently empty across the board.
+            func failure<T>(_ result: Result<T, LabeledAPIFailure>) -> LabeledAPIFailure? {
+                if case let .failure(error) = result { return error }
+                return nil
+            }
+            let firstFailure = failure(dailyResult) ?? failure(queueResult) ?? failure(slotsResult)
+            throw firstFailure ?? LabeledAPIFailure(
+                endpoint: "GET /v1/businesses/mine/daily-ops-summary",
+                underlying: URLError(.unknown)
+            )
+        }
 
         return BusinessTodayDashboardPayload(
             daily: dailyRes,
             queue: queueRes,
-            openSlots: slotsRes.openSlots,
+            openSlots: slotsRes ?? [],
             morningDigest: digestRes,
             recoveryHealth: recoveryRes
         )
@@ -45,10 +65,26 @@ struct BusinessOperatorAPIClient {
         }
     }
 
+    /// Same as `labeled`, but captures the failure instead of throwing —
+    /// for bundle fetches where sections must be able to fail independently.
+    private func labeledResult<T: Sendable>(
+        _ endpoint: String,
+        _ work: @Sendable () async throws -> T
+    ) async -> Result<T, LabeledAPIFailure> {
+        do {
+            return .success(try await labeled(endpoint, work))
+        } catch let failure as LabeledAPIFailure {
+            return .failure(failure)
+        } catch {
+            return .failure(LabeledAPIFailure(endpoint: endpoint, underlying: error))
+        }
+    }
+
     // MARK: - Openings / slot actions (used beyond Today; keeps operator naming in one place)
 
     func listMyOpenSlots() async throws -> OpenSlotsListAPIResponse {
-        try await underlying.getStaffOpenSlots()
+        let rows = try await underlying.getAllStaffOpenSlots()
+        return OpenSlotsListAPIResponse(openSlots: rows)
     }
 
     func openSlotDetail(slotId: String) async throws -> OpenSlotDetailAPIResponse {
@@ -141,8 +177,10 @@ struct BusinessOperatorAPIClient {
 }
 
 struct BusinessTodayDashboardPayload: Sendable {
-    let daily: OperatorDailyOpsSummaryResponse
-    let queue: OperatorActionQueueResponse
+    /// Optional: this section's own fetch can fail independently without blanking the tab.
+    let daily: OperatorDailyOpsSummaryResponse?
+    /// Optional: this section's own fetch can fail independently without blanking the tab.
+    let queue: OperatorActionQueueResponse?
     let openSlots: [StaffOpenSlotListRow]
     let morningDigest: MorningRecoveryDigestResponse?
     let recoveryHealth: OperatorRecoveryHealthResponse?

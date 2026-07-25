@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import StripePaymentSheet
 
 @Observable
 @MainActor
@@ -19,6 +20,11 @@ final class OfferDetailViewModel {
     /// Set after a successful claim so we can link to outcome while the offer payload catches up.
     var lastClaimId: String?
 
+    /// Non-nil once a payment intent is ready — the view presents PaymentSheet when this is set.
+    var paymentSheet: PaymentSheet?
+    var isPreparingPayment = false
+
+    private var pendingPaymentIntentId: String?
     private let api: APIClient
     private let offerId: String
 
@@ -72,36 +78,80 @@ final class OfferDetailViewModel {
         OfferDetailUIState.resolve(
             displayStatus: displayStatus,
             rawOfferStatus: offer?.status,
-            isClaiming: isClaiming,
+            isClaiming: isClaiming || isPreparingPayment,
         )
     }
 
     var primaryActionTitle: String {
-        detailUIState.claimButtonTitle
+        if isPreparingPayment { return "Preparing payment…" }
+        return detailUIState.claimButtonTitle
     }
 
     var canClaim: Bool {
         guard let offer else { return false }
         guard let slotId = offer.openSlotId, !slotId.isEmpty else { return false }
-        if isClaiming { return false }
+        if isClaiming || isPreparingPayment { return false }
         return detailUIState.showsClaimButton
     }
 
     func claimOpening() async {
         guard let offer, let slotId = offer.openSlotId, !slotId.isEmpty else { return }
         guard canClaim else { return }
+
+        if offer.paymentRequired == true {
+            await prepareAndPresentPayment(slotId: slotId)
+            return
+        }
+
+        await performClaim(slotId: slotId, paymentIntentId: nil)
+    }
+
+    /// Called from the view once PaymentSheet finishes (completed / canceled / failed).
+    func handlePaymentSheetCompletion(_ result: PaymentSheetResult) async {
+        defer {
+            paymentSheet = nil
+        }
+        switch result {
+        case .completed:
+            guard let slotId = offer?.openSlotId, let paymentIntentId = pendingPaymentIntentId else { return }
+            pendingPaymentIntentId = nil
+            await performClaim(slotId: slotId, paymentIntentId: paymentIntentId)
+        case .canceled:
+            pendingPaymentIntentId = nil
+        case let .failed(error):
+            pendingPaymentIntentId = nil
+            errorBanner = PFCustomerFacingErrorCopy.sanitizeCustomerMessage(error.localizedDescription)
+            PFHaptics.warning()
+        }
+    }
+
+    private func prepareAndPresentPayment(slotId: String) async {
+        isPreparingPayment = true
+        errorBanner = nil
+        defer { isPreparingPayment = false }
+        do {
+            let intent = try await api.createSlotPaymentIntent(slotId: slotId)
+            pendingPaymentIntentId = intent.paymentIntentId
+            var configuration = PaymentSheet.Configuration()
+            configuration.merchantDisplayName = "PulseFill"
+            paymentSheet = PaymentSheet(paymentIntentClientSecret: intent.clientSecret, configuration: configuration)
+        } catch {
+            errorBanner = PFCustomerFacingErrorCopy.claimFailureMessage(from: error)
+            PFHaptics.warning()
+        }
+    }
+
+    private func performClaim(slotId: String, paymentIntentId: String?) async {
         isClaiming = true
         errorBanner = nil
         defer { isClaiming = false }
         PFHaptics.mediumImpact()
         do {
-            let res = try await api.post(
-                "/v1/open-slots/\(slotId)/claim",
-                body: EmptyJSON(),
-                as: ClaimOpenSlotResponse.self,
-            )
+            let res = try await api.claimSlot(slotId: slotId, paymentIntentId: paymentIntentId)
             guard res.ok else {
-                errorBanner = "This opening could not be claimed right now."
+                errorBanner = paymentIntentId != nil
+                    ? "This opening was claimed by someone else. Your card was not charged."
+                    : "This opening could not be claimed right now."
                 PFHaptics.warning()
                 return
             }

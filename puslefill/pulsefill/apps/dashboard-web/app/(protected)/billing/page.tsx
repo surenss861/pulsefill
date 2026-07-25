@@ -12,12 +12,15 @@ import { OperatorStatusChip } from "@/components/operator/operator-status-chip";
 import type { OperatorStatusKind } from "@/components/operator/operator-status-chip";
 import { OperatorDeskConfirmDialog } from "@/components/operator/operator-desk-confirm-dialog";
 import { BILLING_SESSION_ACTION_ERR } from "@/hooks/useBillingSessionActions";
+import { useConnectAccount } from "@/hooks/useConnectAccount";
+import { useConnectOnboardingActions } from "@/hooks/useConnectOnboardingActions";
 import { apiFetch } from "@/lib/api";
 import type {
   BillingSubscriptionStatus,
   BillingSummaryResponse,
   BillingSummarySubscription,
 } from "@/types/billing";
+import type { ConnectAccountStatus } from "@/types/payments";
 
 const BILLING_SUMMARY = "/v1/billing/summary";
 const BILLING_CHECKOUT = "/v1/billing/checkout";
@@ -102,6 +105,25 @@ function BillingDetailRow({ label, children }: { label: string; children: ReactN
   );
 }
 
+function connectStatusLabel(status: ConnectAccountStatus): string {
+  const labels: Record<ConnectAccountStatus, string> = {
+    not_started: "Not set up",
+    pending: "Setup in progress",
+    enabled: "Payouts on",
+    restricted: "Needs attention",
+    disabled: "Disabled",
+  };
+  return labels[status] ?? status;
+}
+
+function connectStatusChipKind(status: ConnectAccountStatus): OperatorStatusKind {
+  if (status === "enabled") return "confirmed";
+  if (status === "pending") return "pending";
+  if (status === "restricted") return "attention";
+  if (status === "disabled") return "cancelled";
+  return "setup";
+}
+
 function subscriptionIsLive(sub: BillingSummarySubscription): boolean {
   return sub.status === "active" || sub.status === "trialing";
 }
@@ -177,7 +199,19 @@ export default function BillingPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [checkoutConfirmOpen, setCheckoutConfirmOpen] = useState(false);
   const [portalConfirmOpen, setPortalConfirmOpen] = useState(false);
+  const [payoutConfirmOpen, setPayoutConfirmOpen] = useState(false);
   const lastSessionKindRef = useRef<"checkout" | "portal">("checkout");
+
+  const connectAccount = useConnectAccount();
+  const connectOnboarding = useConnectOnboardingActions();
+
+  const runConfirmedOnboarding = useCallback(async () => {
+    try {
+      await connectOnboarding.startOnboarding();
+    } finally {
+      setPayoutConfirmOpen(false);
+    }
+  }, [connectOnboarding]);
 
   const load = useCallback(async () => {
     try {
@@ -407,6 +441,49 @@ export default function BillingPage() {
                   </DeskSecondaryCard>
                 ) : null}
 
+                <DeskSecondaryCard variant="slip" title="Payouts">
+                  <p className="pf-muted-copy" style={{ margin: "0 0 8px", fontSize: 13, lineHeight: 1.55 }}>
+                    Set up Stripe Connect so this business can accept paid claims and get paid out directly.
+                  </p>
+                  {connectAccount.data ? (
+                    <BillingDetailRow label="Status">
+                      <OperatorStatusChip
+                        kind={connectStatusChipKind(connectAccount.data.status)}
+                        label={connectStatusLabel(connectAccount.data.status)}
+                      />
+                    </BillingDetailRow>
+                  ) : null}
+                  {connectOnboarding.sessionError ? (
+                    <div className="pf-desk-invite-error" role="alert" style={{ marginTop: 10 }}>
+                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{connectOnboarding.sessionError}</p>
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={connectOnboarding.onboardingLoading}
+                    onClick={() => setPayoutConfirmOpen(true)}
+                    style={{
+                      marginTop: 12,
+                      borderRadius: 10,
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      background: !connectOnboarding.onboardingLoading ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+                      color: !connectOnboarding.onboardingLoading ? "var(--pf-text-primary)" : "rgba(245,247,250,0.45)",
+                      padding: "9px 14px",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: !connectOnboarding.onboardingLoading ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    {connectOnboarding.onboardingLoading
+                      ? "Opening…"
+                      : connectAccount.data?.status === "enabled"
+                        ? "Update payout details"
+                        : connectAccount.data?.status === "not_started"
+                          ? "Set up payouts"
+                          : "Finish payout setup"}
+                  </button>
+                </DeskSecondaryCard>
+
                 <DeskSecondaryCard variant="slip" title="Billing portal">
                   <p className="pf-muted-copy" style={{ margin: "0 0 12px", fontSize: 13, lineHeight: 1.55 }}>
                     Manage payment method, invoices, and subscription in Stripe.
@@ -479,6 +556,21 @@ export default function BillingPage() {
       >
         <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
           You&apos;ll manage payment methods, invoices, and your subscription in Stripe.
+        </p>
+      </OperatorDeskConfirmDialog>
+      <OperatorDeskConfirmDialog
+        open={payoutConfirmOpen}
+        titleId="pf-billing-page-confirm-payout-title"
+        title="Set up payouts?"
+        busy={connectOnboarding.onboardingLoading}
+        primaryLabel="Continue to Stripe"
+        primaryBusyLabel="Opening Stripe…"
+        primaryVariant="warm"
+        onClose={() => !connectOnboarding.onboardingLoading && setPayoutConfirmOpen(false)}
+        onPrimary={() => void runConfirmedOnboarding()}
+      >
+        <p className="pf-muted-copy" style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+          This opens Stripe so you can verify your business and connect a bank account for payouts.
         </p>
       </OperatorDeskConfirmDialog>
     </main>

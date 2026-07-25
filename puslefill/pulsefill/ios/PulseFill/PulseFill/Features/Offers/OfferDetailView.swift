@@ -1,4 +1,5 @@
 import SwiftUI
+import StripePaymentSheet
 
 /// Customer-facing opening detail: patient-safe copy, clear status, inline claim.
 struct OfferDetailView: View {
@@ -7,6 +8,7 @@ struct OfferDetailView: View {
     @State private var viewModel: OfferDetailViewModel
     @State private var previousDetailStatus: CustomerOfferDisplayStatus?
     @State private var statusPulseTick = 0
+    @State private var showPaymentSheet = false
 
     init(api: APIClient, offerId: String) {
         _viewModel = State(initialValue: OfferDetailViewModel(api: api, offerId: offerId))
@@ -67,6 +69,19 @@ struct OfferDetailView: View {
             }
             previousDetailStatus = new
         }
+        .onChange(of: viewModel.paymentSheet != nil) { _, isReady in
+            showPaymentSheet = isReady
+        }
+        .paymentSheet(
+            isPresented: $showPaymentSheet,
+            paymentSheet: viewModel.paymentSheet ?? PaymentSheet(
+                paymentIntentClientSecret: "",
+                configuration: PaymentSheet.Configuration()
+            ),
+            onCompletion: { result in
+                Task { await viewModel.handlePaymentSheetCompletion(result) }
+            }
+        )
     }
 
     @ViewBuilder

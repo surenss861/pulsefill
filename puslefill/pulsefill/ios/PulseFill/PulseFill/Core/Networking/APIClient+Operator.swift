@@ -16,8 +16,26 @@ extension APIClient {
         try await get("/v1/businesses/mine/action-queue", as: OperatorActionQueueResponse.self)
     }
 
-    func getStaffOpenSlots() async throws -> OpenSlotsListAPIResponse {
-        try await get("/v1/open-slots/mine", as: OpenSlotsListAPIResponse.self)
+    func getStaffOpenSlots(limit: Int? = nil, offset: Int? = nil) async throws -> OpenSlotsListAPIResponse {
+        var params: [String] = []
+        if let limit { params.append("limit=\(limit)") }
+        if let offset { params.append("offset=\(offset)") }
+        let path = params.isEmpty ? "/v1/open-slots/mine" : "/v1/open-slots/mine?\(params.joined(separator: "&"))"
+        return try await get(path, as: OpenSlotsListAPIResponse.self)
+    }
+
+    /// Walks pagination until exhausted so aggregate consumers (Today, Claims bucketing) keep
+    /// seeing the full collection. Bounded by `maxPages` against a runaway fetch loop.
+    func getAllStaffOpenSlots(pageLimit: Int = 200, maxPages: Int = 25) async throws -> [StaffOpenSlotListRow] {
+        var all: [StaffOpenSlotListRow] = []
+        var offset = 0
+        for _ in 0..<maxPages {
+            let page = try await getStaffOpenSlots(limit: pageLimit, offset: offset)
+            all.append(contentsOf: page.openSlots)
+            guard let hasMore = page.pagination?.hasMore, hasMore, !page.openSlots.isEmpty else { break }
+            offset += pageLimit
+        }
+        return all
     }
 
     func createOpenSlot(body: CreateOpenSlotRequestBody) async throws -> CreateOpenSlotAPIResponse {

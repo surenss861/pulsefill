@@ -3,10 +3,7 @@ import { Worker } from "bullmq";
 import { Redis } from "ioredis";
 import { createWorkerSupabase } from "./lib/supabase.js";
 import { expireOffersJob } from "./jobs/expire-offers.job.js";
-import {
-  sendOfferNotificationJob,
-  type SendOfferNotificationJobPayload,
-} from "./jobs/send-offer-notification.job.js";
+import { releaseStaleSlotPaymentAuthorizationsJob } from "./jobs/release-stale-slot-payment-authorizations.job.js";
 
 const redisUrl = process.env.REDIS_URL;
 if (!redisUrl) {
@@ -28,19 +25,18 @@ const connection = new Redis(redisUrl, { maxRetriesPerRequest: null });
 const worker = new Worker(
   "pulsefill-jobs",
   async (job) => {
-    if (job.name === "send-offer-notification") {
-      const payload = job.data as SendOfferNotificationJobPayload;
-      return await sendOfferNotificationJob(supabase, payload);
-    }
-
     if (job.name === "expire-offers") {
       return await expireOffersJob(supabase);
+    }
+
+    if (job.name === "release-stale-payment-authorizations") {
+      return await releaseStaleSlotPaymentAuthorizationsJob(supabase);
     }
 
     console.log("[pulsefill-jobs] unknown job", job.name, job.data);
     return { ok: false };
   },
-  { connection },
+  { connection, concurrency: 5 },
 );
 
 worker.on("failed", (job, err) => {

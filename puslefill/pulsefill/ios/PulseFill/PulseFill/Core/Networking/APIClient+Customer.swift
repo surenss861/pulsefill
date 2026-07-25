@@ -13,6 +13,11 @@ extension APIClient {
         try await get("/v1/customers/me/offers/\(offerId)", as: CustomerOfferDetailResponse.self)
     }
 
+    /// Scrubs PII, deactivates push devices/standby preferences, and deletes the Supabase auth identity.
+    func deleteCustomerAccount() async throws {
+        try await delete("/v1/customers/me")
+    }
+
     func getClaimOutcome(claimId: String) async throws -> ClaimOutcomeResponse {
         try await get("/v1/customers/me/claims/\(claimId)/status", as: ClaimOutcomeResponse.self)
     }

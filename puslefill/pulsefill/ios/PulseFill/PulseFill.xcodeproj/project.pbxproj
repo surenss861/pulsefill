@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8140EDD9AFAE1A8CF785E1DA /* StripePaymentSheet in Frameworks */ = {isa = PBXBuildFile; productRef = C0FE1D9194AAF64123B70DAE /* StripePaymentSheet */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		21D4529F2F90C0C500818129 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -51,11 +55,15 @@
 		};
 		21D452A12F90C0C500818129 /* PulseFillTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = PulseFillTests;
 			sourceTree = "<group>";
 		};
 		21D452AB2F90C0C500818129 /* PulseFillUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = PulseFillUITests;
 			sourceTree = "<group>";
 		};
@@ -66,6 +74,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8140EDD9AFAE1A8CF785E1DA /* StripePaymentSheet in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -135,6 +144,7 @@
 			);
 			name = PulseFill;
 			packageProductDependencies = (
+				C0FE1D9194AAF64123B70DAE /* StripePaymentSheet */,
 			);
 			productName = PulseFill;
 			productReference = 21D4528D2F90C0C300818129 /* PulseFill.app */;
@@ -157,8 +167,6 @@
 				21D452A12F90C0C500818129 /* PulseFillTests */,
 			);
 			name = PulseFillTests;
-			packageProductDependencies = (
-			);
 			productName = PulseFillTests;
 			productReference = 21D4529E2F90C0C500818129 /* PulseFillTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -180,8 +188,6 @@
 				21D452AB2F90C0C500818129 /* PulseFillUITests */,
 			);
 			name = PulseFillUITests;
-			packageProductDependencies = (
-			);
 			productName = PulseFillUITests;
 			productReference = 21D452A82F90C0C500818129 /* PulseFillUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -218,6 +224,9 @@
 			);
 			mainGroup = 21D452842F90C0C300818129;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2C0450BA2F97A8E16C4DEAFC /* XCRemoteSwiftPackageReference "stripe-ios-spm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 21D4528E2F90C0C300818129 /* Products */;
 			projectDirPath = "";
@@ -336,7 +345,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = PulseFill/PulseFill.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "PulseFill/PulseFill-Release.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = XR6D339C8V;
@@ -613,6 +622,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2C0450BA2F97A8E16C4DEAFC /* XCRemoteSwiftPackageReference "stripe-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stripe/stripe-ios-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 24.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C0FE1D9194AAF64123B70DAE /* StripePaymentSheet */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2C0450BA2F97A8E16C4DEAFC /* XCRemoteSwiftPackageReference "stripe-ios-spm" */;
+			productName = StripePaymentSheet;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 21D452852F90C0C300818129 /* Project object */;
 }

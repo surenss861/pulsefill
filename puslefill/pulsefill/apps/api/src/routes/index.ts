@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { createServiceSupabase } from "../config/supabase.js";
 import { sendJson } from "../lib/http-errors.js";
 import { publicServiceSurface } from "../lib/service-meta.js";
+import { registerAdminRoutes } from "../modules/admin/admin.routes.js";
 import { registerAuthRoutes } from "../modules/auth/auth.routes.js";
 import { registerDashboardAuthRoutes } from "../modules/auth/dashboard-auth.routes.js";
 import { registerMobileAuthRoutes } from "../modules/auth/mobile-auth.routes.js";
@@ -15,6 +16,7 @@ import { registerStaffCustomerStandbyRequestsRoutes } from "../modules/customers
 import { registerLocationRoutes } from "../modules/locations/locations.routes.js";
 import { registerMaintenanceRoutes } from "../modules/maintenance/maintenance.routes.js";
 import { registerOpenSlotRoutes } from "../modules/slots/open-slots.routes.js";
+import { registerPaymentsRoutes } from "../modules/payments/payments.routes.js";
 import { registerProviderRoutes } from "../modules/providers/providers.routes.js";
 import { registerServiceRoutes } from "../modules/services/services.routes.js";
 import { registerStripeWebhookRoutes } from "../modules/webhooks/stripe.routes.js";
@@ -66,6 +68,8 @@ export async function registerRoutes(app: FastifyInstance) {
   await registerOpenSlotRoutes(app);
   await registerMaintenanceRoutes(app);
   await registerBillingRoutes(app);
+  await registerPaymentsRoutes(app);
+  await registerAdminRoutes(app);
   if (app.env.ENABLE_STRIPE_WEBHOOK_ROUTES) {
     await registerStripeWebhookRoutes(app);
   }

@@ -57,6 +57,10 @@ const schema = z.object({
   STRIPE_TRIAL_PERIOD_DAYS: z.coerce.number().int().min(0).max(730).optional(),
   ENABLE_BILLING_ROUTES: featureFlag,
   ENABLE_STRIPE_WEBHOOK_ROUTES: featureFlag,
+  /** Marketplace payments (Stripe Connect Express). Separate flag from SaaS billing routes. */
+  ENABLE_CONNECT_ROUTES: featureFlag,
+  /** Platform take rate on marketplace payments, in basis points (1000 = 10%). */
+  STRIPE_CONNECT_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(1000),
   /** When true, skips registering @fastify/rate-limit (used by API route tests). */
   RATE_LIMIT_DISABLED: z.preprocess(
     (val) => {
@@ -71,6 +75,8 @@ const schema = z.object({
   APNS_PRIVATE_KEY: z.string().optional(),
   APNS_BUNDLE_ID: z.string().optional(),
   APNS_ENVIRONMENT: z.enum(["sandbox", "production"]).default("sandbox"),
+  /** Comma-separated emails allowed to use the internal admin/support API (cross-business). Empty = admin routes are fully disabled. */
+  PLATFORM_ADMIN_EMAILS: z.string().optional(),
   /** Optional; used to build `invite_url` for staff invite create (e.g. https://customer.pulsefill.app) */
   CUSTOMER_APP_BASE_URL: z
     .union([z.string().url(), z.literal("")])

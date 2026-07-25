@@ -87,8 +87,9 @@ Clients that branch on `error` should treat both as “not authenticated”; do 
 When `ENABLE_STRIPE_WEBHOOK_ROUTES` is on:
 
 - Verify Stripe signature **before** parsing as trusted.
-- Handle **duplicate** `event.id` idempotently (store seen IDs or rely on Stripe replay semantics + safe upserts).
+- **Implemented:** duplicate `event.id` handling via `processed_stripe_events` (migration `0029`) — the webhook route inserts the event id before dispatch and skips reprocessing on conflict (`apps/api/src/modules/webhooks/stripe.routes.ts`, `claimStripeEventOnce`). Fails open (treats as first-delivery) on any error other than a genuine duplicate-key conflict, so a transient dedup-table issue can't block real webhook processing.
 - Do not log full signing secret or raw card data.
+- Marketplace payment webhooks (`account.updated`, `payment_intent.*`, `charge.refunded`) are handled in `apps/api/src/modules/payments/payments-webhook.ts`, sharing the same dedup guard as the SaaS billing webhook.
 
 ---
 
@@ -99,8 +100,17 @@ Prefer **constraints and partial unique indexes** for:
 - One active membership per `(customer_id, business_id)` where that is the product rule.
 - One pending standby request per pair if that is the product rule.
 - Unique active offer per `(open_slot_id, customer_id)` where applicable.
+- **Implemented (migration `0029`):** at most one active (`authorized`/`capturing`/`captured`) payment per `open_slot_id` (`slot_claim_payments_one_active_per_slot`) — the same race-condition backstop pattern as `slot_claims_one_winner_per_slot`.
 
 App logic should still validate; constraints are the last line of defense.
+
+## 7. Internal admin/support API
+
+`apps/api/src/modules/admin/admin.routes.ts` exposes cross-business lookups (user by email, slot lifecycle, payment status, push device status) for support use. Gated by `requirePlatformAdmin` (`apps/api/src/plugins/guards.ts`) — an email allowlist via `PLATFORM_ADMIN_EMAILS`, **not** a database role, since this is a small, rarely-rotated set of PulseFill operators rather than a per-business permission. Leave `PLATFORM_ADMIN_EMAILS` unset to fully disable these routes (every request 403s). Rotate the allowlist via Railway env, not a deploy.
+
+## 8. Account deletion (`apps/api/src/modules/customers/customers.routes.ts`, `DELETE /v1/customers/me`)
+
+Soft-delete: scrubs `full_name`/`email`/`phone`, sets `customers.deleted_at`, deactivates push devices and standby preferences, and deletes the Supabase auth identity. `requireCustomer` (`plugins/guards.ts`) filters on `deleted_at is null`, so even if an access token outlives the auth-user deletion, the customer row is no longer resolvable. Financial/audit records (`slot_claims`, `slot_claim_payments`, `audit_events`) intentionally survive with the (now-anonymized) `customer_id` reference intact, for recordkeeping.
 
 ---
 

@@ -65,6 +65,7 @@ export type ClaimOpenSlotRpcTestDelegateArgs = {
   openSlotId: string;
   customerId: string;
   deposit_payment_intent_id: string | null;
+  stripe_payment_intent_id?: string | null;
 };
 
 export type ClaimOpenSlotRpcTestDelegateResult = {

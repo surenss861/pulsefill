@@ -8,6 +8,27 @@ export async function requireAuth(req: FastifyRequest, reply: FastifyReply) {
   }
 }
 
+/**
+ * Internal admin/support API — cross-business, not scoped to any single
+ * `staff_users` row. Gated by an email allowlist (`PLATFORM_ADMIN_EMAILS`)
+ * rather than a DB role, since this is a small, high-trust, rarely-rotated
+ * set of PulseFill operators, not a per-business permission.
+ */
+export async function requirePlatformAdmin(req: FastifyRequest, reply: FastifyReply) {
+  await requireAuth(req, reply);
+  if (reply.sent) return;
+
+  const allowlist = (req.server.env.PLATFORM_ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  const email = req.authUser?.email?.toLowerCase();
+  if (!email || allowlist.length === 0 || !allowlist.includes(email)) {
+    return sendPublicError(req, reply, 403, "forbidden", "You do not have access to this tool.");
+  }
+}
+
 export async function requireStaff(req: FastifyRequest, reply: FastifyReply) {
   await requireAuth(req, reply);
   if (reply.sent) return;
@@ -80,6 +101,7 @@ export async function requireCustomer(req: FastifyRequest, reply: FastifyReply) 
     .from("customers")
     .select("id")
     .eq("auth_user_id", req.authUser!.id)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (error) {

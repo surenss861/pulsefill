@@ -124,16 +124,4 @@ export async function registerBillingRoutes(app: FastifyInstance) {
     },
   );
 
-  app.post(
-    "/v1/billing/deposit-intent",
-    { preHandler: requireCustomer },
-    async (req, reply) => {
-      if (!req.server.env.STRIPE_SECRET_KEY) {
-        return sendJson(req, reply, 501, { error: "stripe_not_configured" });
-      }
-      void req.customer;
-      void req.body;
-      return sendJson(req, reply, 501, { error: "deposit_intent_not_implemented" });
-    },
-  );
 }

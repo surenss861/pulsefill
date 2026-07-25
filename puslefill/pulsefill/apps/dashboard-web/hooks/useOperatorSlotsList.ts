@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { fetchAllPages } from "@/lib/api";
 import { getOperatorSlotCounts, matchesOperatorSlotFilter } from "@/lib/operator-slots-ui";
 import type { OperatorOpenSlotsListResponse, OperatorSlotsFilter, OperatorSlotsListItem } from "@/types/operator-slots-list";
 
@@ -23,8 +23,11 @@ export function useOperatorSlotsList(filter: OperatorSlotsFilter) {
     setError(null);
 
     try {
-      const data = await apiFetch<OperatorOpenSlotsListResponse>("/v1/open-slots/mine");
-      setSlots(data.openSlots ?? []);
+      const rows = await fetchAllPages<OperatorSlotsListItem>("/v1/open-slots/mine", (page) => {
+        const p = page as OperatorOpenSlotsListResponse;
+        return { items: p.openSlots ?? [], hasMore: p.pagination?.hasMore ?? false };
+      });
+      setSlots(rows);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load slots.";
       setError(message);

@@ -140,29 +140,6 @@ export async function recordNoMatchesAtomically(
   return { ok: true };
 }
 
-export async function markSendOfferNotificationLogs(
-  admin: SupabaseClient,
-  input: {
-    openSlotId: string;
-    offerIds: string[];
-    status: "queued" | "skipped_no_queue" | "queue_failed";
-    metadata?: Record<string, unknown>;
-  },
-) {
-  if (input.offerIds.length === 0) return;
-
-  await admin
-    .from("notification_logs")
-    .update({
-      status: input.status,
-      error: input.status === "queue_failed" ? String(input.metadata?.queue_error ?? "queue_failed") : null,
-      metadata: input.metadata ?? {},
-    })
-    .eq("open_slot_id", input.openSlotId)
-    .eq("status", "pending_queue")
-    .in("slot_offer_id", input.offerIds);
-}
-
 function toOfferChannel(value: unknown): SendOfferChannel {
   if (value === "sms" || value === "email") return value;
   return "push";

@@ -7,7 +7,7 @@ Monorepo root: this `pulsefill/` directory. Use **pnpm** everywhere.
 | Railway service | Role | Redis |
 |-----------------|------|-------|
 | **api** | Fastify HTTP (`/health`, `/v1/*`) | Set **`REDIS_URL`** on this service for BullMQ enqueue **and** shared `@fastify/rate-limit` counters when scaled. |
-| **worker** | BullMQ consumer (`send-offer-notification`, `expire-offers`) | **`REDIS_URL`** required |
+| **worker** | BullMQ consumer (`expire-offers`) | **`REDIS_URL`** required |
 | **Redis** | Railway Redis (or Upstash TCP URL) | — |
 
 Supabase and Stripe stay **external**.
@@ -63,7 +63,7 @@ The API does **not** need `SUPABASE_ANON_KEY` unless you add anon-key-based feat
 
 ### Customer offer pushes (worker)
 
-The **`send-offer-notification`** job delivers customer **push** notifications when `PUSH_PROVIDER=apns` and the same **`APNS_*`** secrets as the API are set on the **worker** service. If APNS is not configured, the job still marks the offer **delivered** and logs `metadata.delivery_mode: simulated` / `apns_not_configured` so the send-offers transaction is not blocked.
+Customer **push** notifications (offer-sent, booking-confirmed) are delivered by the **api** service itself — fire-and-forget after the triggering response, via `notifyCustomerOfferSent` / `notifyCustomerBookingConfirmed` (`apps/api/src/modules/slots/notification-hooks.ts`) — when `PUSH_PROVIDER=apns` and **`APNS_*`** secrets are set **on the api service**. There is no worker-side push job; only set `APNS_*` on **worker** if you add a worker job that needs it later. (Historically both services sent the same push independently — that duplicate-send path was removed; api is the single source of truth for customer push delivery.) If APNS is not configured, sends are suppressed and `notification_logs` still resolves to `delivered`/`failed` so the send-offers/confirm flow is never blocked.
 
 Per-device APNs host (**sandbox** vs **production**) is chosen from each row’s `customer_push_devices.environment` (`development` → sandbox, `production` → production).
 
@@ -120,7 +120,7 @@ Apply all SQL migrations in `packages/db/migrations/` through **`0008`** (Realti
 
 ### Product loop (staging)
 
-- [ ] Create slot → send offers → queue job → offer row updates
+- [ ] Create slot → send offers → push dispatched (api) → offer row updates
 - [ ] Customer sees offer → claims → dashboard shows claim → confirm booking
 - [ ] Expiry sweep / worker behavior matches expectations
 
@@ -131,9 +131,9 @@ Use a **physical iPhone** (simulator does not receive APNs).
 **Before testing**
 
 - [ ] Push Notifications capability enabled on the PulseFill target (Signing & Capabilities)
-- [ ] Bundle ID matches the APNs topic / worker config (`APNS_BUNDLE_ID` when wired)
-- [ ] Worker env: `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRIVATE_KEY` (when sending real pushes)
-- [ ] Staging/device debug: `APNS_ENVIRONMENT=development` on the worker
+- [ ] Bundle ID matches the APNs topic / api config (`APNS_BUNDLE_ID` when wired)
+- [ ] **api** env: `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRIVATE_KEY` (when sending real pushes) — not the worker
+- [ ] Staging/device debug: `APNS_ENVIRONMENT=development` on the api service
 - [ ] Migration for `customer_push_devices` applied; device can call `POST /v1/customers/me/push-devices`
 
 **Validation flow**
@@ -141,7 +141,7 @@ Use a **physical iPhone** (simulator does not receive APNs).
 1. Sign in on the iOS app → allow notifications when prompted
 2. Confirm a row exists in `customer_push_devices` for that customer (or watch API success)
 3. Dashboard: create slot → send offers
-4. Worker logs: device token found → APNs success (once wired)
+4. API logs: device token found → APNs success (once wired)
 5. Phone receives notification → tap → app opens to **Offers** (deep-link data: `kind`, `offerId`, `openSlotId`)
 
 **If push fails**, check in order: wrong bundle ID, wrong environment (dev vs prod), malformed `.p8` newlines in env, missing push capability, no registered device token, missing worker env vars.

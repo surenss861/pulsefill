@@ -18,6 +18,9 @@ struct CustomerOfferDetail: Decodable, Identifiable, Hashable {
     let endsAt: String?
     let matchedPreference: MatchedPreferenceSummary?
     let claimGuidance: OfferClaimGuidance?
+    let paymentRequired: Bool?
+    let priceCents: Int?
+    let currency: String?
 }
 
 struct MatchedPreferenceSummary: Decodable, Hashable {

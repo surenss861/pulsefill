@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { fetchAllPages } from "@/lib/api";
 
 export type OpenSlotListRow = {
   id: string;
@@ -13,7 +13,7 @@ export type OpenSlotListRow = {
   winning_claim?: { id: string; status: string } | null;
 };
 
-type OpenSlotsResponse = { openSlots: OpenSlotListRow[] };
+type OpenSlotsResponse = { openSlots: OpenSlotListRow[]; pagination?: { hasMore: boolean } };
 
 export function useOpenSlots() {
   const [slots, setSlots] = useState<OpenSlotListRow[]>([]);
@@ -24,8 +24,11 @@ export function useOpenSlots() {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiFetch<OpenSlotsResponse>("/v1/open-slots");
-      setSlots(data.openSlots ?? []);
+      const rows = await fetchAllPages<OpenSlotListRow>("/v1/open-slots", (page) => {
+        const p = page as OpenSlotsResponse;
+        return { items: p.openSlots ?? [], hasMore: p.pagination?.hasMore ?? false };
+      });
+      setSlots(rows);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load open slots");
     } finally {

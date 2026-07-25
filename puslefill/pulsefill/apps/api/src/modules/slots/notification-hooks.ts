@@ -28,6 +28,25 @@ export function setNotificationEventHookTestDelegate(delegate: NotificationEvent
   notificationEventHookDelegate = delegate;
 }
 
+/**
+ * notification_logs rows are created at send-time (RPC / bulk-actions) with a
+ * not-yet-resolved status ("pending_queue" / "queued") so operator-facing
+ * views (inspect logs, delivery reliability) have something to read. This is
+ * the single place that resolves them to a terminal status, now that push
+ * delivery itself happens exactly once here (not duplicated in the worker).
+ */
+async function recordOfferNotificationLogOutcome(
+  supabase: ReturnType<typeof createServiceSupabase>,
+  offerId: string,
+  outcome: { status: "delivered" | "failed"; error?: string | null },
+) {
+  await supabase
+    .from("notification_logs")
+    .update({ status: outcome.status, error: outcome.error ?? null })
+    .eq("slot_offer_id", offerId)
+    .in("status", ["pending_queue", "queued"]);
+}
+
 export async function notifyCustomerOfferSent(params: {
   env: FastifyInstance["env"];
   supabase: ReturnType<typeof createServiceSupabase>;
@@ -43,7 +62,7 @@ export async function notifyCustomerOfferSent(params: {
     });
     return;
   }
-  await handleCustomerOfferSentNotificationEvent({
+  const result = await handleCustomerOfferSentNotificationEvent({
     supabase: params.supabase as unknown as NotificationEventSupabase,
     provider: createPushProviderFromEnv(params.env),
     nowIso: new Date().toISOString(),
@@ -51,6 +70,28 @@ export async function notifyCustomerOfferSent(params: {
     offerId: params.offerId,
     customerId: params.customerId,
   });
+
+  if (!result.ok) {
+    await recordOfferNotificationLogOutcome(params.supabase, params.offerId, {
+      status: "failed",
+      error: result.error,
+    });
+    return;
+  }
+  if (result.outcome === "skipped") {
+    await recordOfferNotificationLogOutcome(params.supabase, params.offerId, {
+      status: "failed",
+      error: result.reason,
+    });
+    return;
+  }
+  // outcome === "processed": "sent" and the benign "suppressed"/"skipped"
+  // (preference off, no device, dedupe) all land in "delivered" — matching
+  // the prior worker semantics where an intentional non-send wasn't a failure.
+  const providerResult = result.result.status === "failed" ? result.result.provider_result : null;
+  const status = providerResult && !providerResult.ok ? "failed" : "delivered";
+  const error = providerResult && !providerResult.ok ? providerResult.error_code : null;
+  await recordOfferNotificationLogOutcome(params.supabase, params.offerId, { status, error });
 }
 
 export async function notifyCustomerBookingConfirmed(params: {

@@ -1,6 +1,5 @@
 import type { Env } from "../../config/env.js";
 import type { createServiceSupabase } from "../../config/supabase.js";
-import { enqueueSendOfferNotificationJobs } from "../../lib/queue.js";
 import { computeStandbyMatchesForOpenSlot } from "../../lib/open-slot-send-offers-match.js";
 import {
   noMatchesReasonFromSummary,
@@ -10,6 +9,7 @@ import {
 } from "../../lib/standby-matcher.js";
 import { canPerformAction } from "./operator-slot-rules.js";
 import { loadSlotRuleContext } from "./load-slot-rule-context.js";
+import { notifyCustomerOfferSent } from "./notification-hooks.js";
 import { mergeMetadata, touchOpenSlotByStaff } from "./staff-attribution.js";
 
 type Admin = ReturnType<typeof createServiceSupabase>;
@@ -169,24 +169,31 @@ async function retryOffersOne(
     return withId(slotId, fail("slot_update_failed", "Could not update slot status."));
   }
 
-  const offerRowsForQueue = inserted ?? [];
-  const queuePayloads = offerRowsForQueue.map((o) => ({
-    offerId: o.id,
-    openSlotId: slotId,
-    customerId: o.customer_id,
-    channel: o.channel as "push" | "sms" | "email",
-  }));
-  const queued = await enqueueSendOfferNotificationJobs(env, queuePayloads);
+  const offerRowsForNotify = inserted ?? [];
 
-  for (const row of offerRowsForQueue) {
+  for (const row of offerRowsForNotify) {
     await admin.from("notification_logs").insert({
       open_slot_id: slotId,
+      business_id: businessId,
       slot_offer_id: row.id,
       customer_id: row.customer_id,
       channel: row.channel,
-      status: queued.queued ? "queued" : "skipped_no_queue",
+      status: "pending_queue",
       error: null,
       metadata: {},
+    });
+  }
+
+  for (const row of offerRowsForNotify) {
+    // Fire-and-forget: push delivery must not block this bulk-action item.
+    notifyCustomerOfferSent({
+      env,
+      supabase: admin,
+      businessId,
+      offerId: row.id,
+      customerId: row.customer_id,
+    }).catch((e) => {
+      console.warn("[bulk-actions] customer_offer_sent_notification_failed", { e, offerId: row.id });
     });
   }
 
@@ -198,7 +205,7 @@ async function retryOffersOne(
     entity_type: "open_slot",
     entity_id: slotId,
     metadata: mergeMetadata(
-      { count: offerRowsForQueue.length, queued: queued.queued, match_summary: matchPack.summary, ...bulkExtra },
+      { count: offerRowsForNotify.length, match_summary: matchPack.summary, ...bulkExtra },
       authUserId,
     ),
   });

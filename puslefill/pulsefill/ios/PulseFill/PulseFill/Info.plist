@@ -16,7 +16,6 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
-		<string>location</string>
 	</array>
 	<key>PulseFillAPIBaseURL</key>
 	<string>$(PULSEFILL_API_BASE_URL)</string>

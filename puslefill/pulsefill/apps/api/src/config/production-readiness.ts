@@ -40,6 +40,15 @@ export function assertProductionStartup(env: Env): void {
     problems.push("ENABLE_STRIPE_WEBHOOK_ROUTES is on but STRIPE_WEBHOOK_SECRET is missing.");
   }
 
+  if (env.ENABLE_CONNECT_ROUTES) {
+    if (!env.STRIPE_SECRET_KEY?.trim()) {
+      problems.push("ENABLE_CONNECT_ROUTES is on but STRIPE_SECRET_KEY is missing.");
+    }
+    if (!env.DASHBOARD_URL?.trim()) {
+      problems.push("ENABLE_CONNECT_ROUTES is on but DASHBOARD_URL is missing (used for Connect onboarding return URLs).");
+    }
+  }
+
   if (problems.length > 0) {
     throw new Error(`Production configuration invalid:\n- ${problems.join("\n- ")}`);
   }

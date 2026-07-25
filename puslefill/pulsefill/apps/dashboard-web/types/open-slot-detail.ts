@@ -74,6 +74,24 @@ export type OpenSlotDetail = {
     claimed_at?: string | null;
     status: string;
   } | null;
+  payment_required?: boolean;
+  price_cents?: number | null;
+  currency?: string;
+  payment?: {
+    id: string;
+    claim_id: string | null;
+    status:
+      | "requires_payment"
+      | "authorized"
+      | "capturing"
+      | "captured"
+      | "canceled"
+      | "refunded"
+      | "failed";
+    amount_cents: number;
+    application_fee_cents: number;
+    currency: string;
+  } | null;
 };
 
 export type OpenSlotDetailApiResponse = {
