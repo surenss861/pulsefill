@@ -17,6 +17,8 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>PulseFill uses your camera to let you scan your card instead of typing the number by hand when paying for a claimed opening.</string>
 	<key>PulseFillAPIBaseURL</key>
 	<string>$(PULSEFILL_API_BASE_URL)</string>
 	<key>PulseFillSupabaseURL</key>
